@@ -9,10 +9,10 @@ interface BadgeProps {
 
 const TONE_CLASSES: Record<NonNullable<BadgeProps['tone']>, string> = {
   pc: 'bg-primary-light text-primary-dark',
-  ps: 'bg-blue-50 text-ps',
+  ps: 'bg-ps-light text-ps',
   live: 'bg-live-light text-live',
   neutral: 'bg-surface-alt text-muted',
-  premium: 'bg-warn-light text-amber-700',
+  premium: 'bg-warn-light text-warn',
 };
 
 export function Badge({ children, tone = 'neutral', className }: BadgeProps) {
