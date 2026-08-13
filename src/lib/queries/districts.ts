@@ -5,7 +5,9 @@ import type { District, ClubType } from '@/types/database';
 export async function getDistricts(): Promise<District[]> {
   const supabase = createClient();
 
-  if (!supabase) return [];
+  if (supabase === null) {
+    return [];
+  }
 
   const { data, error } = await supabase
     .from('districts')
@@ -25,7 +27,9 @@ export async function getDistricts(): Promise<District[]> {
 export async function getClubTypes(): Promise<ClubType[]> {
   const supabase = createClient();
 
-  if (!supabase) return [];
+  if (supabase === null) {
+    return [];
+  }
 
   const { data, error } = await supabase
     .from('club_types')
