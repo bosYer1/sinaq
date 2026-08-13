@@ -4,7 +4,9 @@ import { getDistricts, getClubTypes } from '@/lib/queries/districts';
 import { isSupabaseConfigured } from '@/lib/config';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { ExploreView } from '@/components/explore/ExploreView';
+import { Hero } from '@/components/home/Hero';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { isClubOpenNow } from '@/lib/utils';
 import type { ClubFilters } from '@/types/database';
 
 export const dynamic = 'force-dynamic'; // Filtrlər hər sorğuda dəyişdiyi üçün statik cache-lənmir
@@ -35,14 +37,17 @@ export default async function HomePage({ searchParams }: PageProps) {
   const view = searchParams.view === 'map' ? 'map' : 'list';
 
   const [clubs, districts, types] = await Promise.all([getClubs(filters), getDistricts(), getClubTypes()]);
+  const openNowCount = clubs.filter((c) => isClubOpenNow(c.opening_hours)).length;
 
   return (
     <div className="flex h-[calc(100vh-57px)] flex-col">
       {!isSupabaseConfigured() && (
-        <div className="border-b border-warn/30 bg-warn-light px-4 py-1.5 text-center text-xs font-medium text-amber-800 sm:px-6">
+        <div className="border-b border-warn/30 bg-warn-light px-4 py-1.5 text-center text-xs font-medium text-warn sm:px-6">
           Nümunə (mock) data göstərilir — Supabase hələ qoşulmayıb.
         </div>
       )}
+
+      <Hero clubCount={clubs.length} districtCount={districts.length} openNowCount={openNowCount} />
 
       <Suspense
         fallback={
