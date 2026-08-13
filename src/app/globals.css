@@ -5,24 +5,27 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #f5f6fa;
-  --color-surface: #ffffff;
-  --color-surface-alt: #ecedf3;
-  --color-border: #dee1e8;
-  --color-text: #14161c;
-  --color-text-muted: #5c6270;
+  color-scheme: dark;
 
-  --color-primary: #5b4fe9;
-  --color-primary-dark: #4738d6;
-  --color-primary-light: #eeecfd;
+  --color-bg: #0a0e16;
+  --color-surface: #12161f;
+  --color-surface-alt: #1b202c;
+  --color-border: #262c3a;
+  --color-text: #eef1f7;
+  --color-text-muted: #8a92a6;
 
-  --color-live: #17c3b2;
-  --color-live-light: #e3f8f6;
-  --color-warn: #f2a93b;
-  --color-warn-light: #fdf1de;
+  --color-primary: #7c5cff;
+  --color-primary-dark: #9d84ff;
+  --color-primary-light: rgba(124, 92, 255, 0.16);
 
-  --color-pc: #5b4fe9;
-  --color-ps: #1e6fd9;
+  --color-live: #34d399;
+  --color-live-light: rgba(52, 211, 153, 0.14);
+  --color-warn: #fbbf24;
+  --color-warn-light: rgba(251, 191, 36, 0.14);
+
+  --color-pc: #7c5cff;
+  --color-ps: #22d3ee;
+  --color-ps-light: rgba(34, 211, 238, 0.16);
 
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -50,6 +53,34 @@ body {
 .bosyer-marker {
   background: transparent;
   border: none;
+}
+
+/* Leaflet-in default açıq (light) chrome-unu (popup, zoom düymələri, attribution)
+   dark tema ilə uyğunlaşdırırıq — Leaflet CSS-i buraya import olunduğu üçün
+   default stilləri override etmək lazımdır. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.leaflet-popup-content-wrapper {
+  border: 1px solid var(--color-border);
+}
+
+.leaflet-control-zoom a,
+.leaflet-control-attribution {
+  background: var(--color-surface) !important;
+  color: var(--color-text-muted) !important;
+  border-color: var(--color-border) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--color-surface-alt) !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-text-muted) !important;
 }
 
 /* Focus vəziyyətini həmişə görünən saxlayırıq (əlçatanlıq üçün vacibdir) */
