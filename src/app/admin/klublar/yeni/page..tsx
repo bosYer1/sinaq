@@ -30,7 +30,7 @@ function slugify(input: string): string {
     .replace(/-+/g, '-');
 }
 
-export default function YeniKlubPage() {
+export default function AdminNewClubPage() {
   const router = useRouter();
   const [districts, setDistricts] = useState<DistrictOption[]>([]);
   const [name, setName] = useState('');
