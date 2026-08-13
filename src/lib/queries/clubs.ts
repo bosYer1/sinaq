@@ -5,17 +5,7 @@ import type { ClubFilters, ClubWithRelations } from '@/types/database';
  * Supabase-in nested select sintaksisi ilə klubu bütün əlaqəli data ilə
  * (rayon, qiymətlər+tip, şəkillər, iş saatları) tək sorğuda çəkir.
  *
- * Nəticə tipi HƏR YERDƏ .returns<T>() ilə əl ilə təyin olunur — Supabase-in
- * avtomatik select-string tip-inference mexanizminə etibar edilmir, bu da
- * "never" tip xətalarının qarşısını qəti alır (bax: types/database.ts
- * başındakı izah).
- *
- * VACIB — .returns() və .maybeSingle() sırası: .maybeSingle() çağırışı
- * HƏMİŞƏ .returns<T>()-dən ƏVVƏL olmalıdır, əks halda (.returns() əvvəl,
- * .maybeSingle() sonra) TypeScript nəticəni never kimi tanıyır — real
- * Vercel build-də bu tərtiblə qarşılaşılıb və düzəldilib. Tək sətir gözlənən
- * sorğularda .returns<T>()-ə massiv deyil, təkil obyekt tipi verilir
- * (məs. .returns<{ id: string }>(), .returns<{ id: string }[]>() yox).
+ * Nəticə tipi HƏR YERDƏ .returns<T>() ilə əl ilə təyin olunur.
  */
 const CLUB_SELECT = `
   *,
@@ -30,19 +20,14 @@ const CLUB_SELECT = `
 
 /**
  * Filtrlərə uyğun aktiv klubları qaytarır.
- *
- * Dizayn qərarı: PostgREST-in çox-səviyyəli embed filtrləri (məs.
- * pricing.club_type.slug kimi iki səviyyə dərinlikdə dot-filter) etibarsız/
- * qeyri-müəyyən davranışa malikdir. Bunun qarşısını almaq üçün əvvəlcə
- * district/club_type slug-larını id-yə çeviririk (lookup cədvəllər
- * kiçikdir, əlavə sorğu ucuzdur), sonra əsas sorğuda birbaşa foreign key
- * sütunları üzərindən filtr edirik.
  */
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
   const supabase = createClient();
+
   if (!supabase) return [];
 
   let districtId: string | null = null;
+
   if (filters.district) {
     const { data: districtRow, error: districtError } = await supabase
       .from('districts')
@@ -52,14 +37,20 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
       .returns<{ id: string }>();
 
     if (districtError) {
-      console.error('getClubs (district lookup) xətası:', districtError.message);
+      console.error(
+        'getClubs (district lookup) xətası:',
+        districtError.message,
+      );
       return [];
     }
+
     if (!districtRow) return [];
+
     districtId = districtRow.id;
   }
 
   let clubTypeId: string | null = null;
+
   if (filters.type) {
     const { data: typeRow, error: typeError } = await supabase
       .from('club_types')
@@ -69,16 +60,27 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
       .returns<{ id: string }>();
 
     if (typeError) {
-      console.error('getClubs (club_type lookup) xətası:', typeError.message);
+      console.error(
+        'getClubs (club_type lookup) xətası:',
+        typeError.message,
+      );
       return [];
     }
+
     if (!typeRow) return [];
+
     clubTypeId = typeRow.id;
   }
 
-  const needsPricingInnerJoin = Boolean(clubTypeId || filters.priceMax);
+  const needsPricingInnerJoin = Boolean(
+    clubTypeId || filters.priceMax,
+  );
+
   const selectString = needsPricingInnerJoin
-    ? CLUB_SELECT.replace('pricing:club_pricing (', 'pricing:club_pricing!inner (')
+    ? CLUB_SELECT.replace(
+        'pricing:club_pricing (',
+        'pricing:club_pricing!inner (',
+      )
     : CLUB_SELECT;
 
   let query = supabase
@@ -86,19 +88,43 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     .select(selectString)
     .eq('is_active', true)
     .order('is_premium', { ascending: false })
-    .order('rating_avg', { ascending: false, nullsFirst: false });
+    .order('rating_avg', {
+      ascending: false,
+      nullsFirst: false,
+    });
 
   if (districtId) {
     query = query.eq('district_id', districtId);
   }
+
   if (clubTypeId) {
     query = query.eq('pricing.club_type_id', clubTypeId);
   }
+
   if (filters.priceMax) {
-    query = query.lte('pricing.price_from', filters.priceMax);
+    query = query.lte(
+      'pricing.price_from',
+      filters.priceMax,
+    );
   }
 
-  const { data, error } = await query.returns<ClubWithRelations[]>();
+  // Klub adı, ünvan və slug üzrə axtarış.
+  const searchQuery = filters.q?.trim();
+
+  if (searchQuery) {
+    const sanitized = searchQuery
+      .replace(/[%_,()]/g, ' ')
+      .trim();
+
+    if (sanitized) {
+      query = query.or(
+        `name.ilike.%${sanitized}%,address.ilike.%${sanitized}%,slug.ilike.%${sanitized}%`,
+      );
+    }
+  }
+
+  const { data, error } =
+    await query.returns<ClubWithRelations[]>();
 
   if (error) {
     console.error('getClubs xətası:', error.message);
@@ -108,8 +134,14 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
   return data ?? [];
 }
 
-export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
+/**
+ * Tək klubu slug-a görə bütün detallarla qaytarır.
+ */
+export async function getClubBySlug(
+  slug: string,
+): Promise<ClubWithRelations | null> {
   const supabase = createClient();
+
   if (!supabase) return null;
 
   const { data, error } = await supabase
