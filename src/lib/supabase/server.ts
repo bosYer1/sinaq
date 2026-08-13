@@ -3,24 +3,25 @@ import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
 
 /**
- * Server component-lərdə (page.tsx, layout.tsx) istifadə olunan Supabase client.
- * Next.js App Router-in `cookies()` API-si ilə işləyir.
+ * Server component-lərdə istifadə olunan Supabase client.
  *
- * MVP-də auth/yazma əməliyyatı olmadığı üçün cookie yazma məntiqi minimaldır —
- * gələcəkdə auth əlavə olunanda `set`/`remove` funksiyaları tam işə düşəcək.
+ * Environment dəyişənləri yoxdursa null qaytarır.
  */
-export function createClient() {
-  const cookieStore = cookies();
+export function createClient(): ReturnType<
+  typeof createServerClient<Database>
+> | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !anonKey) {
-    throw new Error(
-      'Supabase konfiqurasiyası tapılmadı. .env.local faylında ' +
-        'NEXT_PUBLIC_SUPABASE_URL və NEXT_PUBLIC_SUPABASE_ANON_KEY dəyərlərini təyin edin ' +
-        '(nümunə üçün .env.local.example-a baxın).',
+    console.error(
+      '[Supabase] NEXT_PUBLIC_SUPABASE_URL və/və ya NEXT_PUBLIC_SUPABASE_ANON_KEY tapılmadı. ' +
+        'Vercel-də: Project Settings → Environment Variables. Yerli mühitdə: .env.local.',
     );
+    return null;
   }
+
+  const cookieStore = cookies();
 
   return createServerClient<Database>(url, anonKey, {
     cookies: {
@@ -31,17 +32,22 @@ export function createClient() {
         try {
           cookieStore.set({ name, value, ...options });
         } catch {
-          // Server Component-dən çağırılanda cookie yazıla bilməz (Next.js məhdudiyyəti).
-          // Middleware olmadığı üçün MVP-də bu, funksionallığa mane olmur (yalnız SELECT).
+          // Server Component-dən çağırılanda cookie yazıla bilməz.
         }
       },
       remove(name: string, options: Record<string, unknown>) {
         try {
           cookieStore.set({ name, value: '', ...options });
         } catch {
-          // Yuxarıdakı qeydlə eyni səbəb.
+          // Server Component-dən çağırılanda cookie yazıla bilməz.
         }
       },
     },
   });
 }
+
+/**
+ * Supabase konfiqurasiyasının mövcudluğunu yoxlayır.
+ * Əsas məntiq config.ts-dədir.
+ */
+export { isSupabaseConfigured } from '@/lib/config';
