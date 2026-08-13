@@ -28,13 +28,19 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       href={`/klub/${club.slug}`}
       onMouseEnter={onMouseEnter}
       className={cn(
-        'group flex gap-3 rounded-card border bg-surface p-3 shadow-card transition-shadow hover:shadow-card-hover',
-        active ? 'border-primary ring-2 ring-primary/25' : 'border-border',
+        'group flex gap-3.5 rounded-card border bg-surface p-3.5 shadow-card transition-all hover:border-primary/40 hover:shadow-card-hover',
+        active ? 'border-primary ring-2 ring-primary/35' : 'border-border',
       )}
     >
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-surface-alt">
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-surface-alt">
         {cover ? (
-          <Image src={cover.url} alt={club.name} fill sizes="80px" className="object-cover" />
+          <Image
+            src={cover.url}
+            alt={club.name}
+            fill
+            sizes="96px"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-2xl">🎮</div>
         )}
