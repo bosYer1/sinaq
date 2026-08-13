@@ -7,6 +7,10 @@ import type { Database } from '@/types/database';
 
 type ClubInsert = Database['public']['Tables']['clubs']['Insert'];
 
+interface ClubsInsertBuilder {
+  insert: (values: ClubInsert) => Promise<{ error: { message: string } | null }>;
+}
+
 interface DistrictOption {
   id: string;
   name: string;
@@ -97,7 +101,8 @@ export default function AdminNewClubPage() {
       is_active: isActive,
     };
 
-    const { error: insertError } = await supabase.from('clubs').insert(payload);
+    const clubsTable = supabase.from('clubs') as unknown as ClubsInsertBuilder;
+    const { error: insertError } = await clubsTable.insert(payload);
 
     setSubmitting(false);
 
