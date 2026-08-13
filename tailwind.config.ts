@@ -1,9 +1,9 @@
 import type { Config } from 'tailwindcss';
 
 // BoşYer dizayn tokenləri.
-// Palitra "ekran işığı" konsepti üzərində qurulub: soyuq neytral fon üzərində
-// bənövşəyi-indiqo əsas rəng (kontroller/RGB assosiasiyası) və "açıqdır" statusu
-// üçün ayrıca canlı firuzəyi əlamət rəngi.
+// Premium dark gaming konsepti: graphite/navy fon üzərində PC üçün elektrik
+// bənövşəyi (primary/pc), PlayStation üçün canlı cyan (ps) əsas rəng olaraq
+// ayrılıb; "açıqdır" statusu üçün ayrıca yaşıl (live) əlamət rəngi saxlanılıb.
 const config: Config = {
   content: [
     './src/app/**/*.{ts,tsx}',
@@ -29,6 +29,7 @@ const config: Config = {
         'warn-light': 'var(--color-warn-light)',
         pc: 'var(--color-pc)',
         ps: 'var(--color-ps)',
+        'ps-light': 'var(--color-ps-light)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'sans-serif'],
