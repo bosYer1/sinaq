@@ -1,0 +1,69 @@
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #f5f6fa;
+  --color-surface: #ffffff;
+  --color-surface-alt: #ecedf3;
+  --color-border: #dee1e8;
+  --color-text: #14161c;
+  --color-text-muted: #5c6270;
+
+  --color-primary: #5b4fe9;
+  --color-primary-dark: #4738d6;
+  --color-primary-light: #eeecfd;
+
+  --color-live: #17c3b2;
+  --color-live-light: #e3f8f6;
+  --color-warn: #f2a93b;
+  --color-warn-light: #fdf1de;
+
+  --color-pc: #5b4fe9;
+  --color-ps: #1e6fd9;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html,
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+/* Leaflet default marker ikonları Next.js bundler-i ilə düzgün yüklənmədiyi üçün
+   biz özümüz div-based custom marker istifadə edirik (bax: ClubMarker.tsx),
+   ona görə leaflet-in default marker-shadow görüntüsünü söndürürük. */
+.leaflet-container {
+  font-family: var(--font-body);
+  background: var(--color-surface-alt);
+}
+
+.bosyer-marker {
+  background: transparent;
+  border: none;
+}
+
+/* Focus vəziyyətini həmişə görünən saxlayırıq (əlçatanlıq üçün vacibdir) */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
