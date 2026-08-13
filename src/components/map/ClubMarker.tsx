@@ -12,9 +12,10 @@ import { formatDistance } from '@/lib/geo';
  * (ikon path-ləri webpack tərəfindən pozulur), ona görə divIcon ilə
  * özümüzün custom, brendə uyğun marker-ini qururuq.
  */
-function createClubIcon(isPremium: boolean, isOpen: boolean, isActive: boolean): L.DivIcon {
-  const bg = isPremium ? '#f2a93b' : '#5b4fe9';
-  const ring = isActive ? '#17c3b2' : isOpen ? '#17c3b2' : 'transparent';
+function createClubIcon(hasPS: boolean, isPremium: boolean, isOpen: boolean, isActive: boolean): L.DivIcon {
+  // Rəng prioriteti: Premium (qızılı) > tip (PC=bənövşəyi / PS=cyan)
+  const bg = isPremium ? '#fbbf24' : hasPS ? '#22d3ee' : '#7c5cff';
+  const ring = isActive || isOpen ? '#34d399' : 'transparent';
   const size = isActive ? 38 : 30;
 
   return L.divIcon({
@@ -24,7 +25,7 @@ function createClubIcon(isPremium: boolean, isOpen: boolean, isActive: boolean):
         width: ${size}px; height: ${size}px; border-radius: 50%;
         background: ${bg}; border: ${isActive ? 3 : 2.5}px solid ${ring};
         display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 2px 6px rgba(20,22,28,0.35);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.55);
         font-size: ${isActive ? 16 : 14}px;
         transition: width 0.15s ease, height 0.15s ease;
       ">🎮</div>
@@ -45,7 +46,8 @@ export function ClubMarker({ club, isActive, onSelect }: ClubMarkerProps) {
   if (club.latitude == null || club.longitude == null) return null;
 
   const openNow = isClubOpenNow(club.opening_hours);
-  const icon = createClubIcon(club.is_premium, openNow, Boolean(isActive));
+  const hasPS = club.pricing.some((p) => p.club_type.slug === 'ps') && !club.pricing.some((p) => p.club_type.slug === 'pc');
+  const icon = createClubIcon(hasPS, club.is_premium, openNow, Boolean(isActive));
   const cheapest = [...club.pricing].sort((a, b) => a.price_from - b.price_from)[0];
 
   return (
