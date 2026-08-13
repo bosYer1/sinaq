@@ -1,4 +1,15 @@
 import { createClient } from '@/lib/supabase/server';
+import type { Database } from '@/types/database';
+
+type ClubInsert = Database['public']['Tables']['clubs']['Insert'];
+
+interface ClubsInsertBuilder {
+  insert: (values: ClubInsert) => {
+    select: (columns: string) => {
+      single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>;
+    };
+  };
+}
 
 export interface AdminClubListItem {
   id: string;
@@ -70,23 +81,22 @@ export async function createClub(
   const supabase = createClient();
   if (!supabase) return { success: false, error: 'Supabase client yaradıla bilmədi.' };
 
-  const { data, error } = await supabase
-    .from('clubs')
-    .insert({
-      name: input.name,
-      slug: input.slug,
-      description: input.description,
-      district_id: input.district_id,
-      address: input.address,
-      latitude: input.latitude,
-      longitude: input.longitude,
-      phone: input.phone,
-      instagram_url: input.instagram_url,
-      is_premium: input.is_premium,
-      is_active: input.is_active,
-    })
-    .select('id')
-    .single();
+  const payload: ClubInsert = {
+    name: input.name,
+    slug: input.slug,
+    description: input.description ?? '',
+    district_id: input.district_id,
+    address: input.address ?? '',
+    latitude: input.latitude,
+    longitude: input.longitude,
+    phone: input.phone ?? '',
+    instagram_url: input.instagram_url ?? '',
+    is_premium: input.is_premium,
+    is_active: input.is_active,
+  };
+
+  const clubsTable = supabase.from('clubs') as unknown as ClubsInsertBuilder;
+  const { data, error } = await clubsTable.insert(payload).select('id').single();
 
   if (error || !data) {
     return { success: false, error: error?.message ?? 'Klub yaradıla bilmədi.' };
