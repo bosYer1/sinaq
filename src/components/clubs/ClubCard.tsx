@@ -44,3 +44,44 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
         {openNow ? (
           <span className="absolute left-1.5 top-1.5 flex h-2 w-2 rounded-full bg-live shadow-sm">
             <span className="h-2 w-2 animate-pulse-dot rounded-full bg-live" />
+          </span>
+        ) : null}
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="truncate font-display text-sm font-semibold text-ink group-hover:text-primary">
+            {club.name}
+          </h3>
+          {club.is_premium ? (
+            <Badge tone="premium" className="shrink-0">
+              VIP
+            </Badge>
+          ) : null}
+        </div>
+
+        <p className="truncate text-xs text-muted">
+          {club.district ? club.district.name : 'Rayon göstərilməyib'}
+          {club.distanceKm != null ? <span> · {formatDistance(club.distanceKm)}</span> : null}
+        </p>
+
+        <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1">
+          {club.pricing.map((p) => (
+            <Badge key={p.id} tone={p.club_type.slug === 'pc' ? 'pc' : 'ps'}>
+              {p.club_type.name}
+            </Badge>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between pt-0.5">
+          <RatingBadge rating={club.rating_avg} count={club.rating_count} />
+          {cheapestPricing ? (
+            <span className="font-mono text-xs font-medium text-ink">
+              {formatPriceRange(cheapestPricing.price_from, cheapestPricing.price_to, cheapestPricing.unit)}
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </Link>
+  );
+});
