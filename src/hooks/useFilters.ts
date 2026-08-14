@@ -6,28 +6,23 @@ import type { ClubFilters } from '@/types/database';
 
 export type ViewMode = 'list' | 'map';
 
-/**
- * Filtr vəziyyətini URL query params üzərindən oxuyan/yazan hook.
- *
- * Niyə URL-də saxlanılır (Zustand/Redux əvəzinə)?
- * - Filtr edilmiş nəticə linki paylaşıla bilər
- * - Brauzerin "geri" düyməsi filtri düzgün geri qaytarır
- * - Server component (page.tsx) səhifəni bu parametrlərlə birbaşa render edə bilir
- */
+function parsePositiveNumber(value: string | null) {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
 export function useFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const filters: ClubFilters = useMemo(() => {
-    const priceMaxRaw = searchParams.get('price_max');
-    return {
-      district: searchParams.get('district') ?? undefined,
-      type: searchParams.get('type') ?? undefined,
-      priceMax: priceMaxRaw ? Number(priceMaxRaw) : undefined,
-      q: searchParams.get('q') ?? undefined,
-    };
-  }, [searchParams]);
+  const filters: ClubFilters = useMemo(() => ({
+    district: searchParams.get('district') || undefined,
+    type: searchParams.get('type') || undefined,
+    priceMax: parsePositiveNumber(searchParams.get('price_max')),
+    q: searchParams.get('q')?.trim() || undefined,
+  }), [searchParams]);
 
   const view: ViewMode = searchParams.get('view') === 'map' ? 'map' : 'list';
 
@@ -43,7 +38,8 @@ export function useFilters() {
         }
       });
 
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      const query = params.toString();
+      router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
     },
     [pathname, router, searchParams],
   );
@@ -51,7 +47,7 @@ export function useFilters() {
   const setDistrict = useCallback((slug: string | undefined) => updateParams({ district: slug }), [updateParams]);
   const setType = useCallback((slug: string | undefined) => updateParams({ type: slug }), [updateParams]);
   const setPriceMax = useCallback((price: number | undefined) => updateParams({ price_max: price }), [updateParams]);
-  const setQuery = useCallback((q: string | undefined) => updateParams({ q }), [updateParams]);
+  const setQuery = useCallback((q: string | undefined) => updateParams({ q: q?.trim() || undefined }), [updateParams]);
   const setView = useCallback((mode: ViewMode) => updateParams({ view: mode }), [updateParams]);
 
   const clearAll = useCallback(() => {
