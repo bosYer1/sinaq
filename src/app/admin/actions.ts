@@ -100,32 +100,50 @@ async function replaceRelations(clubId: string, formData: FormData) {
     if (pricingInsertError) throw new Error(pricingInsertError.message);
   }
 
-  const openingRows = Array.from({ length: 7 }, (_, day) => {
-    const closed = booleanValue(formData, `day_closed_${day}`);
-    return {
-      club_id: clubId,
-      day_of_week: day,
-      open_time: closed ? null : nullableText(formData, `open_time_${day}`),
-      close_time: closed ? null : nullableText(formData, `close_time_${day}`),
-      is_closed: closed,
-    };
-  });
-
   const { error: hoursDeleteError } = await supabase
     .from('club_opening_hours')
     .delete()
     .eq('club_id', clubId);
   if (hoursDeleteError) throw new Error(hoursDeleteError.message);
 
-  const { error: hoursInsertError } = await supabase
-    .from('club_opening_hours')
-    .insert(openingRows as never[]);
-  if (hoursInsertError) throw new Error(hoursInsertError.message);
+  if (booleanValue(formData, 'hours_enabled')) {
+    const openingRows = Array.from({ length: 7 }, (_, day) => {
+      const closed = booleanValue(formData, `day_closed_${day}`);
+      const openTime = nullableText(formData, `open_time_${day}`);
+      const closeTime = nullableText(formData, `close_time_${day}`);
+
+      if (!closed && (!openTime || !closeTime)) {
+        throw new Error(`${day + 1}-ci gün üçün açılış və bağlanış saatı yazılmalıdır.`);
+      }
+
+      return {
+        club_id: clubId,
+        day_of_week: day,
+        open_time: closed ? null : openTime,
+        close_time: closed ? null : closeTime,
+        is_closed: closed,
+      };
+    });
+
+    const { error: hoursInsertError } = await supabase
+      .from('club_opening_hours')
+      .insert(openingRows as never[]);
+    if (hoursInsertError) throw new Error(hoursInsertError.message);
+  }
 
   const urls = text(formData, 'image_urls')
     .split('\n')
     .map((value) => value.trim())
     .filter(Boolean);
+
+  for (const url of urls) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:') throw new Error();
+    } catch {
+      throw new Error('Şəkil URL-ləri etibarlı HTTPS ünvanı olmalıdır.');
+    }
+  }
 
   const { error: imageDeleteError } = await supabase
     .from('club_images')
