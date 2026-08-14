@@ -164,8 +164,22 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-semibold">Şəkillər</h2>
-        <p className="mt-1 text-xs text-gray-500">Hər sətrə bir HTTPS şəkil URL-i yaz. Birinci URL cover şəkli olacaq.</p>
-        <textarea name="image_urls" rows={6} defaultValue={imageUrls} placeholder={'https://...\nhttps://...'} className={textareaClass} />
+        <p className="mt-1 text-xs text-gray-500">JPG, PNG və WEBP yükləyə bilərsən. Hər fayl maksimum 5 MB, bir dəfəyə maksimum 8 şəkil. İlk şəkil cover olacaq.</p>
+        <label className="mt-4 block text-sm font-medium">
+          Yeni şəkillər yüklə
+          <input
+            type="file"
+            name="image_files"
+            multiple
+            accept="image/jpeg,image/png,image/webp"
+            className="mt-2 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+          />
+        </label>
+        <details className="mt-4">
+          <summary className="cursor-pointer text-xs font-medium text-gray-600">Mövcud Storage URL-lərini idarə et</summary>
+          <p className="mt-2 text-xs text-gray-500">Bu sahə əsasən mövcud şəkilləri silmək və ya sıralamaq üçündür. Yalnız GameYer Supabase Storage URL-ləri qəbul edilir.</p>
+          <textarea name="image_urls" rows={6} defaultValue={imageUrls} placeholder={'https://...\nhttps://...'} className={textareaClass} />
+        </details>
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
