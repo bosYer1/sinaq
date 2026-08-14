@@ -5,25 +5,36 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #fafafa;
+  /* Fon qatları — ağ / çox açıq neytral boz */
+  --color-bg: #ffffff;
+  --color-bg-elevated: #fafafb;
   --color-surface: #ffffff;
-  --color-surface-alt: #f4f5f7;
-  --color-border: #e4e7ec;
+  --color-surface-hover: #f7f7f9;
+  --color-surface-alt: #f1f2f5;
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+
   --color-text: #14161c;
-  --color-text-muted: #667085;
+  --color-text-muted: #6b7280;
+  --color-text-faint: #9ca3af;
 
+  /* PC — bənövşəyi (information hierarchy üçün, dekorativ deyil) */
   --color-primary: #7c5cfc;
-  --color-primary-dark: #6a45f5;
-  --color-primary-light: #f1edff;
+  --color-primary-dark: #6a47f0;
+  --color-pc: var(--color-primary);
+  --color-pc-tint: #f1edff;
 
-  --color-live: #16a34a;
-  --color-live-light: #e9f7ef;
-  --color-warn: #b8860b;
-  --color-warn-light: #faf3e0;
-
-  --color-pc: #7c5cfc;
+  /* PlayStation — sian */
   --color-ps: #06aed4;
-  --color-ps-light: #e3f7fb;
+  --color-ps-tint: #e6f8fc;
+
+  /* Açıqdır statusu — yaşıl */
+  --color-live: #16a34a;
+  --color-live-tint: #e9f9ef;
+
+  /* Premium — qızılı (isti, neytral, neon deyil) */
+  --color-warn: #b8860b;
+  --color-warn-tint: #fbf3df;
 
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -40,8 +51,8 @@ body {
   border-color: var(--color-border);
 }
 
-/* Leaflet-in default marker ikonları Next.js bundler-i ilə düzgün yüklənmir,
-   ona görə custom div-based marker istifadə olunur (bax: ClubMarker.tsx). */
+/* Leaflet default marker ikonları Next.js bundler-i ilə düzgün yüklənmədiyi üçün
+   biz özümüz div-based custom SVG marker istifadə edirik (bax: ClubMarker.tsx). */
 .leaflet-container {
   font-family: var(--font-body);
   background: var(--color-surface-alt);
@@ -49,18 +60,20 @@ body {
   height: 100%;
 }
 
-/* KRİTİK: Tailwind preflight bütün <img>-lara max-width:100%; height:auto tətbiq
-   edir. Leaflet öz tile/marker şəkillərini mütləq piksel ölçülərlə mövqeləndirir —
-   bu preflight override olmasa tile-lar əyilir/kəsilir, xəritə "qırıq" görünür. */
-.leaflet-container img {
-  max-width: none !important;
-}
-
 .bosyer-marker {
   background: transparent;
   border: none;
 }
 
+.leaflet-popup-content-wrapper {
+  border-radius: 10px;
+  box-shadow: 0 4px 16px -4px rgba(16, 24, 40, 0.18);
+}
+.leaflet-popup-content {
+  margin: 12px 14px;
+}
+
+/* Focus vəziyyətini həmişə görünən saxlayırıq (əlçatanlıq üçün vacibdir) */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
