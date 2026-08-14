@@ -17,7 +17,7 @@ export function TypeFilter({ types }: { types: ClubType[] }) {
             type="button"
             onClick={() => setType(active ? undefined : t.slug)}
             className={cn(
-              'h-8 rounded-md px-3 text-sm font-medium transition-colors',
+              'h-10 rounded-md px-3 text-sm font-medium transition-colors md:h-8',
               active
                 ? t.slug === 'pc'
                   ? 'bg-primary text-white'
