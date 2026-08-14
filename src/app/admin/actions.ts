@@ -44,6 +44,37 @@ function slugify(input: string) {
     .replace(/^-+|-+$/g, '');
 }
 
+function validateCoordinates(formData: FormData) {
+  const latitude = nullableNumber(formData, 'latitude');
+  const longitude = nullableNumber(formData, 'longitude');
+
+  if (latitude == null || longitude == null) {
+    throw new Error('Xəritə üçün latitude və longitude mütləq yazılmalıdır.');
+  }
+  if (latitude < -90 || latitude > 90) {
+    throw new Error('Latitude -90 ilə 90 arasında olmalıdır.');
+  }
+  if (longitude < -180 || longitude > 180) {
+    throw new Error('Longitude -180 ilə 180 arasında olmalıdır.');
+  }
+
+  return { latitude, longitude };
+}
+
+async function ensureSlugAvailable(slug: string, excludeId?: string) {
+  if (!slug) throw new Error('Düzgün slug yaratmaq mümkün olmadı.');
+
+  const supabase = createClient();
+  let query = supabase.from('clubs').select('id').eq('slug', slug).limit(1);
+  if (excludeId) query = query.neq('id', excludeId);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  if ((data ?? []).length > 0) {
+    throw new Error(`“${slug}” slug-u artıq başqa klubda istifadə olunur.`);
+  }
+}
+
 function safeFileName(name: string) {
   const extension = name.split('.').pop()?.toLowerCase() || 'jpg';
   const base = name
@@ -75,8 +106,6 @@ function storagePathFromPublicUrl(url: string) {
 
 async function uploadImages(clubId: string, files: File[]) {
   const supabase = createClient();
-  if (!supabase) throw new Error('Supabase konfiqurasiya edilməyib.');
-
   const uploadedUrls: string[] = [];
 
   for (const file of files) {
@@ -107,7 +136,6 @@ async function uploadImages(clubId: string, files: File[]) {
 
 async function replaceRelations(clubId: string, formData: FormData) {
   const supabase = createClient();
-  if (!supabase) throw new Error('Supabase konfiqurasiya edilməyib.');
 
   const { data: typesData, error: typesError } = await supabase
     .from('club_types')
@@ -117,6 +145,9 @@ async function replaceRelations(clubId: string, formData: FormData) {
 
   const types = (typesData ?? []) as Array<{ id: string; name: string; slug: string }>;
   const enabledTypes = types.filter((type) => booleanValue(formData, `type_enabled_${type.id}`));
+  if (enabledTypes.length === 0) {
+    throw new Error('Ən azı bir klub tipi (PC və ya PlayStation) seçilməlidir.');
+  }
 
   const assignmentRows = enabledTypes.map((type) => ({
     club_id: clubId,
@@ -140,11 +171,15 @@ async function replaceRelations(clubId: string, formData: FormData) {
     .map((type) => {
       const priceFrom = nullableNumber(formData, `price_from_${type.id}`);
       if (priceFrom == null || priceFrom <= 0) return null;
+      const priceTo = nullableNumber(formData, `price_to_${type.id}`);
+      if (priceTo != null && priceTo < priceFrom) {
+        throw new Error(`${type.name} üçün son qiymət başlanğıc qiymətdən aşağı ola bilməz.`);
+      }
       return {
         club_id: clubId,
         club_type_id: type.id,
         price_from: priceFrom,
-        price_to: nullableNumber(formData, `price_to_${type.id}`),
+        price_to: priceTo,
         unit: text(formData, `unit_${type.id}`) || 'saat',
       };
     })
@@ -286,8 +321,6 @@ async function replaceRelations(clubId: string, formData: FormData) {
 
 export async function saveClub(formData: FormData) {
   const supabase = createClient();
-  if (!supabase) throw new Error('Supabase konfiqurasiya edilməyib.');
-
   const id = text(formData, 'id');
   if (!id) throw new Error('Klub ID tapılmadı.');
 
@@ -295,11 +328,15 @@ export async function saveClub(formData: FormData) {
   if (!name) throw new Error('Klub adı boş ola bilməz.');
 
   const slug = text(formData, 'slug') || slugify(name);
+  await ensureSlugAvailable(slug, id);
+
   const districtId = text(formData, 'district_id');
   if (!districtId) throw new Error('Rayon seçilməlidir.');
 
   const address = text(formData, 'address');
   if (!address) throw new Error('Ünvan boş ola bilməz.');
+
+  const { latitude, longitude } = validateCoordinates(formData);
 
   const updatePayload = {
     name,
@@ -307,8 +344,8 @@ export async function saveClub(formData: FormData) {
     description: nullableText(formData, 'description'),
     district_id: districtId,
     address,
-    latitude: nullableNumber(formData, 'latitude'),
-    longitude: nullableNumber(formData, 'longitude'),
+    latitude,
+    longitude,
     phone: nullableText(formData, 'phone'),
     instagram_url: nullableText(formData, 'instagram_url'),
     rating_avg: nullableNumber(formData, 'rating_avg'),
@@ -337,17 +374,19 @@ export async function saveClub(formData: FormData) {
 
 export async function createClub(formData: FormData) {
   const supabase = createClient();
-  if (!supabase) throw new Error('Supabase konfiqurasiya edilməyib.');
-
   const name = text(formData, 'name');
   if (!name) throw new Error('Klub adı boş ola bilməz.');
 
   const slug = text(formData, 'slug') || slugify(name);
+  await ensureSlugAvailable(slug);
+
   const districtId = text(formData, 'district_id');
   if (!districtId) throw new Error('Rayon seçilməlidir.');
 
   const address = text(formData, 'address');
   if (!address) throw new Error('Ünvan boş ola bilməz.');
+
+  const { latitude, longitude } = validateCoordinates(formData);
 
   const insertPayload = {
     name,
@@ -355,8 +394,8 @@ export async function createClub(formData: FormData) {
     description: nullableText(formData, 'description'),
     district_id: districtId,
     address,
-    latitude: nullableNumber(formData, 'latitude'),
-    longitude: nullableNumber(formData, 'longitude'),
+    latitude,
+    longitude,
     phone: nullableText(formData, 'phone'),
     instagram_url: nullableText(formData, 'instagram_url'),
     rating_avg: nullableNumber(formData, 'rating_avg'),
@@ -386,8 +425,6 @@ export async function createClub(formData: FormData) {
 
 export async function toggleClubActive(formData: FormData) {
   const supabase = createClient();
-  if (!supabase) throw new Error('Supabase konfiqurasiya edilməyib.');
-
   const id = text(formData, 'id');
   if (!id) throw new Error('Klub ID tapılmadı.');
 
