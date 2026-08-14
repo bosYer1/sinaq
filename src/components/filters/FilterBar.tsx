@@ -13,23 +13,19 @@ interface FilterBarProps {
   types: ClubType[];
 }
 
-/**
- * Bütün filtrləri və mobil görünüş keçidini birləşdirən sticky panel.
- * Mobil ekranda üfüqi scroll edir (chip-lər sığmasa), desktop-da tam görünür.
- */
 export function FilterBar({ districts, types }: FilterBarProps) {
   const { hasActiveFilters, clearAll } = useFilters();
 
   return (
     <div className="sticky top-0 z-20 border-b border-border bg-surface/95 backdrop-blur">
-      <div className="flex items-center gap-2 px-4 pt-3 sm:px-6 lg:hidden">
+      <div className="flex items-center gap-2 px-4 pt-2 sm:px-6 lg:hidden">
         <SearchFilter />
         <div className="shrink-0">
           <ViewToggle />
         </div>
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto px-4 py-3 sm:px-6" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6" style={{ scrollbarWidth: 'none' }}>
         <div className="hidden shrink-0 lg:block lg:w-64">
           <SearchFilter />
         </div>
