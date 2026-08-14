@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { AlertIcon } from '@/components/ui/Icon';
 
 /**
  * Next.js App Router error boundary — page.tsx (və ya altındakı hər hansı
@@ -15,7 +16,9 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-3 px-4 py-24 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-warn-light text-3xl">⚠️</div>
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-warn-tint text-warn">
+        <AlertIcon width={24} height={24} />
+      </div>
       <h1 className="font-display text-xl font-semibold text-ink">Nəsə səhv getdi</h1>
       <p className="text-sm text-muted">
         Klubları yükləyərkən xəta baş verdi. İnternet bağlantınızı yoxlayın və yenidən cəhd edin.
