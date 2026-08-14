@@ -151,11 +151,11 @@ export function ExploreView({
       </section>
 
       <section
-        className={`relative min-h-0 flex-1 bg-bg p-3 pt-0 lg:p-3 lg:pl-0 ${
+        className={`relative min-h-0 flex-1 bg-surface-alt p-2.5 sm:p-3 lg:bg-bg lg:p-3 lg:pl-0 ${
           view === 'map' ? 'block' : 'hidden'
         } lg:block`}
       >
-        <div className="relative h-full min-h-0 overflow-hidden rounded-xl border border-border-strong bg-surface shadow-card">
+        <div className="relative h-full min-h-0 overflow-hidden rounded-2xl border-2 border-border-strong bg-surface shadow-[0_8px_28px_rgba(20,22,28,0.12)] sm:rounded-xl sm:border lg:shadow-card">
           <MapWrapper
             clubs={clubsWithDistance}
             activeClubId={activeClubId}
@@ -164,12 +164,12 @@ export function ExploreView({
             locationFocusRequest={locationFocusRequest}
           />
 
-          <div className="absolute right-3 top-3 z-[500] flex max-w-[calc(100%-24px)] flex-col items-end gap-2">
+          <div className="absolute right-3 top-3 z-[500] flex max-w-[calc(100%-24px)] flex-col items-end gap-2 sm:right-3 sm:top-3">
             <button
               type="button"
               onClick={handleMapLocation}
               disabled={status === 'loading' || status === 'unsupported'}
-              className="inline-flex h-11 items-center gap-2 rounded-control border border-border-strong bg-surface px-3.5 text-sm font-semibold text-ink shadow-card transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-11 items-center gap-2 rounded-control border border-border-strong bg-surface/95 px-3.5 text-sm font-semibold text-ink shadow-card backdrop-blur transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
               title={
                 status === 'denied'
                   ? 'Brauzer ayarlarından lokasiya icazəsini aktiv et.'
@@ -181,7 +181,7 @@ export function ExploreView({
             </button>
 
             {location && nearestClub?.distanceKm != null ? (
-              <div className="max-w-[260px] rounded-control border border-border bg-surface/95 px-3 py-2 text-right shadow-card backdrop-blur">
+              <div className="max-w-[240px] rounded-control border border-border bg-surface/95 px-3 py-2 text-right shadow-card backdrop-blur sm:max-w-[260px]">
                 <p className="text-[11px] font-medium text-muted">Ən yaxın klub</p>
                 <p className="truncate text-xs font-semibold text-ink">{nearestClub.name}</p>
                 <p className="mt-0.5 text-[11px] font-medium text-primary">
