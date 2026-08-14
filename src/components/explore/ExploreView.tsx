@@ -19,7 +19,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [pendingMapFocus, setPendingMapFocus] = useState(false);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
-
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
 
   useEffect(() => {
@@ -29,9 +28,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   }, [location, pendingMapFocus]);
 
   useEffect(() => {
-    if (status === 'denied' || status === 'unsupported') {
-      setPendingMapFocus(false);
-    }
+    if (status === 'denied' || status === 'unsupported') setPendingMapFocus(false);
   }, [status]);
 
   const clubsWithDistance = useMemo(() => {
@@ -44,7 +41,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     }));
 
     if (!sortByDistance || !location) return enriched;
-
     return [...enriched].sort((a, b) => {
       if (a.distanceKm == null && b.distanceKm == null) return 0;
       if (a.distanceKm == null) return 1;
@@ -53,29 +49,28 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     });
   }, [clubs, location, sortByDistance]);
 
-  const nearestClub = useMemo(
-    () => (location ? clubsWithDistance.find((club) => club.distanceKm != null) ?? null : null),
-    [clubsWithDistance, location]
-  );
+  const nearestClub = useMemo(() => {
+    if (!location) return null;
+    return [...clubsWithDistance]
+      .filter((club) => club.distanceKm != null)
+      .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity))[0] ?? null;
+  }, [clubsWithDistance, location]);
 
   function handleLocationSort() {
     if (location) {
       setSortByDistance((value) => !value);
       return;
     }
-
     setSortByDistance(true);
     requestLocation();
   }
 
   function handleMapLocation() {
     setSortByDistance(true);
-
     if (location) {
       setLocationFocusRequest((value) => value + 1);
       return;
     }
-
     setPendingMapFocus(true);
     requestLocation();
   }
@@ -89,53 +84,43 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  const locationButtonLabel =
-    status === 'loading'
-      ? 'Lokasiya alınır...'
-      : status === 'denied'
-        ? 'Lokasiya bağlıdır'
-        : status === 'unsupported'
-          ? 'Lokasiya dəstəklənmir'
-          : sortByDistance && location
-            ? 'Yaxınlıq sırası aktivdir'
-            : 'Yaxınlığıma görə';
-
-  const mapLocationLabel =
-    status === 'loading'
-      ? 'Konum alınır...'
-      : status === 'denied'
-        ? 'Konuma icazə ver'
-        : status === 'unsupported'
-          ? 'Konum dəstəklənmir'
-          : location
-            ? 'Mənim konumum'
-            : 'Yaxın klublar';
-
-  const locationMessage =
-    status === 'denied'
-      ? 'Yaxın klubları görmək üçün brauzer ayarlarında GameYer üçün lokasiya icazəsini aktiv et.'
+  const locationButtonLabel = status === 'loading'
+    ? 'Lokasiya alınır...'
+    : status === 'denied'
+      ? 'Lokasiya bağlıdır'
       : status === 'unsupported'
-        ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
-        : null;
+        ? 'Lokasiya dəstəklənmir'
+        : sortByDistance && location
+          ? 'Yaxınlıq sırası aktivdir'
+          : 'Yaxınlığıma görə';
+
+  const mapLocationLabel = status === 'loading'
+    ? 'Konum alınır...'
+    : status === 'denied'
+      ? 'Konuma icazə ver'
+      : status === 'unsupported'
+        ? 'Konum dəstəklənmir'
+        : location
+          ? 'Mənim konumum'
+          : 'Yaxın klublar';
+
+  const locationMessage = status === 'denied'
+    ? 'Yaxın klubları görmək üçün brauzer ayarlarında GameYer üçün lokasiya icazəsini aktiv et.'
+    : status === 'unsupported'
+      ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
+      : null;
 
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden bg-bg lg:flex-row">
-      <section
-        className={`min-h-0 w-full overflow-y-auto px-4 py-4 sm:px-6 lg:block lg:w-[400px] lg:shrink-0 xl:w-[420px] ${view === 'map' ? 'hidden' : 'block'}`}
-      >
+      <section className={`min-h-0 w-full overflow-y-auto px-4 py-4 sm:px-6 lg:block lg:w-[400px] lg:shrink-0 xl:w-[420px] ${view === 'map' ? 'hidden' : 'block'}`}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold text-ink">{clubsWithDistance.length} klub</p>
-
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleLocationSort}
               disabled={status === 'loading' || status === 'unsupported'}
-              className={`rounded-control border px-2.5 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                sortByDistance && location
-                  ? 'border-primary bg-primary-light text-primary'
-                  : 'border-border bg-surface text-muted hover:border-border-strong hover:text-ink'
-              }`}
+              className={`rounded-control border px-2.5 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${sortByDistance && location ? 'border-primary bg-primary-light text-primary' : 'border-border bg-surface text-muted hover:border-border-strong hover:text-ink'}`}
               title={status === 'denied' ? 'Brauzerdə lokasiya icazəsini aktiv et və yenidən yoxla.' : 'Lokasiyan yalnız yaxın klubları hesablamaq üçün istifadə olunur.'}
             >
               {locationButtonLabel}
@@ -143,55 +128,34 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <span className="text-xs text-muted">Bakı</span>
           </div>
         </div>
-
-        {locationMessage ? (
-          <div role="status" className="mb-3 rounded-control border border-warn/30 bg-warn-tint px-3 py-2 text-xs leading-5 text-ink">
-            {locationMessage}
-          </div>
-        ) : null}
-
-        <ClubList
-          clubs={clubsWithDistance}
-          activeClubId={activeClubId}
-          onHoverClub={handleHoverCard}
-          cardRefs={cardRefs}
-          searchActive={searchActive}
-        />
+        {locationMessage ? <div role="status" className="mb-3 rounded-control border border-warn/30 bg-warn-tint px-3 py-2 text-xs leading-5 text-ink">{locationMessage}</div> : null}
+        <ClubList clubs={clubsWithDistance} activeClubId={activeClubId} onHoverClub={handleHoverCard} cardRefs={cardRefs} searchActive={searchActive} />
       </section>
 
-      <section
-        className={`relative min-h-0 flex-1 bg-surface-alt p-2.5 sm:p-3 lg:bg-bg lg:p-3 lg:pl-0 ${view === 'map' ? 'block' : 'hidden'} lg:block`}
-      >
+      <section className={`relative min-h-0 flex-1 bg-surface-alt p-2.5 sm:p-3 lg:bg-bg lg:p-3 lg:pl-0 ${view === 'map' ? 'block' : 'hidden'} lg:block`}>
         <div className="relative h-full min-h-0 overflow-hidden rounded-2xl border-2 border-border-strong bg-surface shadow-[0_8px_28px_rgba(20,22,28,0.12)] sm:rounded-xl sm:border lg:shadow-card">
-          <MapWrapper
-            clubs={clubsWithDistance}
-            activeClubId={activeClubId}
-            onSelectClub={handleSelectMarker}
-            userLocation={location}
-            locationFocusRequest={locationFocusRequest}
-          />
+          <MapWrapper clubs={clubsWithDistance} activeClubId={activeClubId} onSelectClub={handleSelectMarker} userLocation={location} locationFocusRequest={locationFocusRequest} />
 
-          <div className="absolute right-3 top-3 z-[500] flex max-w-[calc(100%-24px)] flex-col items-end gap-2 sm:right-3 sm:top-3">
+          <div className="absolute left-3 right-3 top-3 z-[500] flex items-start justify-between gap-2 sm:left-auto sm:right-3 sm:flex-col sm:items-end">
             <button
               type="button"
               onClick={handleMapLocation}
               disabled={status === 'loading' || status === 'unsupported'}
-              className="inline-flex h-11 items-center gap-2 rounded-control border border-border-strong bg-surface/95 px-3.5 text-sm font-semibold text-ink shadow-card backdrop-blur transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-control border border-border-strong bg-surface/95 px-3 text-xs font-semibold text-ink shadow-card backdrop-blur transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5 sm:text-sm"
               title={status === 'denied' ? 'Brauzer ayarlarından lokasiya icazəsini aktiv et.' : 'Konumunu göstər və sənə yaxın klubları tap.'}
+              aria-label="Konumumu xəritədə göstər və yaxın klubları tap"
             >
               <span aria-hidden="true" className="text-base">⌖</span>
               {mapLocationLabel}
             </button>
 
             {locationMessage ? (
-              <div role="status" className="max-w-[270px] rounded-control border border-warn/30 bg-surface/95 px-3 py-2 text-right text-[11px] leading-4 text-ink shadow-card backdrop-blur">
-                {locationMessage}
-              </div>
+              <div role="status" className="max-w-[55%] rounded-control border border-warn/30 bg-surface/95 px-2.5 py-2 text-right text-[10px] leading-4 text-ink shadow-card backdrop-blur sm:max-w-[270px] sm:px-3 sm:text-[11px]">{locationMessage}</div>
             ) : location && nearestClub?.distanceKm != null ? (
-              <div className="max-w-[240px] rounded-control border border-border bg-surface/95 px-3 py-2 text-right shadow-card backdrop-blur sm:max-w-[260px]">
-                <p className="text-[11px] font-medium text-muted">Ən yaxın klub</p>
-                <p className="truncate text-xs font-semibold text-ink">{nearestClub.name}</p>
-                <p className="mt-0.5 text-[11px] font-medium text-primary">{formatDistance(nearestClub.distanceKm)} məsafədə</p>
+              <div className="min-w-0 max-w-[55%] rounded-control border border-border bg-surface/95 px-2.5 py-2 text-right shadow-card backdrop-blur sm:max-w-[260px] sm:px-3">
+                <p className="hidden text-[11px] font-medium text-muted sm:block">Ən yaxın klub</p>
+                <p className="truncate text-[11px] font-semibold text-ink sm:text-xs">{nearestClub.name}</p>
+                <p className="mt-0.5 text-[10px] font-medium text-primary sm:text-[11px]">{formatDistance(nearestClub.distanceKm)}</p>
               </div>
             ) : null}
           </div>
