@@ -28,6 +28,12 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     setPendingMapFocus(false);
   }, [location, pendingMapFocus]);
 
+  useEffect(() => {
+    if (status === 'denied' || status === 'unsupported') {
+      setPendingMapFocus(false);
+    }
+  }, [status]);
+
   const clubsWithDistance = useMemo(() => {
     const enriched = clubs.map((club) => ({
       ...club,
@@ -88,18 +94,29 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       ? 'Lokasiya alınır...'
       : status === 'denied'
         ? 'Lokasiya bağlıdır'
-        : sortByDistance && location
-          ? 'Yaxınlıq sırası aktivdir'
-          : 'Yaxınlığıma görə';
+        : status === 'unsupported'
+          ? 'Lokasiya dəstəklənmir'
+          : sortByDistance && location
+            ? 'Yaxınlıq sırası aktivdir'
+            : 'Yaxınlığıma görə';
 
   const mapLocationLabel =
     status === 'loading'
       ? 'Konum alınır...'
       : status === 'denied'
         ? 'Konuma icazə ver'
-        : location
-          ? 'Mənim konumum'
-          : 'Yaxın klublar';
+        : status === 'unsupported'
+          ? 'Konum dəstəklənmir'
+          : location
+            ? 'Mənim konumum'
+            : 'Yaxın klublar';
+
+  const locationMessage =
+    status === 'denied'
+      ? 'Yaxın klubları görmək üçün brauzer ayarlarında GameYer üçün lokasiya icazəsini aktiv et.'
+      : status === 'unsupported'
+        ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
+        : null;
 
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden bg-bg lg:flex-row">
@@ -126,6 +143,12 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <span className="text-xs text-muted">Bakı</span>
           </div>
         </div>
+
+        {locationMessage ? (
+          <div role="status" className="mb-3 rounded-control border border-warn/30 bg-warn-tint px-3 py-2 text-xs leading-5 text-ink">
+            {locationMessage}
+          </div>
+        ) : null}
 
         <ClubList
           clubs={clubsWithDistance}
@@ -160,7 +183,11 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
               {mapLocationLabel}
             </button>
 
-            {location && nearestClub?.distanceKm != null ? (
+            {locationMessage ? (
+              <div role="status" className="max-w-[270px] rounded-control border border-warn/30 bg-surface/95 px-3 py-2 text-right text-[11px] leading-4 text-ink shadow-card backdrop-blur">
+                {locationMessage}
+              </div>
+            ) : location && nearestClub?.distanceKm != null ? (
               <div className="max-w-[240px] rounded-control border border-border bg-surface/95 px-3 py-2 text-right shadow-card backdrop-blur sm:max-w-[260px]">
                 <p className="text-[11px] font-medium text-muted">Ən yaxın klub</p>
                 <p className="truncate text-xs font-semibold text-ink">{nearestClub.name}</p>
