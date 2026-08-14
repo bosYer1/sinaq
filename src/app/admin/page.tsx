@@ -72,7 +72,7 @@ export default async function AdminPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">BosYer məlumatlarını bir yerdən idarə et.</p>
+          <p className="mt-1 text-sm text-gray-500">GameYer məlumatlarını bir yerdən idarə et.</p>
         </div>
 
         <Link
