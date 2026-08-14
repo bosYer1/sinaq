@@ -3,6 +3,9 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+type IdRow = { id: string };
+type ClubIdRow = { club_id: string };
+
 export default async function AdminPage() {
   const supabase = createClient();
 
@@ -40,10 +43,15 @@ export default async function AdminPage() {
     premiumClubs = premiumResult.count ?? 0;
     missingPhone = missingPhoneResult.count ?? 0;
 
-    const activeIds = new Set((activeIdsResult.data ?? []).map((row) => row.id));
-    const idsWithHours = new Set((hoursResult.data ?? []).map((row) => row.club_id));
-    const idsWithImages = new Set((imagesResult.data ?? []).map((row) => row.club_id));
-    const idsWithTypes = new Set((typesResult.data ?? []).map((row) => row.club_id));
+    const activeRows = (activeIdsResult.data ?? []) as IdRow[];
+    const hourRows = (hoursResult.data ?? []) as ClubIdRow[];
+    const imageRows = (imagesResult.data ?? []) as ClubIdRow[];
+    const typeRows = (typesResult.data ?? []) as ClubIdRow[];
+
+    const activeIds = new Set(activeRows.map((row) => row.id));
+    const idsWithHours = new Set(hourRows.map((row) => row.club_id));
+    const idsWithImages = new Set(imageRows.map((row) => row.club_id));
+    const idsWithTypes = new Set(typeRows.map((row) => row.club_id));
 
     for (const id of activeIds) {
       if (!idsWithHours.has(id)) missingHours += 1;
