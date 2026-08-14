@@ -47,6 +47,62 @@ function MapResizeHandler() {
   return null;
 }
 
+function MapViewportHandler({
+  clubs,
+  activeClubId,
+}: {
+  clubs: ClubWithDistance[];
+  activeClubId?: string | null;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    const clubsWithCoords = clubs.filter(
+      (club) => club.latitude != null && club.longitude != null
+    );
+
+    if (clubsWithCoords.length === 0) {
+      map.setView([40.4093, 49.8671], 12);
+      return;
+    }
+
+    const activeClub = clubsWithCoords.find(
+      (club) => club.id === activeClubId
+    );
+
+    if (
+      activeClub &&
+      activeClub.latitude != null &&
+      activeClub.longitude != null
+    ) {
+      map.flyTo(
+        [activeClub.latitude, activeClub.longitude],
+        Math.max(map.getZoom(), 14),
+        { duration: 0.45 }
+      );
+      return;
+    }
+
+    if (clubsWithCoords.length === 1) {
+      const club = clubsWithCoords[0];
+      map.setView([club.latitude!, club.longitude!], 14);
+      return;
+    }
+
+    const bounds = clubsWithCoords.map(
+      (club) => [club.latitude!, club.longitude!] as [number, number]
+    );
+
+    map.fitBounds(bounds, {
+      padding: [36, 36],
+      maxZoom: 14,
+      animate: false,
+    });
+  }, [map, clubs, activeClubId]);
+
+  return null;
+}
+
 export function ClubMap({
   clubs,
   activeClubId,
@@ -66,6 +122,7 @@ export function ClubMap({
       className="h-full w-full"
     >
       <MapResizeHandler />
+      <MapViewportHandler clubs={clubs} activeClubId={activeClubId} />
 
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
