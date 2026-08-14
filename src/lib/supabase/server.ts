@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies, type UnsafeUnwrappedCookies } from 'next/headers';
+import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
 import {
   SUPABASE_URL,
@@ -23,13 +23,8 @@ type CookieToSet = {
   };
 };
 
-/**
- * Next 15 keçid uyğunluğu: server actions və mövcud query qatının hamısını bir anda
- * sındırmamaq üçün cookies() müvəqqəti sync compatibility tipi ilə oxunur.
- * Next 16 keçidindən əvvəl bu helper tam async edilə bilər.
- */
-export function createClient() {
-  const cookieStore = cookies() as unknown as UnsafeUnwrappedCookies;
+export async function createClient() {
+  const cookieStore = await cookies();
 
   return createServerClient<Database>(
     SUPABASE_URL,
@@ -45,7 +40,7 @@ export function createClient() {
               cookieStore.set(name, value, options);
             });
           } catch {
-            // Server Components may not write cookies; middleware refreshes auth.
+            // Server Components cannot always write cookies; middleware refreshes auth.
           }
         },
       },
