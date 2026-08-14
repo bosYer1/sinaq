@@ -28,7 +28,9 @@ function createClubIcon(
       ? 'url(#gameyer-dual)'
       : hasPlayStation
         ? '#06AED4'
-        : '#7C5CFC';
+        : hasPC
+          ? '#7C5CFC'
+          : '#6B7280';
 
   const outline = isPremium ? '#B8860B' : '#ffffff';
 
@@ -47,14 +49,8 @@ function createClubIcon(
           x2="1"
           y2="1"
         >
-          <stop
-            offset="0%"
-            stop-color="#7C5CFC"
-          />
-          <stop
-            offset="100%"
-            stop-color="#06AED4"
-          />
+          <stop offset="0%" stop-color="#7C5CFC" />
+          <stop offset="100%" stop-color="#06AED4" />
         </linearGradient>
       </defs>
 
@@ -80,12 +76,7 @@ function createClubIcon(
         stroke-width="${isPremium ? 2.5 : 2}"
       />
 
-      <circle
-        cx="20"
-        cy="16"
-        r="4"
-        fill="#ffffff"
-      />
+      <circle cx="20" cy="16" r="4" fill="#ffffff" />
 
       ${
         isOpen
@@ -125,25 +116,19 @@ export function ClubMarker({
     return null;
   }
 
-  const openNow = isClubOpenNow(
-    club.opening_hours
-  );
+  const openNow = isClubOpenNow(club.opening_hours);
 
   const hasPC = club.pricing.some(
-    (pricing) =>
-      pricing.club_type.slug === 'pc'
+    (pricing) => pricing.club_type.slug === 'pc'
   );
 
   const hasPlayStation = club.pricing.some(
     (pricing) =>
-      ['ps', 'playstation'].includes(
-        pricing.club_type.slug
-      )
+      ['ps', 'playstation'].includes(pricing.club_type.slug)
   );
 
   const cheapest = [...club.pricing].sort(
-    (a, b) =>
-      a.price_from - b.price_from
+    (a, b) => a.price_from - b.price_from
   )[0];
 
   const icon = createClubIcon(
@@ -159,56 +144,46 @@ export function ClubMarker({
 
   return (
     <Marker
-      position={[
-        club.latitude,
-        club.longitude,
-      ]}
+      position={[club.latitude, club.longitude]}
       icon={icon}
-      zIndexOffset={
-        isActive ? 1000 : 0
-      }
+      zIndexOffset={isActive ? 1000 : 0}
       eventHandlers={{
-        click: () =>
-          onSelect?.(club.id),
+        click: () => onSelect?.(club.id),
       }}
     >
       <Popup>
         <div className="min-w-[210px]">
-          {/* Klub adı */}
           <div className="font-display text-sm font-semibold text-ink">
             {club.name}
           </div>
 
-          {/* Rayon */}
           <div className="mt-1 text-xs text-muted">
-            {club.district?.name ??
-              'Rayon göstərilməyib'}
+            {club.district?.name ?? 'Rayon göstərilməyib'}
           </div>
 
-          {/* Ünvan */}
           {club.address ? (
             <div className="mt-0.5 text-xs text-muted">
               {club.address}
             </div>
           ) : null}
 
-          {/* Klub tipləri */}
           {club.pricing.length > 0 ? (
             <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-muted">
-              {club.pricing.map(
-                (pricing) => (
-                  <span
-                    key={pricing.id}
-                    className="rounded bg-surface-alt px-1.5 py-0.5"
-                  >
-                    {pricing.club_type.name}
-                  </span>
-                )
-              )}
+              {club.pricing.map((pricing) => (
+                <span
+                  key={pricing.id}
+                  className="rounded bg-surface-alt px-1.5 py-0.5"
+                >
+                  {pricing.club_type.name}
+                </span>
+              ))}
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-2 text-[11px] text-muted">
+              Klub tipi hələ əlavə edilməyib
+            </div>
+          )}
 
-          {/* Qiymət + status */}
           <div className="mt-2 flex items-center justify-between gap-3">
             {cheapest ? (
               <span className="text-xs font-semibold text-ink">
@@ -231,13 +206,10 @@ export function ClubMarker({
                   : 'text-xs text-muted'
               }
             >
-              {openNow
-                ? 'Açıqdır'
-                : 'Bağlıdır'}
+              {openNow ? 'Açıqdır' : 'Bağlıdır'}
             </span>
           </div>
 
-          {/* Google Maps */}
           <a
             href={googleMapsUrl}
             target="_blank"
