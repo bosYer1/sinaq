@@ -8,7 +8,6 @@ export function AdminHeader() {
 
   async function handleLogout() {
     const supabase = createClient();
-    if (!supabase) return;
     await supabase.auth.signOut();
     router.push('/admin/login');
     router.refresh();
@@ -16,7 +15,7 @@ export function AdminHeader() {
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-surface px-4 sm:px-6">
-      <span className="font-display text-base font-bold text-ink">BoşYer Admin</span>
+      <span className="font-display text-base font-bold text-ink">GameYer Admin</span>
       <button
         onClick={handleLogout}
         className="text-xs font-medium text-muted transition-colors hover:text-ink"
