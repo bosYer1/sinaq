@@ -7,7 +7,7 @@ import { ClubList } from '@/components/clubs/ClubList';
 import { MapWrapper } from '@/components/map/MapWrapper';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ConfigNotice } from '@/components/ui/ConfigNotice';
-import type { ClubFilters } from '@/types/database';
+import type { ClubFilters, ClubWithDistance } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +41,11 @@ export default async function HomePage({ searchParams }: PageProps) {
     getClubTypes(),
   ]);
 
+  const clubsWithDistance: ClubWithDistance[] = clubs.map((club) => ({
+    ...club,
+    distanceKm: null,
+  }));
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <Suspense
@@ -60,10 +65,10 @@ export default async function HomePage({ searchParams }: PageProps) {
           }`}
         >
           <p className="mb-3 text-sm text-muted">
-            {clubs.length} klub tapıldı
+            {clubsWithDistance.length} klub tapıldı
           </p>
 
-          <ClubList clubs={clubs} />
+          <ClubList clubs={clubsWithDistance} />
         </section>
 
         <section
@@ -71,7 +76,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             view === 'map' ? 'block' : 'hidden'
           } lg:block`}
         >
-          <MapWrapper clubs={clubs} />
+          <MapWrapper clubs={clubsWithDistance} />
         </section>
       </div>
     </div>
