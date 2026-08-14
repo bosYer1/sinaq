@@ -42,7 +42,8 @@ export default function PrivacyPage() {
           <p className="mt-2 text-muted">
             Klub adı, ünvan, telefon, iş saatı, sosial şəbəkə, qiymət və digər biznes məlumatları
             ictimai mənbələrdən və ya klub tərəfindən təqdim edilən məlumatlardan formalaşa bilər.
-            Məlumat dəyişibsə, düzəliş üçün bizimlə əlaqə saxlamaq mümkündür.
+            Təsdiqlənməyən məlumat fakt kimi əlavə edilmir və dəyişikliklər mümkün olduqda rəsmi
+            mənbə ilə yoxlanılır.
           </p>
         </section>
 
@@ -58,8 +59,9 @@ export default function PrivacyPage() {
         <section>
           <h2 className="font-display text-lg font-bold">Əlaqə və düzəliş</h2>
           <p className="mt-2 text-muted">
-            GameYer-də klubunuz barədə yanlış və ya köhnə məlumat görürsünüzsə, əlaqə səhifəsindən
-            düzəliş tələb edə bilərsiniz.
+            GameYer-də klub barədə yanlış və ya köhnə məlumat görürsünüzsə, əlaqə səhifəsində
+            düzəliş üçün hansı məlumatların hazırlanmalı olduğunu və rəsmi müraciət kanalının cari
+            statusunu görə bilərsiniz.
           </p>
           <Link href="/elaqe" className="mt-3 inline-flex font-semibold text-primary hover:underline">
             Əlaqə səhifəsinə keç →
