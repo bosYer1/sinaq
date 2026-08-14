@@ -3,10 +3,8 @@
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { ClubWithDistance } from '@/types/database';
-import {
-  formatPriceRange,
-  isClubOpenNow,
-} from '@/lib/utils';
+import { inferClubTypeSlugs } from '@/lib/clubType';
+import { formatPriceRange, isClubOpenNow } from '@/lib/utils';
 
 interface ClubMarkerProps {
   club: ClubWithDistance;
@@ -22,14 +20,13 @@ function createClubIcon(
   isActive: boolean
 ): L.DivIcon {
   const size = isActive ? 40 : 34;
-  const fill =
-    hasPC && hasPlayStation
-      ? 'url(#gameyer-dual)'
-      : hasPlayStation
-        ? '#06AED4'
-        : hasPC
-          ? '#7C5CFC'
-          : '#6B7280';
+  const fill = hasPC && hasPlayStation
+    ? 'url(#gameyer-dual)'
+    : hasPlayStation
+      ? '#06AED4'
+      : hasPC
+        ? '#7C5CFC'
+        : '#6B7280';
   const outline = isPremium ? '#B8860B' : '#ffffff';
 
   const svg = `
@@ -63,11 +60,11 @@ export function ClubMarker({ club, isActive = false, onSelect }: ClubMarkerProps
   const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
   const statusLabel = !hasHours ? 'İş saatı məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
 
-  const hasPC = club.pricing.some((pricing) => pricing.club_type.slug === 'pc');
-  const hasPlayStation = club.pricing.some((pricing) =>
-    ['ps', 'playstation'].includes(pricing.club_type.slug)
-  );
-  const cheapest = [...club.pricing].sort((a, b) => a.price_from - b.price_from)[0];
+  const typeSlugs = inferClubTypeSlugs(club);
+  const hasPC = typeSlugs.includes('pc');
+  const hasPlayStation = typeSlugs.includes('playstation');
+  const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
+  const cheapest = [...realPricing].sort((a, b) => a.price_from - b.price_from)[0];
   const icon = createClubIcon(hasPC, hasPlayStation, club.is_premium, openNow, isActive);
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}`;
 
@@ -84,17 +81,15 @@ export function ClubMarker({ club, isActive = false, onSelect }: ClubMarkerProps
           <div className="mt-1 text-xs text-muted">{club.district?.name ?? 'Rayon göstərilməyib'}</div>
           {club.address ? <div className="mt-0.5 text-xs text-muted">{club.address}</div> : null}
 
-          {club.pricing.length > 0 ? (
+          {typeSlugs.length > 0 ? (
             <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-muted">
-              {club.pricing.map((pricing) => (
-                <span key={pricing.id} className="rounded bg-surface-alt px-1.5 py-0.5">
-                  {pricing.club_type.name}
+              {typeSlugs.map((slug) => (
+                <span key={slug} className="rounded bg-surface-alt px-1.5 py-0.5">
+                  {slug === 'pc' ? 'PC' : 'PlayStation'}
                 </span>
               ))}
             </div>
-          ) : (
-            <div className="mt-2 text-[11px] text-muted">Klub tipi hələ əlavə edilməyib</div>
-          )}
+          ) : null}
 
           <div className="mt-2 flex items-center justify-between gap-3">
             {cheapest ? (
@@ -102,7 +97,7 @@ export function ClubMarker({ club, isActive = false, onSelect }: ClubMarkerProps
                 {formatPriceRange(cheapest.price_from, cheapest.price_to, cheapest.unit)}
               </span>
             ) : (
-              <span className="text-xs text-muted">Qiymət yoxdur</span>
+              <span className="text-xs text-muted">Qiymət məlum deyil</span>
             )}
             <span className={openNow ? 'text-xs font-medium text-live' : 'text-xs text-muted'}>
               {statusLabel}
