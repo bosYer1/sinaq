@@ -4,6 +4,7 @@ import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { ClubWithDistance } from '@/types/database';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { formatDistance } from '@/lib/geo';
 import { formatPriceRange, isClubOpenNow } from '@/lib/utils';
 
 interface ClubMarkerProps {
@@ -80,6 +81,12 @@ export function ClubMarker({ club, isActive = false, onSelect }: ClubMarkerProps
           <div className="font-display text-sm font-semibold text-ink">{club.name}</div>
           <div className="mt-1 text-xs text-muted">{club.district?.name ?? 'Rayon göstərilməyib'}</div>
           {club.address ? <div className="mt-0.5 text-xs text-muted">{club.address}</div> : null}
+
+          {club.distanceKm != null ? (
+            <div className="mt-1 text-xs font-semibold text-primary">
+              Səndən {formatDistance(club.distanceKm)}
+            </div>
+          ) : null}
 
           {typeSlugs.length > 0 ? (
             <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-muted">
