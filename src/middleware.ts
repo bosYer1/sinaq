@@ -1,6 +1,22 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+type CookieOptions = {
+  domain?: string;
+  expires?: Date;
+  httpOnly?: boolean;
+  maxAge?: number;
+  path?: string;
+  sameSite?: boolean | 'lax' | 'strict' | 'none';
+  secure?: boolean;
+};
+
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: CookieOptions;
+};
+
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,7 +38,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
 
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieToSet[]) {
           cookiesToSet.forEach(
             ({ name, value }) => {
               request.cookies.set(
@@ -57,9 +73,6 @@ export async function middleware(request: NextRequest) {
   const pathname =
     request.nextUrl.pathname;
 
-  /*
-   * Login səhifəsi public qalır.
-   */
   if (
     pathname.startsWith(
       '/admin/login'
@@ -68,9 +81,6 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  /*
-   * User həqiqətən login olub?
-   */
   const {
     data: { user },
     error: userError,
@@ -96,9 +106,6 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  /*
-   * Login olubsa, admin_users-da var?
-   */
   const {
     data: adminRow,
     error: adminError,
@@ -112,9 +119,6 @@ export async function middleware(request: NextRequest) {
     adminError ||
     !adminRow
   ) {
-    /*
-     * Admin olmayan user-i public ana səhifəyə qaytarırıq.
-     */
     const homeUrl =
       request.nextUrl.clone();
 
@@ -126,9 +130,6 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  /*
-   * Authenticated route-lar cache olunmasın.
-   */
   response.headers.set(
     'Cache-Control',
     'private, no-store'
