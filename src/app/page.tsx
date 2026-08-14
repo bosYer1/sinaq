@@ -41,7 +41,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <div className="flex h-[calc(100vh-56px)] flex-col">
+    <div className="flex h-[calc(100dvh-56px)] min-h-[500px] flex-col">
       {!isSupabaseConfigured() && (
         <div className="border-b border-warn/30 bg-warn-tint px-4 py-1.5 text-center text-xs font-medium text-warn sm:px-6">
           Supabase hələ qoşulmayıb — heç bir klub göstərilmir.
