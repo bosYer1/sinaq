@@ -1,12 +1,8 @@
 import { Skeleton, ClubCardSkeleton } from '@/components/ui/Skeleton';
 
-/**
- * Next.js App Router bu faylı avtomatik olaraq page.tsx data çəkərkən göstərir
- * (page.tsx `force-dynamic` olduğu üçün hər navigasiyada işə düşə bilər).
- */
 export default function Loading() {
   return (
-    <div className="flex h-[calc(100vh-56px)] flex-col">
+    <div className="flex h-[calc(100dvh-56px)] min-h-[500px] flex-col">
       <div className="border-b border-border bg-surface px-4 py-3 sm:px-6">
         <Skeleton className="h-10 w-full rounded-control" />
         <div className="mt-3 flex gap-2">
