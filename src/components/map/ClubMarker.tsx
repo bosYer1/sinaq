@@ -1,6 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { ClubWithDistance } from '@/types/database';
@@ -17,37 +16,27 @@ function createClubIcon(
   isOpen: boolean,
   isActive: boolean
 ): L.DivIcon {
-  const background = isPremium
-    ? '#B8860B'
-    : '#7C5CFC';
-
+  const background = isPremium ? '#B8860B' : '#7C5CFC';
   const size = isActive ? 38 : 32;
-
-  const border = isActive || isOpen
-    ? '#16A34A'
-    : '#ffffff';
+  const border = isActive || isOpen ? '#16A34A' : '#ffffff';
 
   return L.divIcon({
     className: '',
     html: `
-      <div
-        style="
-          width:${size}px;
-          height:${size}px;
-          border-radius:50%;
-          background:${background};
-          border:3px solid ${border};
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          box-shadow:0 2px 8px rgba(0,0,0,0.25);
-          font-size:${isActive ? 15 : 13}px;
-          color:white;
-          font-weight:700;
-        "
-      >
-        PC
-      </div>
+      <div style="
+        width:${size}px;
+        height:${size}px;
+        border-radius:50%;
+        background:${background};
+        border:3px solid ${border};
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 2px 8px rgba(0,0,0,0.25);
+        font-size:12px;
+        color:white;
+        font-weight:700;
+      ">PC</div>
     `,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
@@ -60,20 +49,21 @@ export function ClubMarker({
   isActive = false,
   onSelect,
 }: ClubMarkerProps) {
-  if (club.latitude == null || club.longitude == null) {
-    return null;
-  }
-
   const openNow = isClubOpenNow(club.opening_hours);
-
-  const icon = useMemo(
-    () => createClubIcon(club.is_premium, openNow, isActive),
-    [club.is_premium, openNow, isActive]
-  );
 
   const cheapest = [...club.pricing].sort(
     (a, b) => a.price_from - b.price_from
   )[0];
+
+  if (club.latitude == null || club.longitude == null) {
+    return null;
+  }
+
+  const icon = createClubIcon(
+    club.is_premium,
+    openNow,
+    isActive
+  );
 
   return (
     <Marker
@@ -81,17 +71,13 @@ export function ClubMarker({
       icon={icon}
       eventHandlers={{
         click: () => {
-          if (onSelect) {
-            onSelect(club.id);
-          }
+          onSelect?.(club.id);
         },
       }}
     >
       <Popup>
         <div className="min-w-[180px]">
-          <div className="font-semibold">
-            {club.name}
-          </div>
+          <div className="font-semibold">{club.name}</div>
 
           {club.district ? (
             <div className="mt-1 text-sm">
@@ -118,9 +104,7 @@ export function ClubMarker({
           ) : null}
 
           {openNow ? (
-            <div className="mt-1 text-xs">
-              Açıqdır
-            </div>
+            <div className="mt-1 text-xs">Açıqdır</div>
           ) : null}
         </div>
       </Popup>
