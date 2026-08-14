@@ -121,8 +121,10 @@ function createPopupContent(club: ClubWithDistance) {
   routeLink.href = `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}`;
   routeLink.target = '_blank';
   routeLink.rel = 'noopener noreferrer';
-  routeLink.className = 'flex h-9 items-center justify-center rounded-control bg-[#1A73E8] px-2 text-center text-xs font-semibold text-white no-underline transition hover:opacity-90';
-  routeLink.textContent = 'Marşrut';
+  routeLink.className = 'flex h-9 items-center justify-center rounded-control bg-[#1A73E8] px-2 text-center text-xs font-semibold no-underline transition hover:opacity-90';
+  routeLink.style.backgroundColor = '#1A73E8';
+  routeLink.style.color = '#ffffff';
+  routeLink.textContent = 'Google Maps';
   actions.appendChild(routeLink);
 
   root.appendChild(actions);
