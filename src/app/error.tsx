@@ -4,14 +4,9 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { AlertIcon } from '@/components/ui/Icon';
 
-/**
- * Next.js App Router error boundary — page.tsx (və ya altındakı hər hansı
- * server/client komponent) render zamanı istisna atarsa buraya düşür.
- * Client Component olmalıdır (Next.js tələbi).
- */
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error('BoşYer səhifə xətası:', error);
+    console.error('GameYer səhifə xətası:', error);
   }, [error]);
 
   return (
