@@ -23,8 +23,8 @@ type CookieToSet = {
   };
 };
 
-export function createClient() {
-  const cookieStore = cookies();
+export async function createClient() {
+  const cookieStore = await cookies();
 
   return createServerClient<Database>(
     SUPABASE_URL,
