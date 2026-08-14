@@ -71,11 +71,9 @@ async function replaceRelations(
     );
   }
 
-  /*
-   * CLUB TYPES / PRICING
-   */
+  // Club types / pricing
   const {
-    data: types,
+    data: typesData,
     error: typesError,
   } = await supabase
     .from('club_types')
@@ -86,7 +84,13 @@ async function replaceRelations(
     throw new Error(typesError.message);
   }
 
-  const pricingRows = (types ?? [])
+  const types = (typesData ?? []) as Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
+
+  const pricingRows = types
     .filter((type) =>
       booleanValue(
         formData,
@@ -143,9 +147,7 @@ async function replaceRelations(
     }
   }
 
-  /*
-   * OPENING HOURS
-   */
+  // Opening hours
   const openingRows = Array.from(
     { length: 7 },
     (_, day) => {
@@ -202,11 +204,7 @@ async function replaceRelations(
     );
   }
 
-  /*
-   * IMAGES
-   *
-   * Hər sətrə bir URL.
-   */
+  // Images
   const urls = text(
     formData,
     'image_urls'
@@ -252,9 +250,6 @@ async function replaceRelations(
   }
 }
 
-/*
- * EXISTING CLUB UPDATE
- */
 export async function saveClub(
   formData: FormData
 ) {
@@ -412,9 +407,6 @@ export async function saveClub(
   );
 }
 
-/*
- * NEW CLUB
- */
 export async function createClub(
   formData: FormData
 ) {
@@ -565,9 +557,6 @@ export async function createClub(
   );
 }
 
-/*
- * ACTIVE / INACTIVE
- */
 export async function toggleClubActive(
   formData: FormData
 ) {
@@ -602,6 +591,7 @@ export async function toggleClubActive(
     .from('clubs')
     .update({
       is_active: nextValue,
+
       updated_at:
         new Date().toISOString(),
     })
