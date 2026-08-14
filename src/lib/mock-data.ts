@@ -83,7 +83,11 @@ function buildClub(input: MockClubInput): ClubWithRelations {
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
     district: district(input.districtSlug),
-    pricing: input.types.map((typeSlug, idx) => ({
+    type_assignments: input.types.map((typeSlug) => ({
+      club_type_id: clubType(typeSlug).id,
+      club_type: clubType(typeSlug),
+    })),
+    pricing: input.types.map((typeSlug) => ({
       id: `${input.id}-price-${typeSlug}`,
       club_id: input.id,
       club_type_id: clubType(typeSlug).id,
