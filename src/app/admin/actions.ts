@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 
 const IMAGE_BUCKET = 'club-images';
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_IMAGES_PER_CLUB = 8;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 function text(formData: FormData, key: string) {
@@ -54,17 +55,27 @@ function safeFileName(name: string) {
   return `${base}.${extension}`;
 }
 
-async function uploadImages(clubId: string, formData: FormData) {
-  const supabase = createClient();
-  if (!supabase) throw new Error('Supabase konfiqurasiya edilməyib.');
-
-  const files = formData
+function imageFiles(formData: FormData) {
+  return formData
     .getAll('image_files')
     .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+}
 
-  if (files.length > 8) {
-    throw new Error('Bir dəfəyə maksimum 8 şəkil yükləmək olar.');
+function storagePathFromPublicUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    const marker = `/storage/v1/object/public/${IMAGE_BUCKET}/`;
+    const markerIndex = parsed.pathname.indexOf(marker);
+    if (markerIndex === -1) return null;
+    return decodeURIComponent(parsed.pathname.slice(markerIndex + marker.length));
+  } catch {
+    return null;
   }
+}
+
+async function uploadImages(clubId: string, files: File[]) {
+  const supabase = createClient();
+  if (!supabase) throw new Error('Supabase konfiqurasiya edilməyib.');
 
   const uploadedUrls: string[] = [];
 
@@ -183,10 +194,14 @@ async function replaceRelations(clubId: string, formData: FormData) {
     if (hoursInsertError) throw new Error(hoursInsertError.message);
   }
 
-  const existingUrls = text(formData, 'image_urls')
-    .split('\n')
-    .map((value) => value.trim())
-    .filter(Boolean);
+  const existingUrls = Array.from(
+    new Set(
+      text(formData, 'image_urls')
+        .split('\n')
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  );
 
   for (const url of existingUrls) {
     try {
@@ -203,14 +218,34 @@ async function replaceRelations(clubId: string, formData: FormData) {
     }
   }
 
-  const uploadedUrls = await uploadImages(clubId, formData);
+  const files = imageFiles(formData);
+  if (existingUrls.length + files.length > MAX_IMAGES_PER_CLUB) {
+    throw new Error(`Bir klubda maksimum ${MAX_IMAGES_PER_CLUB} şəkil saxlamaq olar.`);
+  }
+
+  const { data: previousImages, error: previousImagesError } = await supabase
+    .from('club_images')
+    .select('url')
+    .eq('club_id', clubId);
+  if (previousImagesError) throw new Error(previousImagesError.message);
+
+  const previousUrls = ((previousImages ?? []) as Array<{ url: string }>).map((image) => image.url);
+  const uploadedUrls = await uploadImages(clubId, files);
   const urls = [...existingUrls, ...uploadedUrls];
 
   const { error: imageDeleteError } = await supabase
     .from('club_images')
     .delete()
     .eq('club_id', clubId);
-  if (imageDeleteError) throw new Error(imageDeleteError.message);
+  if (imageDeleteError) {
+    const uploadedPaths = uploadedUrls
+      .map(storagePathFromPublicUrl)
+      .filter((path): path is string => Boolean(path));
+    if (uploadedPaths.length > 0) {
+      await supabase.storage.from(IMAGE_BUCKET).remove(uploadedPaths);
+    }
+    throw new Error(imageDeleteError.message);
+  }
 
   if (urls.length > 0) {
     const imageRows = urls.map((url, index) => ({
@@ -222,7 +257,30 @@ async function replaceRelations(clubId: string, formData: FormData) {
     const { error: imageInsertError } = await supabase
       .from('club_images')
       .insert(imageRows as never[]);
-    if (imageInsertError) throw new Error(imageInsertError.message);
+    if (imageInsertError) {
+      const uploadedPaths = uploadedUrls
+        .map(storagePathFromPublicUrl)
+        .filter((path): path is string => Boolean(path));
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from(IMAGE_BUCKET).remove(uploadedPaths);
+      }
+      throw new Error(imageInsertError.message);
+    }
+  }
+
+  const finalUrlSet = new Set(urls);
+  const removedPaths = previousUrls
+    .filter((url) => !finalUrlSet.has(url))
+    .map(storagePathFromPublicUrl)
+    .filter((path): path is string => Boolean(path));
+
+  if (removedPaths.length > 0) {
+    const { error: storageDeleteError } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .remove(removedPaths);
+    if (storageDeleteError) {
+      console.error('Silinmiş şəkillərin Storage təmizlənməsi uğursuz oldu:', storageDeleteError.message);
+    }
   }
 }
 
