@@ -20,24 +20,14 @@ export function SearchFilter() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const nextQuery = value.trim();
-
-      if (nextQuery === currentQuery) {
-        return;
-      }
+      if (nextQuery === currentQuery) return;
 
       const params = new URLSearchParams(paramsString);
-
-      if (nextQuery) {
-        params.set('q', nextQuery);
-      } else {
-        params.delete('q');
-      }
+      if (nextQuery) params.set('q', nextQuery);
+      else params.delete('q');
 
       const query = params.toString();
-
-      router.replace(query ? `${pathname}?${query}` : pathname, {
-        scroll: false,
-      });
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }, 300);
 
     return () => window.clearTimeout(timer);
@@ -57,7 +47,9 @@ export function SearchFilter() {
         onChange={(event) => setValue(event.target.value)}
         placeholder="Klub adı və ya ünvan axtar"
         aria-label="Klub axtar"
-        className="h-10 w-full rounded-control border border-border-strong bg-surface pl-10 pr-9 text-sm text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10"
+        enterKeyHint="search"
+        autoComplete="off"
+        className="h-11 w-full rounded-control border border-border-strong bg-surface pl-10 pr-11 text-sm text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 md:h-10"
       />
 
       {value ? (
@@ -65,7 +57,7 @@ export function SearchFilter() {
           type="button"
           onClick={() => setValue('')}
           aria-label="Axtarışı təmizlə"
-          className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-lg leading-none text-faint transition hover:bg-surface-alt hover:text-ink"
+          className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-xl leading-none text-faint transition hover:bg-surface-alt hover:text-ink"
         >
           ×
         </button>
