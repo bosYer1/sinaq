@@ -13,13 +13,6 @@ interface ExploreViewProps {
   searchActive?: boolean;
 }
 
-/**
- * Siyahı + xəritə panellərini birləşdirən client komponent.
- * Məsuliyyətləri:
- * - İstifadəçinin brauzer məkanını (icazə verilibsə) oxuyub hər klub üçün məsafə hesablamaq
- * - Kart hover-i ↔ marker highlight/fly-to əlaqəsini saxlamaq
- * - Marker klikini ↔ uyğun kartın scroll-into-view/highlight ilə əlaqələndirmək
- */
 export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const { location } = useUserLocation();
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
@@ -43,15 +36,13 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
   function handleSelectMarker(id: string) {
     setActiveClubId(id);
-    // Yalnız desktop-da hər iki panel eyni anda göründüyü üçün scroll effektlidir
     cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   return (
-    <div className="flex min-h-0 flex-1 lg:flex-row">
-      {/* Siyahı paneli: mobil-də yalnız view=list olanda görünür, desktop-da həmişə */}
+    <div className="flex h-full min-h-0 flex-1 lg:flex-row">
       <section
-        className={`min-h-0 w-full overflow-y-auto px-4 py-4 sm:px-6 lg:block lg:w-[420px] lg:shrink-0 lg:border-r lg:border-border ${
+        className={`h-full min-h-0 w-full overflow-y-auto px-4 py-4 sm:px-6 lg:block lg:w-[380px] lg:shrink-0 lg:border-r lg:border-border ${
           view === 'map' ? 'hidden' : 'block'
         }`}
       >
@@ -65,8 +56,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         />
       </section>
 
-      {/* Xəritə paneli: mobil-də yalnız view=map olanda görünür, desktop-da sticky sağ panel */}
-      <section className={`min-h-0 flex-1 ${view === 'map' ? 'block' : 'hidden'} lg:block`}>
+      <section className={`h-full min-h-0 flex-1 ${view === 'map' ? 'block' : 'hidden'} lg:block`}>
         <MapWrapper clubs={clubsWithDistance} activeClubId={activeClubId} onSelectClub={handleSelectMarker} />
       </section>
     </div>
