@@ -78,7 +78,9 @@ export function ClubMarker({ club, isActive = false, onSelect }: ClubMarkerProps
     >
       <Popup>
         <div className="min-w-[210px]">
-          <div className="font-display text-sm font-semibold text-ink">{club.name}</div>
+          <a href={`/klub/${club.slug}`} className="font-display text-sm font-semibold text-ink no-underline hover:text-primary">
+            {club.name}
+          </a>
           <div className="mt-1 text-xs text-muted">{club.district?.name ?? 'Rayon göstərilməyib'}</div>
           {club.address ? <div className="mt-0.5 text-xs text-muted">{club.address}</div> : null}
 
@@ -111,15 +113,23 @@ export function ClubMarker({ club, isActive = false, onSelect }: ClubMarkerProps
             </span>
           </div>
 
-          <a
-            href={googleMapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ backgroundColor: '#1A73E8', color: '#ffffff' }}
-            className="mt-3 flex h-9 w-full items-center justify-center rounded-control px-3 text-xs font-semibold no-underline transition hover:opacity-90"
-          >
-            Google Maps-də marşrut
-          </a>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <a
+              href={`/klub/${club.slug}`}
+              className="flex h-9 items-center justify-center rounded-control border border-border bg-surface px-2 text-center text-xs font-semibold text-ink no-underline transition hover:border-primary hover:text-primary"
+            >
+              Kluba bax
+            </a>
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ backgroundColor: '#1A73E8', color: '#ffffff' }}
+              className="flex h-9 items-center justify-center rounded-control px-2 text-center text-xs font-semibold no-underline transition hover:opacity-90"
+            >
+              Marşrut
+            </a>
+          </div>
         </div>
       </Popup>
     </Marker>
