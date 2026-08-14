@@ -4,7 +4,15 @@ import Link from 'next/link';
 import type { ClubWithDistance } from '@/types/database';
 import { RatingBadge } from './RatingBadge';
 import { Badge } from '@/components/ui/Badge';
-import { cn, formatPriceRange, isClubOpenNow } from '@/lib/utils';
+import {
+  ControllerIcon,
+  MapPinIcon,
+} from '@/components/ui/Icon';
+import {
+  cn,
+  formatPriceRange,
+  isClubOpenNow,
+} from '@/lib/utils';
 import { formatDistance } from '@/lib/geo';
 
 interface ClubCardProps {
@@ -16,7 +24,7 @@ interface ClubCardProps {
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
   function ClubCard({ club, active, onMouseEnter }, ref) {
     const cover =
-      club.images.find((img) => img.is_cover) ?? club.images[0];
+      club.images.find((image) => image.is_cover) ?? club.images[0];
 
     const openNow = isClubOpenNow(club.opening_hours);
 
@@ -27,40 +35,42 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
     return (
       <Link
         ref={ref}
-        href={'/klub/' + club.slug}
+        href={`/klub/${club.slug}`}
         onMouseEnter={onMouseEnter}
+        onFocus={onMouseEnter}
         className={cn(
-          'group flex gap-3.5 rounded-card border bg-surface p-3.5 shadow-card transition-all hover:border-primary/40 hover:shadow-card-hover',
+          'group flex gap-3 rounded-card border bg-surface p-3 transition-all duration-150',
           active
-            ? 'border-primary ring-2 ring-primary/35'
-            : 'border-border'
+            ? 'border-primary shadow-card-hover ring-1 ring-primary/15'
+            : 'border-border shadow-card hover:border-border-strong hover:shadow-card-hover'
         )}
       >
-        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-surface-alt">
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[10px] bg-surface-alt">
           {cover ? (
             <Image
               src={cover.url}
               alt={club.name}
               fill
-              sizes="96px"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="80px"
+              className="object-cover transition-transform duration-200 group-hover:scale-[1.03]"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-2xl">
-              🎮
+            <div className="flex h-full w-full items-center justify-center text-faint">
+              <ControllerIcon width={25} height={25} />
             </div>
           )}
 
           {openNow ? (
-            <span className="absolute left-1.5 top-1.5 flex h-2 w-2 rounded-full bg-live shadow-sm">
-              <span className="h-2 w-2 animate-pulse-dot rounded-full bg-live" />
-            </span>
+            <span
+              className="absolute left-2 top-2 h-2 w-2 rounded-full bg-live ring-2 ring-white"
+              title="Hazırda açıqdır"
+            />
           ) : null}
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate font-display text-sm font-semibold text-ink group-hover:text-primary">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-w-0 items-start gap-2">
+            <h3 className="min-w-0 flex-1 truncate font-display text-sm font-semibold text-ink transition group-hover:text-primary">
               {club.name}
             </h3>
 
@@ -71,45 +81,75 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
             ) : null}
           </div>
 
-          <p className="truncate text-xs text-muted">
-            {club.district
-              ? club.district.name
-              : 'Rayon göstərilməyib'}
+          <div className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted">
+            <MapPinIcon width={13} height={13} className="shrink-0" />
 
-            {club.distanceKm != null ? (
-              <span>
-                {' '}
-                · {formatDistance(club.distanceKm)}
-              </span>
-            ) : null}
-          </p>
+            <span className="truncate">
+              {club.district?.name ?? 'Rayon göstərilməyib'}
+              {club.address ? ` · ${club.address}` : ''}
+            </span>
+          </div>
 
-          <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1">
-            {club.pricing.map((p) => (
+          <div className="mt-2 flex min-w-0 items-center gap-1.5 overflow-hidden">
+            {club.pricing.map((pricing) => (
               <Badge
-                key={p.id}
-                tone={p.club_type.slug === 'pc' ? 'pc' : 'ps'}
+                key={pricing.id}
+                tone={
+                  pricing.club_type.slug === 'pc'
+                    ? 'pc'
+                    : 'ps'
+                }
               >
-                {p.club_type.name}
+                {pricing.club_type.name}
               </Badge>
             ))}
           </div>
 
-          <div className="flex items-center justify-between pt-0.5">
-            <RatingBadge
-              rating={club.rating_avg}
-              count={club.rating_count}
-            />
+          <div className="mt-auto flex items-end justify-between gap-3 pt-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <RatingBadge
+                rating={club.rating_avg}
+                count={club.rating_count}
+              />
 
-            {cheapestPricing ? (
-              <span className="font-mono text-xs font-medium text-ink">
-                {formatPriceRange(
-                  cheapestPricing.price_from,
-                  cheapestPricing.price_to,
-                  cheapestPricing.unit
-                )}
-              </span>
-            ) : null}
+              {club.distanceKm != null ? (
+                <span className="whitespace-nowrap text-[11px] text-muted">
+                  {formatDistance(club.distanceKm)}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="shrink-0 text-right">
+              {cheapestPricing ? (
+                <>
+                  <div className="font-mono text-xs font-semibold text-ink">
+                    {formatPriceRange(
+                      cheapestPricing.price_from,
+                      cheapestPricing.price_to,
+                      cheapestPricing.unit
+                    )}
+                  </div>
+
+                  <div
+                    className={cn(
+                      'mt-0.5 text-[10px] font-medium',
+                      openNow ? 'text-live' : 'text-muted'
+                    )}
+                  >
+                    {openNow ? 'Açıqdır' : 'Bağlıdır'}
+                  </div>
+                </>
+              ) : (
+                <span
+                  className={cn(
+                    'text-[10px] font-medium',
+                    openNow ? 'text-live' : 'text-muted'
+                  )}
+                >
+                  {openNow ? 'Açıqdır' : 'Bağlıdır'}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </Link>
