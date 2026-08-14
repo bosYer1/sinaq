@@ -1,6 +1,11 @@
 import type { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
 
+interface SitemapClub {
+  slug: string;
+  updated_at: string | null;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gameyer.az';
   const entries: MetadataRoute.Sitemap = [
@@ -15,12 +20,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createClient();
   if (!supabase) return entries;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('clubs')
     .select('slug, updated_at')
     .eq('is_active', true);
 
-  for (const club of data ?? []) {
+  if (error) return entries;
+
+  const clubs = (data ?? []) as unknown as SitemapClub[];
+
+  for (const club of clubs) {
     entries.push({
       url: `${baseUrl}/klub/${club.slug}`,
       lastModified: club.updated_at ? new Date(club.updated_at) : new Date(),
