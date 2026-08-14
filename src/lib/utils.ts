@@ -45,6 +45,16 @@ export function slugify(input: string): string {
     .replace(/-+/g, '-');
 }
 
+/** Premium yalnız flag aktiv və bitmə tarixi gələcəkdədirsə public UI-da aktiv sayılır. */
+export function isPremiumActive(club: {
+  is_premium: boolean;
+  premium_expires_at: string | null;
+}): boolean {
+  if (!club.is_premium || !club.premium_expires_at) return false;
+  const expiresAt = Date.parse(club.premium_expires_at);
+  return Number.isFinite(expiresAt) && expiresAt > Date.now();
+}
+
 export const DAY_NAMES_AZ = [
   'Bazar ertəsi',
   'Çərşənbə axşamı',
