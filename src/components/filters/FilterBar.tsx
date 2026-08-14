@@ -18,14 +18,16 @@ export function FilterBar({ districts, types }: FilterBarProps) {
 
   return (
     <div className="shrink-0 border-b border-border bg-surface">
-      <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
-          <div className="w-full lg:max-w-[360px]">
+      <div className="w-full px-4 py-3 sm:px-6 lg:px-7">
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
+          {/* Search boş qalmır, desktop-da mövcud sahəni doldurur */}
+          <div className="min-w-0 flex-1">
             <SearchFilter />
           </div>
 
+          {/* Filterlər */}
           <div
-            className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 lg:flex-1 lg:overflow-visible"
+            className="flex shrink-0 items-center gap-2 overflow-x-auto pb-0.5 md:overflow-visible md:pb-0"
             style={{ scrollbarWidth: 'none' }}
           >
             <TypeFilter types={types} />
@@ -42,7 +44,7 @@ export function FilterBar({ districts, types }: FilterBarProps) {
               </button>
             ) : null}
 
-            <div className="ml-auto shrink-0">
+            <div className="shrink-0">
               <ViewToggle />
             </div>
           </div>
