@@ -1,59 +1,127 @@
 'use client';
 
-import L from 'leaflet';
+import { useMemo } from 'react';
 import { Marker, Popup } from 'react-leaflet';
-import Link from 'next/link';
-import type { ClubWithRelations } from '@/types/database';
-import { formatPriceRange, isClubOpenNow } from '@/lib/utils';
+import L from 'leaflet';
+import type { ClubWithDistance } from '@/types/database';
+import { isClubOpenNow, formatPriceRange } from '@/lib/utils';
 
-function createClubIcon(isPremium: boolean, isOpen: boolean): L.DivIcon {
-  const fill = isPremium ? '#b8860b' : '#7c5cfc';
-  const dot = isOpen ? '#16a34a' : '#98a2b3';
+interface ClubMarkerProps {
+  club: ClubWithDistance;
+  isActive?: boolean;
+  onSelect?: (id: string) => void;
+}
 
-  const html = `
-    <div style="position: relative; width: 28px; height: 36px;">
-      <svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg"
-        style="filter: drop-shadow(0 2px 3px rgba(20,22,28,0.25));">
-        <path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.3 21.7 0 14 0z" fill="${fill}"/>
-        <circle cx="14" cy="14" r="5.5" fill="white"/>
-      </svg>
-      <span style="
-        position:absolute; top:-1px; right:-1px; width:9px; height:9px;
-        border-radius:50%; background:${dot}; border:1.5px solid white;
-      "></span>
-    </div>
-  `;
+function createClubIcon(
+  isPremium: boolean,
+  isOpen: boolean,
+  isActive: boolean
+): L.DivIcon {
+  const background = isPremium
+    ? '#B8860B'
+    : '#7C5CFC';
+
+  const size = isActive ? 38 : 32;
+
+  const border = isActive || isOpen
+    ? '#16A34A'
+    : '#ffffff';
 
   return L.divIcon({
-    className: 'bosyer-marker',
-    html,
-    iconSize: [28, 36],
-    iconAnchor: [14, 36],
-    popupAnchor: [0, -34],
+    className: '',
+    html: `
+      <div
+        style="
+          width:${size}px;
+          height:${size}px;
+          border-radius:50%;
+          background:${background};
+          border:3px solid ${border};
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          box-shadow:0 2px 8px rgba(0,0,0,0.25);
+          font-size:${isActive ? 15 : 13}px;
+          color:white;
+          font-weight:700;
+        "
+      >
+        PC
+      </div>
+    `,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2],
   });
 }
 
-export function ClubMarker({ club }: { club: ClubWithRelations }) {
-  if (club.latitude == null || club.longitude == null) return null;
+export function ClubMarker({
+  club,
+  isActive = false,
+  onSelect,
+}: ClubMarkerProps) {
+  if (club.latitude == null || club.longitude == null) {
+    return null;
+  }
 
   const openNow = isClubOpenNow(club.opening_hours);
-  const icon = createClubIcon(club.is_premium, openNow);
-  const cheapest = [...club.pricing].sort((a, b) => a.price_from - b.price_from)[0];
+
+  const icon = useMemo(
+    () => createClubIcon(club.is_premium, openNow, isActive),
+    [club.is_premium, openNow, isActive]
+  );
+
+  const cheapest = [...club.pricing].sort(
+    (a, b) => a.price_from - b.price_from
+  )[0];
 
   return (
-    <Marker position={[club.latitude, club.longitude]} icon={icon}>
+    <Marker
+      position={[club.latitude, club.longitude]}
+      icon={icon}
+      eventHandlers={{
+        click: () => {
+          if (onSelect) {
+            onSelect(club.id);
+          }
+        },
+      }}
+    >
       <Popup>
         <div className="min-w-[180px]">
-          <p className="font-display text-sm font-semibold text-ink">{club.name}</p>
-          <p className="mb-1.5 text-xs text-muted">{club.district?.name}</p>
-          {cheapest && (
-            <p className="mb-2 font-mono text-xs text-ink">
-              {formatPriceRange(cheapest.price_from, cheapest.price_to, cheapest.unit)}
-            </p>
-          )}
-          <Link href={`/klub/${club.slug}`} className="text-xs font-medium text-primary hover:underline">
-            Ətraflı bax →
-          </Link>
+          <div className="font-semibold">
+            {club.name}
+          </div>
+
+          {club.district ? (
+            <div className="mt-1 text-sm">
+              {club.district.name}
+            </div>
+          ) : null}
+
+          <div className="mt-2 flex gap-2 text-xs">
+            {club.pricing.map((pricing) => (
+              <span key={pricing.id}>
+                {pricing.club_type.name}
+              </span>
+            ))}
+          </div>
+
+          {cheapest ? (
+            <div className="mt-2 font-medium">
+              {formatPriceRange(
+                cheapest.price_from,
+                cheapest.price_to,
+                cheapest.unit
+              )}
+            </div>
+          ) : null}
+
+          {openNow ? (
+            <div className="mt-1 text-xs">
+              Açıqdır
+            </div>
+          ) : null}
         </div>
       </Popup>
     </Marker>
