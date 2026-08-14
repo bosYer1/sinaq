@@ -7,7 +7,13 @@ export interface UserLocation {
   lng: number;
 }
 
-export type UserLocationStatus = 'idle' | 'loading' | 'granted' | 'denied' | 'unsupported';
+export type UserLocationStatus =
+  | 'idle'
+  | 'loading'
+  | 'granted'
+  | 'denied'
+  | 'unavailable'
+  | 'unsupported';
 
 /**
  * Brauzerin Geolocation API-si ilə istifadəçinin təxmini yerini yalnız
@@ -36,8 +42,8 @@ export function useUserLocation(): {
         setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
         setStatus('granted');
       },
-      () => {
-        setStatus('denied');
+      (error) => {
+        setStatus(error.code === error.PERMISSION_DENIED ? 'denied' : 'unavailable');
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60 * 1000 },
     );
