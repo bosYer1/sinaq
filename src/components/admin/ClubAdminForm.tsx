@@ -177,7 +177,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
         </label>
         <details className="mt-4">
           <summary className="cursor-pointer text-xs font-medium text-gray-600">Mövcud Storage URL-lərini idarə et</summary>
-          <p className="mt-2 text-xs text-gray-500">Bu sahə əsasən mövcud şəkilləri silmək və ya sıralamaq üçündür. Yalnız BosYer Supabase Storage URL-ləri qəbul edilir.</p>
+          <p className="mt-2 text-xs text-gray-500">Bu sahə əsasən mövcud şəkilləri silmək və ya sıralamaq üçündür. Yalnız GameYer Supabase Storage URL-ləri qəbul edilir.</p>
           <textarea name="image_urls" rows={6} defaultValue={imageUrls} placeholder={'https://...\nhttps://...'} className={textareaClass} />
         </details>
       </section>
