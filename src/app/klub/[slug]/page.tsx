@@ -4,9 +4,9 @@ import { getClubBySlug } from '@/lib/queries/clubs';
 import { ClubDetail } from '@/components/clubs/ClubDetail';
 
 interface ClubPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 const SCHEMA_DAY_NAMES = [
@@ -20,7 +20,8 @@ const SCHEMA_DAY_NAMES = [
 ] as const;
 
 export async function generateMetadata({ params }: ClubPageProps): Promise<Metadata> {
-  const club = await getClubBySlug(params.slug);
+  const { slug } = await params;
+  const club = await getClubBySlug(slug);
 
   if (!club) {
     return {
@@ -60,7 +61,8 @@ export async function generateMetadata({ params }: ClubPageProps): Promise<Metad
 }
 
 export default async function ClubPage({ params }: ClubPageProps) {
-  const club = await getClubBySlug(params.slug);
+  const { slug } = await params;
+  const club = await getClubBySlug(slug);
 
   if (!club) notFound();
 
