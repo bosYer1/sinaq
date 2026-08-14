@@ -101,7 +101,19 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
         <h2 className="font-semibold">Əsas məlumatlar</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="text-sm font-medium">Klub adı<input required name="name" defaultValue={club?.name ?? ''} className={inputClass} /></label>
-          <label className="text-sm font-medium">Slug<input name="slug" defaultValue={club?.slug ?? ''} placeholder="Boş saxlasan avtomatik yaranacaq" className={inputClass} /></label>
+          <label className="text-sm font-medium">
+            Slug
+            <input
+              name="slug"
+              defaultValue={club?.slug ?? ''}
+              placeholder="Boş saxlasan avtomatik yaranacaq"
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              title="Yalnız kiçik latın hərfləri, rəqəmlər və sözlər arasında tire istifadə et."
+              autoCapitalize="none"
+              spellCheck={false}
+              className={inputClass}
+            />
+          </label>
           <label className="text-sm font-medium">Rayon<select required name="district_id" defaultValue={club?.district_id ?? ''} className={inputClass}><option value="" disabled>Rayon seç</option>{districts.map((district) => <option key={district.id} value={district.id}>{district.name}</option>)}</select></label>
           <label className="text-sm font-medium">Ünvan<input required name="address" defaultValue={club?.address ?? ''} className={inputClass} /></label>
           <label className="text-sm font-medium md:col-span-2">Təsvir<textarea name="description" defaultValue={club?.description ?? ''} rows={4} className={textareaClass} /></label>
@@ -113,7 +125,20 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
         <p className="mt-1 text-xs text-gray-500">GameYer xəritəsində görünməsi üçün latitude və longitude məcburidir.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="text-sm font-medium">Telefon<input name="phone" defaultValue={club?.phone ?? ''} placeholder="+994..." className={inputClass} /></label>
-          <label className="text-sm font-medium">Instagram<input name="instagram_url" defaultValue={club?.instagram_url ?? ''} placeholder="https://instagram.com/..." className={inputClass} /></label>
+          <label className="text-sm font-medium">
+            Instagram
+            <input
+              name="instagram_url"
+              type="url"
+              defaultValue={club?.instagram_url ?? ''}
+              placeholder="https://instagram.com/..."
+              pattern="https://(www\.)?instagram\.com/.+"
+              title="Tam Instagram linki yaz: https://instagram.com/..."
+              autoCapitalize="none"
+              spellCheck={false}
+              className={inputClass}
+            />
+          </label>
           <label className="text-sm font-medium">Latitude<input required name="latitude" type="number" step="any" min="-90" max="90" defaultValue={club?.latitude ?? ''} className={inputClass} /></label>
           <label className="text-sm font-medium">Longitude<input required name="longitude" type="number" step="any" min="-180" max="180" defaultValue={club?.longitude ?? ''} className={inputClass} /></label>
         </div>
@@ -194,6 +219,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
             <label className="text-sm font-medium">Səs sayı<input name="rating_count" type="number" min="0" defaultValue={club?.rating_count ?? 0} className={inputClass} /></label>
           </div>
         </div>
+        <p className="mt-3 text-xs text-gray-500">Premium aktiv edilirsə bitmə tarixini də doldur. Bitmə vaxtı keçən premium public səhifədə avtomatik VIP kimi göstərilməyəcək.</p>
       </section>
 
       <div className="sticky bottom-4 flex justify-end rounded-xl border border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur">
