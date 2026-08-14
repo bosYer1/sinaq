@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { isPremiumActive } from '@/lib/utils';
 import type { ClubFilters, ClubWithRelations } from '@/types/database';
 
 const CLUB_SELECT = `
@@ -92,6 +93,18 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
       )
     );
   }
+
+  // DB flag-i expiry keçəndən sonra da true qala bilər; public sıralama yalnız
+  // həqiqətən aktiv premium statusuna əsaslanır.
+  clubs = [...clubs].sort((a, b) => {
+    const premiumDelta = Number(isPremiumActive(b)) - Number(isPremiumActive(a));
+    if (premiumDelta !== 0) return premiumDelta;
+
+    const ratingDelta = (b.rating_avg ?? -1) - (a.rating_avg ?? -1);
+    if (ratingDelta !== 0) return ratingDelta;
+
+    return a.name.localeCompare(b.name, 'az');
+  });
 
   return clubs;
 }
