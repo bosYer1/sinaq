@@ -8,6 +8,8 @@ const IMAGE_BUCKET = 'club-images';
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_IMAGES_PER_CLUB = 8;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const INSTAGRAM_PATTERN = /^https:\/\/(?:www\.)?instagram\.com\//i;
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -41,6 +43,38 @@ function slugify(input: string) {
     .replace(/ğ/g, 'g')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+function premiumExpiryUtc(formData: FormData) {
+  if (!booleanValue(formData, 'is_premium')) return null;
+
+  const localValue = text(formData, 'premium_expires_at');
+  if (!localValue) {
+    throw new Error('Premium aktivdirsə bitmə tarixi mütləq yazılmalıdır.');
+  }
+
+  // datetime-local timezone daşımır. Admin panelində bu sahə həmişə Bakı vaxtıdır (UTC+4).
+  const parsed = new Date(`${localValue}:00+04:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error('Premium bitmə tarixi düzgün deyil.');
+  }
+  return parsed.toISOString();
+}
+
+function validateCoreFormInput(formData: FormData) {
+  const rawSlug = text(formData, 'slug');
+  if (rawSlug && !SLUG_PATTERN.test(rawSlug)) {
+    throw new Error('Slug yalnız kiçik latın hərfləri, rəqəmlər və sözlər arasında tire qəbul edir.');
+  }
+
+  const instagramUrl = nullableText(formData, 'instagram_url');
+  if (instagramUrl && !INSTAGRAM_PATTERN.test(instagramUrl)) {
+    throw new Error('Instagram üçün tam https://instagram.com/... linki yazılmalıdır.');
+  }
+
+  if (booleanValue(formData, 'is_premium')) {
+    premiumExpiryUtc(formData);
+  }
 }
 
 function validateCoordinates(formData: FormData) {
@@ -283,6 +317,7 @@ async function replaceRelations(clubId: string, formData: FormData) {
 }
 
 export async function saveClub(formData: FormData) {
+  validateCoreFormInput(formData);
   validateRelationFormInput(formData);
   const supabase = await createClient();
   const id = text(formData, 'id');
@@ -321,7 +356,7 @@ export async function saveClub(formData: FormData) {
     rating_avg: nullableNumber(formData, 'rating_avg'),
     rating_count: nullableNumber(formData, 'rating_count') ?? 0,
     is_premium: booleanValue(formData, 'is_premium'),
-    premium_expires_at: nullableText(formData, 'premium_expires_at'),
+    premium_expires_at: premiumExpiryUtc(formData),
     is_active: booleanValue(formData, 'is_active'),
     updated_at: new Date().toISOString(),
   };
@@ -349,6 +384,7 @@ export async function saveClub(formData: FormData) {
 }
 
 export async function createClub(formData: FormData) {
+  validateCoreFormInput(formData);
   validateRelationFormInput(formData);
   const supabase = await createClient();
 
@@ -376,7 +412,7 @@ export async function createClub(formData: FormData) {
     rating_avg: nullableNumber(formData, 'rating_avg'),
     rating_count: nullableNumber(formData, 'rating_count') ?? 0,
     is_premium: booleanValue(formData, 'is_premium'),
-    premium_expires_at: nullableText(formData, 'premium_expires_at'),
+    premium_expires_at: premiumExpiryUtc(formData),
     is_active: booleanValue(formData, 'is_active'),
   };
 
