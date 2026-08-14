@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ClubWithRelations } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
 import { RatingBadge } from './RatingBadge';
+import { inferClubTypeSlugs } from '@/lib/clubType';
 import {
   DAY_NAMES_AZ,
   formatPriceRange,
@@ -18,6 +19,8 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
     : openNow
       ? 'Hazırda açıqdır'
       : 'Hazırda bağlıdır';
+  const typeSlugs = inferClubTypeSlugs(club);
+  const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
 
   const sortedHours = [...club.opening_hours].sort(
     (a, b) => a.day_of_week - b.day_of_week
@@ -80,6 +83,11 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
                 {club.name}
               </h1>
               {club.is_premium ? <Badge tone="premium">VIP</Badge> : null}
+              {typeSlugs.map((slug) => (
+                <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>
+                  {slug === 'pc' ? 'PC' : 'PlayStation'}
+                </Badge>
+              ))}
             </div>
 
             <p className="mt-2 text-sm text-muted">
@@ -96,13 +104,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
                     : 'inline-flex items-center gap-1.5 text-sm font-medium text-muted'
                 }
               >
-                <span
-                  className={
-                    openNow
-                      ? 'h-2 w-2 rounded-full bg-live'
-                      : 'h-2 w-2 rounded-full bg-muted'
-                  }
-                />
+                <span className={openNow ? 'h-2 w-2 rounded-full bg-live' : 'h-2 w-2 rounded-full bg-muted'} />
                 {statusLabel}
               </span>
             </div>
@@ -133,9 +135,9 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
 
           <section className="mb-7">
             <h2 className="mb-3 font-display text-base font-semibold text-ink">Qiymətlər</h2>
-            {club.pricing.length > 0 ? (
+            {realPricing.length > 0 ? (
               <div className="overflow-hidden rounded-xl border border-border bg-surface">
-                {club.pricing.map((pricing) => (
+                {realPricing.map((pricing) => (
                   <div
                     key={pricing.id}
                     className="flex items-center justify-between gap-4 border-b border-border px-4 py-3.5 last:border-b-0"
@@ -151,7 +153,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               </div>
             ) : (
               <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">
-                Qiymət məlumatı hələ əlavə edilməyib.
+                Qiymət məlumatı hələ təsdiqlənməyib.
               </div>
             )}
           </section>
@@ -176,7 +178,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               </div>
             ) : (
               <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">
-                İş saatları hələ əlavə edilməyib.
+                İş saatları hələ təsdiqlənməyib.
               </div>
             )}
           </section>
@@ -224,11 +226,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
             >
               Marşrut qur
             </a>
-          ) : (
-            <p className="mt-5 rounded-lg bg-surface-alt p-3 text-xs text-muted">
-              Xəritə koordinatları hələ əlavə edilməyib.
-            </p>
-          )}
+          ) : null}
         </aside>
       </div>
     </article>
