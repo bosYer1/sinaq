@@ -16,29 +16,25 @@ import type {
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { id: string };
-  searchParams: { saved?: string; created?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string; created?: string }>;
 }
 
 export default async function AdminEditClubPage({ params, searchParams }: PageProps) {
-  const supabase = createClient();
-
-  if (!supabase) {
-    return <p className="text-sm text-red-600">Supabase konfiqurasiyası tapılmadı.</p>;
-  }
-
+  const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const supabase = await createClient();
   const db = supabase as any;
 
-  const clubResult = await db.from('clubs').select('*').eq('id', params.id).single();
+  const clubResult = await db.from('clubs').select('*').eq('id', id).single();
   if (clubResult.error || !clubResult.data) notFound();
 
   const [districtsResult, typesResult, pricingResult, assignmentsResult, hoursResult, imagesResult] = await Promise.all([
     db.from('districts').select('*').order('name'),
     db.from('club_types').select('*').order('name'),
-    db.from('club_pricing').select('*').eq('club_id', params.id),
-    db.from('club_type_assignments').select('club_type_id').eq('club_id', params.id),
-    db.from('club_opening_hours').select('*').eq('club_id', params.id).order('day_of_week'),
-    db.from('club_images').select('*').eq('club_id', params.id).order('position'),
+    db.from('club_pricing').select('*').eq('club_id', id),
+    db.from('club_type_assignments').select('club_type_id').eq('club_id', id),
+    db.from('club_opening_hours').select('*').eq('club_id', id).order('day_of_week'),
+    db.from('club_images').select('*').eq('club_id', id).order('position'),
   ]);
 
   const club = clubResult.data as ClubRow;
@@ -80,7 +76,7 @@ export default async function AdminEditClubPage({ params, searchParams }: PagePr
         </form>
       </div>
 
-      {(searchParams.saved === '1' || searchParams.created === '1') && (
+      {(resolvedSearchParams.saved === '1' || resolvedSearchParams.created === '1') && (
         <div className="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">Dəyişikliklər yadda saxlanıldı.</div>
       )}
 
