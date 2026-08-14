@@ -23,10 +23,10 @@ interface ClubCardProps {
 
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
   function ClubCard({ club, active, onMouseEnter }, ref) {
-    const cover =
-      club.images.find((image) => image.is_cover) ?? club.images[0];
-
-    const openNow = isClubOpenNow(club.opening_hours);
+    const cover = club.images.find((image) => image.is_cover) ?? club.images[0];
+    const hasHours = club.opening_hours.length > 0;
+    const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
+    const statusLabel = !hasHours ? 'İş saatı məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
 
     const cheapestPricing = [...club.pricing].sort(
       (a, b) => a.price_from - b.price_from
@@ -83,7 +83,6 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
 
           <div className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted">
             <MapPinIcon width={13} height={13} className="shrink-0" />
-
             <span className="truncate">
               {club.district?.name ?? 'Rayon göstərilməyib'}
               {club.address ? ` · ${club.address}` : ''}
@@ -94,11 +93,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
             {club.pricing.map((pricing) => (
               <Badge
                 key={pricing.id}
-                tone={
-                  pricing.club_type.slug === 'pc'
-                    ? 'pc'
-                    : 'ps'
-                }
+                tone={pricing.club_type.slug === 'pc' ? 'pc' : 'ps'}
               >
                 {pricing.club_type.name}
               </Badge>
@@ -107,11 +102,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
 
           <div className="mt-auto flex items-end justify-between gap-3 pt-2">
             <div className="flex min-w-0 items-center gap-2">
-              <RatingBadge
-                rating={club.rating_avg}
-                count={club.rating_count}
-              />
-
+              <RatingBadge rating={club.rating_avg} count={club.rating_count} />
               {club.distanceKm != null ? (
                 <span className="whitespace-nowrap text-[11px] text-muted">
                   {formatDistance(club.distanceKm)}
@@ -121,34 +112,23 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
 
             <div className="shrink-0 text-right">
               {cheapestPricing ? (
-                <>
-                  <div className="font-mono text-xs font-semibold text-ink">
-                    {formatPriceRange(
-                      cheapestPricing.price_from,
-                      cheapestPricing.price_to,
-                      cheapestPricing.unit
-                    )}
-                  </div>
-
-                  <div
-                    className={cn(
-                      'mt-0.5 text-[10px] font-medium',
-                      openNow ? 'text-live' : 'text-muted'
-                    )}
-                  >
-                    {openNow ? 'Açıqdır' : 'Bağlıdır'}
-                  </div>
-                </>
-              ) : (
-                <span
-                  className={cn(
-                    'text-[10px] font-medium',
-                    openNow ? 'text-live' : 'text-muted'
+                <div className="font-mono text-xs font-semibold text-ink">
+                  {formatPriceRange(
+                    cheapestPricing.price_from,
+                    cheapestPricing.price_to,
+                    cheapestPricing.unit
                   )}
-                >
-                  {openNow ? 'Açıqdır' : 'Bağlıdır'}
-                </span>
-              )}
+                </div>
+              ) : null}
+              <div
+                className={cn(
+                  cheapestPricing ? 'mt-0.5' : '',
+                  'text-[10px] font-medium',
+                  openNow ? 'text-live' : 'text-muted'
+                )}
+              >
+                {statusLabel}
+              </div>
             </div>
           </div>
         </div>
