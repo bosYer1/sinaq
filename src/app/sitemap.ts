@@ -15,6 +15,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 1,
     },
+    {
+      url: `${baseUrl}/elaqe`,
+      changeFrequency: 'monthly',
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/mexfilik`,
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
   ];
 
   const supabase = createClient();
