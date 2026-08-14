@@ -15,7 +15,7 @@ interface MapWrapperProps {
   activeClubId?: string | null;
   onSelectClub?: (id: string) => void;
   userLocation?: UserLocation | null;
-  focusUserLocation?: boolean;
+  locationFocusRequest?: number;
 }
 
 export function MapWrapper({
@@ -23,7 +23,7 @@ export function MapWrapper({
   activeClubId,
   onSelectClub,
   userLocation,
-  focusUserLocation = false,
+  locationFocusRequest = 0,
 }: MapWrapperProps) {
   return (
     <div className="relative h-full w-full">
@@ -32,7 +32,7 @@ export function MapWrapper({
         activeClubId={activeClubId}
         onSelectClub={onSelectClub}
         userLocation={userLocation}
-        focusUserLocation={focusUserLocation}
+        locationFocusRequest={locationFocusRequest}
       />
     </div>
   );
