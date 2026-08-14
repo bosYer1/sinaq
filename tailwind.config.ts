@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss';
 
-// BoşYer dizayn tokenləri — v3 (light-first marketplace).
+// GameYer dizayn tokenləri — v3 (light-first marketplace).
 //
 // Prinsip: neytral, işıqlı, professional zəmin üzərində YALNIZ information
 // hierarchy üçün rəng: PC=bənövşəyi, PlayStation=sian, açıq=yaşıl,
