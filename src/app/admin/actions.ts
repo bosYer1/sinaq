@@ -4,6 +4,10 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
+const IMAGE_BUCKET = 'club-images';
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === 'string' ? value.trim() : '';
@@ -39,6 +43,57 @@ function slugify(input: string) {
     .replace(/^-+|-+$/g, '');
 }
 
+function safeFileName(name: string) {
+  const extension = name.split('.').pop()?.toLowerCase() || 'jpg';
+  const base = name
+    .replace(/\.[^.]+$/, '')
+    .toLocaleLowerCase('az')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 50) || 'image';
+  return `${base}.${extension}`;
+}
+
+async function uploadImages(clubId: string, formData: FormData) {
+  const supabase = createClient();
+  if (!supabase) throw new Error('Supabase konfiqurasiya edilməyib.');
+
+  const files = formData
+    .getAll('image_files')
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+  if (files.length > 8) {
+    throw new Error('Bir dəfəyə maksimum 8 şəkil yükləmək olar.');
+  }
+
+  const uploadedUrls: string[] = [];
+
+  for (const file of files) {
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      throw new Error('Şəkil formatı yalnız JPG, PNG və ya WEBP ola bilər.');
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      throw new Error('Hər şəkil maksimum 5 MB ola bilər.');
+    }
+
+    const path = `${clubId}/${Date.now()}-${crypto.randomUUID()}-${safeFileName(file.name)}`;
+    const { error: uploadError } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .upload(path, file, {
+        cacheControl: '3600',
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) throw new Error(`Şəkil yüklənmədi: ${uploadError.message}`);
+
+    const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path);
+    uploadedUrls.push(data.publicUrl);
+  }
+
+  return uploadedUrls;
+}
+
 async function replaceRelations(clubId: string, formData: FormData) {
   const supabase = createClient();
   if (!supabase) throw new Error('Supabase konfiqurasiya edilməyib.');
@@ -47,7 +102,6 @@ async function replaceRelations(clubId: string, formData: FormData) {
     .from('club_types')
     .select('id,name,slug')
     .order('name');
-
   if (typesError) throw new Error(typesError.message);
 
   const types = (typesData ?? []) as Array<{ id: string; name: string; slug: string }>;
@@ -62,7 +116,6 @@ async function replaceRelations(clubId: string, formData: FormData) {
     .from('club_type_assignments')
     .delete()
     .eq('club_id', clubId);
-
   if (assignmentDeleteError) throw new Error(assignmentDeleteError.message);
 
   if (assignmentRows.length > 0) {
@@ -90,7 +143,6 @@ async function replaceRelations(clubId: string, formData: FormData) {
     .from('club_pricing')
     .delete()
     .eq('club_id', clubId);
-
   if (pricingDeleteError) throw new Error(pricingDeleteError.message);
 
   if (pricingRows.length > 0) {
@@ -131,19 +183,28 @@ async function replaceRelations(clubId: string, formData: FormData) {
     if (hoursInsertError) throw new Error(hoursInsertError.message);
   }
 
-  const urls = text(formData, 'image_urls')
+  const existingUrls = text(formData, 'image_urls')
     .split('\n')
     .map((value) => value.trim())
     .filter(Boolean);
 
-  for (const url of urls) {
+  for (const url of existingUrls) {
     try {
       const parsed = new URL(url);
-      if (parsed.protocol !== 'https:') throw new Error();
+      if (
+        parsed.protocol !== 'https:' ||
+        !parsed.hostname.endsWith('.supabase.co') ||
+        !parsed.pathname.includes(`/storage/v1/object/public/${IMAGE_BUCKET}/`)
+      ) {
+        throw new Error();
+      }
     } catch {
-      throw new Error('Şəkil URL-ləri etibarlı HTTPS ünvanı olmalıdır.');
+      throw new Error('Şəkil URL-i GameYer-in Supabase club-images yaddaşından olmalıdır.');
     }
   }
+
+  const uploadedUrls = await uploadImages(clubId, formData);
+  const urls = [...existingUrls, ...uploadedUrls];
 
   const { error: imageDeleteError } = await supabase
     .from('club_images')
