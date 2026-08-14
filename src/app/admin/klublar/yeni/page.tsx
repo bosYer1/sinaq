@@ -7,7 +7,7 @@ import type { ClubType, District } from '@/types/database';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminNewClubPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const [districtsResult, typesResult] = await Promise.all([
     supabase.from('districts').select('*').order('name'),
     supabase.from('club_types').select('*').order('name'),
