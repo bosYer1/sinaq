@@ -1,11 +1,14 @@
 /**
- * Supabase database sxeminə uyğun TypeScript tipləri.
- *
- * Bu fayl `supabase gen types typescript` əmri ilə avtomatik generasiya
- * oluna bilər (Supabase CLI qoşulanda). Hazırda network/CLI bağlantısı
- * olmadığı üçün 001_initial_schema.sql-a əsaslanaraq əl ilə yazılıb.
- * CLI qoşulan kimi bu faylı generasiya olunmuş versiya ilə əvəz etmək tövsiyə olunur.
+ * GameYer Supabase database TypeScript tipləri.
  */
+
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export interface Database {
   public: {
@@ -29,7 +32,9 @@ export interface Database {
           slug?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
+
       club_types: {
         Row: {
           id: string;
@@ -46,7 +51,9 @@ export interface Database {
           name?: string;
           slug?: string;
         };
+        Relationships: [];
       };
+
       clubs: {
         Row: {
           id: string;
@@ -86,8 +93,36 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['clubs']['Insert']>;
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          district_id?: string;
+          address?: string;
+          latitude?: number | null;
+          longitude?: number | null;
+          phone?: string | null;
+          instagram_url?: string | null;
+          rating_avg?: number | null;
+          rating_count?: number;
+          is_premium?: boolean;
+          premium_expires_at?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'clubs_district_id_fkey';
+            columns: ['district_id'];
+            isOneToOne: false;
+            referencedRelation: 'districts';
+            referencedColumns: ['id'];
+          }
+        ];
       };
+
       club_pricing: {
         Row: {
           id: string;
@@ -105,8 +140,32 @@ export interface Database {
           price_to?: number | null;
           unit?: string;
         };
-        Update: Partial<Database['public']['Tables']['club_pricing']['Insert']>;
+        Update: {
+          id?: string;
+          club_id?: string;
+          club_type_id?: string;
+          price_from?: number;
+          price_to?: number | null;
+          unit?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'club_pricing_club_id_fkey';
+            columns: ['club_id'];
+            isOneToOne: false;
+            referencedRelation: 'clubs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'club_pricing_club_type_id_fkey';
+            columns: ['club_type_id'];
+            isOneToOne: false;
+            referencedRelation: 'club_types';
+            referencedColumns: ['id'];
+          }
+        ];
       };
+
       club_opening_hours: {
         Row: {
           id: string;
@@ -124,8 +183,25 @@ export interface Database {
           close_time?: string | null;
           is_closed?: boolean;
         };
-        Update: Partial<Database['public']['Tables']['club_opening_hours']['Insert']>;
+        Update: {
+          id?: string;
+          club_id?: string;
+          day_of_week?: number;
+          open_time?: string | null;
+          close_time?: string | null;
+          is_closed?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'club_opening_hours_club_id_fkey';
+            columns: ['club_id'];
+            isOneToOne: false;
+            referencedRelation: 'clubs';
+            referencedColumns: ['id'];
+          }
+        ];
       };
+
       club_images: {
         Row: {
           id: string;
@@ -141,39 +217,112 @@ export interface Database {
           position?: number;
           is_cover?: boolean;
         };
-        Update: Partial<Database['public']['Tables']['club_images']['Insert']>;
+        Update: {
+          id?: string;
+          club_id?: string;
+          url?: string;
+          position?: number;
+          is_cover?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'club_images_club_id_fkey';
+            columns: ['club_id'];
+            isOneToOne: false;
+            referencedRelation: 'clubs';
+            referencedColumns: ['id'];
+          }
+        ];
       };
+
+      admin_users: {
+        Row: {
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+    };
+
+    Views: {
+      [_ in never]: never;
+    };
+
+    Functions: {
+      [_ in never]: never;
+    };
+
+    Enums: {
+      [_ in never]: never;
+    };
+
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 }
 
-// ---------------------------------------------------------------------------
-// Tətbiq daxilində istifadə üçün əlverişli, "join" edilmiş tiplər.
-// Bunlar cədvəl sətirlərinin birbaşa əksi deyil, sorğu nəticələrinin şəklidir.
-// ---------------------------------------------------------------------------
+/* App daxilində istifadə edilən tiplər */
 
-export type District = Database['public']['Tables']['districts']['Row'];
-export type ClubType = Database['public']['Tables']['club_types']['Row'];
-export type ClubRow = Database['public']['Tables']['clubs']['Row'];
-export type ClubPricing = Database['public']['Tables']['club_pricing']['Row'];
-export type ClubOpeningHours = Database['public']['Tables']['club_opening_hours']['Row'];
-export type ClubImage = Database['public']['Tables']['club_images']['Row'];
+export type District =
+  Database['public']['Tables']['districts']['Row'];
 
-/** Klub siyahısı/xəritə üçün lazım olan bütün əlaqəli məlumatlarla klub. */
+export type ClubType =
+  Database['public']['Tables']['club_types']['Row'];
+
+export type ClubRow =
+  Database['public']['Tables']['clubs']['Row'];
+
+export type ClubPricing =
+  Database['public']['Tables']['club_pricing']['Row'];
+
+export type ClubOpeningHours =
+  Database['public']['Tables']['club_opening_hours']['Row'];
+
+export type ClubImage =
+  Database['public']['Tables']['club_images']['Row'];
+
 export interface ClubWithRelations extends ClubRow {
-  district: Pick<District, 'id' | 'name' | 'slug'> | null;
-  pricing: (ClubPricing & { club_type: Pick<ClubType, 'id' | 'name' | 'slug'> })[];
-  images: Pick<ClubImage, 'id' | 'url' | 'is_cover' | 'position'>[];
+  district:
+    | Pick<
+        District,
+        'id' | 'name' | 'slug'
+      >
+    | null;
+
+  pricing: (
+    ClubPricing & {
+      club_type: Pick<
+        ClubType,
+        'id' | 'name' | 'slug'
+      >;
+    }
+  )[];
+
+  images: Pick<
+    ClubImage,
+    'id' | 'url' | 'is_cover' | 'position'
+  >[];
+
   opening_hours: ClubOpeningHours[];
 }
 
-/** Ana səhifədə istifadə olunan filtr parametrləri (URL searchParams-dan gəlir). */
 export interface ClubFilters {
-  district?: string; // district slug
-  type?: string; // club_type slug (pc | playstation)
-  priceMax?: number; // AZN, price_from üzərindən süzgəc
-  q?: string; // klub adı / ünvanına görə axtarış mətni
+  district?: string;
+  type?: string;
+  priceMax?: number;
+  q?: string;
 }
 
-/** İstifadəçinin cari yerinə görə hesablanmış məsafə ilə zənginləşdirilmiş klub. */
-export type ClubWithDistance = ClubWithRelations & { distanceKm: number | null };
+export type ClubWithDistance =
+  ClubWithRelations & {
+    distanceKm: number | null;
+  };
