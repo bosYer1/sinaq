@@ -60,9 +60,21 @@ const DAYS = [
   'Bazar',
 ];
 
+const BAKU_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: 'Asia/Baku',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
 function dateTimeLocal(value?: string | null) {
   if (!value) return '';
-  return value.slice(0, 16);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return BAKU_DATE_TIME_FORMATTER.format(date).replace(' ', 'T');
 }
 
 export function ClubAdminForm({ club, districts, types, action, submitLabel }: ClubAdminFormProps) {
@@ -213,7 +225,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="is_active" defaultChecked={club?.is_active ?? true} />Saytda aktivdir</label>
           <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="is_premium" defaultChecked={club?.is_premium ?? false} />Premium</label>
-          <label className="text-sm font-medium">Premium bitmə tarixi<input name="premium_expires_at" type="datetime-local" defaultValue={dateTimeLocal(club?.premium_expires_at)} className={inputClass} /></label>
+          <label className="text-sm font-medium">Premium bitmə tarixi — Bakı vaxtı<input name="premium_expires_at" type="datetime-local" defaultValue={dateTimeLocal(club?.premium_expires_at)} className={inputClass} /></label>
           <div className="grid grid-cols-2 gap-3">
             <label className="text-sm font-medium">Reytinq<input name="rating_avg" type="number" step="0.1" min="0" max="5" defaultValue={club?.rating_avg ?? ''} className={inputClass} /></label>
             <label className="text-sm font-medium">Səs sayı<input name="rating_count" type="number" min="0" defaultValue={club?.rating_count ?? 0} className={inputClass} /></label>
