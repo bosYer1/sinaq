@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     q?: string;
     status?: string;
-  };
+  }>;
 }
 
 type ClubRow = {
@@ -37,7 +37,8 @@ function sanitizeSearch(value?: string) {
 }
 
 export default async function AdminClubsPage({ searchParams }: PageProps) {
-  const supabase = createClient();
+  const resolvedSearchParams = await searchParams;
+  const supabase = await createClient();
   const db = supabase as any;
 
   let query = db
@@ -58,15 +59,12 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
     `)
     .order('updated_at', { ascending: false });
 
-  const q = sanitizeSearch(searchParams.q);
+  const q = sanitizeSearch(resolvedSearchParams.q);
 
-  if (q) {
-    query = query.or(`name.ilike.%${q}%,address.ilike.%${q}%`);
-  }
-
-  if (searchParams.status === 'active') query = query.eq('is_active', true);
-  if (searchParams.status === 'inactive') query = query.eq('is_active', false);
-  if (searchParams.status === 'premium') query = query.eq('is_premium', true);
+  if (q) query = query.or(`name.ilike.%${q}%,address.ilike.%${q}%`);
+  if (resolvedSearchParams.status === 'active') query = query.eq('is_active', true);
+  if (resolvedSearchParams.status === 'inactive') query = query.eq('is_active', false);
+  if (resolvedSearchParams.status === 'premium') query = query.eq('is_premium', true);
 
   const clubsResult = await query;
 
@@ -105,10 +103,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           </p>
         </div>
 
-        <Link
-          href="/admin/klublar/yeni"
-          className="rounded-lg bg-[#7C5CFC] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#6A47F0]"
-        >
+        <Link href="/admin/klublar/yeni" className="rounded-lg bg-[#7C5CFC] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#6A47F0]">
           + Yeni klub
         </Link>
       </div>
@@ -116,7 +111,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       <form className="mt-6 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row">
         <input
           name="q"
-          defaultValue={searchParams.q ?? ''}
+          defaultValue={resolvedSearchParams.q ?? ''}
           maxLength={80}
           placeholder="Klub adı və ya ünvan..."
           className="h-10 min-w-0 flex-1 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#7C5CFC] focus:ring-2 focus:ring-[#7C5CFC]/10"
@@ -124,7 +119,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
 
         <select
           name="status"
-          defaultValue={searchParams.status ?? ''}
+          defaultValue={resolvedSearchParams.status ?? ''}
           className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm"
         >
           <option value="">Bütün statuslar</option>
@@ -133,15 +128,10 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           <option value="premium">Premium</option>
         </select>
 
-        <button type="submit" className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white">
-          Axtar
-        </button>
+        <button type="submit" className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white">Axtar</button>
 
-        {(searchParams.q || searchParams.status) ? (
-          <Link
-            href="/admin/klublar"
-            className="flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium"
-          >
+        {(resolvedSearchParams.q || resolvedSearchParams.status) ? (
+          <Link href="/admin/klublar" className="flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium">
             Təmizlə
           </Link>
         ) : null}
@@ -178,44 +168,27 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                       <div className="font-semibold text-gray-900">{club.name}</div>
                       <div className="mt-0.5 max-w-[330px] truncate text-xs text-gray-500">{club.address}</div>
                     </td>
-
                     <td className="px-4 py-3 text-gray-600">{districts.get(club.district_id) ?? '—'}</td>
-
                     <td className="px-4 py-3">
                       <span className={club.is_active ? 'rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700' : 'rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600'}>
                         {club.is_active ? 'Aktiv' : 'Deaktiv'}
                       </span>
                     </td>
-
                     <td className="px-4 py-3">
-                      {club.is_premium ? (
-                        <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-[#B8860B]">Premium</span>
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
+                      {club.is_premium ? <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-[#B8860B]">Premium</span> : <span className="text-gray-400">—</span>}
                     </td>
-
                     <td className="px-4 py-3">
                       {missing.length === 0 ? (
                         <span className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700">Tamdır</span>
                       ) : (
                         <div className="flex max-w-[260px] flex-wrap gap-1">
-                          {missing.map((item) => (
-                            <span key={item} className="rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700">
-                              {item}
-                            </span>
-                          ))}
+                          {missing.map((item) => <span key={item} className="rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700">{item}</span>)}
                         </div>
                       )}
                     </td>
-
                     <td className="px-4 py-3 text-gray-600">{club.rating_avg ?? '—'}</td>
-
                     <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/admin/klublar/${club.id}`}
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold transition hover:border-[#7C5CFC] hover:text-[#7C5CFC]"
-                      >
+                      <Link href={`/admin/klublar/${club.id}`} className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold transition hover:border-[#7C5CFC] hover:text-[#7C5CFC]">
                         Redaktə et
                       </Link>
                     </td>
