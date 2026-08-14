@@ -7,7 +7,7 @@ type ActiveClubRow = { id: string; latitude: number | null; longitude: number | 
 type ClubIdRow = { club_id: string };
 
 export default async function AdminPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   let totalClubs = 0;
   let activeClubs = 0;
@@ -75,45 +75,24 @@ export default async function AdminPage() {
           <p className="mt-1 text-sm text-gray-500">GameYer məlumatlarını bir yerdən idarə et.</p>
         </div>
 
-        <Link
-          href="/admin/klublar/yeni"
-          className="rounded-lg bg-[#7C5CFC] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6A47F0]"
-        >
+        <Link href="/admin/klublar/yeni" className="rounded-lg bg-[#7C5CFC] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6A47F0]">
           + Yeni klub
         </Link>
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <p className="text-sm text-gray-500">Ümumi klub</p>
-          <p className="mt-2 text-4xl font-bold">{totalClubs}</p>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <p className="text-sm text-gray-500">Aktiv</p>
-          <p className="mt-2 text-4xl font-bold">{activeClubs}</p>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <p className="text-sm text-gray-500">Premium</p>
-          <p className="mt-2 text-4xl font-bold">{premiumClubs}</p>
-        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Ümumi klub</p><p className="mt-2 text-4xl font-bold">{totalClubs}</p></div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv</p><p className="mt-2 text-4xl font-bold">{activeClubs}</p></div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Premium</p><p className="mt-2 text-4xl font-bold">{premiumClubs}</p></div>
       </div>
 
       <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold">Məlumat keyfiyyəti</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Aktiv klublarda tamamlanmalı sahələr. Sıfır olduqda həmin məlumat bloku tamdır.
-            </p>
+            <p className="mt-1 text-sm text-gray-500">Aktiv klublarda tamamlanmalı sahələr. Sıfır olduqda həmin məlumat bloku tamdır.</p>
           </div>
-          <Link
-            href="/admin/klublar"
-            className="text-sm font-semibold text-[#6A47F0] hover:underline"
-          >
-            Klubları idarə et
-          </Link>
+          <Link href="/admin/klublar" className="text-sm font-semibold text-[#6A47F0] hover:underline">Klubları idarə et</Link>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -128,28 +107,10 @@ export default async function AdminPage() {
 
       <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="text-lg font-bold">Sürətli idarəetmə</h2>
-
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link
-            href="/admin/klublar"
-            className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50"
-          >
-            Bütün klublar
-          </Link>
-
-          <Link
-            href="/admin/klublar/yeni"
-            className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50"
-          >
-            Klub əlavə et
-          </Link>
-
-          <Link
-            href="/"
-            className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50"
-          >
-            Sayta bax
-          </Link>
+          <Link href="/admin/klublar" className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50">Bütün klublar</Link>
+          <Link href="/admin/klublar/yeni" className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50">Klub əlavə et</Link>
+          <Link href="/" className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50">Sayta bax</Link>
         </div>
       </div>
     </div>
