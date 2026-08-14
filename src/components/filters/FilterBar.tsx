@@ -20,31 +20,31 @@ export function FilterBar({ districts, types }: FilterBarProps) {
     <div className="shrink-0 border-b border-border bg-surface">
       <div className="w-full px-4 py-3 sm:px-6 lg:px-7">
         <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
-          
-          {/* Mobile full width, desktop kompakt search */}
           <div className="w-full shrink-0 md:w-[380px] lg:w-[420px]">
             <SearchFilter />
           </div>
 
-          <div
-            className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5 md:overflow-visible md:pb-0"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            <TypeFilter types={types} />
-            <DistrictFilter districts={districts} />
-            <PriceFilter />
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div
+              className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:overflow-visible md:pb-0"
+              aria-label="Klub filtrləri"
+            >
+              <TypeFilter types={types} />
+              <DistrictFilter districts={districts} />
+              <PriceFilter />
 
-            {hasActiveFilters ? (
-              <button
-                type="button"
-                onClick={clearAll}
-                className="h-10 shrink-0 px-2 text-sm font-medium text-muted transition hover:text-ink"
-              >
-                Təmizlə
-              </button>
-            ) : null}
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={clearAll}
+                  className="h-10 shrink-0 px-2 text-sm font-medium text-muted transition hover:text-ink"
+                >
+                  Təmizlə
+                </button>
+              ) : null}
+            </div>
 
-            <div className="ml-auto shrink-0">
+            <div className="shrink-0">
               <ViewToggle />
             </div>
           </div>
