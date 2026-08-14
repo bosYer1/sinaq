@@ -7,7 +7,7 @@ export async function GET() {
   const startedAt = Date.now();
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { count, error } = await supabase
       .from('clubs')
       .select('*', { count: 'exact', head: true })
