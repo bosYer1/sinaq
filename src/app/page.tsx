@@ -7,7 +7,7 @@ import { ExploreView } from '@/components/explore/ExploreView';
 import { Skeleton } from '@/components/ui/Skeleton';
 import type { ClubFilters } from '@/types/database';
 
-export const dynamic = 'force-dynamic'; // Filtrlər hər sorğuda dəyişdiyi üçün statik cache-lənmir
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   searchParams: {
@@ -19,25 +19,26 @@ interface PageProps {
   };
 }
 
-/**
- * Ana səhifə — Server Component.
- * URL searchParams-dan filtrləri oxuyur, Supabase-dən (və ya Supabase
- * qoşulmayıbsa, yalnız development-də mock data-dan) uyğun klubları çəkir,
- * mobil-first layout-da (tab keçidli) və ya desktop-da (yan-yana) göstərir.
- *
- * Qəsdən heç bir hero/marketing bloku yoxdur — istifadəçi filtr panelini
- * və klub siyahısını ilk viewport-da görməlidir (bax layihə brief-i).
- */
+function parsePositiveNumber(value?: string) {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
 export default async function HomePage({ searchParams }: PageProps) {
   const filters: ClubFilters = {
-    district: searchParams.district,
-    type: searchParams.type,
-    priceMax: searchParams.price_max ? Number(searchParams.price_max) : undefined,
-    q: searchParams.q,
+    district: searchParams.district?.trim() || undefined,
+    type: searchParams.type?.trim() || undefined,
+    priceMax: parsePositiveNumber(searchParams.price_max),
+    q: searchParams.q?.trim() || undefined,
   };
   const view = searchParams.view === 'map' ? 'map' : 'list';
 
-  const [clubs, districts, types] = await Promise.all([getClubs(filters), getDistricts(), getClubTypes()]);
+  const [clubs, districts, types] = await Promise.all([
+    getClubs(filters),
+    getDistricts(),
+    getClubTypes(),
+  ]);
 
   return (
     <div className="flex h-[calc(100vh-56px)] flex-col">
