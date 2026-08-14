@@ -84,7 +84,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
   if (requestedType !== 'pc' && requestedType !== 'playstation') return clubs;
 
-  return clubs.filter((club) => inferClubTypeSlugs(club as any).includes(requestedType));
+  return clubs.filter((club) => inferClubTypeSlugs(club).includes(requestedType));
 }
 
 export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
