@@ -9,14 +9,16 @@ import type { ClubFilters } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
+type HomeSearchParams = {
+  district?: string;
+  type?: string;
+  price_max?: string;
+  q?: string;
+  view?: string;
+};
+
 interface PageProps {
-  searchParams: {
-    district?: string;
-    type?: string;
-    price_max?: string;
-    q?: string;
-    view?: string;
-  };
+  searchParams: Promise<HomeSearchParams>;
 }
 
 function parsePositiveNumber(value?: string) {
@@ -26,13 +28,14 @@ function parsePositiveNumber(value?: string) {
 }
 
 export default async function HomePage({ searchParams }: PageProps) {
+  const resolvedSearchParams = await searchParams;
   const filters: ClubFilters = {
-    district: searchParams.district?.trim() || undefined,
-    type: searchParams.type?.trim() || undefined,
-    priceMax: parsePositiveNumber(searchParams.price_max),
-    q: searchParams.q?.trim() || undefined,
+    district: resolvedSearchParams.district?.trim() || undefined,
+    type: resolvedSearchParams.type?.trim() || undefined,
+    priceMax: parsePositiveNumber(resolvedSearchParams.price_max),
+    q: resolvedSearchParams.q?.trim() || undefined,
   };
-  const view = searchParams.view === 'map' ? 'map' : 'list';
+  const view = resolvedSearchParams.view === 'map' ? 'map' : 'list';
 
   const [clubs, districts, types] = await Promise.all([
     getClubs(filters),
