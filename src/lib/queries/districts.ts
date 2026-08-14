@@ -3,11 +3,7 @@ import type { District, ClubType } from '@/types/database';
 
 /** Bütün rayonları əlifba sırası ilə qaytarır. */
 export async function getDistricts(): Promise<District[]> {
-  const supabase = createClient();
-
-  if (supabase === null) {
-    return [];
-  }
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('districts')
@@ -25,11 +21,7 @@ export async function getDistricts(): Promise<District[]> {
 
 /** Klub tiplərini qaytarır (PC, PlayStation). */
 export async function getClubTypes(): Promise<ClubType[]> {
-  const supabase = createClient();
-
-  if (supabase === null) {
-    return [];
-  }
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('club_types')
