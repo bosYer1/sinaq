@@ -24,6 +24,11 @@ export const metadata: Metadata = {
     'Bakıdakı PC gaming və PlayStation klublarını xəritə üzərində tap, rayon, tip və qiymətə görə filtr et.',
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'GameYer',
+    statusBarStyle: 'default',
+  },
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
