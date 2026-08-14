@@ -51,8 +51,11 @@ export function useFilters() {
   const setView = useCallback((mode: ViewMode) => updateParams({ view: mode }), [updateParams]);
 
   const clearAll = useCallback(() => {
-    router.push(pathname, { scroll: false });
-  }, [pathname, router]);
+    const params = new URLSearchParams();
+    if (view === 'map') params.set('view', 'map');
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, view]);
 
   const hasActiveFilters = Boolean(filters.district || filters.type || filters.priceMax || filters.q);
 
