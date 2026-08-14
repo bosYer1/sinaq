@@ -50,6 +50,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (pathname.startsWith('/admin/login')) {
+    response.headers.set('Cache-Control', 'private, no-store');
     return response;
   }
 
@@ -62,7 +63,9 @@ export async function middleware(request: NextRequest) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = '/admin/login';
     loginUrl.searchParams.set('next', pathname);
-    return NextResponse.redirect(loginUrl);
+    const redirect = NextResponse.redirect(loginUrl);
+    redirect.headers.set('Cache-Control', 'private, no-store');
+    return redirect;
   }
 
   const { data: adminRow, error: adminError } = await supabase
@@ -75,7 +78,9 @@ export async function middleware(request: NextRequest) {
     const homeUrl = request.nextUrl.clone();
     homeUrl.pathname = '/';
     homeUrl.search = '';
-    return NextResponse.redirect(homeUrl);
+    const redirect = NextResponse.redirect(homeUrl);
+    redirect.headers.set('Cache-Control', 'private, no-store');
+    return redirect;
   }
 
   response.headers.set('Cache-Control', 'private, no-store');
