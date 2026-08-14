@@ -6,7 +6,7 @@ import type { ClubWithDistance } from '@/types/database';
 import type { UserLocation } from '@/hooks/useUserLocation';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { formatDistance } from '@/lib/geo';
-import { formatPriceRange, isClubOpenNow } from '@/lib/utils';
+import { formatPriceRange, isClubOpenNow, isPremiumActive } from '@/lib/utils';
 
 interface ClubMapProps {
   clubs: ClubWithDistance[];
@@ -22,6 +22,7 @@ function createClubIcon(club: ClubWithDistance, isActive: boolean) {
   const hasPlayStation = typeSlugs.includes('playstation');
   const hasHours = club.opening_hours.length > 0;
   const isOpen = hasHours ? isClubOpenNow(club.opening_hours) : false;
+  const premiumActive = isPremiumActive(club);
   const size = isActive ? 40 : 34;
   const fill = hasPC && hasPlayStation
     ? 'url(#gameyer-dual)'
@@ -30,7 +31,7 @@ function createClubIcon(club: ClubWithDistance, isActive: boolean) {
       : hasPC
         ? '#7C5CFC'
         : '#6B7280';
-  const outline = club.is_premium ? '#B8860B' : '#ffffff';
+  const outline = premiumActive ? '#B8860B' : '#ffffff';
 
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 40 40" aria-hidden="true">
@@ -41,7 +42,7 @@ function createClubIcon(club: ClubWithDistance, isActive: boolean) {
         </linearGradient>
       </defs>
       ${isActive ? '<circle cx="20" cy="20" r="19" fill="#ffffff" stroke="#14161c" stroke-width="1.5" />' : ''}
-      <path d="M20 4C13.4 4 8 9.4 8 16c0 8.6 12 20 12 20s12-11.4 12-20C32 9.4 26.6 4 20 4Z" fill="${fill}" stroke="${outline}" stroke-width="${club.is_premium ? 2.5 : 2}" />
+      <path d="M20 4C13.4 4 8 9.4 8 16c0 8.6 12 20 12 20s12-11.4 12-20C32 9.4 26.6 4 20 4Z" fill="${fill}" stroke="${outline}" stroke-width="${premiumActive ? 2.5 : 2}" />
       <circle cx="20" cy="16" r="4" fill="#ffffff" />
       ${isOpen ? '<circle cx="30.5" cy="8.5" r="4.5" fill="#16A34A" stroke="#ffffff" stroke-width="2" />' : ''}
     </svg>
