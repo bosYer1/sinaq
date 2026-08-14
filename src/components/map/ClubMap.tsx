@@ -5,7 +5,6 @@ import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import type { ClubWithDistance } from '@/types/database';
 import { ClubMarker } from './ClubMarker';
 
-// Bakının mərkəzi — heç bir klubun koordinatı olmayanda default görünüş.
 const BAKU_CENTER: [number, number] = [40.3777, 49.892];
 const DEFAULT_ZOOM = 12;
 
@@ -15,7 +14,26 @@ interface ClubMapProps {
   onSelectClub?: (id: string) => void;
 }
 
-/** activeClubId dəyişəndə xəritəni həmin klubun üzərinə rəvan sürüşdürür. */
+function MapResizeHandler() {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+
+    const raf = requestAnimationFrame(() => map.invalidateSize());
+
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
+  }, [map]);
+
+  return null;
+}
+
 function FlyToActiveClub({ club }: { club: ClubWithDistance | undefined }) {
   const map = useMap();
 
@@ -33,14 +51,7 @@ export function ClubMap({ clubs, activeClubId, onSelectClub }: ClubMapProps) {
   const activeClub = clubsWithCoords.find((c) => c.id === activeClubId);
 
   return (
-    <MapContainer
-      center={BAKU_CENTER}
-      zoom={DEFAULT_ZOOM}
-      scrollWheelZoom
-      className="h-full w-full"
-      // Xəritə çubuğunu default OSM logolu vəziyyətdə saxlayırıq —
-      // OpenStreetMap-in istifadə şərtlərinə görə atribusiya mütləqdir.
-    >
+    <MapContainer center={BAKU_CENTER} zoom={DEFAULT_ZOOM} scrollWheelZoom className="h-full w-full">
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> müəllifləri &copy; <a href="https://carto.com/attributions">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -49,6 +60,7 @@ export function ClubMap({ clubs, activeClubId, onSelectClub }: ClubMapProps) {
         <ClubMarker key={club.id} club={club} isActive={club.id === activeClubId} onSelect={onSelectClub} />
       ))}
       <FlyToActiveClub club={activeClub} />
+      <MapResizeHandler />
     </MapContainer>
   );
 }
