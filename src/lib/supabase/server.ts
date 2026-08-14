@@ -1,6 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
+import {
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+} from '@/lib/supabase/public-config';
 
 type CookieToSet = {
   name: string;
@@ -20,31 +24,26 @@ type CookieToSet = {
 };
 
 export function createClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !key) {
-    return null;
-  }
-
   const cookieStore = cookies();
 
-  return createServerClient<Database>(url, key, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
+  return createServerClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: CookieToSet[]) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Server Components may not write cookies; middleware refreshes auth.
+          }
+        },
       },
-
-      setAll(cookiesToSet: CookieToSet[]) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        } catch {
-          // Server Component daxilində cookie yazmaq mümkün olmaya bilər.
-          // Middleware auth refresh-i idarə edirsə bu normaldır.
-        }
-      },
-    },
-  });
+    }
+  );
 }
