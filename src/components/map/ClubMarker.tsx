@@ -3,7 +3,10 @@
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { ClubWithDistance } from '@/types/database';
-import { isClubOpenNow, formatPriceRange } from '@/lib/utils';
+import {
+  formatPriceRange,
+  isClubOpenNow,
+} from '@/lib/utils';
 
 interface ClubMarkerProps {
   club: ClubWithDistance;
@@ -12,35 +15,73 @@ interface ClubMarkerProps {
 }
 
 function createClubIcon(
+  hasPC: boolean,
+  hasPlayStation: boolean,
   isPremium: boolean,
   isOpen: boolean,
   isActive: boolean
 ): L.DivIcon {
-  const background = isPremium ? '#B8860B' : '#7C5CFC';
-  const size = isActive ? 38 : 32;
-  const border = isActive || isOpen ? '#16A34A' : '#ffffff';
+  const size = isActive ? 40 : 34;
+
+  const fill =
+    hasPC && hasPlayStation
+      ? 'url(#bosyer-dual)'
+      : hasPlayStation
+        ? '#06AED4'
+        : '#7C5CFC';
+
+  const outline = isPremium ? '#B8860B' : '#ffffff';
+  const selectedStroke = isActive ? '#14161c' : 'transparent';
+
+  const svg = `
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="${size}"
+      height="${size}"
+      viewBox="0 0 40 40"
+    >
+      <defs>
+        <linearGradient id="bosyer-dual" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#7C5CFC" />
+          <stop offset="100%" stop-color="#06AED4" />
+        </linearGradient>
+      </defs>
+
+      ${
+        isActive
+          ? '<circle cx="20" cy="20" r="18.5" fill="white" stroke="#14161c" stroke-width="1.5"/>'
+          : ''
+      }
+
+      <path
+        d="M20 4C13.4 4 8 9.4 8 16c0 8.6 12 20 12 20s12-11.4 12-20C32 9.4 26.6 4 20 4Z"
+        fill="${fill}"
+        stroke="${outline}"
+        stroke-width="${isPremium ? 2.5 : 2}"
+      />
+
+      <circle cx="20" cy="16" r="4" fill="#ffffff" />
+
+      ${
+        isOpen
+          ? '<circle cx="30.5" cy="8.5" r="4.5" fill="#16A34A" stroke="#ffffff" stroke-width="2"/>'
+          : ''
+      }
+
+      ${
+        isActive
+          ? `<circle cx="20" cy="20" r="18" fill="none" stroke="${selectedStroke}" stroke-width="1"/>`
+          : ''
+      }
+    </svg>
+  `;
 
   return L.divIcon({
-    className: '',
-    html: `
-      <div style="
-        width:${size}px;
-        height:${size}px;
-        border-radius:50%;
-        background:${background};
-        border:3px solid ${border};
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        box-shadow:0 2px 8px rgba(0,0,0,0.25);
-        font-size:12px;
-        color:white;
-        font-weight:700;
-      ">PC</div>
-    `,
+    className: 'bosyer-marker',
+    html: svg,
     iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-    popupAnchor: [0, -size / 2],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size],
   });
 }
 
@@ -49,17 +90,30 @@ export function ClubMarker({
   isActive = false,
   onSelect,
 }: ClubMarkerProps) {
+  if (
+    club.latitude == null ||
+    club.longitude == null
+  ) {
+    return null;
+  }
+
   const openNow = isClubOpenNow(club.opening_hours);
+
+  const hasPC = club.pricing.some(
+    (pricing) => pricing.club_type.slug === 'pc'
+  );
+
+  const hasPlayStation = club.pricing.some((pricing) =>
+    ['ps', 'playstation'].includes(pricing.club_type.slug)
+  );
 
   const cheapest = [...club.pricing].sort(
     (a, b) => a.price_from - b.price_from
   )[0];
 
-  if (club.latitude == null || club.longitude == null) {
-    return null;
-  }
-
   const icon = createClubIcon(
+    hasPC,
+    hasPlayStation,
     club.is_premium,
     openNow,
     isActive
@@ -69,43 +123,56 @@ export function ClubMarker({
     <Marker
       position={[club.latitude, club.longitude]}
       icon={icon}
+      zIndexOffset={isActive ? 1000 : 0}
       eventHandlers={{
-        click: () => {
-          onSelect?.(club.id);
-        },
+        click: () => onSelect?.(club.id),
       }}
     >
       <Popup>
-        <div className="min-w-[180px]">
-          <div className="font-semibold">{club.name}</div>
-
-          {club.district ? (
-            <div className="mt-1 text-sm">
-              {club.district.name}
-            </div>
-          ) : null}
-
-          <div className="mt-2 flex gap-2 text-xs">
-            {club.pricing.map((pricing) => (
-              <span key={pricing.id}>
-                {pricing.club_type.name}
-              </span>
-            ))}
+        <div className="min-w-[190px]">
+          <div className="font-display text-sm font-semibold text-ink">
+            {club.name}
           </div>
 
-          {cheapest ? (
-            <div className="mt-2 font-medium">
-              {formatPriceRange(
-                cheapest.price_from,
-                cheapest.price_to,
-                cheapest.unit
-              )}
+          <div className="mt-1 text-xs text-muted">
+            {club.district?.name ?? 'Rayon göstərilməyib'}
+          </div>
+
+          {club.pricing.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-muted">
+              {club.pricing.map((pricing) => (
+                <span key={pricing.id}>
+                  {pricing.club_type.name}
+                </span>
+              ))}
             </div>
           ) : null}
 
-          {openNow ? (
-            <div className="mt-1 text-xs">Açıqdır</div>
-          ) : null}
+          <div className="mt-2 flex items-center justify-between gap-3">
+            {cheapest ? (
+              <span className="text-xs font-semibold text-ink">
+                {formatPriceRange(
+                  cheapest.price_from,
+                  cheapest.price_to,
+                  cheapest.unit
+                )}
+              </span>
+            ) : (
+              <span className="text-xs text-muted">
+                Qiymət göstərilməyib
+              </span>
+            )}
+
+            <span
+              className={
+                openNow
+                  ? 'text-xs font-medium text-live'
+                  : 'text-xs text-muted'
+              }
+            >
+              {openNow ? 'Açıqdır' : 'Bağlıdır'}
+            </span>
+          </div>
         </div>
       </Popup>
     </Marker>
