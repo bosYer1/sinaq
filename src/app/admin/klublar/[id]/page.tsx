@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ClubAdminForm } from '@/components/admin/ClubAdminForm';
 import { saveClub, toggleClubActive } from '../../actions';
+
 import type {
   ClubRow,
   ClubPricing,
@@ -18,6 +19,7 @@ interface PageProps {
   params: {
     id: string;
   };
+
   searchParams: {
     saved?: string;
     created?: string;
@@ -38,68 +40,72 @@ export default async function AdminEditClubPage({
     );
   }
 
-  const [
-    clubResult,
-    districtsResult,
-    typesResult,
-    pricingResult,
-    hoursResult,
-    imagesResult,
-  ] = await Promise.all([
-    supabase
-      .from('clubs')
-      .select('*')
-      .eq('id', params.id)
-      .single(),
+  /*
+   * Manual Database type-larında Supabase bəzi query-ləri `never`
+   * kimi infer etdiyi üçün yalnız bu admin səhifəsində client-i
+   * lokal olaraq boşaldırıq.
+   *
+   * Runtime query-lər dəyişmir.
+   */
+  const db = supabase as any;
 
-    supabase
-      .from('districts')
-      .select('*')
-      .order('name'),
+  const clubResult = await db
+    .from('clubs')
+    .select('*')
+    .eq('id', params.id)
+    .single();
 
-    supabase
-      .from('club_types')
-      .select('*')
-      .order('name'),
-
-    supabase
-      .from('club_pricing')
-      .select('*')
-      .eq('club_id', params.id),
-
-    supabase
-      .from('club_opening_hours')
-      .select('*')
-      .eq('club_id', params.id)
-      .order('day_of_week'),
-
-    supabase
-      .from('club_images')
-      .select('*')
-      .eq('club_id', params.id)
-      .order('position'),
-  ]);
-
-  if (clubResult.error || !clubResult.data) {
+  if (
+    clubResult.error ||
+    !clubResult.data
+  ) {
     notFound();
   }
 
-  const club = clubResult.data as unknown as ClubRow;
+  const districtsResult = await db
+    .from('districts')
+    .select('*')
+    .order('name');
+
+  const typesResult = await db
+    .from('club_types')
+    .select('*')
+    .order('name');
+
+  const pricingResult = await db
+    .from('club_pricing')
+    .select('*')
+    .eq('club_id', params.id);
+
+  const hoursResult = await db
+    .from('club_opening_hours')
+    .select('*')
+    .eq('club_id', params.id)
+    .order('day_of_week');
+
+  const imagesResult = await db
+    .from('club_images')
+    .select('*')
+    .eq('club_id', params.id)
+    .order('position');
+
+  const club =
+    clubResult.data as ClubRow;
 
   const districts =
-    (districtsResult.data ?? []) as unknown as District[];
+    (districtsResult.data ?? []) as District[];
 
   const types =
-    (typesResult.data ?? []) as unknown as ClubType[];
+    (typesResult.data ?? []) as ClubType[];
 
   const pricing =
-    (pricingResult.data ?? []) as unknown as ClubPricing[];
+    (pricingResult.data ?? []) as ClubPricing[];
 
   const hours =
-    (hoursResult.data ?? []) as unknown as ClubOpeningHours[];
+    (hoursResult.data ?? []) as ClubOpeningHours[];
 
   const images =
-    (imagesResult.data ?? []) as unknown as ClubImage[];
+    (imagesResult.data ?? []) as ClubImage[];
 
   const fullClub = {
     ...club,
@@ -146,6 +152,7 @@ export default async function AdminEditClubPage({
           />
 
           <button
+            type="submit"
             className={
               club.is_active
                 ? 'rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50'
