@@ -18,7 +18,7 @@ const CLUB_SELECT = `
 `;
 
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   let districtId: string | null = null;
 
   if (filters.district) {
@@ -97,7 +97,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
 }
 
 export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('clubs')
