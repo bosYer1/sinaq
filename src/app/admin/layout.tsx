@@ -14,7 +14,7 @@ export default function AdminLayout({
               href="/admin"
               className="text-lg font-bold"
             >
-              Bos<span className="text-[#7C5CFC]">Yer</span> Admin
+              Game<span className="text-[#7C5CFC]">Yer</span> Admin
             </Link>
 
             <nav className="mt-7 space-y-1 text-sm">
@@ -56,7 +56,7 @@ export default function AdminLayout({
                 href="/admin"
                 className="shrink-0 font-bold"
               >
-                BosYer Admin
+                GameYer Admin
               </Link>
 
               <Link
