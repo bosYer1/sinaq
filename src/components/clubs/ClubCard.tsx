@@ -6,7 +6,7 @@ import { RatingBadge } from './RatingBadge';
 import { Badge } from '@/components/ui/Badge';
 import { MapPinIcon } from '@/components/ui/Icon';
 import { inferClubTypeSlugs } from '@/lib/clubType';
-import { cn, formatPriceRange, isClubOpenNow } from '@/lib/utils';
+import { cn, formatPriceRange, isClubOpenNow, isPremiumActive } from '@/lib/utils';
 import { formatDistance } from '@/lib/geo';
 
 interface ClubCardProps {
@@ -20,6 +20,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
     const cover = club.images.find((image) => image.is_cover) ?? club.images[0];
     const hasHours = club.opening_hours.length > 0;
     const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
+    const premiumActive = isPremiumActive(club);
     const statusLabel = !hasHours ? 'İş saatı məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
     const typeSlugs = inferClubTypeSlugs(club);
     const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
@@ -78,7 +79,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
               {club.name}
             </h3>
 
-            {club.is_premium ? (
+            {premiumActive ? (
               <Badge tone="premium" className="shrink-0">VIP</Badge>
             ) : null}
           </div>
