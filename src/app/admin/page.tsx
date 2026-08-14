@@ -18,6 +18,7 @@ export default async function AdminPage() {
   let missingTypes = 0;
   let missingCoordinates = 0;
 
+  const nowIso = new Date().toISOString();
   const [
     totalResult,
     activeResult,
@@ -30,7 +31,11 @@ export default async function AdminPage() {
   ] = await Promise.all([
     supabase.from('clubs').select('*', { count: 'exact', head: true }),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true),
-    supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_premium', true),
+    supabase
+      .from('clubs')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_premium', true)
+      .gt('premium_expires_at', nowIso),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
     supabase.from('clubs').select('id,latitude,longitude').eq('is_active', true),
     supabase.from('club_opening_hours').select('club_id'),
@@ -83,7 +88,7 @@ export default async function AdminPage() {
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Ümumi klub</p><p className="mt-2 text-4xl font-bold">{totalClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv</p><p className="mt-2 text-4xl font-bold">{activeClubs}</p></div>
-        <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Premium</p><p className="mt-2 text-4xl font-bold">{premiumClubs}</p></div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv premium</p><p className="mt-2 text-4xl font-bold">{premiumClubs}</p></div>
       </div>
 
       <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
