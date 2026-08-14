@@ -13,7 +13,7 @@ export function DistrictFilter({ districts }: { districts: District[] }) {
         value={filters.district ?? ''}
         onChange={(e) => setDistrict(e.target.value || undefined)}
         className={cn(
-          'h-9 appearance-none rounded-lg border border-border bg-surface pl-3 pr-7 text-sm text-ink',
+          'h-10 appearance-none rounded-lg border border-border bg-surface pl-3 pr-7 text-sm text-ink md:h-9',
           'focus:border-primary focus:outline-none',
           filters.district && 'border-primary/50 bg-primary-light text-primary-dark',
         )}
