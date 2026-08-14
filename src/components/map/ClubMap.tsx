@@ -2,17 +2,22 @@
 
 import { useEffect } from 'react';
 import {
+  CircleMarker,
   MapContainer,
   TileLayer,
+  Tooltip,
   useMap,
 } from 'react-leaflet';
 import type { ClubWithDistance } from '@/types/database';
+import type { UserLocation } from '@/hooks/useUserLocation';
 import { ClubMarker } from './ClubMarker';
 
 interface ClubMapProps {
   clubs: ClubWithDistance[];
   activeClubId?: string | null;
   onSelectClub?: (id: string) => void;
+  userLocation?: UserLocation | null;
+  focusUserLocation?: boolean;
 }
 
 function MapResizeHandler() {
@@ -50,13 +55,22 @@ function MapResizeHandler() {
 function MapViewportHandler({
   clubs,
   activeClubId,
+  userLocation,
+  focusUserLocation,
 }: {
   clubs: ClubWithDistance[];
   activeClubId?: string | null;
+  userLocation?: UserLocation | null;
+  focusUserLocation?: boolean;
 }) {
   const map = useMap();
 
   useEffect(() => {
+    if (focusUserLocation && userLocation) {
+      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 0.45 });
+      return;
+    }
+
     const clubsWithCoords = clubs.filter(
       (club) => club.latitude != null && club.longitude != null
     );
@@ -98,7 +112,7 @@ function MapViewportHandler({
       maxZoom: 14,
       animate: false,
     });
-  }, [map, clubs, activeClubId]);
+  }, [map, clubs, activeClubId, userLocation, focusUserLocation]);
 
   return null;
 }
@@ -107,6 +121,8 @@ export function ClubMap({
   clubs,
   activeClubId,
   onSelectClub,
+  userLocation,
+  focusUserLocation = false,
 }: ClubMapProps) {
   const clubsWithCoords = clubs.filter(
     (club) =>
@@ -122,12 +138,34 @@ export function ClubMap({
       className="h-full w-full"
     >
       <MapResizeHandler />
-      <MapViewportHandler clubs={clubs} activeClubId={activeClubId} />
+      <MapViewportHandler
+        clubs={clubs}
+        activeClubId={activeClubId}
+        userLocation={userLocation}
+        focusUserLocation={focusUserLocation}
+      />
 
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
+
+      {userLocation ? (
+        <CircleMarker
+          center={[userLocation.lat, userLocation.lng]}
+          radius={8}
+          pathOptions={{
+            color: '#ffffff',
+            weight: 3,
+            fillColor: '#2563EB',
+            fillOpacity: 1,
+          }}
+        >
+          <Tooltip direction="top" offset={[0, -8]} permanent={false}>
+            Sənin konumun
+          </Tooltip>
+        </CircleMarker>
+      ) : null}
 
       {clubsWithCoords.map((club) => (
         <ClubMarker
