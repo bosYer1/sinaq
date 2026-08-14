@@ -104,9 +104,9 @@ function getBakuDayAndMinutes(date = new Date()) {
  * Bakı vaxtına görə klubun hazırda açıq olub-olmadığını hesablayır.
  * `openingHours` — həmin klubun bütün həftə sətirləri (club_opening_hours).
  *
- * Gecə yarısını keçən qrafikdə (məs. Cümə 18:00–02:00) şənbə 01:00
- * hələ cümə növbəsinin davamıdır. Ona görə həm bugünkü növbə, həm də
- * əvvəlki günün gecə yarısını keçən növbəsi yoxlanılır.
+ * Eyni açılış və bağlanış saatı (məs. 00:00–00:00) 24 saat açıq qrafik
+ * kimi qəbul edilir. Gecə yarısını keçən qrafikdə (məs. Cümə 18:00–02:00)
+ * şənbə 01:00 hələ cümə növbəsinin davamıdır.
  */
 export function isClubOpenNow(openingHours: OpeningHour[]): boolean {
   if (!openingHours || openingHours.length === 0) return false;
@@ -119,10 +119,12 @@ export function isClubOpenNow(openingHours: OpeningHour[]): boolean {
     const openMinutes = timeToMinutes(today.open_time);
     const closeMinutes = timeToMinutes(today.close_time);
 
+    // Admin panelində 00:00–00:00 kimi saxlanılan qrafik 24/7 deməkdir.
+    if (closeMinutes === openMinutes) return true;
+
     if (closeMinutes > openMinutes) {
       if (nowMinutes >= openMinutes && nowMinutes < closeMinutes) return true;
     } else if (nowMinutes >= openMinutes) {
-      // Bugünkü növbə gecə yarısını keçir və hələ gecə yarısına çatmamışıq.
       return true;
     }
   }
@@ -132,8 +134,7 @@ export function isClubOpenNow(openingHours: OpeningHour[]): boolean {
     const previousOpen = timeToMinutes(previous.open_time);
     const previousClose = timeToMinutes(previous.close_time);
 
-    // Yalnız gecə yarısını keçən əvvəlki növbə cari günün erkən saatlarına daşına bilər.
-    if (previousClose <= previousOpen && nowMinutes < previousClose) {
+    if (previousClose < previousOpen && nowMinutes < previousClose) {
       return true;
     }
   }
