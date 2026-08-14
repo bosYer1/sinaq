@@ -25,15 +25,12 @@ function createClubIcon(
 
   const fill =
     hasPC && hasPlayStation
-      ? 'url(#bosyer-dual)'
+      ? 'url(#gameyer-dual)'
       : hasPlayStation
         ? '#06AED4'
         : '#7C5CFC';
 
-  const outline =
-    isPremium
-      ? '#B8860B'
-      : '#ffffff';
+  const outline = isPremium ? '#B8860B' : '#ffffff';
 
   const svg = `
     <svg
@@ -44,7 +41,7 @@ function createClubIcon(
     >
       <defs>
         <linearGradient
-          id="bosyer-dual"
+          id="gameyer-dual"
           x1="0"
           y1="0"
           x2="1"
@@ -109,23 +106,10 @@ function createClubIcon(
 
   return L.divIcon({
     className: 'bosyer-marker',
-
     html: svg,
-
-    iconSize: [
-      size,
-      size,
-    ],
-
-    iconAnchor: [
-      size / 2,
-      size,
-    ],
-
-    popupAnchor: [
-      0,
-      -size,
-    ],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size],
   });
 }
 
@@ -141,44 +125,34 @@ export function ClubMarker({
     return null;
   }
 
-  const openNow =
-    isClubOpenNow(
-      club.opening_hours
-    );
+  const openNow = isClubOpenNow(
+    club.opening_hours
+  );
 
-  const hasPC =
-    club.pricing.some(
-      (pricing) =>
-        pricing.club_type.slug ===
-        'pc'
-    );
+  const hasPC = club.pricing.some(
+    (pricing) =>
+      pricing.club_type.slug === 'pc'
+  );
 
-  const hasPlayStation =
-    club.pricing.some(
-      (pricing) =>
-        [
-          'ps',
-          'playstation',
-        ].includes(
-          pricing.club_type.slug
-        )
-    );
+  const hasPlayStation = club.pricing.some(
+    (pricing) =>
+      ['ps', 'playstation'].includes(
+        pricing.club_type.slug
+      )
+  );
 
-  const cheapest =
-    [...club.pricing].sort(
-      (a, b) =>
-        a.price_from -
-        b.price_from
-    )[0];
+  const cheapest = [...club.pricing].sort(
+    (a, b) =>
+      a.price_from - b.price_from
+  )[0];
 
-  const icon =
-    createClubIcon(
-      hasPC,
-      hasPlayStation,
-      club.is_premium,
-      openNow,
-      isActive
-    );
+  const icon = createClubIcon(
+    hasPC,
+    hasPlayStation,
+    club.is_premium,
+    openNow,
+    isActive
+  );
 
   const googleMapsUrl =
     `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}`;
@@ -191,56 +165,50 @@ export function ClubMarker({
       ]}
       icon={icon}
       zIndexOffset={
-        isActive
-          ? 1000
-          : 0
+        isActive ? 1000 : 0
       }
       eventHandlers={{
         click: () =>
-          onSelect?.(
-            club.id
-          ),
+          onSelect?.(club.id),
       }}
     >
       <Popup>
         <div className="min-w-[210px]">
+          {/* Klub adı */}
           <div className="font-display text-sm font-semibold text-ink">
             {club.name}
           </div>
 
+          {/* Rayon */}
           <div className="mt-1 text-xs text-muted">
             {club.district?.name ??
               'Rayon göstərilməyib'}
           </div>
 
+          {/* Ünvan */}
           {club.address ? (
             <div className="mt-0.5 text-xs text-muted">
               {club.address}
             </div>
           ) : null}
 
-          {club.pricing.length >
-          0 ? (
+          {/* Klub tipləri */}
+          {club.pricing.length > 0 ? (
             <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-muted">
               {club.pricing.map(
                 (pricing) => (
                   <span
-                    key={
-                      pricing.id
-                    }
+                    key={pricing.id}
                     className="rounded bg-surface-alt px-1.5 py-0.5"
                   >
-                    {
-                      pricing
-                        .club_type
-                        .name
-                    }
+                    {pricing.club_type.name}
                   </span>
                 )
               )}
             </div>
           ) : null}
 
+          {/* Qiymət + status */}
           <div className="mt-2 flex items-center justify-between gap-3">
             {cheapest ? (
               <span className="text-xs font-semibold text-ink">
@@ -269,14 +237,17 @@ export function ClubMarker({
             </span>
           </div>
 
-          {/* GOOGLE MAPS ROUTE */}
+          {/* Google Maps */}
           <a
-            href={
-              googleMapsUrl
-            }
+            href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-className="mt-3 flex h-9 w-full items-center justify-center rounded-control bg-[#1A73E8] px-3 text-xs font-semibold text-white transition hover:bg-[#1557B0]"          >
+            style={{
+              backgroundColor: '#1A73E8',
+              color: '#ffffff',
+            }}
+            className="mt-3 flex h-9 w-full items-center justify-center rounded-control px-3 text-xs font-semibold no-underline transition hover:opacity-90"
+          >
             Google Maps-də marşrut
           </a>
         </div>
