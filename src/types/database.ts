@@ -1,5 +1,5 @@
 /**
- * GameYer Supabase database TypeScript tipləri.
+ * BosYer Supabase database TypeScript tipləri.
  */
 
 export type Json =
