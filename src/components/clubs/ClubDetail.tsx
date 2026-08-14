@@ -80,7 +80,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
         <div className="mb-6 flex aspect-[16/7] items-center justify-center overflow-hidden rounded-card border border-border bg-gradient-to-br from-primary-light via-surface to-surface-alt">
           <div className="px-6 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary font-display text-3xl font-bold text-white shadow-card">
-              B
+              G
             </div>
             <p className="mt-4 font-display text-lg font-semibold text-ink">{club.name}</p>
             <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">{fallbackType}</p>
