@@ -53,14 +53,55 @@ export async function generateMetadata({
   };
 }
 
-export default async function ClubPage({
-  params,
-}: ClubPageProps) {
+export default async function ClubPage({ params }: ClubPageProps) {
   const club = await getClubBySlug(params.slug);
 
   if (!club) {
     notFound();
   }
 
-  return <ClubDetail club={club} />;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bosyer-web.vercel.app';
+  const typeNames = club.club_types.map((item) => item.club_type.name);
+  const coverImage = [...club.images]
+    .sort((a, b) => a.position - b.position)
+    .find((image) => image.is_cover)?.url ??
+    [...club.images].sort((a, b) => a.position - b.position)[0]?.url;
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: club.name,
+    url: `${siteUrl}/klub/${club.slug}`,
+    description: club.description || undefined,
+    image: coverImage || undefined,
+    telephone: club.phone || undefined,
+    address: club.address
+      ? {
+          '@type': 'PostalAddress',
+          streetAddress: club.address,
+          addressLocality: 'Bakı',
+          addressCountry: 'AZ',
+        }
+      : undefined,
+    geo:
+      club.latitude != null && club.longitude != null
+        ? {
+            '@type': 'GeoCoordinates',
+            latitude: club.latitude,
+            longitude: club.longitude,
+          }
+        : undefined,
+    sameAs: club.instagram_url ? [club.instagram_url] : undefined,
+    keywords: typeNames.length > 0 ? typeNames.join(', ') : undefined,
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }}
+      />
+      <ClubDetail club={club} />
+    </>
+  );
 }
