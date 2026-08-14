@@ -21,6 +21,10 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
       : 'Hazırda bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
   const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
+  const phoneNumbers = (club.phone ?? '')
+    .split(/\s*\/\s*|\s*,\s*|\s*;\s*/)
+    .map((phone) => phone.trim())
+    .filter(Boolean);
 
   const sortedHours = [...club.opening_hours].sort(
     (a, b) => a.day_of_week - b.day_of_week
@@ -192,12 +196,20 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               <p className="mt-1 leading-5 text-ink">{club.address || 'Ünvan göstərilməyib'}</p>
             </div>
 
-            {club.phone ? (
+            {phoneNumbers.length > 0 ? (
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted">Telefon</p>
-                <a href={`tel:${club.phone}`} className="mt-1 inline-block font-medium text-primary hover:underline">
-                  {club.phone}
-                </a>
+                <div className="mt-1 flex flex-col items-start gap-1">
+                  {phoneNumbers.map((phone) => (
+                    <a
+                      key={phone}
+                      href={`tel:${phone.replace(/[^+\d]/g, '')}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {phone}
+                    </a>
+                  ))}
+                </div>
               </div>
             ) : null}
 
