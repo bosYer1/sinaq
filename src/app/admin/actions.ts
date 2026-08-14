@@ -6,25 +6,15 @@ import { createClient } from '@/lib/supabase/server';
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
-
-  return typeof value === 'string'
-    ? value.trim()
-    : '';
+  return typeof value === 'string' ? value.trim() : '';
 }
 
-function nullableText(
-  formData: FormData,
-  key: string
-) {
+function nullableText(formData: FormData, key: string) {
   const value = text(formData, key);
-
   return value || null;
 }
 
-function nullableNumber(
-  formData: FormData,
-  key: string
-) {
+function nullableNumber(formData: FormData, key: string) {
   const value = text(formData, key);
 
   if (!value) {
@@ -33,15 +23,10 @@ function nullableNumber(
 
   const parsed = Number(value);
 
-  return Number.isFinite(parsed)
-    ? parsed
-    : null;
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
-function booleanValue(
-  formData: FormData,
-  key: string
-) {
+function booleanValue(formData: FormData, key: string) {
   return formData.get(key) === 'on';
 }
 
@@ -66,12 +51,12 @@ async function replaceRelations(
   const supabase = createClient();
 
   if (!supabase) {
-    throw new Error(
-      'Supabase konfiqurasiya edilməyib.'
-    );
+    throw new Error('Supabase konfiqurasiya edilməyib.');
   }
 
-  // Club types / pricing
+  /*
+   * CLUB TYPES / PRICING
+   */
   const {
     data: typesData,
     error: typesError,
@@ -100,19 +85,15 @@ async function replaceRelations(
     .map((type) => ({
       club_id: clubId,
       club_type_id: type.id,
-
       price_from:
         nullableNumber(
           formData,
           `price_from_${type.id}`
         ) ?? 0,
-
-      price_to:
-        nullableNumber(
-          formData,
-          `price_to_${type.id}`
-        ),
-
+      price_to: nullableNumber(
+        formData,
+        `price_to_${type.id}`
+      ),
       unit:
         text(
           formData,
@@ -128,9 +109,7 @@ async function replaceRelations(
     .eq('club_id', clubId);
 
   if (pricingDeleteError) {
-    throw new Error(
-      pricingDeleteError.message
-    );
+    throw new Error(pricingDeleteError.message);
   }
 
   if (pricingRows.length > 0) {
@@ -138,16 +117,16 @@ async function replaceRelations(
       error: pricingInsertError,
     } = await supabase
       .from('club_pricing')
-      .insert(pricingRows);
+      .insert(pricingRows as never[]);
 
     if (pricingInsertError) {
-      throw new Error(
-        pricingInsertError.message
-      );
+      throw new Error(pricingInsertError.message);
     }
   }
 
-  // Opening hours
+  /*
+   * OPENING HOURS
+   */
   const openingRows = Array.from(
     { length: 7 },
     (_, day) => {
@@ -159,21 +138,18 @@ async function replaceRelations(
       return {
         club_id: clubId,
         day_of_week: day,
-
         open_time: closed
           ? null
           : nullableText(
               formData,
               `open_time_${day}`
             ),
-
         close_time: closed
           ? null
           : nullableText(
               formData,
               `close_time_${day}`
             ),
-
         is_closed: closed,
       };
     }
@@ -187,28 +163,23 @@ async function replaceRelations(
     .eq('club_id', clubId);
 
   if (hoursDeleteError) {
-    throw new Error(
-      hoursDeleteError.message
-    );
+    throw new Error(hoursDeleteError.message);
   }
 
   const {
     error: hoursInsertError,
   } = await supabase
     .from('club_opening_hours')
-    .insert(openingRows);
+    .insert(openingRows as never[]);
 
   if (hoursInsertError) {
-    throw new Error(
-      hoursInsertError.message
-    );
+    throw new Error(hoursInsertError.message);
   }
 
-  // Images
-  const urls = text(
-    formData,
-    'image_urls'
-  )
+  /*
+   * IMAGES
+   */
+  const urls = text(formData, 'image_urls')
     .split('\n')
     .map((value) => value.trim())
     .filter(Boolean);
@@ -221,9 +192,7 @@ async function replaceRelations(
     .eq('club_id', clubId);
 
   if (imageDeleteError) {
-    throw new Error(
-      imageDeleteError.message
-    );
+    throw new Error(imageDeleteError.message);
   }
 
   if (urls.length > 0) {
@@ -240,12 +209,10 @@ async function replaceRelations(
       error: imageInsertError,
     } = await supabase
       .from('club_images')
-      .insert(imageRows);
+      .insert(imageRows as never[]);
 
     if (imageInsertError) {
-      throw new Error(
-        imageInsertError.message
-      );
+      throw new Error(imageInsertError.message);
     }
   }
 }
@@ -256,28 +223,19 @@ export async function saveClub(
   const supabase = createClient();
 
   if (!supabase) {
-    throw new Error(
-      'Supabase konfiqurasiya edilməyib.'
-    );
+    throw new Error('Supabase konfiqurasiya edilməyib.');
   }
 
   const id = text(formData, 'id');
 
   if (!id) {
-    throw new Error(
-      'Klub ID tapılmadı.'
-    );
+    throw new Error('Klub ID tapılmadı.');
   }
 
-  const name = text(
-    formData,
-    'name'
-  );
+  const name = text(formData, 'name');
 
   if (!name) {
-    throw new Error(
-      'Klub adı boş ola bilməz.'
-    );
+    throw new Error('Klub adı boş ola bilməz.');
   }
 
   const slug =
@@ -290,117 +248,81 @@ export async function saveClub(
   );
 
   if (!districtId) {
-    throw new Error(
-      'Rayon seçilməlidir.'
-    );
+    throw new Error('Rayon seçilməlidir.');
   }
 
-  const address = text(
-    formData,
-    'address'
-  );
+  const address = text(formData, 'address');
 
   if (!address) {
-    throw new Error(
-      'Ünvan boş ola bilməz.'
-    );
+    throw new Error('Ünvan boş ola bilməz.');
   }
 
-  const {
-    error,
-  } = await supabase
+  const updatePayload = {
+    name,
+    slug,
+    description: nullableText(
+      formData,
+      'description'
+    ),
+    district_id: districtId,
+    address,
+    latitude: nullableNumber(
+      formData,
+      'latitude'
+    ),
+    longitude: nullableNumber(
+      formData,
+      'longitude'
+    ),
+    phone: nullableText(
+      formData,
+      'phone'
+    ),
+    instagram_url: nullableText(
+      formData,
+      'instagram_url'
+    ),
+    rating_avg: nullableNumber(
+      formData,
+      'rating_avg'
+    ),
+    rating_count:
+      nullableNumber(
+        formData,
+        'rating_count'
+      ) ?? 0,
+    is_premium: booleanValue(
+      formData,
+      'is_premium'
+    ),
+    premium_expires_at:
+      nullableText(
+        formData,
+        'premium_expires_at'
+      ),
+    is_active: booleanValue(
+      formData,
+      'is_active'
+    ),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
     .from('clubs')
-    .update({
-      name,
-      slug,
-
-      description:
-        nullableText(
-          formData,
-          'description'
-        ),
-
-      district_id: districtId,
-
-      address,
-
-      latitude:
-        nullableNumber(
-          formData,
-          'latitude'
-        ),
-
-      longitude:
-        nullableNumber(
-          formData,
-          'longitude'
-        ),
-
-      phone:
-        nullableText(
-          formData,
-          'phone'
-        ),
-
-      instagram_url:
-        nullableText(
-          formData,
-          'instagram_url'
-        ),
-
-      rating_avg:
-        nullableNumber(
-          formData,
-          'rating_avg'
-        ),
-
-      rating_count:
-        nullableNumber(
-          formData,
-          'rating_count'
-        ) ?? 0,
-
-      is_premium:
-        booleanValue(
-          formData,
-          'is_premium'
-        ),
-
-      premium_expires_at:
-        nullableText(
-          formData,
-          'premium_expires_at'
-        ),
-
-      is_active:
-        booleanValue(
-          formData,
-          'is_active'
-        ),
-
-      updated_at:
-        new Date().toISOString(),
-    })
+    .update(updatePayload as never)
     .eq('id', id);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  await replaceRelations(
-    id,
-    formData
-  );
+  await replaceRelations(id, formData);
 
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
-  revalidatePath(
-    `/admin/klublar/${id}`
-  );
-  revalidatePath(
-    `/klub/${slug}`
-  );
+  revalidatePath(`/admin/klublar/${id}`);
+  revalidatePath(`/klub/${slug}`);
 
   redirect(
     `/admin/klublar/${id}?saved=1`
@@ -413,20 +335,13 @@ export async function createClub(
   const supabase = createClient();
 
   if (!supabase) {
-    throw new Error(
-      'Supabase konfiqurasiya edilməyib.'
-    );
+    throw new Error('Supabase konfiqurasiya edilməyib.');
   }
 
-  const name = text(
-    formData,
-    'name'
-  );
+  const name = text(formData, 'name');
 
   if (!name) {
-    throw new Error(
-      'Klub adı boş ola bilməz.'
-    );
+    throw new Error('Klub adı boş ola bilməz.');
   }
 
   const slug =
@@ -439,108 +354,84 @@ export async function createClub(
   );
 
   if (!districtId) {
-    throw new Error(
-      'Rayon seçilməlidir.'
-    );
+    throw new Error('Rayon seçilməlidir.');
   }
 
-  const address = text(
-    formData,
-    'address'
-  );
+  const address = text(formData, 'address');
 
   if (!address) {
-    throw new Error(
-      'Ünvan boş ola bilməz.'
-    );
+    throw new Error('Ünvan boş ola bilməz.');
   }
 
+  const insertPayload = {
+    name,
+    slug,
+    description: nullableText(
+      formData,
+      'description'
+    ),
+    district_id: districtId,
+    address,
+    latitude: nullableNumber(
+      formData,
+      'latitude'
+    ),
+    longitude: nullableNumber(
+      formData,
+      'longitude'
+    ),
+    phone: nullableText(
+      formData,
+      'phone'
+    ),
+    instagram_url: nullableText(
+      formData,
+      'instagram_url'
+    ),
+    rating_avg: nullableNumber(
+      formData,
+      'rating_avg'
+    ),
+    rating_count:
+      nullableNumber(
+        formData,
+        'rating_count'
+      ) ?? 0,
+    is_premium: booleanValue(
+      formData,
+      'is_premium'
+    ),
+    premium_expires_at:
+      nullableText(
+        formData,
+        'premium_expires_at'
+      ),
+    is_active: booleanValue(
+      formData,
+      'is_active'
+    ),
+  };
+
   const {
-    data: club,
+    data: clubData,
     error,
   } = await supabase
     .from('clubs')
-    .insert({
-      name,
-      slug,
-
-      description:
-        nullableText(
-          formData,
-          'description'
-        ),
-
-      district_id: districtId,
-
-      address,
-
-      latitude:
-        nullableNumber(
-          formData,
-          'latitude'
-        ),
-
-      longitude:
-        nullableNumber(
-          formData,
-          'longitude'
-        ),
-
-      phone:
-        nullableText(
-          formData,
-          'phone'
-        ),
-
-      instagram_url:
-        nullableText(
-          formData,
-          'instagram_url'
-        ),
-
-      rating_avg:
-        nullableNumber(
-          formData,
-          'rating_avg'
-        ),
-
-      rating_count:
-        nullableNumber(
-          formData,
-          'rating_count'
-        ) ?? 0,
-
-      is_premium:
-        booleanValue(
-          formData,
-          'is_premium'
-        ),
-
-      premium_expires_at:
-        nullableText(
-          formData,
-          'premium_expires_at'
-        ),
-
-      is_active:
-        booleanValue(
-          formData,
-          'is_active'
-        ),
-    })
+    .insert(insertPayload as never)
     .select('id,slug')
     .single();
 
   if (error) {
-    throw new Error(
-      error.message
-    );
+    throw new Error(error.message);
   }
 
+  const club = clubData as {
+    id: string;
+    slug: string;
+  } | null;
+
   if (!club) {
-    throw new Error(
-      'Klub yaradılmadı.'
-    );
+    throw new Error('Klub yaradılmadı.');
   }
 
   await replaceRelations(
@@ -563,20 +454,13 @@ export async function toggleClubActive(
   const supabase = createClient();
 
   if (!supabase) {
-    throw new Error(
-      'Supabase konfiqurasiya edilməyib.'
-    );
+    throw new Error('Supabase konfiqurasiya edilməyib.');
   }
 
-  const id = text(
-    formData,
-    'id'
-  );
+  const id = text(formData, 'id');
 
   if (!id) {
-    throw new Error(
-      'Klub ID tapılmadı.'
-    );
+    throw new Error('Klub ID tapılmadı.');
   }
 
   const nextValue =
@@ -585,28 +469,22 @@ export async function toggleClubActive(
       'next_value'
     ) === 'true';
 
-  const {
-    error,
-  } = await supabase
-    .from('clubs')
-    .update({
-      is_active: nextValue,
+  const payload = {
+    is_active: nextValue,
+    updated_at: new Date().toISOString(),
+  };
 
-      updated_at:
-        new Date().toISOString(),
-    })
+  const { error } = await supabase
+    .from('clubs')
+    .update(payload as never)
     .eq('id', id);
 
   if (error) {
-    throw new Error(
-      error.message
-    );
+    throw new Error(error.message);
   }
 
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
-  revalidatePath(
-    `/admin/klublar/${id}`
-  );
+  revalidatePath(`/admin/klublar/${id}`);
 }
