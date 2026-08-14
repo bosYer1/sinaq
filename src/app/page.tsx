@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts, getClubTypes } from '@/lib/queries/districts';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
-import { Hero } from '@/components/home/Hero';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { ClubList } from '@/components/clubs/ClubList';
 import { MapWrapper } from '@/components/map/MapWrapper';
@@ -29,20 +28,21 @@ export default async function HomePage({ searchParams }: PageProps) {
   const filters: ClubFilters = {
     district: searchParams.district,
     type: searchParams.type,
-    priceMax: searchParams.price_max ? Number(searchParams.price_max) : undefined,
+    priceMax: searchParams.price_max
+      ? Number(searchParams.price_max)
+      : undefined,
   };
+
   const view = searchParams.view === 'map' ? 'map' : 'list';
 
-  const [clubs, districts, types] = await Promise.all([getClubs(filters), getDistricts(), getClubTypes()]);
+  const [clubs, districts, types] = await Promise.all([
+    getClubs(filters),
+    getDistricts(),
+    getClubTypes(),
+  ]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Hero
-  clubCount={clubs.length}
-  districtCount={districts.length}
-  openNowCount={openNowCount}
-/>
-
       <Suspense
         fallback={
           <div className="border-b border-border bg-surface px-4 py-3 sm:px-6">
@@ -59,11 +59,18 @@ export default async function HomePage({ searchParams }: PageProps) {
             view === 'map' ? 'hidden' : 'block'
           }`}
         >
-          <p className="mb-3 text-sm text-muted">{clubs.length} klub tapıldı</p>
+          <p className="mb-3 text-sm text-muted">
+            {clubs.length} klub tapıldı
+          </p>
+
           <ClubList clubs={clubs} />
         </section>
 
-        <section className={`min-h-0 flex-1 ${view === 'map' ? 'block' : 'hidden'} lg:block`}>
+        <section
+          className={`min-h-0 flex-1 ${
+            view === 'map' ? 'block' : 'hidden'
+          } lg:block`}
+        >
           <MapWrapper clubs={clubs} />
         </section>
       </div>
