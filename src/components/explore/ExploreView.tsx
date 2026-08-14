@@ -28,7 +28,9 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   }, [location, pendingMapFocus]);
 
   useEffect(() => {
-    if (status === 'denied' || status === 'unsupported') setPendingMapFocus(false);
+    if (status === 'denied' || status === 'unsupported' || status === 'unavailable') {
+      setPendingMapFocus(false);
+    }
   }, [status]);
 
   const clubsWithDistance = useMemo(() => {
@@ -88,27 +90,33 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     ? 'Lokasiya alınır...'
     : status === 'denied'
       ? 'Lokasiya bağlıdır'
-      : status === 'unsupported'
-        ? 'Lokasiya dəstəklənmir'
-        : sortByDistance && location
-          ? 'Yaxınlıq sırası aktivdir'
-          : 'Yaxınlığıma görə';
+      : status === 'unavailable'
+        ? 'Yenidən yoxla'
+        : status === 'unsupported'
+          ? 'Lokasiya dəstəklənmir'
+          : sortByDistance && location
+            ? 'Yaxınlıq sırası aktivdir'
+            : 'Yaxınlığıma görə';
 
   const mapLocationLabel = status === 'loading'
     ? 'Konum alınır...'
     : status === 'denied'
       ? 'Konuma icazə ver'
-      : status === 'unsupported'
-        ? 'Konum dəstəklənmir'
-        : location
-          ? 'Mənim konumum'
-          : 'Yaxın klublar';
+      : status === 'unavailable'
+        ? 'Konumu yenilə'
+        : status === 'unsupported'
+          ? 'Konum dəstəklənmir'
+          : location
+            ? 'Mənim konumum'
+            : 'Yaxın klublar';
 
   const locationMessage = status === 'denied'
     ? 'Yaxın klubları görmək üçün brauzer ayarlarında GameYer üçün lokasiya icazəsini aktiv et.'
-    : status === 'unsupported'
-      ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
-      : null;
+    : status === 'unavailable'
+      ? 'Konum alınmadı. GPS və internet bağlantısını yoxlayıb yenidən cəhd et.'
+      : status === 'unsupported'
+        ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
+        : null;
 
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden bg-bg lg:flex-row">
