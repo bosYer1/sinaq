@@ -30,6 +30,14 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
     (a, b) => a.day_of_week - b.day_of_week
   );
   const sortedImages = [...club.images].sort((a, b) => a.position - b.position);
+  const fallbackType =
+    typeSlugs.length === 2
+      ? 'PC + PlayStation'
+      : typeSlugs[0] === 'pc'
+        ? 'PC Gaming'
+        : typeSlugs[0] === 'playstation'
+          ? 'PlayStation'
+          : 'Gaming Club';
 
   const googleMapsUrl =
     club.latitude != null && club.longitude != null
@@ -69,12 +77,14 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           ))}
         </div>
       ) : (
-        <div className="mb-6 flex aspect-[16/7] items-center justify-center rounded-card border border-border bg-surface-alt">
-          <div className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface">
-              <span className="text-lg font-bold text-primary">G</span>
+        <div className="mb-6 flex aspect-[16/7] items-center justify-center overflow-hidden rounded-card border border-border bg-gradient-to-br from-primary-light via-surface to-surface-alt">
+          <div className="px-6 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary font-display text-3xl font-bold text-white shadow-card">
+              B
             </div>
-            <p className="mt-3 text-sm text-muted">Klub şəkli hələ əlavə edilməyib</p>
+            <p className="mt-4 font-display text-lg font-semibold text-ink">{club.name}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">{fallbackType}</p>
+            <p className="mt-3 text-sm text-muted">Real klub şəkilləri əlavə ediləndə burada görünəcək.</p>
           </div>
         </div>
       )}
