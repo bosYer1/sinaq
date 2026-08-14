@@ -19,13 +19,17 @@ export function ExploreView({
   searchActive,
 }: ExploreViewProps) {
   const { location } = useUserLocation();
+
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
-  const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+
+  const cardRefs =
+    useRef<Record<string, HTMLAnchorElement | null>>({});
 
   const clubsWithDistance = useMemo(
     () =>
       clubs.map((club) => ({
         ...club,
+
         distanceKm:
           location &&
           club.latitude != null &&
@@ -55,14 +59,15 @@ export function ExploreView({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 overflow-hidden lg:flex-row">
+    <div className="flex min-h-0 flex-1 overflow-hidden bg-bg lg:flex-row">
+      {/* CLUB LIST */}
       <section
-        className={`min-h-0 w-full overflow-y-auto bg-bg px-4 py-4 sm:px-6 lg:block lg:w-[400px] lg:shrink-0 lg:border-r lg:border-border xl:w-[420px] ${
+        className={`min-h-0 w-full overflow-y-auto px-4 py-4 sm:px-6 lg:block lg:w-[400px] lg:shrink-0 xl:w-[420px] ${
           view === 'map' ? 'hidden' : 'block'
         }`}
       >
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-medium text-ink">
+          <p className="text-sm font-semibold text-ink">
             {clubsWithDistance.length} klub
           </p>
 
@@ -80,16 +85,19 @@ export function ExploreView({
         />
       </section>
 
+      {/* MAP PANEL */}
       <section
-        className={`relative min-h-0 flex-1 overflow-hidden bg-surface-alt ${
+        className={`relative min-h-0 flex-1 bg-bg p-3 pt-0 lg:p-3 lg:pl-0 ${
           view === 'map' ? 'block' : 'hidden'
         } lg:block`}
       >
-        <MapWrapper
-          clubs={clubsWithDistance}
-          activeClubId={activeClubId}
-          onSelectClub={handleSelectMarker}
-        />
+        <div className="h-full min-h-0 overflow-hidden rounded-xl border border-border-strong bg-surface shadow-card">
+          <MapWrapper
+            clubs={clubsWithDistance}
+            activeClubId={activeClubId}
+            onSelectClub={handleSelectMarker}
+          />
+        </div>
       </section>
     </div>
   );
