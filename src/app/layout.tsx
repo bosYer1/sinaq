@@ -50,7 +50,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Game<span className="text-primary">Yer</span>
               </span>
             </Link>
-            <span className="hidden text-xs text-muted sm:inline">Bakıda gaming klubu tap</span>
+
+            <nav className="flex items-center gap-3 text-[11px] font-medium text-muted sm:gap-4 sm:text-xs" aria-label="Əsas keçidlər">
+              <Link href="/elaqe" className="transition hover:text-ink">Əlaqə</Link>
+              <Link href="/mexfilik" className="hidden transition hover:text-ink sm:inline">Məxfilik</Link>
+              <span className="hidden text-muted lg:inline">Bakıda gaming klubu tap</span>
+            </nav>
           </div>
         </header>
         <main>{children}</main>
