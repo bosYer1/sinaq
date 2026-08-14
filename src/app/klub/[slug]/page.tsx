@@ -9,9 +9,17 @@ interface ClubPageProps {
   };
 }
 
-export async function generateMetadata({
-  params,
-}: ClubPageProps): Promise<Metadata> {
+const SCHEMA_DAY_NAMES = [
+  'https://schema.org/Monday',
+  'https://schema.org/Tuesday',
+  'https://schema.org/Wednesday',
+  'https://schema.org/Thursday',
+  'https://schema.org/Friday',
+  'https://schema.org/Saturday',
+  'https://schema.org/Sunday',
+] as const;
+
+export async function generateMetadata({ params }: ClubPageProps): Promise<Metadata> {
   const club = await getClubBySlug(params.slug);
 
   if (!club) {
@@ -26,10 +34,8 @@ export async function generateMetadata({
     club.description ??
     `${club.name}${districtName ? ` — ${districtName} rayonunda` : ''} gaming klubu. Qiymət, ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
   const canonical = `/klub/${club.slug}`;
-  const coverImage = [...club.images]
-    .sort((a, b) => a.position - b.position)
-    .find((image) => image.is_cover)?.url ??
-    [...club.images].sort((a, b) => a.position - b.position)[0]?.url;
+  const sortedImages = [...club.images].sort((a, b) => a.position - b.position);
+  const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
 
   return {
     title: club.name,
@@ -56,16 +62,27 @@ export async function generateMetadata({
 export default async function ClubPage({ params }: ClubPageProps) {
   const club = await getClubBySlug(params.slug);
 
-  if (!club) {
-    notFound();
-  }
+  if (!club) notFound();
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bosyer-web.vercel.app';
-  const typeNames = club.club_types.map((item) => item.club_type.name);
-  const coverImage = [...club.images]
-    .sort((a, b) => a.position - b.position)
-    .find((image) => image.is_cover)?.url ??
-    [...club.images].sort((a, b) => a.position - b.position)[0]?.url;
+  const typeNames = club.type_assignments.map((item) => item.club_type.name);
+  const sortedImages = [...club.images].sort((a, b) => a.position - b.position);
+  const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
+  const openingHoursSpecification = club.opening_hours
+    .filter(
+      (hours) =>
+        !hours.is_closed &&
+        hours.open_time &&
+        hours.close_time &&
+        hours.day_of_week >= 0 &&
+        hours.day_of_week <= 6
+    )
+    .map((hours) => ({
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: SCHEMA_DAY_NAMES[hours.day_of_week],
+      opens: hours.open_time!.slice(0, 5),
+      closes: hours.close_time!.slice(0, 5),
+    }));
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -75,14 +92,12 @@ export default async function ClubPage({ params }: ClubPageProps) {
     description: club.description || undefined,
     image: coverImage || undefined,
     telephone: club.phone || undefined,
-    address: club.address
-      ? {
-          '@type': 'PostalAddress',
-          streetAddress: club.address,
-          addressLocality: 'Bakı',
-          addressCountry: 'AZ',
-        }
-      : undefined,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: club.address,
+      addressLocality: 'Bakı',
+      addressCountry: 'AZ',
+    },
     geo:
       club.latitude != null && club.longitude != null
         ? {
@@ -91,6 +106,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
             longitude: club.longitude,
           }
         : undefined,
+    openingHoursSpecification:
+      openingHoursSpecification.length > 0 ? openingHoursSpecification : undefined,
     sameAs: club.instagram_url ? [club.instagram_url] : undefined,
     keywords: typeNames.length > 0 ? typeNames.join(', ') : undefined,
   };
