@@ -61,6 +61,82 @@ function validateCoordinates(formData: FormData) {
   return { latitude, longitude };
 }
 
+function imageFiles(formData: FormData) {
+  return formData
+    .getAll('image_files')
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+}
+
+function validateImageUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === 'https:' &&
+      parsed.hostname.endsWith('.supabase.co') &&
+      parsed.pathname.includes(`/storage/v1/object/public/${IMAGE_BUCKET}/`)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function validateRelationFormInput(formData: FormData) {
+  const enabledTypeIds = Array.from(formData.keys())
+    .filter((key) => key.startsWith('type_enabled_') && booleanValue(formData, key))
+    .map((key) => key.replace('type_enabled_', ''));
+
+  if (enabledTypeIds.length === 0) {
+    throw new Error('Ən azı bir klub tipi (PC və ya PlayStation) seçilməlidir.');
+  }
+
+  for (const typeId of enabledTypeIds) {
+    const priceFrom = nullableNumber(formData, `price_from_${typeId}`);
+    const priceTo = nullableNumber(formData, `price_to_${typeId}`);
+    if (priceFrom != null && priceFrom < 0) {
+      throw new Error('Qiymət mənfi ola bilməz.');
+    }
+    if (priceFrom != null && priceFrom > 0 && priceTo != null && priceTo < priceFrom) {
+      throw new Error('Son qiymət başlanğıc qiymətdən aşağı ola bilməz.');
+    }
+  }
+
+  if (booleanValue(formData, 'hours_enabled')) {
+    for (let day = 0; day < 7; day += 1) {
+      const closed = booleanValue(formData, `day_closed_${day}`);
+      if (closed) continue;
+      if (!nullableText(formData, `open_time_${day}`) || !nullableText(formData, `close_time_${day}`)) {
+        throw new Error(`${day + 1}-ci gün üçün açılış və bağlanış saatı yazılmalıdır.`);
+      }
+    }
+  }
+
+  const existingUrls = Array.from(
+    new Set(
+      text(formData, 'image_urls')
+        .split('\n')
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  );
+
+  if (existingUrls.some((url) => !validateImageUrl(url))) {
+    throw new Error('Şəkil URL-i GameYer-in Supabase club-images yaddaşından olmalıdır.');
+  }
+
+  const files = imageFiles(formData);
+  if (existingUrls.length + files.length > MAX_IMAGES_PER_CLUB) {
+    throw new Error(`Bir klubda maksimum ${MAX_IMAGES_PER_CLUB} şəkil saxlamaq olar.`);
+  }
+  for (const file of files) {
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      throw new Error('Şəkil formatı yalnız JPG, PNG və ya WEBP ola bilər.');
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      throw new Error('Hər şəkil maksimum 5 MB ola bilər.');
+    }
+  }
+}
+
 async function ensureSlugAvailable(slug: string, excludeId?: string) {
   if (!slug) throw new Error('Düzgün slug yaratmaq mümkün olmadı.');
 
@@ -84,12 +160,6 @@ function safeFileName(name: string) {
     .replace(/^-+|-+$/g, '')
     .slice(0, 50) || 'image';
   return `${base}.${extension}`;
-}
-
-function imageFiles(formData: FormData) {
-  return formData
-    .getAll('image_files')
-    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
 }
 
 function storagePathFromPublicUrl(url: string) {
@@ -160,12 +230,10 @@ async function replaceRelations(clubId: string, formData: FormData) {
     .eq('club_id', clubId);
   if (assignmentDeleteError) throw new Error(assignmentDeleteError.message);
 
-  if (assignmentRows.length > 0) {
-    const { error: assignmentInsertError } = await (supabase as any)
-      .from('club_type_assignments')
-      .insert(assignmentRows);
-    if (assignmentInsertError) throw new Error(assignmentInsertError.message);
-  }
+  const { error: assignmentInsertError } = await (supabase as any)
+    .from('club_type_assignments')
+    .insert(assignmentRows);
+  if (assignmentInsertError) throw new Error(assignmentInsertError.message);
 
   const pricingRows = enabledTypes
     .map((type) => {
@@ -239,16 +307,7 @@ async function replaceRelations(clubId: string, formData: FormData) {
   );
 
   for (const url of existingUrls) {
-    try {
-      const parsed = new URL(url);
-      if (
-        parsed.protocol !== 'https:' ||
-        !parsed.hostname.endsWith('.supabase.co') ||
-        !parsed.pathname.includes(`/storage/v1/object/public/${IMAGE_BUCKET}/`)
-      ) {
-        throw new Error();
-      }
-    } catch {
+    if (!validateImageUrl(url)) {
       throw new Error('Şəkil URL-i GameYer-in Supabase club-images yaddaşından olmalıdır.');
     }
   }
@@ -320,6 +379,7 @@ async function replaceRelations(clubId: string, formData: FormData) {
 }
 
 export async function saveClub(formData: FormData) {
+  validateRelationFormInput(formData);
   const supabase = createClient();
   const id = text(formData, 'id');
   if (!id) throw new Error('Klub ID tapılmadı.');
@@ -373,6 +433,7 @@ export async function saveClub(formData: FormData) {
 }
 
 export async function createClub(formData: FormData) {
+  validateRelationFormInput(formData);
   const supabase = createClient();
   const name = text(formData, 'name');
   if (!name) throw new Error('Klub adı boş ola bilməz.');
