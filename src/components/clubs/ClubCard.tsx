@@ -4,15 +4,9 @@ import Link from 'next/link';
 import type { ClubWithDistance } from '@/types/database';
 import { RatingBadge } from './RatingBadge';
 import { Badge } from '@/components/ui/Badge';
-import {
-  ControllerIcon,
-  MapPinIcon,
-} from '@/components/ui/Icon';
-import {
-  cn,
-  formatPriceRange,
-  isClubOpenNow,
-} from '@/lib/utils';
+import { ControllerIcon, MapPinIcon } from '@/components/ui/Icon';
+import { inferClubTypeSlugs } from '@/lib/clubType';
+import { cn, formatPriceRange, isClubOpenNow } from '@/lib/utils';
 import { formatDistance } from '@/lib/geo';
 
 interface ClubCardProps {
@@ -27,10 +21,9 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
     const hasHours = club.opening_hours.length > 0;
     const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
     const statusLabel = !hasHours ? 'İş saatı məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
-
-    const cheapestPricing = [...club.pricing].sort(
-      (a, b) => a.price_from - b.price_from
-    )[0];
+    const typeSlugs = inferClubTypeSlugs(club);
+    const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
+    const cheapestPricing = [...realPricing].sort((a, b) => a.price_from - b.price_from)[0];
 
     return (
       <Link
@@ -75,9 +68,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
             </h3>
 
             {club.is_premium ? (
-              <Badge tone="premium" className="shrink-0">
-                VIP
-              </Badge>
+              <Badge tone="premium" className="shrink-0">VIP</Badge>
             ) : null}
           </div>
 
@@ -89,16 +80,15 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
             </span>
           </div>
 
-          <div className="mt-2 flex min-w-0 items-center gap-1.5 overflow-hidden">
-            {club.pricing.map((pricing) => (
-              <Badge
-                key={pricing.id}
-                tone={pricing.club_type.slug === 'pc' ? 'pc' : 'ps'}
-              >
-                {pricing.club_type.name}
-              </Badge>
-            ))}
-          </div>
+          {typeSlugs.length > 0 ? (
+            <div className="mt-2 flex min-w-0 items-center gap-1.5 overflow-hidden">
+              {typeSlugs.map((slug) => (
+                <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>
+                  {slug === 'pc' ? 'PC' : 'PlayStation'}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
 
           <div className="mt-auto flex items-end justify-between gap-3 pt-2">
             <div className="flex min-w-0 items-center gap-2">
@@ -119,11 +109,12 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
                     cheapestPricing.unit
                   )}
                 </div>
-              ) : null}
+              ) : (
+                <div className="text-[10px] text-muted">Qiymət məlum deyil</div>
+              )}
               <div
                 className={cn(
-                  cheapestPricing ? 'mt-0.5' : '',
-                  'text-[10px] font-medium',
+                  'mt-0.5 text-[10px] font-medium',
                   openNow ? 'text-live' : 'text-muted'
                 )}
               >
