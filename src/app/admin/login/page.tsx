@@ -89,7 +89,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm rounded-card border border-border bg-surface p-6 shadow-card">
         <div>
           <p className="text-sm font-semibold text-primary">
-            GameYer
+            BosYer
           </p>
 
           <h1 className="mt-1 font-display text-xl font-bold text-ink">
@@ -124,7 +124,7 @@ export default function AdminLoginPage() {
               required
               disabled={loading}
               className="mt-1 h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60"
-              placeholder="admin@gameyer.az"
+              placeholder="admin@bosyer.az"
             />
           </div>
 
