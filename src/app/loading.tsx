@@ -6,13 +6,13 @@ import { Skeleton, ClubCardSkeleton } from '@/components/ui/Skeleton';
  */
 export default function Loading() {
   return (
-    <div className="flex h-[calc(100vh-57px)] flex-col">
+    <div className="flex h-[calc(100vh-56px)] flex-col">
       <div className="border-b border-border bg-surface px-4 py-3 sm:px-6">
-        <Skeleton className="h-10 w-full rounded-full" />
+        <Skeleton className="h-10 w-full rounded-control" />
         <div className="mt-3 flex gap-2">
-          <Skeleton className="h-9 w-20 rounded-full" />
-          <Skeleton className="h-9 w-28 rounded-full" />
-          <Skeleton className="h-9 w-24 rounded-full" />
+          <Skeleton className="h-9 w-20 rounded-control" />
+          <Skeleton className="h-9 w-28 rounded-control" />
+          <Skeleton className="h-9 w-24 rounded-control" />
         </div>
       </div>
 
