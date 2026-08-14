@@ -16,8 +16,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="az" className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable}`}>
-      <body className="font-body antialiased">
-        <header className="sticky top-0 z-30 border-b border-border bg-surface">
+      <body className="flex min-h-dvh flex-col font-body antialiased">
+        <header className="border-b border-border bg-surface">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
             <Link href="/" className="font-display text-lg font-bold tracking-tight text-ink">
               Boş<span className="text-primary">Yer</span>
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-xs text-muted">Bakıda gaming klubu tap</span>
           </div>
         </header>
-        <main>{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col">{children}</main>
       </body>
     </html>
   );
