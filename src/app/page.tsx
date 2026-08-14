@@ -37,7 +37,11 @@ export default async function HomePage({ searchParams }: PageProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Hero />
+      <Hero
+  clubCount={clubs.length}
+  districtCount={districts.length}
+  openNowCount={openNowCount}
+/>
 
       <Suspense
         fallback={
