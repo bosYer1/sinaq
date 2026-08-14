@@ -19,8 +19,6 @@ const CLUB_SELECT = `
 
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
   const supabase = createClient();
-  if (!supabase) return [];
-
   let districtId: string | null = null;
 
   if (filters.district) {
@@ -40,7 +38,8 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     districtId = districtRow.id;
   }
 
-  const selectString = filters.priceMax
+  const hasPriceFilter = filters.priceMax != null && filters.priceMax > 0;
+  const selectString = hasPriceFilter
     ? CLUB_SELECT.replace('pricing:club_pricing (', 'pricing:club_pricing!inner (')
     : CLUB_SELECT;
 
@@ -53,14 +52,13 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
 
   if (districtId) query = query.eq('district_id', districtId);
 
-  if (filters.priceMax) {
+  if (hasPriceFilter) {
     query = query
       .gt('pricing.price_from', 0)
-      .lte('pricing.price_from', filters.priceMax);
+      .lte('pricing.price_from', filters.priceMax!);
   }
 
   const searchQuery = filters.q?.trim();
-
   if (searchQuery) {
     const sanitized = searchQuery.replace(/[%_,()]/g, ' ').trim();
     if (sanitized) {
@@ -71,25 +69,35 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
   }
 
   const { data, error } = await query.returns<ClubWithRelations[]>();
-
   if (error) {
     console.error('getClubs xətası:', error.message);
     return [];
   }
 
-  const clubs = data ?? [];
-
-  if (!filters.type) return clubs;
-
+  let clubs = data ?? [];
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
-  if (requestedType !== 'pc' && requestedType !== 'playstation') return clubs;
+  const hasTypeFilter = requestedType === 'pc' || requestedType === 'playstation';
 
-  return clubs.filter((club) => inferClubTypeSlugs(club).includes(requestedType));
+  if (hasTypeFilter) {
+    clubs = clubs.filter((club) => inferClubTypeSlugs(club).includes(requestedType));
+  }
+
+  if (hasPriceFilter && hasTypeFilter) {
+    clubs = clubs.filter((club) =>
+      club.pricing.some(
+        (pricing) =>
+          pricing.club_type.slug === requestedType &&
+          pricing.price_from > 0 &&
+          pricing.price_from <= filters.priceMax!
+      )
+    );
+  }
+
+  return clubs;
 }
 
 export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
   const supabase = createClient();
-  if (!supabase) return null;
 
   const { data, error } = await supabase
     .from('clubs')
