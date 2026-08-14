@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'GameYer',
-    short_name: 'GameYer',
+    name: 'BosYer',
+    short_name: 'BosYer',
     description: 'Bakıda PC və PlayStation klublarını tap.',
     start_url: '/',
     display: 'standalone',
