@@ -24,7 +24,7 @@ export async function generateMetadata({
   const districtName = club.district?.name;
   const description =
     club.description ??
-    `${club.name}${districtName ? ` — ${districtName} rayonunda` : ''} gaming klubu. Qiymət, ünvan, iş saatları və xəritə məlumatlarına BosYer-də bax.`;
+    `${club.name}${districtName ? ` — ${districtName} rayonunda` : ''} gaming klubu. Qiymət, ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
   const canonical = `/klub/${club.slug}`;
   const coverImage = [...club.images]
     .sort((a, b) => a.position - b.position)
@@ -39,14 +39,14 @@ export async function generateMetadata({
       type: 'website',
       locale: 'az_AZ',
       url: canonical,
-      siteName: 'BosYer',
-      title: `${club.name} — BosYer`,
+      siteName: 'GameYer',
+      title: `${club.name} — GameYer`,
       description,
       images: coverImage ? [{ url: coverImage, alt: club.name }] : undefined,
     },
     twitter: {
       card: coverImage ? 'summary_large_image' : 'summary',
-      title: `${club.name} — BosYer`,
+      title: `${club.name} — GameYer`,
       description,
       images: coverImage ? [coverImage] : undefined,
     },
