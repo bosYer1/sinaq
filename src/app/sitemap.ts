@@ -7,7 +7,7 @@ interface SitemapClub {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gameyer.az';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bosyer-web.vercel.app';
   const entries: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
@@ -18,8 +18,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const supabase = createClient();
-  if (!supabase) return entries;
-
   const { data, error } = await supabase
     .from('clubs')
     .select('slug, updated_at')
