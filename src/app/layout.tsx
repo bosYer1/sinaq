@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import Link from 'next/link';
 import './globals.css';
@@ -8,6 +8,11 @@ const displayFont = Space_Grotesk({ subsets: ['latin'], variable: '--font-displa
 const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bosyer-web.vercel.app';
+
+export const viewport: Viewport = {
+  themeColor: '#7C5CFC',
+  colorScheme: 'light',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
