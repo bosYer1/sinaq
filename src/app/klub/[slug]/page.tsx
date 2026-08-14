@@ -16,17 +16,40 @@ export async function generateMetadata({
 
   if (!club) {
     return {
-      title: 'Klub tapılmadı — GameYer',
+      title: 'Klub tapılmadı',
+      robots: { index: false, follow: false },
     };
   }
 
   const districtName = club.district?.name;
+  const description =
+    club.description ??
+    `${club.name}${districtName ? ` — ${districtName} rayonunda` : ''} gaming klubu. Qiymət, ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
+  const canonical = `/klub/${club.slug}`;
+  const coverImage = [...club.images]
+    .sort((a, b) => a.position - b.position)
+    .find((image) => image.is_cover)?.url ??
+    [...club.images].sort((a, b) => a.position - b.position)[0]?.url;
 
   return {
-    title: `${club.name} — GameYer`,
-    description:
-      club.description ??
-      `${club.name}${districtName ? ` — ${districtName} rayonunda` : ''} gaming klubu. Qiymət, ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.`,
+    title: club.name,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: 'website',
+      locale: 'az_AZ',
+      url: canonical,
+      siteName: 'GameYer',
+      title: `${club.name} — GameYer`,
+      description,
+      images: coverImage ? [{ url: coverImage, alt: club.name }] : undefined,
+    },
+    twitter: {
+      card: coverImage ? 'summary_large_image' : 'summary',
+      title: `${club.name} — GameYer`,
+      description,
+      images: coverImage ? [coverImage] : undefined,
+    },
   };
 }
 
