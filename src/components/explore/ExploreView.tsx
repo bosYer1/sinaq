@@ -5,7 +5,7 @@ import type { ClubWithRelations } from '@/types/database';
 import { ClubList } from '@/components/clubs/ClubList';
 import { MapWrapper } from '@/components/map/MapWrapper';
 import { useUserLocation } from '@/hooks/useUserLocation';
-import { haversineDistanceKm } from '@/lib/geo';
+import { formatDistance, haversineDistanceKm } from '@/lib/geo';
 
 interface ExploreViewProps {
   clubs: ClubWithRelations[];
@@ -20,6 +20,7 @@ export function ExploreView({
 }: ExploreViewProps) {
   const { location, status, requestLocation } = useUserLocation();
   const [sortByDistance, setSortByDistance] = useState(false);
+  const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
 
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
@@ -48,6 +49,14 @@ export function ExploreView({
     });
   }, [clubs, location, sortByDistance]);
 
+  const nearestClub = useMemo(
+    () =>
+      location
+        ? clubsWithDistance.find((club) => club.distanceKm != null) ?? null
+        : null,
+    [clubsWithDistance, location]
+  );
+
   function handleLocationSort() {
     if (location) {
       setSortByDistance((value) => !value);
@@ -56,6 +65,15 @@ export function ExploreView({
 
     setSortByDistance(true);
     requestLocation();
+  }
+
+  function handleMapLocation() {
+    setSortByDistance(true);
+    setLocationFocusRequest((value) => value + 1);
+
+    if (!location) {
+      requestLocation();
+    }
   }
 
   function handleHoverCard(id: string) {
@@ -79,6 +97,15 @@ export function ExploreView({
         : sortByDistance && location
           ? 'Yaxınlıq sırası aktivdir'
           : 'Yaxınlığıma görə';
+
+  const mapLocationLabel =
+    status === 'loading'
+      ? 'Konum alınır...'
+      : status === 'denied'
+        ? 'Konuma icazə ver'
+        : location
+          ? 'Mənim konumum'
+          : 'Yaxın klublar';
 
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden bg-bg lg:flex-row">
@@ -128,12 +155,41 @@ export function ExploreView({
           view === 'map' ? 'block' : 'hidden'
         } lg:block`}
       >
-        <div className="h-full min-h-0 overflow-hidden rounded-xl border border-border-strong bg-surface shadow-card">
+        <div className="relative h-full min-h-0 overflow-hidden rounded-xl border border-border-strong bg-surface shadow-card">
           <MapWrapper
             clubs={clubsWithDistance}
             activeClubId={activeClubId}
             onSelectClub={handleSelectMarker}
+            userLocation={location}
+            locationFocusRequest={locationFocusRequest}
           />
+
+          <div className="absolute right-3 top-3 z-[500] flex max-w-[calc(100%-24px)] flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={handleMapLocation}
+              disabled={status === 'loading' || status === 'unsupported'}
+              className="inline-flex h-11 items-center gap-2 rounded-control border border-border-strong bg-surface px-3.5 text-sm font-semibold text-ink shadow-card transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+              title={
+                status === 'denied'
+                  ? 'Brauzer ayarlarından lokasiya icazəsini aktiv et.'
+                  : 'Konumunu göstər və sənə yaxın klubları tap.'
+              }
+            >
+              <span aria-hidden="true" className="text-base">⌖</span>
+              {mapLocationLabel}
+            </button>
+
+            {location && nearestClub?.distanceKm != null ? (
+              <div className="max-w-[260px] rounded-control border border-border bg-surface/95 px-3 py-2 text-right shadow-card backdrop-blur">
+                <p className="text-[11px] font-medium text-muted">Ən yaxın klub</p>
+                <p className="truncate text-xs font-semibold text-ink">{nearestClub.name}</p>
+                <p className="mt-0.5 text-[11px] font-medium text-primary">
+                  {formatDistance(nearestClub.distanceKm)} məsafədə
+                </p>
+              </div>
+            ) : null}
+          </div>
         </div>
       </section>
     </div>
