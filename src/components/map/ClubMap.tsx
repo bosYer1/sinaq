@@ -17,7 +17,7 @@ interface ClubMapProps {
   activeClubId?: string | null;
   onSelectClub?: (id: string) => void;
   userLocation?: UserLocation | null;
-  focusUserLocation?: boolean;
+  locationFocusRequest?: number;
 }
 
 function MapResizeHandler() {
@@ -56,17 +56,17 @@ function MapViewportHandler({
   clubs,
   activeClubId,
   userLocation,
-  focusUserLocation,
+  locationFocusRequest,
 }: {
   clubs: ClubWithDistance[];
   activeClubId?: string | null;
   userLocation?: UserLocation | null;
-  focusUserLocation?: boolean;
+  locationFocusRequest?: number;
 }) {
   const map = useMap();
 
   useEffect(() => {
-    if (focusUserLocation && userLocation) {
+    if (userLocation && locationFocusRequest && locationFocusRequest > 0) {
       map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 0.45 });
       return;
     }
@@ -112,7 +112,7 @@ function MapViewportHandler({
       maxZoom: 14,
       animate: false,
     });
-  }, [map, clubs, activeClubId, userLocation, focusUserLocation]);
+  }, [map, clubs, activeClubId, userLocation, locationFocusRequest]);
 
   return null;
 }
@@ -122,7 +122,7 @@ export function ClubMap({
   activeClubId,
   onSelectClub,
   userLocation,
-  focusUserLocation = false,
+  locationFocusRequest = 0,
 }: ClubMapProps) {
   const clubsWithCoords = clubs.filter(
     (club) =>
@@ -142,7 +142,7 @@ export function ClubMap({
         clubs={clubs}
         activeClubId={activeClubId}
         userLocation={userLocation}
-        focusUserLocation={focusUserLocation}
+        locationFocusRequest={locationFocusRequest}
       />
 
       <TileLayer
