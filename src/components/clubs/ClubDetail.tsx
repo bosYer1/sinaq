@@ -9,11 +9,13 @@ import {
   formatPriceRange,
   formatTime,
   isClubOpenNow,
+  isPremiumActive,
 } from '@/lib/utils';
 
 export function ClubDetail({ club }: { club: ClubWithRelations }) {
   const hasHours = club.opening_hours.length > 0;
   const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
+  const premiumActive = isPremiumActive(club);
   const statusLabel = !hasHours
     ? 'İş saatları məlum deyil'
     : openNow
@@ -96,7 +98,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
                 {club.name}
               </h1>
-              {club.is_premium ? <Badge tone="premium">VIP</Badge> : null}
+              {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
               {typeSlugs.map((slug) => (
                 <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>
                   {slug === 'pc' ? 'PC' : 'PlayStation'}
