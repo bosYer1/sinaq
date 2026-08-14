@@ -4,7 +4,7 @@ import Link from 'next/link';
 import type { ClubWithDistance } from '@/types/database';
 import { RatingBadge } from './RatingBadge';
 import { Badge } from '@/components/ui/Badge';
-import { ControllerIcon, MapPinIcon } from '@/components/ui/Icon';
+import { MapPinIcon } from '@/components/ui/Icon';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { cn, formatPriceRange, isClubOpenNow } from '@/lib/utils';
 import { formatDistance } from '@/lib/geo';
@@ -24,6 +24,14 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
     const typeSlugs = inferClubTypeSlugs(club);
     const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
     const cheapestPricing = [...realPricing].sort((a, b) => a.price_from - b.price_from)[0];
+    const fallbackType =
+      typeSlugs.length === 2
+        ? 'PC + PS'
+        : typeSlugs[0] === 'pc'
+          ? 'PC'
+          : typeSlugs[0] === 'playstation'
+            ? 'PS'
+            : 'Gaming';
 
     return (
       <Link
@@ -48,8 +56,11 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
               className="object-cover transition-transform duration-200 group-hover:scale-[1.03]"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-faint">
-              <ControllerIcon width={25} height={25} />
+            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-primary-light to-surface-alt text-center">
+              <span className="font-display text-xl font-bold text-primary">B</span>
+              <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted">
+                {fallbackType}
+              </span>
             </div>
           )}
 
