@@ -78,6 +78,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
   const hoursByDay = new Map(
     (club?.opening_hours ?? []).map((item) => [item.day_of_week, item])
   );
+  const hasHours = (club?.opening_hours ?? []).length > 0;
 
   const imageUrls = [...(club?.images ?? [])]
     .sort((a, b) => {
@@ -136,7 +137,16 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-semibold">İş saatları</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold">İş saatları</h2>
+            <p className="mt-1 text-xs text-gray-500">Saatlar təsdiqlənməyibsə bu seçimi söndür. Beləliklə saxta standart saatlar sayta düşməyəcək.</p>
+          </div>
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input type="checkbox" name="hours_enabled" defaultChecked={hasHours} />
+            İş saatları təsdiqlənib
+          </label>
+        </div>
         <div className="mt-4 space-y-2">
           {DAYS.map((label, day) => {
             const hours = hoursByDay.get(day);
@@ -144,8 +154,8 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
               <div key={label} className="grid items-center gap-3 rounded-lg border border-gray-200 p-3 sm:grid-cols-[170px_110px_1fr_1fr]">
                 <div className="text-sm font-medium">{label}</div>
                 <label className="flex items-center gap-2 text-xs text-gray-600"><input type="checkbox" name={`day_closed_${day}`} defaultChecked={hours?.is_closed ?? false} />Bağlıdır</label>
-                <input type="time" name={`open_time_${day}`} defaultValue={hours?.open_time?.slice(0, 5) ?? '10:00'} className={inputClass} />
-                <input type="time" name={`close_time_${day}`} defaultValue={hours?.close_time?.slice(0, 5) ?? '23:59'} className={inputClass} />
+                <input type="time" name={`open_time_${day}`} defaultValue={hours?.open_time?.slice(0, 5) ?? ''} className={inputClass} />
+                <input type="time" name={`close_time_${day}`} defaultValue={hours?.close_time?.slice(0, 5) ?? ''} className={inputClass} />
               </div>
             );
           })}
@@ -154,7 +164,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-semibold">Şəkillər</h2>
-        <p className="mt-1 text-xs text-gray-500">Hər sətrə bir şəkil URL-i yaz. Birinci URL cover şəkli olacaq.</p>
+        <p className="mt-1 text-xs text-gray-500">Hər sətrə bir HTTPS şəkil URL-i yaz. Birinci URL cover şəkli olacaq.</p>
         <textarea name="image_urls" rows={6} defaultValue={imageUrls} placeholder={'https://...\nhttps://...'} className={textareaClass} />
       </section>
 
