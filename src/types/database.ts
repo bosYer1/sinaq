@@ -14,43 +14,16 @@ export interface Database {
   public: {
     Tables: {
       districts: {
-        Row: {
-          id: string;
-          name: string;
-          slug: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          slug: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          slug?: string;
-          created_at?: string;
-        };
+        Row: { id: string; name: string; slug: string; created_at: string };
+        Insert: { id?: string; name: string; slug: string; created_at?: string };
+        Update: { id?: string; name?: string; slug?: string; created_at?: string };
         Relationships: [];
       };
 
       club_types: {
-        Row: {
-          id: string;
-          name: string;
-          slug: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          slug: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          slug?: string;
-        };
+        Row: { id: string; name: string; slug: string };
+        Insert: { id?: string; name: string; slug: string };
+        Update: { id?: string; name?: string; slug?: string };
         Relationships: [];
       };
 
@@ -118,6 +91,28 @@ export interface Database {
             columns: ['district_id'];
             isOneToOne: false;
             referencedRelation: 'districts';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+
+      club_type_assignments: {
+        Row: { club_id: string; club_type_id: string };
+        Insert: { club_id: string; club_type_id: string };
+        Update: { club_id?: string; club_type_id?: string };
+        Relationships: [
+          {
+            foreignKeyName: 'club_type_assignments_club_id_fkey';
+            columns: ['club_id'];
+            isOneToOne: false;
+            referencedRelation: 'clubs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'club_type_assignments_club_type_id_fkey';
+            columns: ['club_type_id'];
+            isOneToOne: false;
+            referencedRelation: 'club_types';
             referencedColumns: ['id'];
           }
         ];
@@ -203,27 +198,9 @@ export interface Database {
       };
 
       club_images: {
-        Row: {
-          id: string;
-          club_id: string;
-          url: string;
-          position: number;
-          is_cover: boolean;
-        };
-        Insert: {
-          id?: string;
-          club_id: string;
-          url: string;
-          position?: number;
-          is_cover?: boolean;
-        };
-        Update: {
-          id?: string;
-          club_id?: string;
-          url?: string;
-          position?: number;
-          is_cover?: boolean;
-        };
+        Row: { id: string; club_id: string; url: string; position: number; is_cover: boolean };
+        Insert: { id?: string; club_id: string; url: string; position?: number; is_cover?: boolean };
+        Update: { id?: string; club_id?: string; url?: string; position?: number; is_cover?: boolean };
         Relationships: [
           {
             foreignKeyName: 'club_images_club_id_fkey';
@@ -236,82 +213,41 @@ export interface Database {
       };
 
       admin_users: {
-        Row: {
-          user_id: string;
-          created_at: string;
-        };
-        Insert: {
-          user_id: string;
-          created_at?: string;
-        };
-        Update: {
-          user_id?: string;
-          created_at?: string;
-        };
+        Row: { user_id: string; created_at: string };
+        Insert: { user_id: string; created_at?: string };
+        Update: { user_id?: string; created_at?: string };
         Relationships: [];
       };
     };
 
-    Views: {
-      [_ in never]: never;
-    };
-
-    Functions: {
-      [_ in never]: never;
-    };
-
-    Enums: {
-      [_ in never]: never;
-    };
-
-    CompositeTypes: {
-      [_ in never]: never;
-    };
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
+    Enums: { [_ in never]: never };
+    CompositeTypes: { [_ in never]: never };
   };
 }
 
-/* App daxilində istifadə edilən tiplər */
-
-export type District =
-  Database['public']['Tables']['districts']['Row'];
-
-export type ClubType =
-  Database['public']['Tables']['club_types']['Row'];
-
-export type ClubRow =
-  Database['public']['Tables']['clubs']['Row'];
-
-export type ClubPricing =
-  Database['public']['Tables']['club_pricing']['Row'];
-
-export type ClubOpeningHours =
-  Database['public']['Tables']['club_opening_hours']['Row'];
-
-export type ClubImage =
-  Database['public']['Tables']['club_images']['Row'];
+export type District = Database['public']['Tables']['districts']['Row'];
+export type ClubType = Database['public']['Tables']['club_types']['Row'];
+export type ClubRow = Database['public']['Tables']['clubs']['Row'];
+export type ClubTypeAssignment = Database['public']['Tables']['club_type_assignments']['Row'];
+export type ClubPricing = Database['public']['Tables']['club_pricing']['Row'];
+export type ClubOpeningHours = Database['public']['Tables']['club_opening_hours']['Row'];
+export type ClubImage = Database['public']['Tables']['club_images']['Row'];
 
 export interface ClubWithRelations extends ClubRow {
-  district:
-    | Pick<
-        District,
-        'id' | 'name' | 'slug'
-      >
-    | null;
-
-  pricing: (
-    ClubPricing & {
-      club_type: Pick<
-        ClubType,
-        'id' | 'name' | 'slug'
-      >;
+  district: Pick<District, 'id' | 'name' | 'slug'> | null;
+  type_assignments: Array<
+    ClubTypeAssignment & {
+      club_type: Pick<ClubType, 'id' | 'name' | 'slug'>;
     }
-  )[];
-
-  images: Pick<
-    ClubImage,
-    'id' | 'url' | 'is_cover' | 'position'
-  >[];
-
+  >;
+  pricing: Array<
+    ClubPricing & {
+      club_type: Pick<ClubType, 'id' | 'name' | 'slug'>;
+    }
+  >;
+  images: Pick<ClubImage, 'id' | 'url' | 'is_cover' | 'position'>[];
   opening_hours: ClubOpeningHours[];
 }
 
@@ -322,7 +258,6 @@ export interface ClubFilters {
   q?: string;
 }
 
-export type ClubWithDistance =
-  ClubWithRelations & {
-    distanceKm: number | null;
-  };
+export type ClubWithDistance = ClubWithRelations & {
+  distanceKm: number | null;
+};
