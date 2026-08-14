@@ -5,6 +5,10 @@ import type { ClubFilters, ClubWithRelations } from '@/types/database';
 const CLUB_SELECT = `
   *,
   district:districts ( id, name, slug ),
+  type_assignments:club_type_assignments (
+    club_type_id,
+    club_type:club_types ( id, name, slug )
+  ),
   pricing:club_pricing (
     id, club_id, club_type_id, price_from, price_to, unit,
     club_type:club_types ( id, name, slug )
@@ -36,13 +40,8 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     districtId = districtRow.id;
   }
 
-  // Price filter only works on real pricing rows. Type filter is applied after
-  // fetch so clubs without entered prices can still be found by their known type.
   const selectString = filters.priceMax
-    ? CLUB_SELECT.replace(
-        'pricing:club_pricing (',
-        'pricing:club_pricing!inner ('
-      )
+    ? CLUB_SELECT.replace('pricing:club_pricing (', 'pricing:club_pricing!inner (')
     : CLUB_SELECT;
 
   let query = supabase
@@ -50,14 +49,9 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     .select(selectString)
     .eq('is_active', true)
     .order('is_premium', { ascending: false })
-    .order('rating_avg', {
-      ascending: false,
-      nullsFirst: false,
-    });
+    .order('rating_avg', { ascending: false, nullsFirst: false });
 
-  if (districtId) {
-    query = query.eq('district_id', districtId);
-  }
+  if (districtId) query = query.eq('district_id', districtId);
 
   if (filters.priceMax) {
     query = query
@@ -69,7 +63,6 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
 
   if (searchQuery) {
     const sanitized = searchQuery.replace(/[%_,()]/g, ' ').trim();
-
     if (sanitized) {
       query = query.or(
         `name.ilike.%${sanitized}%,address.ilike.%${sanitized}%,slug.ilike.%${sanitized}%`
@@ -89,19 +82,12 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
   if (!filters.type) return clubs;
 
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
+  if (requestedType !== 'pc' && requestedType !== 'playstation') return clubs;
 
-  if (requestedType !== 'pc' && requestedType !== 'playstation') {
-    return clubs;
-  }
-
-  return clubs.filter((club) =>
-    inferClubTypeSlugs(club).includes(requestedType)
-  );
+  return clubs.filter((club) => inferClubTypeSlugs(club as any).includes(requestedType));
 }
 
-export async function getClubBySlug(
-  slug: string,
-): Promise<ClubWithRelations | null> {
+export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
   const supabase = createClient();
   if (!supabase) return null;
 
