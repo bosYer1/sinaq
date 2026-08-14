@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -19,19 +19,27 @@ function MapResizeHandler() {
   const map = useMap();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-
-    const observer = new ResizeObserver(() => {
-      map.invalidateSize();
-    });
-
     const container = map.getContainer();
+
+    const invalidate = () => {
+      window.requestAnimationFrame(() => {
+        map.invalidateSize(false);
+      });
+    };
+
+    const timer = window.setTimeout(invalidate, 100);
+
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        window.clearTimeout(timer);
+      };
+    }
+
+    const observer = new ResizeObserver(invalidate);
     observer.observe(container);
 
     return () => {
-      clearTimeout(timer);
+      window.clearTimeout(timer);
       observer.disconnect();
     };
   }, [map]);
@@ -44,29 +52,24 @@ export function ClubMap({
   activeClubId,
   onSelectClub,
 }: ClubMapProps) {
-  const mapRef = useRef<L.Map | null>(null);
-
   const clubsWithCoords = clubs.filter(
     (club) =>
       club.latitude != null &&
       club.longitude != null
   );
 
-  const center: [number, number] = [40.4093, 49.8671];
-
   return (
     <MapContainer
-      center={center}
+      center={[40.4093, 49.8671]}
       zoom={12}
       scrollWheelZoom
       className="h-full w-full"
-      ref={mapRef}
     >
       <MapResizeHandler />
 
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
 
       {clubsWithCoords.map((club) => (
