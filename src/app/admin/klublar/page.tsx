@@ -21,6 +21,7 @@ type ClubRow = {
   longitude: number | null;
   is_active: boolean;
   is_premium: boolean;
+  premium_expires_at: string | null;
   rating_avg: number | null;
   updated_at: string;
 };
@@ -40,6 +41,8 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
   const supabase = await createClient();
   const db = supabase as any;
+  const nowIso = new Date().toISOString();
+  const nowMs = Date.now();
 
   let query = db
     .from('clubs')
@@ -54,6 +57,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       longitude,
       is_active,
       is_premium,
+      premium_expires_at,
       rating_avg,
       updated_at
     `)
@@ -64,7 +68,9 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   if (q) query = query.or(`name.ilike.%${q}%,address.ilike.%${q}%`);
   if (resolvedSearchParams.status === 'active') query = query.eq('is_active', true);
   if (resolvedSearchParams.status === 'inactive') query = query.eq('is_active', false);
-  if (resolvedSearchParams.status === 'premium') query = query.eq('is_premium', true);
+  if (resolvedSearchParams.status === 'premium') {
+    query = query.eq('is_premium', true).gt('premium_expires_at', nowIso);
+  }
 
   const clubsResult = await query;
 
@@ -125,7 +131,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           <option value="">Bütün statuslar</option>
           <option value="active">Aktiv</option>
           <option value="inactive">Deaktiv</option>
-          <option value="premium">Premium</option>
+          <option value="premium">Aktiv premium</option>
         </select>
 
         <button type="submit" className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white">Axtar</button>
@@ -162,6 +168,12 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                   club.latitude == null || club.longitude == null ? 'Koordinat' : null,
                 ].filter((value): value is string => Boolean(value));
 
+                const premiumActive = Boolean(
+                  club.is_premium &&
+                  club.premium_expires_at &&
+                  Date.parse(club.premium_expires_at) > nowMs
+                );
+
                 return (
                   <tr key={club.id} className="transition hover:bg-gray-50">
                     <td className="px-4 py-3">
@@ -175,7 +187,13 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {club.is_premium ? <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-[#B8860B]">Premium</span> : <span className="text-gray-400">—</span>}
+                      {premiumActive ? (
+                        <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-[#B8860B]">Aktiv premium</span>
+                      ) : club.is_premium ? (
+                        <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">Premium bitib</span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {missing.length === 0 ? (
