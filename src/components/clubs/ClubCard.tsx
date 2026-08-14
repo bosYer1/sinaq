@@ -57,7 +57,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-primary-light to-surface-alt text-center">
-              <span className="font-display text-xl font-bold text-primary">B</span>
+              <span className="font-display text-xl font-bold text-primary">G</span>
               <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted">
                 {fallbackType}
               </span>
