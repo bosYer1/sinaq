@@ -17,6 +17,8 @@ type ClubRow = {
   address: string;
   district_id: string;
   phone: string | null;
+  latitude: number | null;
+  longitude: number | null;
   is_active: boolean;
   is_premium: boolean;
   rating_avg: number | null;
@@ -36,11 +38,6 @@ function sanitizeSearch(value?: string) {
 
 export default async function AdminClubsPage({ searchParams }: PageProps) {
   const supabase = createClient();
-
-  if (!supabase) {
-    return <p className="text-sm text-red-600">Supabase konfiqurasiyası tapılmadı.</p>;
-  }
-
   const db = supabase as any;
 
   let query = db
@@ -52,6 +49,8 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       address,
       district_id,
       phone,
+      latitude,
+      longitude,
       is_active,
       is_premium,
       rating_avg,
@@ -65,17 +64,9 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
     query = query.or(`name.ilike.%${q}%,address.ilike.%${q}%`);
   }
 
-  if (searchParams.status === 'active') {
-    query = query.eq('is_active', true);
-  }
-
-  if (searchParams.status === 'inactive') {
-    query = query.eq('is_active', false);
-  }
-
-  if (searchParams.status === 'premium') {
-    query = query.eq('is_premium', true);
-  }
+  if (searchParams.status === 'active') query = query.eq('is_active', true);
+  if (searchParams.status === 'inactive') query = query.eq('is_active', false);
+  if (searchParams.status === 'premium') query = query.eq('is_premium', true);
 
   const clubsResult = await query;
 
@@ -100,15 +91,9 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
     (districtsResult.data ?? []).map((district: { id: string; name: string }) => [district.id, district.name])
   );
 
-  const idsWithHours = new Set(
-    ((hoursResult.data ?? []) as ClubIdRow[]).map((row) => row.club_id)
-  );
-  const idsWithImages = new Set(
-    ((imagesResult.data ?? []) as ClubIdRow[]).map((row) => row.club_id)
-  );
-  const idsWithTypes = new Set(
-    ((typesResult.data ?? []) as ClubIdRow[]).map((row) => row.club_id)
-  );
+  const idsWithHours = new Set(((hoursResult.data ?? []) as ClubIdRow[]).map((row) => row.club_id));
+  const idsWithImages = new Set(((imagesResult.data ?? []) as ClubIdRow[]).map((row) => row.club_id));
+  const idsWithTypes = new Set(((typesResult.data ?? []) as ClubIdRow[]).map((row) => row.club_id));
 
   return (
     <div>
@@ -148,10 +133,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           <option value="premium">Premium</option>
         </select>
 
-        <button
-          type="submit"
-          className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white"
-        >
+        <button type="submit" className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white">
           Axtar
         </button>
 
@@ -187,38 +169,27 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                   !idsWithHours.has(club.id) ? 'Saat' : null,
                   !idsWithImages.has(club.id) ? 'Şəkil' : null,
                   !idsWithTypes.has(club.id) ? 'Tip' : null,
+                  club.latitude == null || club.longitude == null ? 'Koordinat' : null,
                 ].filter((value): value is string => Boolean(value));
 
                 return (
                   <tr key={club.id} className="transition hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="font-semibold text-gray-900">{club.name}</div>
-                      <div className="mt-0.5 max-w-[330px] truncate text-xs text-gray-500">
-                        {club.address}
-                      </div>
+                      <div className="mt-0.5 max-w-[330px] truncate text-xs text-gray-500">{club.address}</div>
                     </td>
 
-                    <td className="px-4 py-3 text-gray-600">
-                      {districts.get(club.district_id) ?? '—'}
-                    </td>
+                    <td className="px-4 py-3 text-gray-600">{districts.get(club.district_id) ?? '—'}</td>
 
                     <td className="px-4 py-3">
-                      <span
-                        className={
-                          club.is_active
-                            ? 'rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700'
-                            : 'rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600'
-                        }
-                      >
+                      <span className={club.is_active ? 'rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700' : 'rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600'}>
                         {club.is_active ? 'Aktiv' : 'Deaktiv'}
                       </span>
                     </td>
 
                     <td className="px-4 py-3">
                       {club.is_premium ? (
-                        <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-[#B8860B]">
-                          Premium
-                        </span>
+                        <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-[#B8860B]">Premium</span>
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}
@@ -226,16 +197,11 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
 
                     <td className="px-4 py-3">
                       {missing.length === 0 ? (
-                        <span className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
-                          Tamdır
-                        </span>
+                        <span className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700">Tamdır</span>
                       ) : (
-                        <div className="flex max-w-[240px] flex-wrap gap-1">
+                        <div className="flex max-w-[260px] flex-wrap gap-1">
                           {missing.map((item) => (
-                            <span
-                              key={item}
-                              className="rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700"
-                            >
+                            <span key={item} className="rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700">
                               {item}
                             </span>
                           ))}
