@@ -57,6 +57,25 @@ export const DAY_NAMES_AZ = [
 
 export const DAY_NAMES_SHORT_AZ = ['B.e', 'Ç.a', 'Çər', 'C.a', 'Cümə', 'Şən', 'Baz'] as const;
 
+const BAKU_TIME_ZONE = 'Asia/Baku';
+const BAKU_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: BAKU_TIME_ZONE,
+  weekday: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+const WEEKDAY_TO_SCHEMA_DAY: Record<string, number> = {
+  Mon: 0,
+  Tue: 1,
+  Wed: 2,
+  Thu: 3,
+  Fri: 4,
+  Sat: 5,
+  Sun: 6,
+};
+
 type OpeningHour = {
   day_of_week: number;
   open_time: string | null;
@@ -69,8 +88,20 @@ function timeToMinutes(time: string): number {
   return hours * 60 + minutes;
 }
 
+function getBakuDayAndMinutes(date = new Date()) {
+  const parts = BAKU_DATE_TIME_FORMATTER.formatToParts(date);
+  const weekday = parts.find((part) => part.type === 'weekday')?.value ?? 'Mon';
+  const hours = Number(parts.find((part) => part.type === 'hour')?.value ?? 0);
+  const minutes = Number(parts.find((part) => part.type === 'minute')?.value ?? 0);
+
+  return {
+    dayOfWeek: WEEKDAY_TO_SCHEMA_DAY[weekday] ?? 0,
+    nowMinutes: hours * 60 + minutes,
+  };
+}
+
 /**
- * Hazırkı vaxta görə klubun açıq olub-olmadığını hesablayır.
+ * Bakı vaxtına görə klubun hazırda açıq olub-olmadığını hesablayır.
  * `openingHours` — həmin klubun bütün həftə sətirləri (club_opening_hours).
  *
  * Gecə yarısını keçən qrafikdə (məs. Cümə 18:00–02:00) şənbə 01:00
@@ -80,12 +111,8 @@ function timeToMinutes(time: string): number {
 export function isClubOpenNow(openingHours: OpeningHour[]): boolean {
   if (!openingHours || openingHours.length === 0) return false;
 
-  const now = new Date();
-  // JS-də getDay(): 0=Bazar ... 6=Şənbə. Bizim sxemdə 0=Bazar ertəsi ... 6=Bazar.
-  const jsDay = now.getDay();
-  const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
+  const { dayOfWeek, nowMinutes } = getBakuDayAndMinutes();
   const previousDay = (dayOfWeek + 6) % 7;
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   const today = openingHours.find((h) => h.day_of_week === dayOfWeek);
   if (today && !today.is_closed && today.open_time && today.close_time) {
