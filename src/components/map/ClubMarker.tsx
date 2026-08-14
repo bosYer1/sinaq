@@ -21,7 +21,7 @@ function createClubIcon(
 ): L.DivIcon {
   const size = isActive ? 40 : 34;
   const fill = hasPC && hasPlayStation
-    ? 'url(#bosyer-dual)'
+    ? 'url(#gameyer-dual)'
     : hasPlayStation
       ? '#06AED4'
       : hasPC
@@ -32,7 +32,7 @@ function createClubIcon(
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 40 40">
       <defs>
-        <linearGradient id="bosyer-dual" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id="gameyer-dual" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stop-color="#7C5CFC" />
           <stop offset="100%" stop-color="#06AED4" />
         </linearGradient>
@@ -45,7 +45,7 @@ function createClubIcon(
   `;
 
   return L.divIcon({
-    className: 'bosyer-marker',
+    className: 'gameyer-marker',
     html: svg,
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
