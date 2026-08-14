@@ -12,25 +12,19 @@
   --color-surface-alt: #f1f2f5;
   --color-border: #e5e7eb;
   --color-border-strong: #d1d5db;
-
   --color-text: #14161c;
   --color-text-muted: #6b7280;
   --color-text-faint: #9ca3af;
-
   --color-primary: #7c5cfc;
   --color-primary-dark: #6a47f0;
   --color-pc: var(--color-primary);
   --color-pc-tint: #f1edff;
-
   --color-ps: #06aed4;
   --color-ps-tint: #e6f8fc;
-
   --color-live: #16a34a;
   --color-live-tint: #e9f9ef;
-
   --color-warn: #b8860b;
   --color-warn-tint: #fbf3df;
-
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -54,7 +48,7 @@ body {
   background: var(--color-surface-alt);
 }
 
-/* Tailwind preflight Leaflet tile ölçülərini pozmasın */
+/* Tailwind preflight Leaflet tile ölçülərini pozmasın. */
 .leaflet-container img {
   max-width: none !important;
 }
@@ -90,6 +84,30 @@ body {
 
 .leaflet-control-zoom a:hover {
   background: var(--color-surface-hover) !important;
+}
+
+.leaflet-control-attribution {
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px !important;
+  opacity: 0.8;
+}
+
+@media (max-width: 639px) {
+  /* Telefonda pinch-zoom var; düymələri gizlətmək konum overlay-i ilə toqquşmanı aradan qaldırır. */
+  .leaflet-control-zoom {
+    display: none;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px;
+  }
+
+  .leaflet-popup-content {
+    margin: 12px;
+  }
 }
 
 :focus-visible {
