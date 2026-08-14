@@ -276,8 +276,7 @@ export function ClubMarker({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 flex h-9 w-full items-center justify-center rounded-control bg-primary px-3 text-xs font-semibold text-white transition hover:bg-primary-dark"
-          >
+className="mt-3 flex h-9 w-full items-center justify-center rounded-control bg-[#1A73E8] px-3 text-xs font-semibold text-white transition hover:bg-[#1557B0]"          >
             Google Maps-də marşrut
           </a>
         </div>
