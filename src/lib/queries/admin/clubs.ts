@@ -26,7 +26,7 @@ type AdminClubRow = {
 };
 
 export async function getAdminClubs(): Promise<AdminClubListItem[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('clubs')
@@ -47,7 +47,7 @@ export async function getAdminClubs(): Promise<AdminClubListItem[]> {
 }
 
 export async function getAdminDistricts(): Promise<AdminDistrictOption[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('districts')
