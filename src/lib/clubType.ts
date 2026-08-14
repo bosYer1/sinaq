@@ -1,20 +1,34 @@
-import type { ClubWithRelations } from '@/types/database';
-
 export type ClubTypeSlug = 'pc' | 'playstation';
 
+type TypeSourceClub = {
+  name: string;
+  description: string | null;
+  pricing: Array<{
+    club_type: { slug: string };
+  }>;
+  type_assignments?: Array<{
+    club_type: { slug: string };
+  }>;
+};
+
 /**
- * Klub tipi üçün əsas mənbə real pricing rows-dur.
- * Pricing hələ daxil edilməyibsə yalnız ad + description mətnindən konservativ fallback edirik.
- * Bu fallback qiymət uydurmur; sadəcə filtr/badge üçün tip siqnalıdır.
+ * Klub tipi üçün əsas mənbə club_type_assignments cədvəlidir.
+ * Köhnə/uyğunluq hallarında real pricing rows ikinci mənbədir.
+ * Heç biri yoxdursa yalnız ad + description mətnindən konservativ fallback edilir.
  */
-export function inferClubTypeSlugs(club: Pick<ClubWithRelations, 'name' | 'description' | 'pricing'>): ClubTypeSlug[] {
+export function inferClubTypeSlugs(club: TypeSourceClub): ClubTypeSlug[] {
   const explicit = new Set<ClubTypeSlug>();
 
-  for (const pricing of club.pricing) {
-    if (pricing.club_type.slug === 'pc') explicit.add('pc');
-    if (pricing.club_type.slug === 'playstation' || pricing.club_type.slug === 'ps') {
-      explicit.add('playstation');
-    }
+  for (const assignment of club.type_assignments ?? []) {
+    const slug = assignment.club_type?.slug;
+    if (slug === 'pc') explicit.add('pc');
+    if (slug === 'playstation' || slug === 'ps') explicit.add('playstation');
+  }
+
+  for (const pricing of club.pricing ?? []) {
+    const slug = pricing.club_type?.slug;
+    if (slug === 'pc') explicit.add('pc');
+    if (slug === 'playstation' || slug === 'ps') explicit.add('playstation');
   }
 
   if (explicit.size > 0) return [...explicit];
