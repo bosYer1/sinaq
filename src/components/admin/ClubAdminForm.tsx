@@ -110,11 +110,12 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-semibold">Əlaqə və xəritə</h2>
+        <p className="mt-1 text-xs text-gray-500">GameYer xəritəsində görünməsi üçün latitude və longitude məcburidir.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="text-sm font-medium">Telefon<input name="phone" defaultValue={club?.phone ?? ''} placeholder="+994..." className={inputClass} /></label>
           <label className="text-sm font-medium">Instagram<input name="instagram_url" defaultValue={club?.instagram_url ?? ''} placeholder="https://instagram.com/..." className={inputClass} /></label>
-          <label className="text-sm font-medium">Latitude<input name="latitude" type="number" step="any" defaultValue={club?.latitude ?? ''} className={inputClass} /></label>
-          <label className="text-sm font-medium">Longitude<input name="longitude" type="number" step="any" defaultValue={club?.longitude ?? ''} className={inputClass} /></label>
+          <label className="text-sm font-medium">Latitude<input required name="latitude" type="number" step="any" min="-90" max="90" defaultValue={club?.latitude ?? ''} className={inputClass} /></label>
+          <label className="text-sm font-medium">Longitude<input required name="longitude" type="number" step="any" min="-180" max="180" defaultValue={club?.longitude ?? ''} className={inputClass} /></label>
         </div>
       </section>
 
