@@ -13,7 +13,11 @@ interface ExploreViewProps {
   searchActive?: boolean;
 }
 
-export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
+export function ExploreView({
+  clubs,
+  view,
+  searchActive,
+}: ExploreViewProps) {
   const { location } = useUserLocation();
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
@@ -23,11 +27,18 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       clubs.map((club) => ({
         ...club,
         distanceKm:
-          location && club.latitude != null && club.longitude != null
-            ? haversineDistanceKm(location.lat, location.lng, club.latitude, club.longitude)
+          location &&
+          club.latitude != null &&
+          club.longitude != null
+            ? haversineDistanceKm(
+                location.lat,
+                location.lng,
+                club.latitude,
+                club.longitude
+              )
             : null,
       })),
-    [clubs, location],
+    [clubs, location]
   );
 
   function handleHoverCard(id: string) {
@@ -36,17 +47,30 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
   function handleSelectMarker(id: string) {
     setActiveClubId(id);
-    cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    cardRefs.current[id]?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    });
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 lg:flex-row">
+    <div className="flex min-h-0 flex-1 overflow-hidden lg:flex-row">
       <section
-        className={`h-full min-h-0 w-full overflow-y-auto px-4 py-4 sm:px-6 lg:block lg:w-[380px] lg:shrink-0 lg:border-r lg:border-border ${
+        className={`min-h-0 w-full overflow-y-auto bg-bg px-4 py-4 sm:px-6 lg:block lg:w-[400px] lg:shrink-0 lg:border-r lg:border-border xl:w-[420px] ${
           view === 'map' ? 'hidden' : 'block'
         }`}
       >
-        <p className="mb-3 text-sm text-muted">{clubsWithDistance.length} klub tapıldı</p>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-medium text-ink">
+            {clubsWithDistance.length} klub
+          </p>
+
+          <span className="text-xs text-muted">
+            Bakı
+          </span>
+        </div>
+
         <ClubList
           clubs={clubsWithDistance}
           activeClubId={activeClubId}
@@ -56,8 +80,16 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         />
       </section>
 
-      <section className={`h-full min-h-0 flex-1 ${view === 'map' ? 'block' : 'hidden'} lg:block`}>
-        <MapWrapper clubs={clubsWithDistance} activeClubId={activeClubId} onSelectClub={handleSelectMarker} />
+      <section
+        className={`relative min-h-0 flex-1 overflow-hidden bg-surface-alt ${
+          view === 'map' ? 'block' : 'hidden'
+        } lg:block`}
+      >
+        <MapWrapper
+          clubs={clubsWithDistance}
+          activeClubId={activeClubId}
+          onSelectClub={handleSelectMarker}
+        />
       </section>
     </div>
   );
