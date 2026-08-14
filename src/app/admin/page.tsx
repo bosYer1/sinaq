@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-type IdRow = { id: string };
+type ActiveClubRow = { id: string; latitude: number | null; longitude: number | null };
 type ClubIdRow = { club_id: string };
 
 export default async function AdminPage() {
@@ -16,48 +16,47 @@ export default async function AdminPage() {
   let missingHours = 0;
   let missingImages = 0;
   let missingTypes = 0;
+  let missingCoordinates = 0;
 
-  if (supabase) {
-    const [
-      totalResult,
-      activeResult,
-      premiumResult,
-      missingPhoneResult,
-      activeIdsResult,
-      hoursResult,
-      imagesResult,
-      typesResult,
-    ] = await Promise.all([
-      supabase.from('clubs').select('*', { count: 'exact', head: true }),
-      supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true),
-      supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_premium', true),
-      supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
-      supabase.from('clubs').select('id').eq('is_active', true),
-      supabase.from('club_opening_hours').select('club_id'),
-      supabase.from('club_images').select('club_id'),
-      supabase.from('club_type_assignments').select('club_id'),
-    ]);
+  const [
+    totalResult,
+    activeResult,
+    premiumResult,
+    missingPhoneResult,
+    activeRowsResult,
+    hoursResult,
+    imagesResult,
+    typesResult,
+  ] = await Promise.all([
+    supabase.from('clubs').select('*', { count: 'exact', head: true }),
+    supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_premium', true),
+    supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
+    supabase.from('clubs').select('id,latitude,longitude').eq('is_active', true),
+    supabase.from('club_opening_hours').select('club_id'),
+    supabase.from('club_images').select('club_id'),
+    supabase.from('club_type_assignments').select('club_id'),
+  ]);
 
-    totalClubs = totalResult.count ?? 0;
-    activeClubs = activeResult.count ?? 0;
-    premiumClubs = premiumResult.count ?? 0;
-    missingPhone = missingPhoneResult.count ?? 0;
+  totalClubs = totalResult.count ?? 0;
+  activeClubs = activeResult.count ?? 0;
+  premiumClubs = premiumResult.count ?? 0;
+  missingPhone = missingPhoneResult.count ?? 0;
 
-    const activeRows = (activeIdsResult.data ?? []) as IdRow[];
-    const hourRows = (hoursResult.data ?? []) as ClubIdRow[];
-    const imageRows = (imagesResult.data ?? []) as ClubIdRow[];
-    const typeRows = (typesResult.data ?? []) as ClubIdRow[];
+  const activeRows = (activeRowsResult.data ?? []) as ActiveClubRow[];
+  const hourRows = (hoursResult.data ?? []) as ClubIdRow[];
+  const imageRows = (imagesResult.data ?? []) as ClubIdRow[];
+  const typeRows = (typesResult.data ?? []) as ClubIdRow[];
 
-    const activeIds = new Set(activeRows.map((row) => row.id));
-    const idsWithHours = new Set(hourRows.map((row) => row.club_id));
-    const idsWithImages = new Set(imageRows.map((row) => row.club_id));
-    const idsWithTypes = new Set(typeRows.map((row) => row.club_id));
+  const idsWithHours = new Set(hourRows.map((row) => row.club_id));
+  const idsWithImages = new Set(imageRows.map((row) => row.club_id));
+  const idsWithTypes = new Set(typeRows.map((row) => row.club_id));
 
-    for (const id of activeIds) {
-      if (!idsWithHours.has(id)) missingHours += 1;
-      if (!idsWithImages.has(id)) missingImages += 1;
-      if (!idsWithTypes.has(id)) missingTypes += 1;
-    }
+  for (const club of activeRows) {
+    if (!idsWithHours.has(club.id)) missingHours += 1;
+    if (!idsWithImages.has(club.id)) missingImages += 1;
+    if (!idsWithTypes.has(club.id)) missingTypes += 1;
+    if (club.latitude == null || club.longitude == null) missingCoordinates += 1;
   }
 
   const completenessItems = [
@@ -65,6 +64,7 @@ export default async function AdminPage() {
     { label: 'İş saatı çatmır', value: missingHours },
     { label: 'Şəkil çatmır', value: missingImages },
     { label: 'Klub tipi çatmır', value: missingTypes },
+    { label: 'Koordinat çatmır', value: missingCoordinates },
   ];
 
   return (
@@ -116,7 +116,7 @@ export default async function AdminPage() {
           </Link>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {completenessItems.map((item) => (
             <div key={item.label} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <p className="text-sm text-gray-500">{item.label}</p>
