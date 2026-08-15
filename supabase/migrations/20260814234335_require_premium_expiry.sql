@@ -1,0 +1,1 @@
+alter table public.clubs add constraint chk_clubs_premium_expiry_required check (not is_premium or premium_expires_at is not null);
