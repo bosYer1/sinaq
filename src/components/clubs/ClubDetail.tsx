@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import type { ClubWithRelations } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
 import { RatingBadge } from './RatingBadge';
@@ -22,15 +21,17 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
       ? 'Hazırda açıqdır'
       : 'Hazırda bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
-  const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
+  const realPricing = club.pricing.filter(
+    (pricing) => pricing.price_from > 0 && pricing.club_type
+  );
   const phoneNumbers = (club.phone ?? '')
     .split(/\s*\/\s*|\s*,\s*|\s*;\s*/)
     .map((phone) => phone.trim())
     .filter(Boolean);
 
-  const sortedHours = [...club.opening_hours].sort(
-    (a, b) => a.day_of_week - b.day_of_week
-  );
+  const sortedHours = [...club.opening_hours]
+    .filter((hours) => hours.day_of_week >= 0 && hours.day_of_week <= 6)
+    .sort((a, b) => a.day_of_week - b.day_of_week);
   const sortedImages = [...club.images].sort((a, b) => a.position - b.position);
   const fallbackType =
     typeSlugs.length === 2
@@ -49,9 +50,9 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
   return (
     <article className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
       <div className="mb-4">
-        <Link href="/" className="text-sm font-medium text-muted transition hover:text-ink">
+        <a href="/" className="text-sm font-medium text-muted transition hover:text-ink">
           ← Klublara qayıt
-        </Link>
+        </a>
       </div>
 
       {sortedImages.length > 0 ? (
