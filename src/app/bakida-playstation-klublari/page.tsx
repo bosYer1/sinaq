@@ -15,6 +15,22 @@ export default async function BakuPlayStationClubsPage() {
   const clubs = await getClubs({ type: 'playstation' });
   const siteUrl = getSiteUrl();
   const url = `${siteUrl}/bakida-playstation-klublari`;
+  const districtCounts = new Map<string, { slug: string; name: string; count: number }>();
+
+  for (const club of clubs) {
+    if (!club.district?.slug) continue;
+    const current = districtCounts.get(club.district.slug);
+    districtCounts.set(club.district.slug, {
+      slug: club.district.slug,
+      name: club.district.name,
+      count: (current?.count ?? 0) + 1,
+    });
+  }
+
+  const strongDistricts = [...districtCounts.values()]
+    .filter((district) => district.count >= 2)
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'az'));
+
   const data = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -31,6 +47,21 @@ export default async function BakuPlayStationClubsPage() {
     <nav className="mb-5 text-xs text-muted"><Link href="/">GameYer</Link> / Bakıda PlayStation klubları</nav>
     <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda PlayStation və PS klubları</h1>
     <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakıda PlayStation klub və PS klub axtaranlar üçün aktiv məkanları bir yerdə müqayisə et. Hazırda {clubs.length} PlayStation klubu göstərilir. Ünvan, xəritə, iş saatları və mövcud olduqda saatlıq qiymət məlumatları klub səhifələrindədir.</p>
+
+    {strongDistricts.length > 0 ? (
+      <section className="mt-6" aria-labelledby="ps-districts-heading">
+        <h2 id="ps-districts-heading" className="font-display text-base font-bold text-ink">Rayon üzrə PlayStation klubları</h2>
+        <p className="mt-1 text-xs leading-5 text-muted">Ən azı 2 aktiv PlayStation klubu olan rayonlara birbaşa keç.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {strongDistricts.map((district) => (
+            <Link key={district.slug} href={`/rayon/${district.slug}/playstation`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">
+              {district.name} PlayStation klubları ({district.count})
+            </Link>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
     <div className="mt-7"><SeoClubList clubs={clubs} /></div>
     <section className="mt-10 rounded-card border border-border bg-surface p-5">
       <h2 className="font-display text-lg font-bold">Yaxın PlayStation klubunu tap</h2>
