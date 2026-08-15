@@ -95,12 +95,10 @@ jobs:
           grep 'rel="canonical" href="https://gameyerr-gameyer.vercel.app/bakida-pc-klublari"' /tmp/pc.html > /dev/null
           curl --fail --silent http://127.0.0.1:3000/bakida-playstation-klublari > /tmp/ps.html
           grep 'rel="canonical" href="https://gameyerr-gameyer.vercel.app/bakida-playstation-klublari"' /tmp/ps.html > /dev/null
-          curl --silent --dump-header /tmp/old-pc-headers --output /dev/null http://127.0.0.1:3000/tip/pc
-          grep -Ei '^HTTP/.* 308' /tmp/old-pc-headers > /dev/null
-          grep -Ei '^location: /bakida-pc-klublari' /tmp/old-pc-headers > /dev/null
-          curl --silent --dump-header /tmp/old-ps-headers --output /dev/null http://127.0.0.1:3000/tip/playstation
-          grep -Ei '^HTTP/.* 308' /tmp/old-ps-headers > /dev/null
-          grep -Ei '^location: /bakida-playstation-klublari' /tmp/old-ps-headers > /dev/null
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/tip/pc)" = "308"
+          curl --silent --output /dev/null --write-out '%{redirect_url}' http://127.0.0.1:3000/tip/pc | grep -E '/bakida-pc-klublari$' > /dev/null
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/tip/playstation)" = "308"
+          curl --silent --output /dev/null --write-out '%{redirect_url}' http://127.0.0.1:3000/tip/playstation | grep -E '/bakida-playstation-klublari$' > /dev/null
           curl --fail --silent http://127.0.0.1:3000/elaqe > /tmp/elaqe.html
           grep 'rel="canonical" href="https://gameyerr-gameyer.vercel.app/elaqe"' /tmp/elaqe.html > /dev/null
           curl --fail --silent http://127.0.0.1:3000/mexfilik > /tmp/mexfilik.html
