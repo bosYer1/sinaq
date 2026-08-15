@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
 export default function ClubDetailError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -18,9 +17,9 @@ export default function ClubDetailError({ error, reset }: { error: Error & { dig
         <Button onClick={reset} variant="secondary">
           Yenidən cəhd et
         </Button>
-        <Link href="/" className="inline-flex h-10 items-center rounded-control bg-primary px-4 text-sm font-medium text-white hover:bg-primary-dark">
+        <a href="/" className="inline-flex h-10 items-center rounded-control bg-primary px-4 text-sm font-medium text-white hover:bg-primary-dark">
           Ana səhifəyə qayıt
-        </Link>
+        </a>
       </div>
     </div>
   );
