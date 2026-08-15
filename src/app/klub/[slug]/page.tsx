@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getClubBySlug } from '@/lib/queries/clubs';
 import { ClubDetail } from '@/components/clubs/ClubDetail';
+import { getSiteUrl } from '@/lib/site-url';
 
 interface ClubPageProps {
   params: Promise<{
@@ -67,7 +68,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
   if (!club) notFound();
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gameyerr-gameyer.vercel.app';
+  const siteUrl = getSiteUrl();
   const typeAssignments = Array.isArray(club.type_assignments) ? club.type_assignments : [];
   const openingHours = Array.isArray(club.opening_hours) ? club.opening_hours : [];
   const images = Array.isArray(club.images) ? club.images : [];
