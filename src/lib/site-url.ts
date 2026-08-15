@@ -3,7 +3,7 @@ const GAMEYER_PRODUCTION_URL = 'https://gameyerr-gameyer.vercel.app';
 export function getSiteUrl(): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
-  if (!configured || configured.includes('bosyer')) {
+  if (!configured || configured.toLowerCase().includes('bosyer')) {
     return GAMEYER_PRODUCTION_URL;
   }
 
