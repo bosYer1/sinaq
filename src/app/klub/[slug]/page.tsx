@@ -99,15 +99,19 @@ export default async function ClubPage({ params }: ClubPageProps) {
       closes: hours.close_time!.slice(0, 5),
     }));
 
-  const validPrices = pricing
-    .flatMap((item) => {
-      const values = [item.price_from, item.price_to]
-        .filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0);
-      return values;
-    });
-  const priceRange = validPrices.length > 0
-    ? `${Math.min(...validPrices)}–${Math.max(...validPrices)} AZN`
-    : undefined;
+  const validPrices = pricing.flatMap((item) =>
+    [item.price_from, item.price_to].filter(
+      (value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0
+    )
+  );
+  const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
+  const maxPrice = validPrices.length > 0 ? Math.max(...validPrices) : null;
+  const priceRange =
+    minPrice != null && maxPrice != null
+      ? minPrice === maxPrice
+        ? `${minPrice} AZN`
+        : `${minPrice}–${maxPrice} AZN`
+      : undefined;
   const aggregateRating =
     club.rating_avg != null &&
     Number.isFinite(club.rating_avg) &&
