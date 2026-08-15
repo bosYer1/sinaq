@@ -9,7 +9,9 @@ const displayFont = Space_Grotesk({ subsets: ['latin'], variable: '--font-displa
 const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 
 const siteUrl = getSiteUrl();
-const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
+const googleVerification =
+  process.env.GOOGLE_SITE_VERIFICATION?.trim() ||
+  'p4_LT_BjLRiy0oSjt8chd_QgipidT5IWv1N0rKzUl3I';
 
 export const viewport: Viewport = {
   themeColor: '#7C5CFC',
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
     'Bakıdakı PC gaming və PlayStation klublarını xəritə üzərində tap, rayon, tip və qiymətə görə filtr et.',
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
-  verification: googleVerification ? { google: googleVerification } : undefined,
+  verification: { google: googleVerification },
   appleWebApp: {
     capable: true,
     title: 'GameYer',
