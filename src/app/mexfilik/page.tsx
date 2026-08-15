@@ -4,6 +4,14 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Məxfilik siyasəti',
   description: 'GameYer məxfilik siyasəti və lokasiya məlumatlarının istifadəsi.',
+  alternates: { canonical: '/mexfilik' },
+  openGraph: {
+    type: 'website',
+    locale: 'az_AZ',
+    url: '/mexfilik',
+    title: 'Məxfilik siyasəti | GameYer',
+    description: 'GameYer-də lokasiya və digər məlumatların necə istifadə edildiyini oxu.',
+  },
 };
 
 export default function PrivacyPage() {

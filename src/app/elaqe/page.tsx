@@ -4,6 +4,14 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Əlaqə və məlumat düzəlişi',
   description: 'GameYer-də klub məlumatının əlavə edilməsi, düzəldilməsi və klub sahibi təsdiqi qaydası.',
+  alternates: { canonical: '/elaqe' },
+  openGraph: {
+    type: 'website',
+    locale: 'az_AZ',
+    url: '/elaqe',
+    title: 'Əlaqə və məlumat düzəlişi | GameYer',
+    description: 'Klub məlumatında düzəliş, yeni klub təklifi və klub sahibi təsdiqi üçün GameYer müraciət qaydaları.',
+  },
 };
 
 interface ContactPageProps {
