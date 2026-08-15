@@ -63,6 +63,10 @@ export default async function HomePage({ searchParams }: PageProps) {
         name: 'GameYer',
         url: siteUrl,
         logo: `${siteUrl}/apple-icon`,
+        sameAs: [
+          'https://www.instagram.com/gameyer.az/',
+          'https://www.tiktok.com/@gameyer.az',
+        ],
       },
     ],
   };
