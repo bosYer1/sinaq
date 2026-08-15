@@ -6,7 +6,7 @@ import { SeoClubList } from '@/components/seo/SeoClubList';
 
 export const metadata: Metadata = {
   title: 'Bakıda PlayStation klubları — PS klub qiymətləri və ünvanlar',
-  description: 'Bakıda PlayStation və PS klub axtarırsan? PlayStation klublarını qiymət, ünvan, rayon və xəritə məlumatları ilə GameYer-də müqayisə et.',
+  description: 'Bakıda PlayStation və PS klub axtarırsan? PlayStation klublarını qiymət, ünvan, rayon, iş saatı və xəritə məlumatları ilə GameYer-də müqayisə et.',
   alternates: { canonical: '/bakida-playstation-klublari' },
   openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-playstation-klublari', title: 'Bakıda PlayStation klubları | GameYer', description: 'Bakıdakı PlayStation və PS klublarını qiymət, ünvan və xəritə məlumatları ilə müqayisə et.' },
 };
@@ -34,8 +34,8 @@ export default async function BakuPlayStationClubsPage() {
     <div className="mt-7"><SeoClubList clubs={clubs} /></div>
     <section className="mt-10 rounded-card border border-border bg-surface p-5">
       <h2 className="font-display text-lg font-bold">Yaxın PlayStation klubunu tap</h2>
-      <p className="mt-2 text-sm leading-6 text-muted">Rayon, qiymət və lokasiyaya görə müqayisə et. Xəritə görünüşü yaxın PS klublarını tapmağı, rayon səhifələri isə konkret ərazidə seçim etməyi asanlaşdırır.</p>
-      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=playstation&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PS klubları xəritədə</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
+      <p className="mt-2 text-sm leading-6 text-muted">Rayon, qiymət, iş saatı və lokasiyaya görə müqayisə et. Xəritə görünüşü yaxın PS klublarını tapmağı, 24 saat səhifəsi gecə-gündüz açıq məkanları, rayon səhifələri isə konkret ərazidə seçim etməyi asanlaşdırır.</p>
+      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=playstation&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PS klubları xəritədə</Link><Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">24 saat gaming klubları</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
     </section>
   </div>;
 }
