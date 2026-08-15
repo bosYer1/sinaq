@@ -218,6 +218,31 @@ export interface Database {
         ];
       };
 
+      page_views: {
+        Row: {
+          id: number;
+          session_id: string;
+          path: string;
+          referrer_host: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          session_id: string;
+          path: string;
+          referrer_host?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          session_id?: string;
+          path?: string;
+          referrer_host?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
       club_submissions: {
         Row: {
           id: string;
@@ -292,6 +317,10 @@ export interface Database {
         };
         Returns: string;
       };
+      get_admin_analytics: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
@@ -306,6 +335,7 @@ export type ClubPricing = Database['public']['Tables']['club_pricing']['Row'];
 export type ClubOpeningHours = Database['public']['Tables']['club_opening_hours']['Row'];
 export type ClubImage = Database['public']['Tables']['club_images']['Row'];
 export type ClubSubmission = Database['public']['Tables']['club_submissions']['Row'];
+export type PageView = Database['public']['Tables']['page_views']['Row'];
 
 export interface ClubWithRelations extends ClubRow {
   district: Pick<District, 'id' | 'name' | 'slug'> | null;
