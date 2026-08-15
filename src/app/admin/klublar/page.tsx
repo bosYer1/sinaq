@@ -8,6 +8,7 @@ interface PageProps {
     q?: string;
     status?: string;
     missing?: string;
+    sort?: string;
   }>;
 }
 
@@ -97,6 +98,9 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   const missingFilter = resolvedSearchParams.missing && missingLabels[resolvedSearchParams.missing]
     ? resolvedSearchParams.missing
     : '';
+  const sort = resolvedSearchParams.sort === 'seo-low' || resolvedSearchParams.sort === 'seo-high'
+    ? resolvedSearchParams.sort
+    : 'updated';
 
   function missingForClub(club: (typeof clubs)[number]) {
     return [
@@ -111,23 +115,33 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
     ].filter((value): value is string => Boolean(value));
   }
 
+  function seoScoreForClub(club: (typeof clubs)[number]) {
+    return Math.round(((8 - missingForClub(club).length) / 8) * 100);
+  }
+
   const seoReadyCount = clubs.filter((club) => missingForClub(club).length === 0).length;
   const seoAverage = clubs.length > 0
-    ? Math.round(clubs.reduce((sum, club) => sum + ((8 - missingForClub(club).length) / 8) * 100, 0) / clubs.length)
+    ? Math.round(clubs.reduce((sum, club) => sum + seoScoreForClub(club), 0) / clubs.length)
     : 0;
 
-  const filteredClubs = clubs.filter((club) => {
-    if (!missingFilter) return true;
-    if (missingFilter === 'phone') return !club.phone;
-    if (missingFilter === 'description') return !club.description?.trim();
-    if (missingFilter === 'instagram') return !club.instagram_url;
-    if (missingFilter === 'hours') return !idsWithHours.has(club.id);
-    if (missingFilter === 'pricing') return !idsWithPricing.has(club.id);
-    if (missingFilter === 'images') return !idsWithImages.has(club.id);
-    if (missingFilter === 'types') return !idsWithTypes.has(club.id);
-    if (missingFilter === 'coordinates') return club.latitude == null || club.longitude == null;
-    return true;
-  });
+  const filteredClubs = clubs
+    .filter((club) => {
+      if (!missingFilter) return true;
+      if (missingFilter === 'phone') return !club.phone;
+      if (missingFilter === 'description') return !club.description?.trim();
+      if (missingFilter === 'instagram') return !club.instagram_url;
+      if (missingFilter === 'hours') return !idsWithHours.has(club.id);
+      if (missingFilter === 'pricing') return !idsWithPricing.has(club.id);
+      if (missingFilter === 'images') return !idsWithImages.has(club.id);
+      if (missingFilter === 'types') return !idsWithTypes.has(club.id);
+      if (missingFilter === 'coordinates') return club.latitude == null || club.longitude == null;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sort === 'seo-low') return seoScoreForClub(a) - seoScoreForClub(b) || a.name.localeCompare(b.name, 'az');
+      if (sort === 'seo-high') return seoScoreForClub(b) - seoScoreForClub(a) || a.name.localeCompare(b.name, 'az');
+      return Date.parse(b.updated_at) - Date.parse(a.updated_at);
+    });
 
   return (
     <div>
@@ -179,22 +193,14 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           className="h-10 min-w-0 flex-1 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#7C5CFC] focus:ring-2 focus:ring-[#7C5CFC]/10"
         />
 
-        <select
-          name="status"
-          defaultValue={resolvedSearchParams.status ?? ''}
-          className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm"
-        >
+        <select name="status" defaultValue={resolvedSearchParams.status ?? ''} className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm">
           <option value="">Bütün statuslar</option>
           <option value="active">Aktiv</option>
           <option value="inactive">Deaktiv</option>
           <option value="premium">Aktiv premium</option>
         </select>
 
-        <select
-          name="missing"
-          defaultValue={missingFilter}
-          className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm"
-        >
+        <select name="missing" defaultValue={missingFilter} className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm">
           <option value="">Çatışmayan məlumat</option>
           <option value="phone">Telefon çatmır</option>
           <option value="description">Təsvir çatmır</option>
@@ -206,9 +212,15 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           <option value="coordinates">Koordinat çatmır</option>
         </select>
 
+        <select name="sort" defaultValue={sort} className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm">
+          <option value="updated">Son yenilənən</option>
+          <option value="seo-low">SEO zəif → güclü</option>
+          <option value="seo-high">SEO güclü → zəif</option>
+        </select>
+
         <button type="submit" className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white">Axtar</button>
 
-        {(resolvedSearchParams.q || resolvedSearchParams.status || missingFilter) ? (
+        {(resolvedSearchParams.q || resolvedSearchParams.status || missingFilter || sort !== 'updated') ? (
           <Link href="/admin/klublar" className="flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium">
             Təmizlə
           </Link>
@@ -233,7 +245,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
             <tbody className="divide-y divide-gray-100">
               {filteredClubs.map((club) => {
                 const missing = missingForClub(club);
-                const seoScore = Math.round(((8 - missing.length) / 8) * 100);
+                const seoScore = seoScoreForClub(club);
                 const seoTone = seoScore >= 88
                   ? 'bg-green-50 text-green-700'
                   : seoScore >= 63
@@ -267,9 +279,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                         <span className="text-gray-400">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className={`rounded-md px-2 py-1 text-xs font-semibold ${seoTone}`}>{seoScore}%</span>
-                    </td>
+                    <td className="px-4 py-3"><span className={`rounded-md px-2 py-1 text-xs font-semibold ${seoTone}`}>{seoScore}%</span></td>
                     <td className="px-4 py-3">
                       {missing.length === 0 ? (
                         <span className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700">Tamdır</span>
@@ -280,9 +290,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/admin/klublar/${club.id}`} className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold transition hover:border-[#7C5CFC] hover:text-[#7C5CFC]">
-                        Redaktə et
-                      </Link>
+                      <Link href={`/admin/klublar/${club.id}`} className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold transition hover:border-[#7C5CFC] hover:text-[#7C5CFC]">Redaktə et</Link>
                     </td>
                   </tr>
                 );
