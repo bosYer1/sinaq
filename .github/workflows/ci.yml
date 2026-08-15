@@ -15,6 +15,9 @@ jobs:
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: '1'
+      NEXT_PUBLIC_SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ZRyHR5Qj2LmbCZVsKTBZ4Q_eRByoSYf
+      NEXT_PUBLIC_SITE_URL: https://bosyer-web.vercel.app
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -32,7 +35,45 @@ jobs:
 
       - name: Production build
         run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ZRyHR5Qj2LmbCZVsKTBZ4Q_eRByoSYf
-          NEXT_PUBLIC_SITE_URL: https://bosyer-web.vercel.app
+
+      - name: Start production server
+        run: |
+          npm run start > /tmp/gameyer-next.log 2>&1 &
+          echo $! > /tmp/gameyer-next.pid
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/gameyer-next.log
+          exit 1
+
+      - name: Smoke test public routes
+        run: |
+          set -euo pipefail
+          curl --fail --silent http://127.0.0.1:3000/ > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/api/health | grep '"ok":true' > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/robots.txt | grep 'Disallow: /admin' > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/sitemap.xml > /tmp/sitemap.xml
+          curl --fail --silent http://127.0.0.1:3000/manifest.webmanifest > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/admin/login > /dev/null
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/this-route-must-not-exist)" = "404"
+          node <<'NODE'
+          const fs = require('node:fs');
+          const xml = fs.readFileSync('/tmp/sitemap.xml', 'utf8');
+          const paths = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => new URL(match[1]).pathname);
+          if (paths.length < 33) throw new Error(`Expected at least 33 sitemap URLs, got ${paths.length}`);
+          for (const path of paths) {
+            const response = await fetch(`http://127.0.0.1:3000${path}`);
+            if (!response.ok) throw new Error(`${path} returned ${response.status}`);
+          }
+          console.log(`Smoke-tested ${paths.length} sitemap routes successfully.`);
+          NODE
+
+      - name: Stop production server
+        if: always()
+        run: |
+          if [ -f /tmp/gameyer-next.pid ]; then
+            kill "$(cat /tmp/gameyer-next.pid)" || true
+          fi
