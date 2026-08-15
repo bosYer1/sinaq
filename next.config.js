@@ -30,6 +30,20 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/tip/pc',
+        destination: '/bakida-pc-klublari',
+        permanent: true,
+      },
+      {
+        source: '/tip/playstation',
+        destination: '/bakida-playstation-klublari',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

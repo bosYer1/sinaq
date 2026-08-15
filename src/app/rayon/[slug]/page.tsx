@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts } from '@/lib/queries/districts';
 import { getSiteUrl } from '@/lib/site-url';
+import { inferClubTypeSlugs } from '@/lib/clubType';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
 interface DistrictPageProps {
@@ -38,6 +39,8 @@ export default async function DistrictPage({ params }: DistrictPageProps) {
   const district = districts.find((item) => item.slug === slug);
   if (!district) notFound();
 
+  const pcCount = clubs.filter((club) => inferClubTypeSlugs(club).includes('pc')).length;
+  const playStationCount = clubs.filter((club) => inferClubTypeSlugs(club).includes('playstation')).length;
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/rayon/${district.slug}`;
   const structuredData = {
@@ -74,6 +77,14 @@ export default async function DistrictPage({ params }: DistrictPageProps) {
       <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
         {district.name} rayonunda aktiv PC və PlayStation klublarını müqayisə et. Hazırda {clubs.length} klub göstərilir; klub səhifələrində ünvan, xəritə, iş saatları və mövcud olduqda qiymətlər yer alır.
       </p>
+
+      {(pcCount >= 2 || playStationCount >= 2) ? (
+        <div className="mt-5 flex flex-wrap gap-2" aria-label={`${district.name} üzrə klub növləri`}>
+          {pcCount >= 2 ? <Link href={`/rayon/${district.slug}/pc`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">{district.name} PC klubları ({pcCount})</Link> : null}
+          {playStationCount >= 2 ? <Link href={`/rayon/${district.slug}/playstation`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">{district.name} PlayStation klubları ({playStationCount})</Link> : null}
+        </div>
+      ) : null}
+
       <div className="mt-7"><SeoClubList clubs={clubs} /></div>
       <div className="mt-8 flex flex-wrap gap-2">
         <Link href={`/?district=${encodeURIComponent(district.slug)}&view=map`} className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Xəritədə göstər</Link>
