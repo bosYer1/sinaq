@@ -69,7 +69,11 @@ jobs:
           grep -Ei '^referrer-policy: strict-origin-when-cross-origin' /tmp/public-headers > /dev/null
           curl --fail --silent http://127.0.0.1:3000/rayon > /dev/null
           curl --fail --silent http://127.0.0.1:3000/tip > /dev/null
-          curl --fail --silent http://127.0.0.1:3000/api/health | grep '"ok":true' > /dev/null
+          curl --fail --silent --dump-header /tmp/health-headers --output /tmp/health.json http://127.0.0.1:3000/api/health
+          grep -Ei '^x-robots-tag: noindex, nofollow' /tmp/health-headers > /dev/null
+          grep '"ok":true' /tmp/health.json > /dev/null
+          grep '"database":"ok"' /tmp/health.json > /dev/null
+          ! grep -E 'activeClubs|responseMs|timestamp' /tmp/health.json > /dev/null
           curl --fail --silent http://127.0.0.1:3000/robots.txt | grep 'Disallow: /admin' > /dev/null
           curl --fail --silent http://127.0.0.1:3000/sitemap.xml > /tmp/sitemap.xml
           grep '/rayon/' /tmp/sitemap.xml > /dev/null
