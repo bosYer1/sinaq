@@ -18,6 +18,16 @@ const CLUB_SELECT = `
   opening_hours:club_opening_hours ( id, club_id, day_of_week, open_time, close_time, is_closed )
 `;
 
+function normalizeClubRelations(club: ClubWithRelations): ClubWithRelations {
+  return {
+    ...club,
+    type_assignments: Array.isArray(club.type_assignments) ? club.type_assignments : [],
+    pricing: Array.isArray(club.pricing) ? club.pricing : [],
+    images: Array.isArray(club.images) ? club.images : [],
+    opening_hours: Array.isArray(club.opening_hours) ? club.opening_hours : [],
+  };
+}
+
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
   const supabase = await createClient();
   let districtId: string | null = null;
@@ -75,7 +85,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     return [];
   }
 
-  let clubs = data ?? [];
+  let clubs = (data ?? []).map(normalizeClubRelations);
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
   const hasTypeFilter = requestedType === 'pc' || requestedType === 'playstation';
 
@@ -87,15 +97,13 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     clubs = clubs.filter((club) =>
       club.pricing.some(
         (pricing) =>
-          pricing.club_type.slug === requestedType &&
+          pricing.club_type?.slug === requestedType &&
           pricing.price_from > 0 &&
           pricing.price_from <= filters.priceMax!
       )
     );
   }
 
-  // DB flag-i expiry keçəndən sonra da true qala bilər; public sıralama yalnız
-  // həqiqətən aktiv premium statusuna əsaslanır.
   clubs = [...clubs].sort((a, b) => {
     const premiumDelta = Number(isPremiumActive(b)) - Number(isPremiumActive(a));
     if (premiumDelta !== 0) return premiumDelta;
@@ -125,5 +133,5 @@ export async function getClubBySlug(slug: string): Promise<ClubWithRelations | n
     return null;
   }
 
-  return data;
+  return data ? normalizeClubRelations(data) : null;
 }
