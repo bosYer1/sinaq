@@ -19,6 +19,20 @@ export class MapErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('GameYer map runtime error:', error, info);
+
+    const payload = {
+      message: `MapError: ${error.message}`,
+      stack: `${error.stack ?? ''}\n${info.componentStack ?? ''}`,
+      path: window.location.pathname + window.location.search,
+      userAgent: navigator.userAgent,
+    };
+
+    fetch('/api/client-error', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => undefined);
   }
 
   render() {
