@@ -59,7 +59,14 @@ jobs:
       - name: Smoke test public routes
         run: |
           set -euo pipefail
-          curl --fail --silent http://127.0.0.1:3000/ > /dev/null
+          curl --fail --silent --dump-header /tmp/public-headers --output /dev/null http://127.0.0.1:3000/
+          grep -Ei "^content-security-policy: .*default-src 'self'" /tmp/public-headers > /dev/null
+          grep -Ei "^content-security-policy: .*frame-ancestors 'none'" /tmp/public-headers > /dev/null
+          grep -Ei '^content-security-policy: .*basemaps\.cartocdn\.com' /tmp/public-headers > /dev/null
+          grep -Ei '^content-security-policy: .*uxcedpbumulpheglhlvs\.supabase\.co' /tmp/public-headers > /dev/null
+          grep -Ei '^x-frame-options: DENY' /tmp/public-headers > /dev/null
+          grep -Ei '^x-content-type-options: nosniff' /tmp/public-headers > /dev/null
+          grep -Ei '^referrer-policy: strict-origin-when-cross-origin' /tmp/public-headers > /dev/null
           curl --fail --silent http://127.0.0.1:3000/rayon > /dev/null
           curl --fail --silent http://127.0.0.1:3000/tip > /dev/null
           curl --fail --silent http://127.0.0.1:3000/api/health | grep '"ok":true' > /dev/null
