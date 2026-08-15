@@ -206,6 +206,10 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               </div>
             )}
           </section>
+
+          <p className="mt-4 text-xs leading-5 text-muted">
+            Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl mümkün olduqda klubun rəsmi əlaqə kanalından məlumatı dəqiqləşdirin.
+          </p>
         </div>
 
         <aside className="h-fit rounded-xl border border-border bg-surface p-5">
