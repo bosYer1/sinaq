@@ -1,16 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SubmissionForm } from '@/components/submissions/SubmissionForm';
 
 export const metadata: Metadata = {
   title: 'Əlaqə və məlumat düzəlişi',
-  description: 'GameYer-də klub məlumatının əlavə edilməsi, düzəldilməsi və klub sahibi təsdiqi qaydası.',
+  description: 'GameYer-də klub məlumatının əlavə edilməsi və düzəldilməsi üçün müraciət göndər.',
   alternates: { canonical: '/elaqe' },
   openGraph: {
     type: 'website',
     locale: 'az_AZ',
     url: '/elaqe',
     title: 'Əlaqə və məlumat düzəlişi | GameYer',
-    description: 'Klub məlumatında düzəliş, yeni klub təklifi və klub sahibi təsdiqi üçün GameYer müraciət qaydaları.',
+    description: 'Klub məlumatında düzəliş və yeni klub təklifi üçün GameYer müraciət səhifəsi.',
   },
 };
 
@@ -18,6 +19,8 @@ interface ContactPageProps {
   searchParams: Promise<{
     club?: string;
     slug?: string;
+    sent?: string;
+    error?: string;
   }>;
 }
 
@@ -40,10 +43,20 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
         Əlaqə və məlumat düzəlişi
       </h1>
       <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
-        GameYer-də məqsəd klub məlumatlarını mümkün qədər dəqiq saxlamaqdır. Klub sahibi və ya
-        istifadəçi kimi yanlış məlumat gördükdə aşağıdakı məlumatları hazırlamaq düzəlişin daha
-        tez yoxlanmasına kömək edir.
+        GameYer-də klub məlumatlarını mümkün qədər dəqiq saxlayırıq. Səhv məlumat gördükdə və ya
+        siyahıda olmayan klub bildikdə müraciəti birbaşa buradan göndərə bilərsiniz.
       </p>
+
+      {params.sent === '1' ? (
+        <div role="status" className="mt-6 rounded-xl border border-live/30 bg-live/10 p-4 text-sm text-ink">
+          Müraciət qəbul edildi. Məlumat yoxlanıldıqdan sonra lazım olarsa göstərdiyiniz əlaqə vasitəsilə sizinlə əlaqə saxlanılacaq.
+        </div>
+      ) : null}
+      {params.error === '1' ? (
+        <div role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          Müraciət göndərilmədi. Sahələri və əlaqə məlumatını yoxlayıb yenidən cəhd edin.
+        </div>
+      ) : null}
 
       {selectedClub ? (
         <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
@@ -57,24 +70,31 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
         </div>
       ) : null}
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <section className="rounded-xl border border-border bg-surface p-5 shadow-card">
-          <h2 className="font-display text-lg font-bold text-ink">Məlumat düzəlişi</h2>
-          <p className="mt-2 text-sm leading-6 text-muted">
-            Klubun adı, dəyişən sahə və düzgün məlumatı qeyd edin. Telefon, iş saatı, qiymət,
-            Instagram və xəritə mövqeyi kimi məlumatlar mümkün olduqda klubun rəsmi mənbəsi ilə
-            yoxlanılır.
-          </p>
-        </section>
+      <section className="mt-8 rounded-xl border border-border bg-surface p-5 shadow-card sm:p-6">
+        <h2 className="font-display text-xl font-bold text-ink">Məlumat düzəlişi</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          Telefon, ünvan, iş saatı, qiymət, Instagram, klub tipi və ya xəritə mövqeyində səhv varsa düzgün məlumatı yazın.
+        </p>
+        <SubmissionForm
+          kind="correction"
+          clubName={selectedClub}
+          clubSlug={selectedSlug}
+          returnTo="/elaqe"
+          submitLabel="Düzəlişi göndər"
+        />
+      </section>
 
-        <section className="rounded-xl border border-border bg-surface p-5 shadow-card">
-          <h2 className="font-display text-lg font-bold text-ink">Yeni klub əlavə etmək</h2>
-          <p className="mt-2 text-sm leading-6 text-muted">
-            Klubun adı, tam ünvanı, PC/PlayStation tipi, əlaqə nömrəsi, iş saatları və varsa rəsmi
-            sosial şəbəkə hesabını hazırlayın. Təsdiqlənməyən məlumat saytda fakt kimi göstərilmir.
-          </p>
-        </section>
-      </div>
+      <section className="mt-6 rounded-xl border border-border bg-surface p-5 shadow-card sm:p-6">
+        <h2 className="font-display text-xl font-bold text-ink">Yeni klub təklif et</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          GameYer-də olmayan real PC və ya PlayStation klubunu bildir. Məlumat təsdiqlənmədən saytda fakt kimi yayımlanmayacaq.
+        </p>
+        <SubmissionForm
+          kind="new_club"
+          returnTo="/elaqe"
+          submitLabel="Klubu təklif et"
+        />
+      </section>
 
       <section className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-card">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -97,9 +117,9 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
       </section>
 
       <div className="mt-6 rounded-xl border border-border bg-surface-alt p-5">
-        <h2 className="font-display text-base font-bold text-ink">Rəsmi müraciət kanalları</h2>
+        <h2 className="font-display text-base font-bold text-ink">Alternativ əlaqə kanalları</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Klub məlumatında səhv və ya yeni klub təklifi üçün GameYer-in rəsmi sosial hesablarına yaza bilərsiniz.
+          Formdan istifadə etmək istəmirsinizsə GameYer-in rəsmi sosial hesablarına da yaza bilərsiniz.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <a
@@ -122,7 +142,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
       </div>
 
       <p className="mt-8 text-xs leading-5 text-muted">
-        Şəxsi məlumatların və lokasiyanın necə istifadə edildiyini{' '}
+        Müraciətdə verdiyiniz əlaqə məlumatının necə istifadə edildiyini{' '}
         <Link href="/mexfilik" className="font-semibold text-primary hover:underline">
           Məxfilik siyasətində
         </Link>{' '}

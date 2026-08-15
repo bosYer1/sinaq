@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SubmissionForm } from '@/components/submissions/SubmissionForm';
 
 export const metadata: Metadata = {
   title: 'Klub sahibləri üçün',
@@ -18,6 +19,8 @@ interface ClubOwnerPageProps {
   searchParams: Promise<{
     club?: string;
     slug?: string;
+    sent?: string;
+    error?: string;
   }>;
 }
 
@@ -39,10 +42,20 @@ export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps
         </h1>
         <p className="mt-4 text-sm leading-7 text-muted sm:text-base">
           Klubun sahibi və ya rəsmi nümayəndəsisinizsə, GameYer-dəki klub məlumatının sizə aid
-          olduğunu təsdiqləyə və səhv məlumatların düzəldilməsini istəyə bilərsiniz. Hazırkı
-          təsdiqləmə prosesi ödənişsizdir.
+          olduğunu təsdiqləyə və səhv məlumatların düzəldilməsini istəyə bilərsiniz. Təsdiqləmə prosesi ödənişsizdir.
         </p>
       </div>
+
+      {params.sent === '1' ? (
+        <div role="status" className="mt-6 rounded-xl border border-live/30 bg-live/10 p-4 text-sm text-ink">
+          Təsdiq müraciəti qəbul edildi. Müraciətin klubun rəsmi nümayəndəsindən gəldiyi yoxlanıldıqdan sonra sizinlə əlaqə saxlanılacaq.
+        </div>
+      ) : null}
+      {params.error === '1' ? (
+        <div role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          Müraciət göndərilmədi. Sahələri və əlaqə məlumatını yoxlayıb yenidən cəhd edin.
+        </div>
+      ) : null}
 
       {selectedClub ? (
         <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
@@ -59,25 +72,25 @@ export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <section className="rounded-xl border border-border bg-surface p-5 shadow-card">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">1</span>
-          <h2 className="mt-4 font-display text-base font-bold text-ink">Klub linkini göndər</h2>
+          <h2 className="mt-4 font-display text-base font-bold text-ink">Klubu seç</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            GameYer-də klub səhifənizin linkini və klubun adını qeyd edin.
+            GameYer-dəki klub səhifəsindən bu axına keçdikdə klub avtomatik seçilir; yoxdursa adını əl ilə yazın.
           </p>
         </section>
 
         <section className="rounded-xl border border-border bg-surface p-5 shadow-card">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">2</span>
-          <h2 className="mt-4 font-display text-base font-bold text-ink">Rəsmi kanaldan yaz</h2>
+          <h2 className="mt-4 font-display text-base font-bold text-ink">Rəsmi əlaqəni göstər</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Klubun rəsmi Instagram hesabından və ya açıq klub əlaqə nömrəsindən müraciət edin.
+            Klubun rəsmi Instagram hesabını, açıq telefon nömrəsini və ya rəsmi e-poçtu qeyd edin.
           </p>
         </section>
 
         <section className="rounded-xl border border-border bg-surface p-5 shadow-card">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">3</span>
-          <h2 className="mt-4 font-display text-base font-bold text-ink">Düzəlişləri bildir</h2>
+          <h2 className="mt-4 font-display text-base font-bold text-ink">Yoxlamanı gözlə</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Ünvan, telefon, iş saatı, qiymət, PC/PS tipi və şəkillərdən hansı dəyişibsə ayrıca yazın.
+            GameYer müraciətin həqiqətən klubun rəsmi nümayəndəsindən gəldiyini yoxladıqdan sonra məlumatı təsdiqləyir.
           </p>
         </section>
       </div>
@@ -99,30 +112,33 @@ export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps
       </section>
 
       <section className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
-        <h2 className="font-display text-lg font-bold text-ink">Müraciət et</h2>
+        <h2 className="font-display text-xl font-bold text-ink">Təsdiq müraciəti göndər</h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-          Hazırda müraciətlər GameYer-in rəsmi sosial hesabları üzərindən qəbul edilir. Mesajda
-          klubun adını və GameYer səhifəsinin linkini əlavə edin.
+          Klubla əlaqənizi və dəyişməli məlumatları qısa şəkildə yazın. Əlaqə məlumatınız public göstərilməyəcək.
         </p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <a
-            href="https://www.instagram.com/gameyer.az/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-control bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark"
-          >
-            Instagram-da yaz
-          </a>
-          <a
-            href="https://www.tiktok.com/@gameyer.az"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-control border border-border-strong bg-surface px-5 py-2.5 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
-          >
-            TikTok @gameyer.az
-          </a>
-        </div>
+        <SubmissionForm
+          kind="owner_claim"
+          clubName={selectedClub}
+          clubSlug={selectedSlug}
+          returnTo="/klub-sahibi"
+          submitLabel="Təsdiq müraciətini göndər"
+        />
       </section>
+
+      <div className="mt-6 rounded-xl border border-border bg-surface p-5 sm:p-6">
+        <h2 className="font-display text-base font-bold text-ink">Alternativ əlaqə</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          İstəsəniz GameYer-in rəsmi Instagram hesabına da müraciət edə bilərsiniz.
+        </p>
+        <a
+          href="https://www.instagram.com/gameyer.az/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex rounded-control border border-border-strong bg-surface px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
+        >
+          Instagram @gameyer.az
+        </a>
+      </div>
 
       <p className="mt-8 text-xs leading-5 text-muted">
         Sadəcə məlumat səhvi bildirmək istəyirsinizsə{' '}

@@ -212,6 +212,54 @@ export interface Database {
         ];
       };
 
+      club_submissions: {
+        Row: {
+          id: string;
+          kind: 'correction' | 'new_club' | 'owner_claim';
+          club_id: string | null;
+          club_name: string;
+          message: string;
+          contact_type: 'instagram' | 'phone' | 'email';
+          contact_value: string;
+          status: 'pending' | 'reviewing' | 'resolved' | 'rejected';
+          created_at: string;
+          reviewed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          kind: 'correction' | 'new_club' | 'owner_claim';
+          club_id?: string | null;
+          club_name: string;
+          message: string;
+          contact_type: 'instagram' | 'phone' | 'email';
+          contact_value: string;
+          status?: 'pending' | 'reviewing' | 'resolved' | 'rejected';
+          created_at?: string;
+          reviewed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          kind?: 'correction' | 'new_club' | 'owner_claim';
+          club_id?: string | null;
+          club_name?: string;
+          message?: string;
+          contact_type?: 'instagram' | 'phone' | 'email';
+          contact_value?: string;
+          status?: 'pending' | 'reviewing' | 'resolved' | 'rejected';
+          created_at?: string;
+          reviewed_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'club_submissions_club_id_fkey';
+            columns: ['club_id'];
+            isOneToOne: false;
+            referencedRelation: 'clubs';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+
       admin_users: {
         Row: { user_id: string; created_at: string };
         Insert: { user_id: string; created_at?: string };
@@ -245,6 +293,7 @@ export type ClubTypeAssignment = Database['public']['Tables']['club_type_assignm
 export type ClubPricing = Database['public']['Tables']['club_pricing']['Row'];
 export type ClubOpeningHours = Database['public']['Tables']['club_opening_hours']['Row'];
 export type ClubImage = Database['public']['Tables']['club_images']['Row'];
+export type ClubSubmission = Database['public']['Tables']['club_submissions']['Row'];
 
 export interface ClubWithRelations extends ClubRow {
   district: Pick<District, 'id' | 'name' | 'slug'> | null;

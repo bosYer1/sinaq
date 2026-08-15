@@ -18,6 +18,7 @@ export default async function AdminPage() {
   let totalClubs = 0;
   let activeClubs = 0;
   let premiumClubs = 0;
+  let pendingSubmissions = 0;
   let missingPhone = 0;
   let missingDescription = 0;
   let missingInstagram = 0;
@@ -32,6 +33,7 @@ export default async function AdminPage() {
     totalResult,
     activeResult,
     premiumResult,
+    pendingSubmissionsResult,
     missingPhoneResult,
     activeRowsResult,
     hoursResult,
@@ -46,6 +48,7 @@ export default async function AdminPage() {
       .select('*', { count: 'exact', head: true })
       .eq('is_premium', true)
       .gt('premium_expires_at', nowIso),
+    supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
     supabase.from('clubs').select('id,description,instagram_url,latitude,longitude').eq('is_active', true),
     supabase.from('club_opening_hours').select('club_id'),
@@ -57,6 +60,7 @@ export default async function AdminPage() {
   totalClubs = totalResult.count ?? 0;
   activeClubs = activeResult.count ?? 0;
   premiumClubs = premiumResult.count ?? 0;
+  pendingSubmissions = pendingSubmissionsResult.count ?? 0;
   missingPhone = missingPhoneResult.count ?? 0;
 
   const activeRows = (activeRowsResult.data ?? []) as ActiveClubRow[];
@@ -104,10 +108,14 @@ export default async function AdminPage() {
         </Link>
       </div>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Ümumi klub</p><p className="mt-2 text-4xl font-bold">{totalClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv</p><p className="mt-2 text-4xl font-bold">{activeClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv premium</p><p className="mt-2 text-4xl font-bold">{premiumClubs}</p></div>
+        <Link href="/admin/muracietler" className="rounded-xl border border-gray-200 bg-white p-6 transition hover:border-[#7C5CFC]/50 hover:bg-[#7C5CFC]/5">
+          <p className="text-sm text-gray-500">Gözləyən müraciət</p>
+          <div className="mt-2 flex items-end justify-between gap-3"><p className="text-4xl font-bold">{pendingSubmissions}</p><span className="text-sm font-semibold text-[#6A47F0]">Bax →</span></div>
+        </Link>
       </div>
 
       <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
@@ -141,6 +149,7 @@ export default async function AdminPage() {
         <h2 className="text-lg font-bold">Sürətli idarəetmə</h2>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href="/admin/klublar" className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50">Bütün klublar</Link>
+          <Link href="/admin/muracietler" className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50">Müraciətlər</Link>
           <Link href="/admin/klublar/yeni" className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50">Klub əlavə et</Link>
           <Link href="/" className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50">Sayta bax</Link>
         </div>
