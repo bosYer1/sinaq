@@ -3,7 +3,13 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-type ActiveClubRow = { id: string; latitude: number | null; longitude: number | null };
+type ActiveClubRow = {
+  id: string;
+  description: string | null;
+  instagram_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
 type ClubIdRow = { club_id: string };
 
 export default async function AdminPage() {
@@ -13,7 +19,10 @@ export default async function AdminPage() {
   let activeClubs = 0;
   let premiumClubs = 0;
   let missingPhone = 0;
+  let missingDescription = 0;
+  let missingInstagram = 0;
   let missingHours = 0;
+  let missingPricing = 0;
   let missingImages = 0;
   let missingTypes = 0;
   let missingCoordinates = 0;
@@ -26,6 +35,7 @@ export default async function AdminPage() {
     missingPhoneResult,
     activeRowsResult,
     hoursResult,
+    pricingResult,
     imagesResult,
     typesResult,
   ] = await Promise.all([
@@ -37,8 +47,9 @@ export default async function AdminPage() {
       .eq('is_premium', true)
       .gt('premium_expires_at', nowIso),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
-    supabase.from('clubs').select('id,latitude,longitude').eq('is_active', true),
+    supabase.from('clubs').select('id,description,instagram_url,latitude,longitude').eq('is_active', true),
     supabase.from('club_opening_hours').select('club_id'),
+    supabase.from('club_pricing').select('club_id'),
     supabase.from('club_images').select('club_id'),
     supabase.from('club_type_assignments').select('club_id'),
   ]);
@@ -50,15 +61,20 @@ export default async function AdminPage() {
 
   const activeRows = (activeRowsResult.data ?? []) as ActiveClubRow[];
   const hourRows = (hoursResult.data ?? []) as ClubIdRow[];
+  const pricingRows = (pricingResult.data ?? []) as ClubIdRow[];
   const imageRows = (imagesResult.data ?? []) as ClubIdRow[];
   const typeRows = (typesResult.data ?? []) as ClubIdRow[];
 
   const idsWithHours = new Set(hourRows.map((row) => row.club_id));
+  const idsWithPricing = new Set(pricingRows.map((row) => row.club_id));
   const idsWithImages = new Set(imageRows.map((row) => row.club_id));
   const idsWithTypes = new Set(typeRows.map((row) => row.club_id));
 
   for (const club of activeRows) {
+    if (!club.description?.trim()) missingDescription += 1;
+    if (!club.instagram_url) missingInstagram += 1;
     if (!idsWithHours.has(club.id)) missingHours += 1;
+    if (!idsWithPricing.has(club.id)) missingPricing += 1;
     if (!idsWithImages.has(club.id)) missingImages += 1;
     if (!idsWithTypes.has(club.id)) missingTypes += 1;
     if (club.latitude == null || club.longitude == null) missingCoordinates += 1;
@@ -66,7 +82,10 @@ export default async function AdminPage() {
 
   const completenessItems = [
     { label: 'Telefon çatmır', value: missingPhone, key: 'phone' },
+    { label: 'Təsvir çatmır', value: missingDescription, key: 'description' },
+    { label: 'Instagram yoxdur', value: missingInstagram, key: 'instagram' },
     { label: 'İş saatı çatmır', value: missingHours, key: 'hours' },
+    { label: 'Qiymət çatmır', value: missingPricing, key: 'pricing' },
     { label: 'Şəkil çatmır', value: missingImages, key: 'images' },
     { label: 'Klub tipi çatmır', value: missingTypes, key: 'types' },
     { label: 'Koordinat çatmır', value: missingCoordinates, key: 'coordinates' },
@@ -100,7 +119,7 @@ export default async function AdminPage() {
           <Link href="/admin/klublar" className="text-sm font-semibold text-[#6A47F0] hover:underline">Klubları idarə et</Link>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {completenessItems.map((item) => (
             <Link
               key={item.key}
