@@ -17,6 +17,7 @@
 - [x] Client runtime error telemetry + same-origin/body-size hardening
 - [x] Production migration manifest CI-da yoxlanılır
 - [x] Empty-project disaster recovery üçün core schema bootstrap sənədləşdirilib
+- [x] Vercel preview build-ları söndürülüb; yalnız `main` production deploy yaradır
 
 ## Mobil UX
 - [x] `100dvh` əsas layout
@@ -41,7 +42,7 @@
 - [x] Anon table privilege-ləri minimuma endirilib
 - [x] Admin write siyasətləri `is_admin()` ilə qorunur
 - [x] Storage write yalnız admin; JPG/PNG/WEBP, maksimum 5 MB
-- [x] Admin şəkilləri birbaşa Supabase Storage-a yükləyir; Vercel body limiti bypass olunur
+- [x] Admin şəkilləri birbaşa Supabase Storage-a yükləyir
 - [x] Şəkil URL-ləri yalnız GameYer-in öz Supabase Storage hostundan qəbul edilir
 - [x] Duplicate slug və server-side form validation
 - [x] Relation save atomik DB transaction-dır
@@ -55,13 +56,15 @@
 - [x] Privacy-safe page analytics
 - [x] Analytics trafik mənbələri: Direct / Google / Instagram / Facebook / TikTok və digər hostname-lər
 - [x] Analytics RPC `SECURITY INVOKER`; raw page-view SELECT yalnız admin RLS-dən keçir
-- [x] Supabase security advisor: yalnız leaked-password protection warning-i qalır
-- [ ] Supabase Auth leaked-password protection-u aktivləşdir — Dashboard/Auth təhlükəsizlik ayarı
+- [x] Supabase security advisor tətbiq səviyyəsində harden edilib
+- [ ] Supabase Auth leaked-password protection-u aktivləşdir — yalnız Dashboard/Auth ayarı
 
-## SEO və public səth
-- [x] Canonical metadata
+## SEO və indekslənmə
+- [x] Əsas `gameyerr-gameyer.vercel.app` production response artıq `x-robots-tag: noindex` qaytarmır
+- [x] Canonical metadata production GameYer URL-inə baxır
+- [x] Google verification meta aktivdir
 - [x] Sitemap — bütün aktiv klublar + SEO landing page-lər
-- [x] Robots — API crawl bloklanır; admin səhifələri öz `noindex/nofollow` metadata-sı ilə qorunur
+- [x] Robots — `/admin` və `/api` crawl bloklanır
 - [x] Filter/search query URL-ləri `noindex, follow`
 - [x] LocalBusiness / InternetCafe / EntertainmentBusiness structured data
 - [x] Breadcrumb structured data
@@ -69,47 +72,73 @@
 - [x] Google large image/snippet preview direktivləri
 - [x] Bakıda PC/kompüter/internet klub landing page-i
 - [x] Bakıda PlayStation/PS klub landing page-i
-- [x] Rayon + klub tipi landing page-ləri yalnız kifayət qədər real data olduqda indexlənir
+- [x] Bakıda 24 saat gaming klub landing page-i
+- [x] Rayon landing page-ləri
+- [x] Rayon + klub tipi landing page-ləri yalnız kifayət qədər real data olduqda sitemap-a düşür
 - [x] Legacy `/tip/pc` və `/tip/playstation` server-side permanent redirect
-- [x] Apple touch icon
-- [x] PWA manifest + PNG/maskable iconlar
-- [x] iPhone standalone metadata
+- [x] Klub detail səhifələrindən rayon/tip internal linking
+- [x] Apple touch icon + PWA manifest
 - [x] Privacy və Əlaqə/məlumat düzəlişi səhifələri
 - [x] Klub məlumatının dəyişə biləcəyi barədə disclaimer
+- [x] Search Console ownership HTML meta ilə təsdiqlənib
 
 ## Klub vizualları
-- [x] Rəsmi mənbə ilə təsdiqlənən klub/filiallarda real brand logo registry-si
+- [x] Etibarsız Instagram/Facebook avatar proxy və generic favicon “logo”ları çıxarılıb
 - [x] Təsdiqlənməmiş klub üçün saxta logo istifadə olunmur
 - [x] Rəsmi logo olmayan klub üçün klub adına əsaslanan fərdi monogram fallback
 - [x] Logo yüklənməzsə avtomatik monogram fallback
+- [x] LaLiga-nın təsdiqlənmiş filiallarında eyni stabil brand asset-i istifadə olunur
 - [x] Real interyer/klub şəkilləri loqodan ayrıca saxlanılır
 
-## Data integrity
-- [x] 30 aktiv klub
-- [x] 30/30 koordinat
-- [x] 30/30 rayon
-- [x] 30/30 ünvan
-- [x] 30/30 klub tipi
+## Data integrity — 60 klub release
+- [x] **60 aktiv real klub**
+- [x] 60/60 unikal slug
+- [x] 60/60 rayon
+- [x] 60/60 ünvan
+- [x] 60/60 ən azı bir klub tipi
+- [x] 41/60 telefon nömrəsi mövcuddur
+- [x] 10/60 rəsmi Instagram URL-i mövcuddur
+- [x] Təsdiqlənən iş saatları əlavə olunub; bilinməyən qrafik uydurulmur
+- [x] PlayerCyberBar qiymətləri rəsmi sayta uyğun düzəldilib
+- [x] Vegas PC + PlayStation tipi rəsmi sayta uyğunlaşdırılıb
+- [x] LaLiga filial ünvan/telefon/Instagram məlumatları rəsmi brend mənbələri ilə yenilənib
 - [x] Duplicate slug = 0
-- [x] Duplicate iş günü = 0
 - [x] Orphan relation = 0
-- [x] Qrafiki olan bütün klublarda 7 tam gün
 
-## Təsdiqlənmədiyi üçün qəsdən boş saxlanılan məlumatlar — launch blocker deyil
-- Bəzi klublarda telefon
-- Bəzi klublarda tam iş qrafiki
-- Bir çox klubda real qiymət
-- Real interyer şəkilləri klub sahibləri/rəsmi mənbələrdən gəldikcə əlavə ediləcək
+## Custom domain — `gameyer.az`
+- [x] Kod custom domainə hazırdır: `NEXT_PUBLIC_SITE_URL` canonical, sitemap, robots, JSON-LD və sosial URL-lərin baza ünvanını idarə edir
+- [x] `gameyer.az` internet axtarışında aktiv/indexlənən sayt kimi görünmür
+- [ ] Domeni registrar-dan əldə et / mülkiyyəti təsdiqlə
+- [ ] Vercel project-ə `gameyer.az` və istəyə görə `www.gameyer.az` əlavə et
+- [ ] DNS Vercel-ə yönəldikdən sonra `NEXT_PUBLIC_SITE_URL=https://gameyer.az` et
+- [ ] Custom domain canlı olduqdan sonra canonical/robots/sitemap/Search Console property-ni bir dəfə yenidən yoxla
 
-## Production status
-- [ ] Vercel build-rate-limit açılsın
-- [ ] Son `main` commit production-a bir dəfə deploy olunsun
-- [ ] Production `/api/health` = 200 və DB = `ok`
-- [ ] Production sitemap / robots / canonical / representative detail route smoke-test
-- [ ] Admin `/admin/statistika` real browser girişindən sonra page-view və traffic-source data göstərsin
+> Domain alınana qədər production canonical kimi `https://gameyerr-gameyer.vercel.app` qalmalıdır. Mövcud olmayan domenə canonical vermək olmaz.
 
-## Public launchdan əvvəl manual addımlar
-1. Supabase Dashboard → Auth təhlükəsizlik ayarından leaked-password protection-u aktivləşdir.
-2. Vercel build-rate-limit açıldıqdan sonra final `main` production-a yalnız bir dəfə deploy et.
-3. Real iPhone Safari-də: Siyahı → klub detail → geri; Xəritə → marker → Kluba bax; Google Maps CTA; lokasiya düyməsini yoxla.
-4. `gameyer.az` alınarsa Vercel project-ə bağla və `NEXT_PUBLIC_SITE_URL=https://gameyer.az` et. Custom domain ilkin launch üçün məcburi deyil.
+## Social launch
+- [x] Sayt footer və Organization JSON-LD GameYer Instagram/TikTok handle-lərinə hazırdır
+- [x] Admin analytics Instagram/TikTok referrer-lərini ayrıca qruplaşdırır
+- [x] Social preview üçün 1200×630 Open Graph image route var
+- [x] Instagram/TikTok launch mətnləri və UTM planı `SOCIAL_LAUNCH.md`-də saxlanılır
+- [ ] Sosial hesabların öz platformalarında bio/post paylaşılması — hesab daxilində manual əməliyyat
+
+## Final release gate
+- [ ] `final-launch-8-stage` branch üçün GitHub CI tam yaşıl
+- [ ] Branch `main`-ə merge olunsun
+- [ ] **Yalnız bir** production deployment başlasın
+- [ ] Deployment `READY` olsun
+- [ ] `/api/health` = 200 və DB = `ok`
+- [ ] `/robots.txt` və `/sitemap.xml` = 200
+- [ ] Sitemap yeni 60 klub datasını əhatə etsin
+- [ ] Homepage və representative detail canonical eyni final domainə baxsın
+- [ ] Production-da `x-robots-tag: noindex` olmasın
+- [ ] OpenGraph/Twitter image final production domainindən gəlsin, preview alias-dan yox
+- [ ] LaLiga logo + logo-suz klub monogram fallback smoke-test
+- [ ] Mobil şəkilsiz hero və PC/PlayStation badge smoke-test
+- [ ] `/admin/statistika` authentication ilə qorunsun və source analytics UI mövcud olsun
+
+## Launch blocker sayılmayan qəsdən boş məlumatlar
+- Mənbədə telefon görünməyən klublar
+- Mənbədə tam iş qrafiki görünməyən klublar
+- Təsdiqlənməyən qiymətlər
+- Klub sahiblərindən/rəsmi mənbədən hələ alınmayan interyer şəkilləri

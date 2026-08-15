@@ -10,14 +10,22 @@ export type ClubLogoSource = {
  * rate-limited, default, or incorrect images. Clubs without a stable asset
  * fall back to a club-specific monogram in ClubLogo.
  *
- * As official logo files are obtained, store them under /public/club-logos
- * (or GameYer-owned Supabase Storage) and register those stable URLs here.
+ * As official logo files are obtained, prefer storing them under
+ * /public/club-logos (or GameYer-owned Supabase Storage) and register those
+ * stable URLs here.
  */
+const LALIGA_LOGO: ClubLogoSource = {
+  imageUrl: 'https://marsol.az/wp-content/uploads/2021/12/laliga-logo-sayt.jpg',
+  sourceUrl: 'https://marsol.az/laliga-game-center/',
+};
+
 const CLUB_LOGOS: Record<string, ClubLogoSource> = {
-  'laliga-game-center-merkez': {
-    imageUrl: 'https://marsol.az/wp-content/uploads/2021/12/laliga-logo-sayt.jpg',
-    sourceUrl: 'https://www.instagram.com/laligagamecenter/',
-  },
+  'laliga-game-center-merkez': LALIGA_LOGO,
+  'laliga-game-center-narimanov': LALIGA_LOGO,
+  'laliga-lounge-aztu': LALIGA_LOGO,
+  'laliga-lounge-elmler-2': LALIGA_LOGO,
+  'laliga-lounge-tibb': LALIGA_LOGO,
+  'laliga-lounge-genclik': LALIGA_LOGO,
 };
 
 export function getClubLogo(slug: string): ClubLogoSource | null {
