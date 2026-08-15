@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import type { ClubWithRelations } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
 import { inferClubTypeSlugs } from '@/lib/clubType';
@@ -10,6 +11,13 @@ import {
   isClubOpenNow,
   isPremiumActive,
 } from '@/lib/utils';
+
+const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', {
+  timeZone: 'Asia/Baku',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
 
 export function ClubDetail({ club }: { club: ClubWithRelations }) {
   const hasHours = club.opening_hours.length > 0;
@@ -28,6 +36,16 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
     .split(/\s*\/\s*|\s*,\s*|\s*;\s*/)
     .map((phone) => phone.trim())
     .filter(Boolean);
+  const hasRating =
+    club.rating_avg != null &&
+    Number.isFinite(club.rating_avg) &&
+    club.rating_avg > 0 &&
+    club.rating_avg <= 5 &&
+    club.rating_count > 0;
+  const updatedAt = new Date(club.updated_at);
+  const updatedLabel = Number.isNaN(updatedAt.getTime())
+    ? null
+    : BAKU_DATE_FORMATTER.format(updatedAt);
 
   const sortedHours = [...club.opening_hours]
     .filter((hours) => hours.day_of_week >= 0 && hours.day_of_week <= 6)
@@ -52,13 +70,14 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
     club.latitude != null && club.longitude != null
       ? `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}`
       : null;
+  const correctionHref = `/elaqe?club=${encodeURIComponent(club.name)}&slug=${encodeURIComponent(club.slug)}`;
 
   return (
     <article className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
       <div className="mb-4">
-        <a href="/" className="text-sm font-medium text-muted transition hover:text-ink">
+        <Link href="/" className="text-sm font-medium text-muted transition hover:text-ink">
           ← Klublara qayıt
-        </a>
+        </Link>
       </div>
 
       {sortedImages.length > 0 ? (
@@ -118,7 +137,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               {club.address ? ` · ${club.address}` : ''}
             </p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
               <span
                 className={
                   openNow
@@ -129,6 +148,11 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
                 <span className={openNow ? 'h-2 w-2 rounded-full bg-live' : 'h-2 w-2 rounded-full bg-muted'} />
                 {statusLabel}
               </span>
+              {hasRating ? (
+                <span className="text-sm font-medium text-ink" aria-label={`${club.rating_avg} reytinq, ${club.rating_count} rəy`}>
+                  ★ {club.rating_avg!.toFixed(1)} <span className="font-normal text-muted">({club.rating_count})</span>
+                </span>
+              ) : null}
             </div>
           </div>
 
@@ -261,6 +285,20 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               Marşrut qur
             </a>
           ) : null}
+
+          <div className="mt-5 border-t border-border pt-4">
+            {updatedLabel ? (
+              <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p>
+            ) : null}
+            <div className="mt-3 flex flex-col gap-2">
+              <Link href={correctionHref} className="text-sm font-semibold text-primary hover:underline">
+                Məlumatda səhv var? Bildir
+              </Link>
+              <Link href={correctionHref} className="text-sm font-semibold text-ink hover:text-primary">
+                Bu klubun sahibisiniz? Klub məlumatını təsdiqləyin
+              </Link>
+            </div>
+          </div>
         </aside>
       </div>
     </article>
