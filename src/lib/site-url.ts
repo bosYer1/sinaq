@@ -1,3 +1,4 @@
+// Production URL source for canonical and SEO links.
 const GAMEYER_PRODUCTION_URL = 'https://gameyerr-gameyer.vercel.app';
 
 export function getSiteUrl(): string {
