@@ -98,6 +98,24 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
     ? resolvedSearchParams.missing
     : '';
 
+  function missingForClub(club: (typeof clubs)[number]) {
+    return [
+      !club.phone ? 'Telefon' : null,
+      !club.description?.trim() ? 'Təsvir' : null,
+      !club.instagram_url ? 'Instagram' : null,
+      !idsWithHours.has(club.id) ? 'Saat' : null,
+      !idsWithPricing.has(club.id) ? 'Qiymət' : null,
+      !idsWithImages.has(club.id) ? 'Şəkil' : null,
+      !idsWithTypes.has(club.id) ? 'Tip' : null,
+      club.latitude == null || club.longitude == null ? 'Koordinat' : null,
+    ].filter((value): value is string => Boolean(value));
+  }
+
+  const seoReadyCount = clubs.filter((club) => missingForClub(club).length === 0).length;
+  const seoAverage = clubs.length > 0
+    ? Math.round(clubs.reduce((sum, club) => sum + ((8 - missingForClub(club).length) / 8) * 100, 0) / clubs.length)
+    : 0;
+
   const filteredClubs = clubs.filter((club) => {
     if (!missingFilter) return true;
     if (missingFilter === 'phone') return !club.phone;
@@ -124,6 +142,24 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
         <Link href="/admin/klublar/yeni" className="rounded-lg bg-[#7C5CFC] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#6A47F0]">
           + Yeni klub
         </Link>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">SEO orta tamlıq</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900">{seoAverage}%</p>
+          <p className="mt-1 text-xs text-gray-500">Telefon, təsvir, şəkil, iş saatı, qiymət, tip və lokasiya əsasında.</p>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">SEO-ready klublar</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900">{seoReadyCount}/{clubs.length}</p>
+          <p className="mt-1 text-xs text-gray-500">Bütün əsas public məlumatları tam olan klublar.</p>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Qiyməti olan klublar</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900">{idsWithPricing.size}</p>
+          <p className="mt-1 text-xs text-gray-500">SEO və istifadəçi müqayisəsi üçün ən zəif məlumat sahələrindən biri.</p>
+        </div>
       </div>
 
       {missingFilter ? (
@@ -181,13 +217,14 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
 
       <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[940px] text-left text-sm">
+          <table className="w-full min-w-[1020px] text-left text-sm">
             <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
               <tr>
                 <th className="px-4 py-3">Klub</th>
                 <th className="px-4 py-3">Rayon</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Premium</th>
+                <th className="px-4 py-3">SEO</th>
                 <th className="px-4 py-3">Məlumat</th>
                 <th className="px-4 py-3 text-right">İdarəetmə</th>
               </tr>
@@ -195,16 +232,13 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
 
             <tbody className="divide-y divide-gray-100">
               {filteredClubs.map((club) => {
-                const missing = [
-                  !club.phone ? 'Telefon' : null,
-                  !club.description?.trim() ? 'Təsvir' : null,
-                  !club.instagram_url ? 'Instagram' : null,
-                  !idsWithHours.has(club.id) ? 'Saat' : null,
-                  !idsWithPricing.has(club.id) ? 'Qiymət' : null,
-                  !idsWithImages.has(club.id) ? 'Şəkil' : null,
-                  !idsWithTypes.has(club.id) ? 'Tip' : null,
-                  club.latitude == null || club.longitude == null ? 'Koordinat' : null,
-                ].filter((value): value is string => Boolean(value));
+                const missing = missingForClub(club);
+                const seoScore = Math.round(((8 - missing.length) / 8) * 100);
+                const seoTone = seoScore >= 88
+                  ? 'bg-green-50 text-green-700'
+                  : seoScore >= 63
+                    ? 'bg-amber-50 text-amber-700'
+                    : 'bg-red-50 text-red-700';
 
                 const premiumActive = Boolean(
                   club.is_premium &&
@@ -232,6 +266,9 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-md px-2 py-1 text-xs font-semibold ${seoTone}`}>{seoScore}%</span>
                     </td>
                     <td className="px-4 py-3">
                       {missing.length === 0 ? (
