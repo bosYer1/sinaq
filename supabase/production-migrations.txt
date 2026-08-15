@@ -24,3 +24,4 @@
 20260815082559_add_club_owner_verification
 20260815083437_harden_club_submissions
 20260815091026_serialize_submission_rate_limit
+20260815095419_add_privacy_safe_page_analytics
