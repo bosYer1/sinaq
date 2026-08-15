@@ -70,7 +70,9 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
     club.latitude != null && club.longitude != null
       ? `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}`
       : null;
-  const correctionHref = `/elaqe?club=${encodeURIComponent(club.name)}&slug=${encodeURIComponent(club.slug)}`;
+  const clubContext = `club=${encodeURIComponent(club.name)}&slug=${encodeURIComponent(club.slug)}`;
+  const correctionHref = `/elaqe?${clubContext}`;
+  const ownerHref = `/klub-sahibi?${clubContext}`;
 
   return (
     <article className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
@@ -294,7 +296,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               <Link href={correctionHref} className="text-sm font-semibold text-primary hover:underline">
                 Məlumatda səhv var? Bildir
               </Link>
-              <Link href={correctionHref} className="text-sm font-semibold text-ink hover:text-primary">
+              <Link href={ownerHref} className="text-sm font-semibold text-ink hover:text-primary">
                 Bu klubun sahibisiniz? Klub məlumatını təsdiqləyin
               </Link>
             </div>
