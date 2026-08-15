@@ -17,6 +17,7 @@ interface ClubCardProps {
 
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
   function ClubCard({ club, active, onMouseEnter }, ref) {
+    const isVerified = club.is_verified;
     const cover = club.images.find((image) => image.is_cover) ?? club.images[0];
     const hasHours = club.opening_hours.length > 0;
     const [openNow, setOpenNow] = useState(() =>
@@ -99,9 +100,10 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
               {club.name}
             </h3>
 
-            {premiumActive ? (
-              <Badge tone="premium" className="shrink-0">VIP</Badge>
-            ) : null}
+            <div className="flex shrink-0 items-center gap-1">
+              {isVerified ? <Badge tone="verified">✓</Badge> : null}
+              {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
+            </div>
           </div>
 
           <div className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted">

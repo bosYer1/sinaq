@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { ClubSubmission } from '@/types/database';
-import { updateSubmissionStatus } from './actions';
+import { updateSubmissionStatus, verifyOwnerClaim } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,6 +91,18 @@ export default async function AdminSubmissionsPage() {
                   {item.contact_type}: {item.contact_value}
                 </a>
               </div>
+
+              {item.kind === 'owner_claim' && item.club_id && item.status !== 'resolved' ? (
+                <form action={verifyOwnerClaim} className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                  <input type="hidden" name="id" value={item.id} />
+                  <p className="text-xs leading-5 text-emerald-800">
+                    Rəsmi kanal yoxlamasını tamamladıqdan sonra bu düymə klubu təsdiqlənmiş kimi işarələyəcək və müraciəti həll olunmuş statusuna keçirəcək.
+                  </p>
+                  <button type="submit" className="mt-2 h-9 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                    Klub sahibini təsdiqlə
+                  </button>
+                </form>
+              ) : null}
 
               <form action={updateSubmissionStatus} className="mt-4 flex flex-wrap items-center gap-2">
                 <input type="hidden" name="id" value={item.id} />

@@ -25,3 +25,20 @@ export async function updateSubmissionStatus(formData: FormData) {
   revalidatePath('/admin');
   revalidatePath('/admin/muracietler');
 }
+
+export async function verifyOwnerClaim(formData: FormData) {
+  const id = typeof formData.get('id') === 'string' ? String(formData.get('id')).trim() : '';
+  if (!id) throw new Error('Klub sahibi müraciəti tapılmadı.');
+
+  const supabase = await createClient();
+  const { data: clubId, error } = await supabase.rpc('verify_owner_claim_atomic', {
+    p_submission_id: id,
+  });
+
+  if (error) throw new Error(error.message);
+  if (!clubId) throw new Error('Təsdiqlənən klub tapılmadı.');
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/muracietler');
+  revalidatePath(`/admin/klublar/${clubId}`);
+}

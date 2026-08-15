@@ -19,7 +19,14 @@ const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', {
   day: 'numeric',
 });
 
+type ClubWithVerification = ClubWithRelations & {
+  is_verified?: boolean;
+  verified_at?: string | null;
+};
+
 export function ClubDetail({ club }: { club: ClubWithRelations }) {
+  const verifiedClub = club as ClubWithVerification;
+  const isVerified = verifiedClub.is_verified === true;
   const hasHours = club.opening_hours.length > 0;
   const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
   const premiumActive = isPremiumActive(club);
@@ -126,6 +133,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
                 {club.name}
               </h1>
+              {isVerified ? <Badge tone="verified">✓ Təsdiqlənib</Badge> : null}
               {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
               {typeSlugs.map((slug) => (
                 <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>
@@ -292,13 +300,20 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
             {updatedLabel ? (
               <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p>
             ) : null}
+            {isVerified ? (
+              <p className="mt-2 text-xs leading-5 text-primary">
+                ✓ Klubun sahibi və ya rəsmi nümayəndəsi GameYer tərəfindən təsdiqlənib.
+              </p>
+            ) : null}
             <div className="mt-3 flex flex-col gap-2">
               <Link href={correctionHref} className="text-sm font-semibold text-primary hover:underline">
                 Məlumatda səhv var? Bildir
               </Link>
-              <Link href={ownerHref} className="text-sm font-semibold text-ink hover:text-primary">
-                Bu klubun sahibisiniz? Klub məlumatını təsdiqləyin
-              </Link>
+              {!isVerified ? (
+                <Link href={ownerHref} className="text-sm font-semibold text-ink hover:text-primary">
+                  Bu klubun sahibisiniz? Klub məlumatını təsdiqləyin
+                </Link>
+              ) : null}
             </div>
           </div>
         </aside>
