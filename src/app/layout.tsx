@@ -11,6 +11,36 @@ const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', d
 const siteUrl = getSiteUrl();
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim() || 'p4_LT_BjLRiy0oSjt8chd_QgipidT5IWv1N0rKzUl3I';
 const socialImage = `${siteUrl}/opengraph-image`;
+const brandLogo = `${siteUrl}/apple-icon`;
+const organizationId = `${siteUrl}/#organization`;
+const websiteId = `${siteUrl}/#website`;
+
+const siteStructuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': organizationId,
+      name: 'GameYer',
+      url: siteUrl,
+      logo: brandLogo,
+      description: 'Azərbaycanda PC və PlayStation klublarını tapmaq və müqayisə etmək üçün gaming klub kataloqu və xəritəsi.',
+      sameAs: [
+        'https://www.instagram.com/gameyer.az/',
+        'https://www.tiktok.com/@gameyer.az',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': websiteId,
+      url: siteUrl,
+      name: 'GameYer',
+      inLanguage: 'az-AZ',
+      publisher: { '@id': organizationId },
+      description: 'Bakıda PC, kompüter, internet və PlayStation klublarını ünvan, iş saatı, qiymət və xəritəyə görə tap.',
+    },
+  ],
+};
 
 export const viewport: Viewport = { themeColor: '#7C5CFC', colorScheme: 'light' };
 export const metadata: Metadata = {
@@ -52,6 +82,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return <html lang="az" className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable}`}><body className="bg-bg font-body text-ink antialiased">
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, '\\u003c') }} />
     <PageViewTracker />
     <header className="sticky top-0 z-30 border-b border-border bg-surface"><div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
       <Link href="/" className="flex items-center gap-2" aria-label="GameYer ana səhifə"><span className="flex h-7 w-7 items-center justify-center rounded-control bg-primary text-sm font-bold text-white">G</span><span className="font-display text-base font-bold tracking-tight text-ink">Game<span className="text-primary">Yer</span></span></Link>

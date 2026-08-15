@@ -45,9 +45,9 @@ export async function generateMetadata({ params }: ClubPageProps): Promise<Metad
     .map((item) => item?.club_type?.slug)
     .filter((value): value is string => Boolean(value));
   const category = clubCategory(typeSlugs);
-  const title = `${club.name} — ${districtName ? `${districtName} ` : ''}${category}`;
+  const title = `${club.name} — ${districtName ? `${districtName}, ` : ''}ünvan və iş saatları`;
   const locationText = districtName ? `${districtName} rayonunda` : 'Bakıda';
-  const description = `${club.name} ${locationText} ${category.toLowerCase()}. Ünvan: ${club.address}. Qiymət, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
+  const description = `${club.name} ${locationText} ${category.toLowerCase()}. Ünvan: ${club.address}. Telefon, qiymət, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
   const canonical = `/klub/${club.slug}`;
   const images = Array.isArray(club.images) ? club.images : [];
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
@@ -105,13 +105,20 @@ export default async function ClubPage({ params }: ClubPageProps) {
         '@id': `${clubUrl}#business`,
         name: club.name,
         url: clubUrl,
+        mainEntityOfPage: clubUrl,
         description: club.description || undefined,
         image: coverImage || undefined,
         telephone: club.phone || undefined,
         priceRange,
         currenciesAccepted: 'AZN',
         aggregateRating,
-        address: { '@type': 'PostalAddress', streetAddress: club.address, addressLocality: 'Bakı', addressCountry: 'AZ' },
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: club.address,
+          addressLocality: 'Bakı',
+          addressRegion: club.district?.name || 'Bakı',
+          addressCountry: 'AZ',
+        },
         geo: club.latitude != null && club.longitude != null ? { '@type': 'GeoCoordinates', latitude: club.latitude, longitude: club.longitude } : undefined,
         hasMap,
         openingHoursSpecification: openingHoursSpecification.length > 0 ? openingHoursSpecification : undefined,
