@@ -3,50 +3,52 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
-  const startedAt = Date.now();
+function healthResponse(
+  body: { ok: boolean; service: 'gameyer'; database: 'ok' | 'error' | 'unavailable' },
+  status = 200
+) {
+  return NextResponse.json(body, {
+    status,
+    headers: {
+      'Cache-Control': 'no-store',
+      'X-Robots-Tag': 'noindex, nofollow',
+    },
+  });
+}
 
+export async function GET() {
   try {
     const supabase = await createClient();
-    const { count, error } = await supabase
+    const { error } = await supabase
       .from('clubs')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true);
+      .select('id')
+      .eq('is_active', true)
+      .limit(1);
 
     if (error) {
-      return NextResponse.json(
+      return healthResponse(
         {
           ok: false,
           service: 'gameyer',
           database: 'error',
-          error: 'Database health check failed',
-          timestamp: new Date().toISOString(),
         },
-        { status: 503, headers: { 'Cache-Control': 'no-store' } }
+        503
       );
     }
 
-    return NextResponse.json(
-      {
-        ok: true,
-        service: 'gameyer',
-        database: 'ok',
-        activeClubs: count ?? 0,
-        responseMs: Date.now() - startedAt,
-        timestamp: new Date().toISOString(),
-      },
-      { headers: { 'Cache-Control': 'no-store' } }
-    );
+    return healthResponse({
+      ok: true,
+      service: 'gameyer',
+      database: 'ok',
+    });
   } catch {
-    return NextResponse.json(
+    return healthResponse(
       {
         ok: false,
         service: 'gameyer',
         database: 'unavailable',
-        error: 'Health check unavailable',
-        timestamp: new Date().toISOString(),
       },
-      { status: 503, headers: { 'Cache-Control': 'no-store' } }
+      503
     );
   }
 }
