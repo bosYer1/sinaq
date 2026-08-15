@@ -69,8 +69,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="flex items-center gap-3 text-[11px] font-medium text-muted sm:gap-4 sm:text-xs" aria-label="Əsas keçidlər">
               <Link href="/rayon" className="hidden transition hover:text-ink sm:inline">Rayonlar</Link>
               <Link href="/tip" className="hidden transition hover:text-ink sm:inline">PC / PS</Link>
+              <Link href="/klub-sahibi" className="hidden transition hover:text-primary md:inline">Klub sahibləri</Link>
               <Link href="/elaqe" className="transition hover:text-ink">Əlaqə</Link>
-              <Link href="/mexfilik" className="hidden transition hover:text-ink md:inline">Məxfilik</Link>
+              <Link href="/mexfilik" className="hidden transition hover:text-ink lg:inline">Məxfilik</Link>
             </nav>
           </div>
         </header>
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/rayon" className="hover:text-ink">Rayonlar üzrə klublar</Link>
             <Link href="/tip/pc" className="hover:text-ink">PC klubları</Link>
             <Link href="/tip/playstation" className="hover:text-ink">PlayStation klubları</Link>
+            <Link href="/klub-sahibi" className="font-semibold text-primary hover:underline">Klub sahibləri üçün</Link>
             <Link href="/elaqe" className="hover:text-ink">Əlaqə</Link>
           </div>
         </footer>
