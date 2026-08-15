@@ -1,6 +1,5 @@
 import { forwardRef } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import type { ClubWithDistance } from '@/types/database';
 import { RatingBadge } from './RatingBadge';
 import { Badge } from '@/components/ui/Badge';
@@ -35,9 +34,9 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
             : 'Gaming';
 
     return (
-      <Link
+      <a
         ref={ref}
-        href={`/klub/${club.slug}`}
+        href={`/klub/${encodeURIComponent(club.slug)}`}
         onMouseEnter={onMouseEnter}
         onFocus={onMouseEnter}
         className={cn(
@@ -135,7 +134,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
             </div>
           </div>
         </div>
-      </Link>
+      </a>
     );
   }
 );
