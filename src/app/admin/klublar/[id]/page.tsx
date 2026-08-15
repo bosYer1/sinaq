@@ -4,15 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 import { ClubAdminForm } from '@/components/admin/ClubAdminForm';
 import { saveClub, toggleClubActive } from '../../actions';
 
-import type {
-  ClubRow,
-  ClubPricing,
-  ClubOpeningHours,
-  ClubImage,
-  District,
-  ClubType,
-} from '@/types/database';
-
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
@@ -23,27 +14,26 @@ interface PageProps {
 export default async function AdminEditClubPage({ params, searchParams }: PageProps) {
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
-  const db = supabase as any;
 
-  const clubResult = await db.from('clubs').select('*').eq('id', id).single();
+  const clubResult = await supabase.from('clubs').select('*').eq('id', id).single();
   if (clubResult.error || !clubResult.data) notFound();
 
   const [districtsResult, typesResult, pricingResult, assignmentsResult, hoursResult, imagesResult] = await Promise.all([
-    db.from('districts').select('*').order('name'),
-    db.from('club_types').select('*').order('name'),
-    db.from('club_pricing').select('*').eq('club_id', id),
-    db.from('club_type_assignments').select('club_type_id').eq('club_id', id),
-    db.from('club_opening_hours').select('*').eq('club_id', id).order('day_of_week'),
-    db.from('club_images').select('*').eq('club_id', id).order('position'),
+    supabase.from('districts').select('*').order('name'),
+    supabase.from('club_types').select('*').order('name'),
+    supabase.from('club_pricing').select('*').eq('club_id', id),
+    supabase.from('club_type_assignments').select('club_type_id').eq('club_id', id),
+    supabase.from('club_opening_hours').select('*').eq('club_id', id).order('day_of_week'),
+    supabase.from('club_images').select('*').eq('club_id', id).order('position'),
   ]);
 
-  const club = clubResult.data as ClubRow;
-  const districts = (districtsResult.data ?? []) as District[];
-  const types = (typesResult.data ?? []) as ClubType[];
-  const pricing = (pricingResult.data ?? []) as ClubPricing[];
-  const typeAssignments = (assignmentsResult.data ?? []) as Array<{ club_type_id: string }>;
-  const hours = (hoursResult.data ?? []) as ClubOpeningHours[];
-  const images = (imagesResult.data ?? []) as ClubImage[];
+  const club = clubResult.data;
+  const districts = districtsResult.data ?? [];
+  const types = typesResult.data ?? [];
+  const pricing = pricingResult.data ?? [];
+  const typeAssignments = assignmentsResult.data ?? [];
+  const hours = hoursResult.data ?? [];
+  const images = imagesResult.data ?? [];
 
   const fullClub = {
     ...club,
