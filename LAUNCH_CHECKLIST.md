@@ -96,7 +96,7 @@
 - [x] 60/60 rayon
 - [x] 60/60 ünvan
 - [x] 60/60 ən azı bir klub tipi
-- [x] 40/60 telefon nömrəsi mövcuddur
+- [x] 41/60 telefon nömrəsi mövcuddur
 - [x] 10/60 rəsmi Instagram URL-i mövcuddur
 - [x] Təsdiqlənən iş saatları əlavə olunub; bilinməyən qrafik uydurulmur
 - [x] PlayerCyberBar qiymətləri rəsmi sayta uyğun düzəldilib
