@@ -4,61 +4,19 @@ export type ClubLogoSource = {
 };
 
 /**
- * Only logos/profile images backed by an official club site or official social profile.
- * If a source cannot be verified, ClubLogo renders a club-specific monogram instead.
+ * Only use logo assets that are stable and directly controlled/verified.
+ * Social-avatar proxies (Instagram/Facebook via unavatar) and generic favicon
+ * services are intentionally not used here because they can return stale,
+ * rate-limited, default, or incorrect images. Clubs without a stable asset
+ * fall back to a club-specific monogram in ClubLogo.
+ *
+ * As official logo files are obtained, store them under /public/club-logos
+ * (or GameYer-owned Supabase Storage) and register those stable URLs here.
  */
 const CLUB_LOGOS: Record<string, ClubLogoSource> = {
   'laliga-game-center-merkez': {
     imageUrl: 'https://marsol.az/wp-content/uploads/2021/12/laliga-logo-sayt.jpg',
     sourceUrl: 'https://www.instagram.com/laligagamecenter/',
-  },
-  'vegas-gaming-center-hazi-aslanov': {
-    imageUrl: 'https://unavatar.io/instagram/vegasgamingcenter',
-    sourceUrl: 'https://vegasgamingcenter.az/',
-  },
-  'vegas-gaming-club-merkez': {
-    imageUrl: 'https://unavatar.io/instagram/vegasgamingcenter',
-    sourceUrl: 'https://vegasgamingcenter.az/',
-  },
-  'forgamer-narimanov-bunker': {
-    imageUrl: 'https://www.google.com/s2/favicons?domain=forgamer.az&sz=256',
-    sourceUrl: 'https://forgamer.az/',
-  },
-  'forgamer-yasamal': {
-    imageUrl: 'https://www.google.com/s2/favicons?domain=forgamer.az&sz=256',
-    sourceUrl: 'https://forgamer.az/',
-  },
-  'kenza-gaming-lounge': {
-    imageUrl: 'https://unavatar.io/instagram/kenza_cyber',
-    sourceUrl: 'https://instagram.com/kenza_cyber',
-  },
-  'playrooms-gameclub': {
-    imageUrl: 'https://unavatar.io/instagram/playrooms_gameclub',
-    sourceUrl: 'https://instagram.com/playrooms_gameclub/',
-  },
-  'galatasaray-playstation-club': {
-    imageUrl: 'https://unavatar.io/instagram/gs.playstation.club',
-    sourceUrl: 'https://instagram.com/gs.playstation.club/',
-  },
-  'forsaj-game-club-yeni-yasamal': {
-    imageUrl: 'https://unavatar.io/instagram/forsaj.gameclub',
-    sourceUrl: 'https://instagram.com/forsaj.gameclub/',
-  },
-  'milli-gaming-arena': {
-    imageUrl: 'https://www.google.com/s2/favicons?domain=milligamingarena.az&sz=256',
-    sourceUrl: 'https://milligamingarena.az/',
-  },
-  'playercyberbar': {
-    imageUrl: 'https://www.google.com/s2/favicons?domain=playercyberbar.az&sz=256',
-    sourceUrl: 'https://playercyberbar.az/',
-  },
-  'cyber-arena-baku': {
-    imageUrl: 'https://unavatar.io/facebook/cyberarenaAZ',
-    sourceUrl: 'https://www.facebook.com/cyberarenaAZ/',
-  },
-  'game-club': {
-    imageUrl: 'https://unavatar.io/facebook/Game-Club-Baku-290464214313454',
-    sourceUrl: 'https://www.facebook.com/Game-Club-Baku-290464214313454/',
   },
 };
 
