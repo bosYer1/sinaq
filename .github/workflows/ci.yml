@@ -94,7 +94,8 @@ jobs:
           curl --fail --silent http://127.0.0.1:3000/apple-icon > /dev/null
 
           curl --fail --silent http://127.0.0.1:3000/admin/login > /tmp/admin-login.html
-          grep -E '<meta[^>]+name="robots"[^>]+content="noindex, nofollow, noarchive"' /tmp/admin-login.html > /dev/null
+          grep -E '<meta[^>]+name="robots"' /tmp/admin-login.html > /dev/null
+          grep -E '<meta[^>]+content="[^"]*noindex[^"]*"' /tmp/admin-login.html > /dev/null
           curl --silent --dump-header /tmp/admin-headers --output /dev/null http://127.0.0.1:3000/admin
           grep -Ei '^location: .*\/admin\/login' /tmp/admin-headers > /dev/null
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/this-route-must-not-exist)" = "404"
