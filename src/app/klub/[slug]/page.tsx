@@ -76,9 +76,10 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const typeNames = typeAssignments
     .map((item) => item?.club_type?.name)
     .filter((name): name is string => Boolean(name));
-  const typeLinks = typeAssignments
-    .map((item) => item?.club_type)
-    .filter((type): type is NonNullable<typeof type> => Boolean(type?.slug));
+  const typeLinks = typeAssignments.flatMap((item) => {
+    const type = item?.club_type;
+    return type?.slug ? [{ slug: type.slug, name: type.name }] : [];
+  });
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
   const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
   const openingHoursSpecification = openingHours
