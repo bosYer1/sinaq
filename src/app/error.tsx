@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { AlertIcon } from '@/components/ui/Icon';
 
@@ -34,7 +35,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       </p>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
         <Button onClick={reset}>Yenidən cəhd et</Button>
-        <a href="/" className="text-sm font-semibold text-primary hover:underline">Klublara qayıt</a>
+        <Link href="/" className="text-sm font-semibold text-primary hover:underline">Klublara qayıt</Link>
       </div>
       {error.digest ? <p className="mt-2 font-mono text-[11px] text-muted">Xəta kodu: {error.digest}</p> : null}
     </div>
