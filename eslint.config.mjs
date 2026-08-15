@@ -8,7 +8,7 @@ export default defineConfig([
   {
     files: [
       'src/components/clubs/ClubDetail.tsx',
-      'src/app/klub/[slug]/error.tsx',
+      'src/app/klub/**/error.tsx',
     ],
     rules: {
       // These two routes intentionally force a full document navigation to avoid
