@@ -7,6 +7,21 @@ import { AlertIcon } from '@/components/ui/Icon';
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('GameYer səhifə xətası:', error);
+
+    const payload = {
+      message: error.message,
+      stack: error.stack,
+      digest: error.digest,
+      path: window.location.pathname + window.location.search,
+      userAgent: navigator.userAgent,
+    };
+
+    fetch('/api/client-error', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => undefined);
   }, [error]);
 
   return (
@@ -16,7 +31,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       </div>
       <h1 className="font-display text-xl font-semibold text-ink">Nəsə səhv getdi</h1>
       <p className="text-sm text-muted">
-        Klubları yükləyərkən xəta baş verdi. İnternet bağlantınızı yoxlayın və yenidən cəhd edin.
+        Səhifə yüklənərkən xəta baş verdi. Yenidən cəhd edin.
       </p>
       <Button onClick={reset} className="mt-2">
         Yenidən cəhd et
