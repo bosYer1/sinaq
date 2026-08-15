@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
+import { getSiteUrl } from '@/lib/site-url';
 
 interface SitemapClub {
   slug: string;
@@ -7,7 +8,7 @@ interface SitemapClub {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gameyerr-gameyer.vercel.app';
+  const baseUrl = getSiteUrl();
   const entries: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
