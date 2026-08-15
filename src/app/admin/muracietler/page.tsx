@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { ClubSubmission } from '@/types/database';
-import { updateSubmissionStatus, verifyOwnerClaim } from './actions';
+import { deleteCompletedSubmission, updateSubmissionStatus, verifyOwnerClaim } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,24 +104,38 @@ export default async function AdminSubmissionsPage() {
                 </form>
               ) : null}
 
-              <form action={updateSubmissionStatus} className="mt-4 flex flex-wrap items-center gap-2">
-                <input type="hidden" name="id" value={item.id} />
-                <label htmlFor={`status-${item.id}`} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Status</label>
-                <select
-                  id={`status-${item.id}`}
-                  name="status"
-                  defaultValue={item.status}
-                  className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                >
-                  <option value="pending">Gözləyir</option>
-                  <option value="reviewing">Yoxlanılır</option>
-                  <option value="resolved">Həll olunub</option>
-                  <option value="rejected">Rədd edilib</option>
-                </select>
-                <button type="submit" className="h-9 rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white hover:bg-[#6A47F0]">
-                  Yadda saxla
-                </button>
-              </form>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <form action={updateSubmissionStatus} className="flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="id" value={item.id} />
+                  <label htmlFor={`status-${item.id}`} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Status</label>
+                  <select
+                    id={`status-${item.id}`}
+                    name="status"
+                    defaultValue={item.status}
+                    className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900"
+                  >
+                    <option value="pending">Gözləyir</option>
+                    <option value="reviewing">Yoxlanılır</option>
+                    <option value="resolved">Həll olunub</option>
+                    <option value="rejected">Rədd edilib</option>
+                  </select>
+                  <button type="submit" className="h-9 rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white hover:bg-[#6A47F0]">
+                    Yadda saxla
+                  </button>
+                </form>
+
+                {item.status === 'resolved' || item.status === 'rejected' ? (
+                  <form action={deleteCompletedSubmission}>
+                    <input type="hidden" name="id" value={item.id} />
+                    <button
+                      type="submit"
+                      className="h-9 rounded-lg border border-red-200 bg-white px-4 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                    >
+                      Müraciəti sil
+                    </button>
+                  </form>
+                ) : null}
+              </div>
             </article>
           ))}
         </div>
