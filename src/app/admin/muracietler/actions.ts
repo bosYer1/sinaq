@@ -7,8 +7,13 @@ const STATUSES = new Set(['pending', 'reviewing', 'resolved', 'rejected']);
 
 type SubmissionStatus = 'pending' | 'reviewing' | 'resolved' | 'rejected';
 
+function submissionId(formData: FormData) {
+  const value = formData.get('id');
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 export async function updateSubmissionStatus(formData: FormData) {
-  const id = typeof formData.get('id') === 'string' ? String(formData.get('id')).trim() : '';
+  const id = submissionId(formData);
   const status = typeof formData.get('status') === 'string' ? String(formData.get('status')).trim() : '';
   if (!id || !STATUSES.has(status)) throw new Error('Müraciət statusu düzgün deyil.');
 
@@ -27,7 +32,7 @@ export async function updateSubmissionStatus(formData: FormData) {
 }
 
 export async function verifyOwnerClaim(formData: FormData) {
-  const id = typeof formData.get('id') === 'string' ? String(formData.get('id')).trim() : '';
+  const id = submissionId(formData);
   if (!id) throw new Error('Klub sahibi müraciəti tapılmadı.');
 
   const supabase = await createClient();
@@ -41,4 +46,24 @@ export async function verifyOwnerClaim(formData: FormData) {
   revalidatePath('/admin');
   revalidatePath('/admin/muracietler');
   revalidatePath(`/admin/klublar/${clubId}`);
+}
+
+export async function deleteCompletedSubmission(formData: FormData) {
+  const id = submissionId(formData);
+  if (!id) throw new Error('Müraciət ID tapılmadı.');
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('club_submissions')
+    .delete()
+    .eq('id', id)
+    .in('status', ['resolved', 'rejected'])
+    .select('id')
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error('Yalnız həll olunmuş və ya rədd edilmiş müraciət silinə bilər.');
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/muracietler');
 }
