@@ -8,11 +8,11 @@ interface BadgeProps {
 }
 
 const TONE_CLASSES: Record<NonNullable<BadgeProps['tone']>, string> = {
-  pc: 'bg-primary-light text-primary-dark',
-  ps: 'bg-ps-light text-ps',
-  live: 'bg-live-light text-live',
+  pc: 'bg-pc-tint text-pc',
+  ps: 'bg-ps-tint text-ps',
+  live: 'bg-live-tint text-live',
   neutral: 'bg-surface-alt text-muted',
-  premium: 'bg-warn-light text-warn',
+  premium: 'bg-warn-tint text-warn',
 };
 
 export function Badge({ children, tone = 'neutral', className }: BadgeProps) {
