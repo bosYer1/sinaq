@@ -48,7 +48,7 @@ export default async function AdminPage() {
       .select('*', { count: 'exact', head: true })
       .eq('is_premium', true)
       .gt('premium_expires_at', nowIso),
-    (supabase as any).from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
     supabase.from('clubs').select('id,description,instagram_url,latitude,longitude').eq('is_active', true),
     supabase.from('club_opening_hours').select('club_id'),
