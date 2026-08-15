@@ -15,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, changeFrequency: 'daily', priority: 1 },
     { url: `${baseUrl}/bakida-pc-klublari`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/bakida-playstation-klublari`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${baseUrl}/bakida-24-saat-gaming-klublari`, changeFrequency: 'weekly', priority: 0.88 },
     { url: `${baseUrl}/rayon`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/tip`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/klub-sahibi`, changeFrequency: 'monthly', priority: 0.55 },

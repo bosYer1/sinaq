@@ -40,8 +40,8 @@ export default async function BakuPcClubsPage() {
     <div className="mt-7"><SeoClubList clubs={clubs} /></div>
     <section className="mt-10 rounded-card border border-border bg-surface p-5">
       <h2 className="font-display text-lg font-bold">PC klubunu necə seçmək olar?</h2>
-      <p className="mt-2 text-sm leading-6 text-muted">Rayonuna yaxınlığı, saatlıq qiyməti, iş saatlarını və klubun xəritədə yerini müqayisə et. Daha konkret nəticə üçün rayon səhifələrindən istifadə edə və ya bütün klubları xəritədə görə bilərsən.</p>
-      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=pc&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PC klubları xəritədə</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
+      <p className="mt-2 text-sm leading-6 text-muted">Rayonuna yaxınlığı, saatlıq qiyməti, iş saatlarını və klubun xəritədə yerini müqayisə et. Daha konkret nəticə üçün rayon səhifələrindən istifadə edə, 24 saat işləyən məkanlara baxa və ya bütün klubları xəritədə görə bilərsən.</p>
+      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=pc&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PC klubları xəritədə</Link><Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">24 saat PC klubları</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
     </section>
   </div>;
 }
