@@ -14,7 +14,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ClubOwnerPage() {
+interface ClubOwnerPageProps {
+  searchParams: Promise<{
+    club?: string;
+    slug?: string;
+  }>;
+}
+
+export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps) {
+  const params = await searchParams;
+  const selectedClub = params.club?.trim().slice(0, 120) || null;
+  const selectedSlug = params.slug?.trim().slice(0, 120) || null;
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
       <Link href="/" className="text-sm font-semibold text-primary hover:underline">
@@ -32,6 +43,18 @@ export default function ClubOwnerPage() {
           təsdiqləmə prosesi ödənişsizdir.
         </p>
       </div>
+
+      {selectedClub ? (
+        <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Təsdiqləmək istədiyiniz klub</p>
+          <p className="mt-1 font-display text-lg font-bold text-ink">{selectedClub}</p>
+          {selectedSlug ? (
+            <Link href={`/klub/${selectedSlug}`} className="mt-2 inline-flex text-sm font-semibold text-primary hover:underline">
+              Klub səhifəsinə qayıt
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <section className="rounded-xl border border-border bg-surface p-5 shadow-card">
