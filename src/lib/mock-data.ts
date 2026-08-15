@@ -80,6 +80,8 @@ function buildClub(input: MockClubInput): ClubWithRelations {
     is_premium: input.isPremium,
     premium_expires_at: input.isPremium ? '2026-12-31T00:00:00Z' : null,
     is_active: true,
+    is_verified: false,
+    verified_at: null,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
     district: district(input.districtSlug),
