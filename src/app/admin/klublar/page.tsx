@@ -7,6 +7,7 @@ interface PageProps {
   searchParams: Promise<{
     q?: string;
     status?: string;
+    missing?: string;
   }>;
 }
 
@@ -18,6 +19,14 @@ function sanitizeSearch(value?: string) {
     .replace(/\s+/g, ' ')
     .slice(0, 80);
 }
+
+const missingLabels: Record<string, string> = {
+  phone: 'Telefon çatmır',
+  hours: 'İş saatı çatmır',
+  images: 'Şəkil çatmır',
+  types: 'Klub tipi çatmır',
+  coordinates: 'Koordinat çatmır',
+};
 
 export default async function AdminClubsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
@@ -39,7 +48,6 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       is_active,
       is_premium,
       premium_expires_at,
-      rating_avg,
       updated_at
     `)
     .order('updated_at', { ascending: false });
@@ -79,6 +87,19 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   const idsWithHours = new Set((hoursResult.data ?? []).map((row) => row.club_id));
   const idsWithImages = new Set((imagesResult.data ?? []).map((row) => row.club_id));
   const idsWithTypes = new Set((typesResult.data ?? []).map((row) => row.club_id));
+  const missingFilter = resolvedSearchParams.missing && missingLabels[resolvedSearchParams.missing]
+    ? resolvedSearchParams.missing
+    : '';
+
+  const filteredClubs = clubs.filter((club) => {
+    if (!missingFilter) return true;
+    if (missingFilter === 'phone') return !club.phone;
+    if (missingFilter === 'hours') return !idsWithHours.has(club.id);
+    if (missingFilter === 'images') return !idsWithImages.has(club.id);
+    if (missingFilter === 'types') return !idsWithTypes.has(club.id);
+    if (missingFilter === 'coordinates') return club.latitude == null || club.longitude == null;
+    return true;
+  });
 
   return (
     <div>
@@ -86,7 +107,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
         <div>
           <h1 className="text-2xl font-bold">Klublar</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {clubs.length} klub tapıldı. Klub əlavə et və bütün məlumatlarını redaktə et.
+            {filteredClubs.length} klub tapıldı. Klub əlavə et və bütün məlumatlarını redaktə et.
           </p>
         </div>
 
@@ -95,7 +116,15 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      <form className="mt-6 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row">
+      {missingFilter ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span className="font-semibold">Çatışmayan məlumat filtri:</span>
+          <span>{missingLabels[missingFilter]}</span>
+          <Link href="/admin/klublar" className="ml-auto font-semibold text-[#6A47F0] hover:underline">Filtri sil</Link>
+        </div>
+      ) : null}
+
+      <form className="mt-6 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:flex-wrap">
         <input
           name="q"
           defaultValue={resolvedSearchParams.q ?? ''}
@@ -115,9 +144,22 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           <option value="premium">Aktiv premium</option>
         </select>
 
+        <select
+          name="missing"
+          defaultValue={missingFilter}
+          className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm"
+        >
+          <option value="">Çatışmayan məlumat</option>
+          <option value="phone">Telefon çatmır</option>
+          <option value="hours">İş saatı çatmır</option>
+          <option value="images">Şəkil çatmır</option>
+          <option value="types">Klub tipi çatmır</option>
+          <option value="coordinates">Koordinat çatmır</option>
+        </select>
+
         <button type="submit" className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white">Axtar</button>
 
-        {(resolvedSearchParams.q || resolvedSearchParams.status) ? (
+        {(resolvedSearchParams.q || resolvedSearchParams.status || missingFilter) ? (
           <Link href="/admin/klublar" className="flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium">
             Təmizlə
           </Link>
@@ -126,7 +168,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
 
       <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1050px] text-left text-sm">
+          <table className="w-full min-w-[940px] text-left text-sm">
             <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
               <tr>
                 <th className="px-4 py-3">Klub</th>
@@ -134,13 +176,12 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Premium</th>
                 <th className="px-4 py-3">Məlumat</th>
-                <th className="px-4 py-3">Reytinq</th>
                 <th className="px-4 py-3 text-right">İdarəetmə</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-gray-100">
-              {clubs.map((club) => {
+              {filteredClubs.map((club) => {
                 const missing = [
                   !club.phone ? 'Telefon' : null,
                   !idsWithHours.has(club.id) ? 'Saat' : null,
@@ -180,12 +221,11 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                       {missing.length === 0 ? (
                         <span className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700">Tamdır</span>
                       ) : (
-                        <div className="flex max-w-[260px] flex-wrap gap-1">
+                        <div className="flex max-w-[280px] flex-wrap gap-1">
                           {missing.map((item) => <span key={item} className="rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700">{item}</span>)}
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{club.rating_avg ?? '—'}</td>
                     <td className="px-4 py-3 text-right">
                       <Link href={`/admin/klublar/${club.id}`} className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold transition hover:border-[#7C5CFC] hover:text-[#7C5CFC]">
                         Redaktə et
@@ -198,7 +238,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           </table>
         </div>
 
-        {clubs.length === 0 ? (
+        {filteredClubs.length === 0 ? (
           <div className="p-10 text-center">
             <p className="text-sm font-medium text-gray-900">Klub tapılmadı</p>
             <p className="mt-1 text-xs text-gray-500">Axtarışı və ya filtri dəyiş.</p>
