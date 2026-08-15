@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import type { ClubWithRelations } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
-import { RatingBadge } from './RatingBadge';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import {
   cn,
@@ -120,7 +119,6 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <RatingBadge rating={club.rating_avg} count={club.rating_count} />
               <span
                 className={
                   openNow
