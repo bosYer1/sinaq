@@ -25,6 +25,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Validate migration manifest
+        run: |
+          set -euo pipefail
+          sort supabase/production-migrations.txt > /tmp/expected-migrations.txt
+          find supabase/migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\n' \
+            | sed 's/\.sql$//' \
+            | sort > /tmp/repo-migrations.txt
+          diff -u /tmp/expected-migrations.txt /tmp/repo-migrations.txt
+
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
