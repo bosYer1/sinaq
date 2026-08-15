@@ -23,8 +23,19 @@ interface PageProps {
   searchParams: Promise<HomeSearchParams>;
 }
 
+const INDEX_AFFECTING_QUERY_KEYS: Array<keyof HomeSearchParams> = [
+  'district',
+  'type',
+  'price_max',
+  'q',
+  'view',
+];
+
 function hasActiveQuery(params: HomeSearchParams) {
-  return Object.values(params).some((value) => typeof value === 'string' && value.trim().length > 0);
+  return INDEX_AFFECTING_QUERY_KEYS.some((key) => {
+    const value = params[key];
+    return typeof value === 'string' && value.trim().length > 0;
+  });
 }
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
