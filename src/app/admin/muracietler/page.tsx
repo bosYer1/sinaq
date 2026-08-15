@@ -1,21 +1,11 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import type { ClubSubmission } from '@/types/database';
 import { updateSubmissionStatus } from './actions';
 
 export const dynamic = 'force-dynamic';
 
-type SubmissionRow = {
-  id: string;
-  kind: 'correction' | 'new_club' | 'owner_claim';
-  club_id: string | null;
-  club_name: string;
-  message: string;
-  contact_type: 'instagram' | 'phone' | 'email';
-  contact_value: string;
-  status: 'pending' | 'reviewing' | 'resolved' | 'rejected';
-  created_at: string;
-  reviewed_at: string | null;
-};
+type SubmissionRow = ClubSubmission;
 
 const KIND_LABELS: Record<SubmissionRow['kind'], string> = {
   correction: 'Düzəliş',
@@ -39,7 +29,7 @@ function contactHref(row: SubmissionRow) {
 
 export default async function AdminSubmissionsPage() {
   const supabase = await createClient();
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('club_submissions')
     .select('id,kind,club_id,club_name,message,contact_type,contact_value,status,created_at,reviewed_at')
     .order('created_at', { ascending: false })
