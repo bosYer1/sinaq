@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts, getClubTypes } from '@/lib/queries/districts';
@@ -20,6 +21,23 @@ type HomeSearchParams = {
 
 interface PageProps {
   searchParams: Promise<HomeSearchParams>;
+}
+
+function hasActiveQuery(params: HomeSearchParams) {
+  return Object.values(params).some((value) => typeof value === 'string' && value.trim().length > 0);
+}
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  if (!hasActiveQuery(params)) return { alternates: { canonical: '/' } };
+
+  return {
+    alternates: { canonical: '/' },
+    robots: {
+      index: false,
+      follow: true,
+    },
+  };
 }
 
 function parsePositiveNumber(value?: string) {
