@@ -5,8 +5,7 @@ export type ClubLogoSource = {
 
 /**
  * Only logos/profile images backed by an official club site or official social profile.
- * Keep this list deliberately conservative: if a source cannot be verified, show the
- * GameYer fallback instead of guessing.
+ * If a source cannot be verified, ClubLogo renders a club-specific monogram instead.
  */
 const CLUB_LOGOS: Record<string, ClubLogoSource> = {
   'laliga-game-center-merkez': {
@@ -41,8 +40,40 @@ const CLUB_LOGOS: Record<string, ClubLogoSource> = {
     imageUrl: 'https://unavatar.io/instagram/gs.playstation.club',
     sourceUrl: 'https://instagram.com/gs.playstation.club/',
   },
+  'forsaj-game-club-yeni-yasamal': {
+    imageUrl: 'https://unavatar.io/instagram/forsaj.gameclub',
+    sourceUrl: 'https://instagram.com/forsaj.gameclub/',
+  },
+  'milli-gaming-arena': {
+    imageUrl: 'https://www.google.com/s2/favicons?domain=milligamingarena.az&sz=256',
+    sourceUrl: 'https://milligamingarena.az/',
+  },
+  'playercyberbar': {
+    imageUrl: 'https://www.google.com/s2/favicons?domain=playercyberbar.az&sz=256',
+    sourceUrl: 'https://playercyberbar.az/',
+  },
+  'cyber-arena-baku': {
+    imageUrl: 'https://unavatar.io/facebook/cyberarenaAZ',
+    sourceUrl: 'https://www.facebook.com/cyberarenaAZ/',
+  },
+  'game-club': {
+    imageUrl: 'https://unavatar.io/facebook/Game-Club-Baku-290464214313454',
+    sourceUrl: 'https://www.facebook.com/Game-Club-Baku-290464214313454/',
+  },
 };
 
 export function getClubLogo(slug: string): ClubLogoSource | null {
   return CLUB_LOGOS[slug] ?? null;
+}
+
+export function getClubMonogram(name: string): string {
+  const words = name
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length === 0) return 'GY';
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return `${words[0][0]}${words[1][0]}`.toUpperCase();
 }
