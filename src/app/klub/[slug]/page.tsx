@@ -67,7 +67,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
   if (!club) notFound();
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bosyer-web.vercel.app';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gameyerr-gameyer.vercel.app';
   const typeAssignments = Array.isArray(club.type_assignments) ? club.type_assignments : [];
   const openingHours = Array.isArray(club.opening_hours) ? club.opening_hours : [];
   const images = Array.isArray(club.images) ? club.images : [];
