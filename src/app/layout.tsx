@@ -16,10 +16,35 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: 'GameYer — Bakıda PC və PlayStation klubları', template: '%s | GameYer' },
   description: 'Bakıda PC klub, kompüter klubu və PlayStation klub tap. Qiymət, ünvan, rayon, iş saatları və xəritəyə görə gaming klublarını GameYer-də müqayisə et.',
-  applicationName: 'GameYer', manifest: '/manifest.webmanifest', verification: { google: googleVerification },
-  appleWebApp: { capable: true, title: 'GameYer', statusBarStyle: 'default' }, alternates: { canonical: '/' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/', siteName: 'GameYer', title: 'GameYer — Bakıda PC və PlayStation klubları', description: 'Bakıda PC, kompüter və PlayStation klublarını qiymət, ünvan və xəritə məlumatları ilə tap.' },
-  twitter: { card: 'summary_large_image', title: 'GameYer — Bakıda gaming klubu tap', description: 'PC və PlayStation klublarını xəritə, rayon və qiymətə görə tap.' },
+  applicationName: 'GameYer',
+  manifest: '/manifest.webmanifest',
+  verification: { google: googleVerification },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  appleWebApp: { capable: true, title: 'GameYer', statusBarStyle: 'default' },
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'az_AZ',
+    url: '/',
+    siteName: 'GameYer',
+    title: 'GameYer — Bakıda PC və PlayStation klubları',
+    description: 'Bakıda PC, kompüter və PlayStation klublarını qiymət, ünvan və xəritə məlumatları ilə tap.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'GameYer — Bakıda gaming klubu tap',
+    description: 'PC və PlayStation klublarını xəritə, rayon və qiymətə görə tap.',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

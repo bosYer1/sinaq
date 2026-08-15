@@ -77,12 +77,23 @@ export default async function HomePage({ searchParams }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }}
       />
-      <div className="flex h-[calc(100dvh-56px)] min-h-[500px] flex-col">
+      <div className="flex min-h-[calc(100dvh-56px)] flex-col">
         {!isSupabaseConfigured() && (
           <div className="border-b border-warn/30 bg-warn-tint px-4 py-1.5 text-center text-xs font-medium text-warn sm:px-6">
             Supabase hələ qoşulmayıb — heç bir klub göstərilmir.
           </div>
         )}
+
+        <section className="border-b border-border bg-surface px-4 py-2 sm:px-6" aria-labelledby="home-title">
+          <div className="mx-auto flex max-w-6xl items-baseline gap-2 overflow-hidden">
+            <h1 id="home-title" className="shrink-0 font-display text-sm font-bold text-ink sm:text-base">
+              Bakıda PC və PlayStation klubları
+            </h1>
+            <p className="hidden truncate text-xs text-muted md:block">
+              Gaming klublarını rayon, qiymət və xəritəyə görə tap və müqayisə et.
+            </p>
+          </div>
+        </section>
 
         <Suspense
           fallback={
@@ -94,7 +105,9 @@ export default async function HomePage({ searchParams }: PageProps) {
           <FilterBar districts={districts} types={types} />
         </Suspense>
 
-        <ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} />
+        <div className="flex min-h-[500px] flex-1">
+          <ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} />
+        </div>
       </div>
     </>
   );

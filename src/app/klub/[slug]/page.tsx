@@ -44,6 +44,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
   if (!club) notFound();
 
   const siteUrl = getSiteUrl();
+  const clubUrl = `${siteUrl}/klub/${club.slug}`;
   const typeAssignments = Array.isArray(club.type_assignments) ? club.type_assignments : [];
   const openingHours = Array.isArray(club.opening_hours) ? club.opening_hours : [];
   const images = Array.isArray(club.images) ? club.images : [];
@@ -68,13 +69,35 @@ export default async function ClubPage({ params }: ClubPageProps) {
     : undefined;
 
   const structuredData = {
-    '@context': 'https://schema.org', '@type': 'LocalBusiness', name: club.name, url: `${siteUrl}/klub/${club.slug}`,
-    description: club.description || undefined, image: coverImage || undefined, telephone: club.phone || undefined, priceRange, aggregateRating,
-    address: { '@type': 'PostalAddress', streetAddress: club.address, addressLocality: 'Bakı', addressCountry: 'AZ' },
-    geo: club.latitude != null && club.longitude != null ? { '@type': 'GeoCoordinates', latitude: club.latitude, longitude: club.longitude } : undefined,
-    openingHoursSpecification: openingHoursSpecification.length > 0 ? openingHoursSpecification : undefined,
-    sameAs: club.instagram_url ? [club.instagram_url] : undefined,
-    keywords: typeNames.length > 0 ? typeNames.join(', ') : undefined,
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'LocalBusiness',
+        '@id': `${clubUrl}#business`,
+        name: club.name,
+        url: clubUrl,
+        description: club.description || undefined,
+        image: coverImage || undefined,
+        telephone: club.phone || undefined,
+        priceRange,
+        aggregateRating,
+        address: { '@type': 'PostalAddress', streetAddress: club.address, addressLocality: 'Bakı', addressCountry: 'AZ' },
+        geo: club.latitude != null && club.longitude != null ? { '@type': 'GeoCoordinates', latitude: club.latitude, longitude: club.longitude } : undefined,
+        openingHoursSpecification: openingHoursSpecification.length > 0 ? openingHoursSpecification : undefined,
+        sameAs: club.instagram_url ? [club.instagram_url] : undefined,
+        keywords: typeNames.length > 0 ? typeNames.join(', ') : undefined,
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'GameYer', item: siteUrl },
+          ...(club.district?.slug
+            ? [{ '@type': 'ListItem', position: 2, name: `${club.district.name} klubları`, item: `${siteUrl}/rayon/${club.district.slug}` }]
+            : []),
+          { '@type': 'ListItem', position: club.district?.slug ? 3 : 2, name: club.name, item: clubUrl },
+        ],
+      },
+    ],
   };
 
   return <>
