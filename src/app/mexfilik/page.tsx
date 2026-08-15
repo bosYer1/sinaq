@@ -55,8 +55,9 @@ export default function PrivacyPage() {
           </p>
           <p className="mt-2 text-muted">
             Müraciətlərin məzmunu və əlaqə məlumatları admin panelində yalnız səlahiyyətli admin
-            hesabları üçün görünür. Şifrə, SMS kodu, bank kartı məlumatı və ya hesab giriş məlumatı
-            göndərməyin.
+            hesabları üçün görünür. Həll olunmuş və ya rədd edilmiş müraciətlərə artıq ehtiyac
+            qalmadıqda admin tərəfindən silinə bilər. Şifrə, SMS kodu, bank kartı məlumatı və ya
+            hesab giriş məlumatı göndərməyin.
           </p>
         </section>
 
