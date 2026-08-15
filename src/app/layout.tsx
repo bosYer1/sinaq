@@ -11,6 +11,7 @@ const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', d
 const siteUrl = getSiteUrl();
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim() || 'p4_LT_BjLRiy0oSjt8chd_QgipidT5IWv1N0rKzUl3I';
 const socialImage = `${siteUrl}/opengraph-image`;
+const brandLogo = `${siteUrl}/apple-icon`;
 const organizationId = `${siteUrl}/#organization`;
 const websiteId = `${siteUrl}/#website`;
 
@@ -22,7 +23,7 @@ const siteStructuredData = {
       '@id': organizationId,
       name: 'GameYer',
       url: siteUrl,
-      logo: socialImage,
+      logo: brandLogo,
       description: 'Azərbaycanda PC və PlayStation klublarını tapmaq və müqayisə etmək üçün gaming klub kataloqu və xəritəsi.',
       sameAs: [
         'https://www.instagram.com/gameyer.az/',
