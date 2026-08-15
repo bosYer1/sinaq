@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { LogoutButton } from '@/components/admin/LogoutButton';
 
 export const metadata: Metadata = {
   title: 'Admin',
@@ -30,6 +31,8 @@ export default function AdminLayout({
               <Link href="/admin/klublar/yeni" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">+ Yeni klub</Link>
               <Link href="/" className="block rounded-lg px-3 py-2.5 font-medium text-gray-500 hover:bg-gray-100">Sayta qayıt</Link>
             </nav>
+
+            <LogoutButton />
           </div>
         </aside>
 
@@ -40,6 +43,7 @@ export default function AdminLayout({
               <Link href="/admin/klublar" className="shrink-0 text-gray-600">Klublar</Link>
               <Link href="/admin/klublar/yeni" className="shrink-0 text-[#7C5CFC]">+ Yeni klub</Link>
               <Link href="/" className="shrink-0 text-gray-500">Sayt</Link>
+              <LogoutButton compact />
             </div>
           </header>
 
