@@ -2,6 +2,7 @@
 
 import { forwardRef, useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { ClubWithDistance } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
 import { MapPinIcon } from '@/components/ui/Icon';
@@ -56,7 +57,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
           : 'from-primary/10';
 
     return (
-      <a
+      <Link
         ref={ref}
         href={`/klub/${encodeURIComponent(club.slug)}`}
         onMouseEnter={onMouseEnter}
@@ -156,7 +157,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
             </div>
           </div>
         </div>
-      </a>
+      </Link>
     );
   }
 );
