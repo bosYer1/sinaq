@@ -7,7 +7,7 @@ interface SitemapClub {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bosyer-web.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gameyerr-gameyer.vercel.app';
   const entries: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
