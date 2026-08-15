@@ -9,6 +9,7 @@ interface ClubListProps {
   onHoverClub?: (id: string) => void;
   cardRefs?: MutableRefObject<Record<string, HTMLAnchorElement | null>>;
   searchActive?: boolean;
+  onClearFilters?: () => void;
 }
 
 /**
@@ -16,12 +17,14 @@ interface ClubListProps {
  * ExploreView (client) vasitəsilə buraya ötürülür; bura yalnız render +
  * hover/aktiv vəziyyəti xəritəyə ötürmək üçün lazımi əlaqələndirməni edir.
  */
-export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchActive }: ClubListProps) {
+export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchActive, onClearFilters }: ClubListProps) {
   if (clubs.length === 0) {
     return (
       <EmptyState
         title={searchActive ? 'Axtarışa uyğun klub tapılmadı' : 'Bu filtrə uyğun klub tapılmadı'}
-        description="Filtrləri dəyişməyi və ya təmizləməyi sınayın."
+        description="Başqa axtarış sözü yoxla və ya aktiv filtrləri təmizlə."
+        actionLabel={onClearFilters ? 'Filtrləri təmizlə' : undefined}
+        onAction={onClearFilters}
       />
     );
   }
