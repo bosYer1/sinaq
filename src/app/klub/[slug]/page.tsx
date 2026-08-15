@@ -26,6 +26,15 @@ function clubCategory(typeSlugs: string[]) {
   return 'gaming klubu';
 }
 
+function schemaBusinessType(typeSlugs: string[]) {
+  const hasPc = typeSlugs.includes('pc');
+  const hasPlayStation = typeSlugs.includes('playstation');
+  if (hasPc && hasPlayStation) return ['InternetCafe', 'EntertainmentBusiness'];
+  if (hasPc) return 'InternetCafe';
+  if (hasPlayStation) return 'EntertainmentBusiness';
+  return 'LocalBusiness';
+}
+
 export async function generateMetadata({ params }: ClubPageProps): Promise<Metadata> {
   const { slug } = await params;
   const club = await getClubBySlug(slug);
@@ -69,6 +78,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
     const type = item?.club_type;
     return type?.slug ? [{ slug: type.slug, name: type.name }] : [];
   });
+  const typeSlugs = typeLinks.map((type) => type.slug);
+  const businessType = schemaBusinessType(typeSlugs);
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
   const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
   const openingHoursSpecification = openingHours
@@ -82,12 +93,15 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const aggregateRating = club.rating_avg != null && Number.isFinite(club.rating_avg) && club.rating_avg > 0 && club.rating_avg <= 5 && club.rating_count > 0
     ? { '@type': 'AggregateRating', ratingValue: club.rating_avg, ratingCount: club.rating_count, bestRating: 5, worstRating: 1 }
     : undefined;
+  const hasMap = club.latitude != null && club.longitude != null
+    ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}`
+    : undefined;
 
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': 'LocalBusiness',
+        '@type': businessType,
         '@id': `${clubUrl}#business`,
         name: club.name,
         url: clubUrl,
@@ -95,9 +109,11 @@ export default async function ClubPage({ params }: ClubPageProps) {
         image: coverImage || undefined,
         telephone: club.phone || undefined,
         priceRange,
+        currenciesAccepted: 'AZN',
         aggregateRating,
         address: { '@type': 'PostalAddress', streetAddress: club.address, addressLocality: 'Bakı', addressCountry: 'AZ' },
         geo: club.latitude != null && club.longitude != null ? { '@type': 'GeoCoordinates', latitude: club.latitude, longitude: club.longitude } : undefined,
+        hasMap,
         openingHoursSpecification: openingHoursSpecification.length > 0 ? openingHoursSpecification : undefined,
         sameAs: club.instagram_url ? [club.instagram_url] : undefined,
         keywords: typeNames.length > 0 ? typeNames.join(', ') : undefined,
