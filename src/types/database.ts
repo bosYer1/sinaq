@@ -44,6 +44,8 @@ export interface Database {
           is_premium: boolean;
           premium_expires_at: string | null;
           is_active: boolean;
+          is_verified: boolean;
+          verified_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -63,6 +65,8 @@ export interface Database {
           is_premium?: boolean;
           premium_expires_at?: string | null;
           is_active?: boolean;
+          is_verified?: boolean;
+          verified_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -82,6 +86,8 @@ export interface Database {
           is_premium?: boolean;
           premium_expires_at?: string | null;
           is_active?: boolean;
+          is_verified?: boolean;
+          verified_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -279,6 +285,12 @@ export interface Database {
           p_images: Json;
         };
         Returns: undefined;
+      };
+      verify_owner_claim_atomic: {
+        Args: {
+          p_submission_id: string;
+        };
+        Returns: string;
       };
     };
     Enums: { [_ in never]: never };
