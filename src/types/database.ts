@@ -1,5 +1,5 @@
 /**
- * BosYer Supabase database TypeScript tipləri.
+ * GameYer Supabase database TypeScript tipləri.
  */
 
 export type Json =
@@ -221,7 +221,18 @@ export interface Database {
     };
 
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      replace_club_relations_atomic: {
+        Args: {
+          p_club_id: string;
+          p_assignments: Json;
+          p_pricing: Json;
+          p_hours: Json;
+          p_images: Json;
+        };
+        Returns: undefined;
+      };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };
