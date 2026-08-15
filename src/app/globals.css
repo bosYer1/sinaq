@@ -108,6 +108,14 @@ body {
   .leaflet-popup-content {
     margin: 12px;
   }
+
+  /* ClubDetail şəkilsiz hero mobil ekranda mətnin kəsilməsinə yol verməsin. */
+  .aspect-\[16\/7\] {
+    aspect-ratio: auto !important;
+    min-height: 300px;
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
 }
 
 :focus-visible {
