@@ -23,7 +23,7 @@ export type UserLocationStatus =
 export function useUserLocation(): {
   location: UserLocation | null;
   status: UserLocationStatus;
-  requestLocation: () => void;
+  requestLocation: () => Promise<UserLocation | null>;
 } {
   const [location, setLocation] = useState<UserLocation | null>(null);
   const [status, setStatus] = useState<UserLocationStatus>('idle');
@@ -31,22 +31,30 @@ export function useUserLocation(): {
   const requestLocation = useCallback(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setStatus('unsupported');
-      return;
+      return Promise.resolve(null);
     }
 
-    if (status === 'loading') return;
+    if (status === 'loading') return Promise.resolve(null);
 
     setStatus('loading');
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
-        setStatus('granted');
-      },
-      (error) => {
-        setStatus(error.code === error.PERMISSION_DENIED ? 'denied' : 'unavailable');
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60 * 1000 },
-    );
+    return new Promise<UserLocation | null>((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const nextLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setLocation(nextLocation);
+          setStatus('granted');
+          resolve(nextLocation);
+        },
+        (error) => {
+          setStatus(error.code === error.PERMISSION_DENIED ? 'denied' : 'unavailable');
+          resolve(null);
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60 * 1000 },
+      );
+    });
   }, [status]);
 
   return { location, status, requestLocation };
