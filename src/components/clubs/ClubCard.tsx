@@ -3,7 +3,6 @@
 import { forwardRef, useEffect, useState } from 'react';
 import Image from 'next/image';
 import type { ClubWithDistance } from '@/types/database';
-import { RatingBadge } from './RatingBadge';
 import { Badge } from '@/components/ui/Badge';
 import { MapPinIcon } from '@/components/ui/Icon';
 import { inferClubTypeSlugs } from '@/lib/clubType';
@@ -116,8 +115,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
           ) : null}
 
           <div className="mt-auto flex items-end justify-between gap-3 pt-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <RatingBadge rating={club.rating_avg} count={club.rating_count} />
+            <div className="min-w-0">
               {club.distanceKm != null ? (
                 <span className="whitespace-nowrap text-[11px] text-muted">
                   {formatDistance(club.distanceKm)}
