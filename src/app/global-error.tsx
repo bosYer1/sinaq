@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <html lang="az">
@@ -52,7 +54,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
               >
                 Yenidən cəhd et
               </button>
-              <a
+              <Link
                 href="/"
                 style={{
                   border: '1px solid #d1d5db',
@@ -64,7 +66,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
                 }}
               >
                 Ana səhifə
-              </a>
+              </Link>
             </div>
           </div>
         </main>
