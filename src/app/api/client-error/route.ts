@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const MAX_BODY_BYTES = 12_000;
+const RATE_WINDOW_MS = 60_000;
+const RATE_LIMIT = 12;
+
+const rateBuckets = new Map<string, { startedAt: number; count: number }>();
 
 function clean(value: unknown, max = 2000) {
   return typeof value === 'string'
@@ -10,13 +14,39 @@ function clean(value: unknown, max = 2000) {
     : '';
 }
 
-function jsonResponse(body: Record<string, unknown>, status = 200) {
+function jsonResponse(body: Record<string, unknown>, status = 200, headers?: Record<string, string>) {
   return NextResponse.json(body, {
     status,
     headers: {
       'Cache-Control': 'no-store',
+      ...headers,
     },
   });
+}
+
+function requestKey(request: Request) {
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return forwarded || request.headers.get('x-real-ip')?.trim() || 'unknown';
+}
+
+function isRateLimited(request: Request) {
+  const now = Date.now();
+  const key = requestKey(request);
+  const current = rateBuckets.get(key);
+
+  if (!current || now - current.startedAt >= RATE_WINDOW_MS) {
+    rateBuckets.set(key, { startedAt: now, count: 1 });
+    return false;
+  }
+
+  current.count += 1;
+  if (rateBuckets.size > 500) {
+    for (const [bucketKey, bucket] of rateBuckets) {
+      if (now - bucket.startedAt >= RATE_WINDOW_MS) rateBuckets.delete(bucketKey);
+    }
+  }
+
+  return current.count > RATE_LIMIT;
 }
 
 export async function POST(request: Request) {
@@ -46,6 +76,10 @@ export async function POST(request: Request) {
     }
   }
 
+  if (isRateLimited(request)) {
+    return jsonResponse({ ok: false }, 429, { 'Retry-After': '60' });
+  }
+
   try {
     const raw = await request.text();
     if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) {
@@ -58,7 +92,6 @@ export async function POST(request: Request) {
       stack: clean(body.stack, 4000),
       digest: clean(body.digest, 200),
       path: clean(body.path, 500),
-      userAgent: clean(body.userAgent, 500),
     };
 
     if (payload.message) {
