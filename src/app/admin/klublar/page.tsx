@@ -10,24 +10,6 @@ interface PageProps {
   }>;
 }
 
-type ClubRow = {
-  id: string;
-  name: string;
-  slug: string;
-  address: string;
-  district_id: string;
-  phone: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  is_active: boolean;
-  is_premium: boolean;
-  premium_expires_at: string | null;
-  rating_avg: number | null;
-  updated_at: string;
-};
-
-type ClubIdRow = { club_id: string };
-
 function sanitizeSearch(value?: string) {
   if (!value) return '';
   return value
@@ -40,11 +22,10 @@ function sanitizeSearch(value?: string) {
 export default async function AdminClubsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
   const supabase = await createClient();
-  const db = supabase as any;
   const nowIso = new Date().toISOString();
-  const nowMs = Date.now();
+  const nowMs = Date.parse(nowIso);
 
-  let query = db
+  let query = supabase
     .from('clubs')
     .select(`
       id,
@@ -82,22 +63,22 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
     );
   }
 
-  const clubs = (clubsResult.data ?? []) as ClubRow[];
+  const clubs = clubsResult.data ?? [];
 
   const [districtsResult, hoursResult, imagesResult, typesResult] = await Promise.all([
-    db.from('districts').select('id,name'),
-    db.from('club_opening_hours').select('club_id'),
-    db.from('club_images').select('club_id'),
-    db.from('club_type_assignments').select('club_id'),
+    supabase.from('districts').select('id,name'),
+    supabase.from('club_opening_hours').select('club_id'),
+    supabase.from('club_images').select('club_id'),
+    supabase.from('club_type_assignments').select('club_id'),
   ]);
 
   const districts = new Map<string, string>(
-    (districtsResult.data ?? []).map((district: { id: string; name: string }) => [district.id, district.name])
+    (districtsResult.data ?? []).map((district) => [district.id, district.name])
   );
 
-  const idsWithHours = new Set(((hoursResult.data ?? []) as ClubIdRow[]).map((row) => row.club_id));
-  const idsWithImages = new Set(((imagesResult.data ?? []) as ClubIdRow[]).map((row) => row.club_id));
-  const idsWithTypes = new Set(((typesResult.data ?? []) as ClubIdRow[]).map((row) => row.club_id));
+  const idsWithHours = new Set((hoursResult.data ?? []).map((row) => row.club_id));
+  const idsWithImages = new Set((imagesResult.data ?? []).map((row) => row.club_id));
+  const idsWithTypes = new Set((typesResult.data ?? []).map((row) => row.club_id));
 
   return (
     <div>
