@@ -94,8 +94,9 @@ function createPopupContent(club: ClubWithDistance) {
   const hasHours = club.opening_hours.length > 0;
   const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
   const statusLabel = !hasHours ? 'İş saatı məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
-  const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
-  const cheapest = [...realPricing].sort((a, b) => a.price_from - b.price_from)[0];
+  const cheapest = [...club.pricing]
+    .filter((pricing) => pricing.price_from > 0)
+    .sort((a, b) => a.price_from - b.price_from)[0];
 
   const meta = document.createElement('div');
   meta.className = 'mt-2 flex items-center justify-between gap-3';
@@ -141,7 +142,14 @@ export function ClubMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerLayerRef = useRef<L.LayerGroup | null>(null);
+  const markerRefs = useRef<Map<string, L.Marker>>(new Map());
+  const clubRefs = useRef<Map<string, ClubWithDistance>>(new Map());
+  const activeClubIdRef = useRef<string | null>(activeClubId ?? null);
+  const onSelectClubRef = useRef(onSelectClub);
   const userMarkerRef = useRef<L.CircleMarker | null>(null);
+
+  onSelectClubRef.current = onSelectClub;
+  activeClubIdRef.current = activeClubId ?? null;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -171,6 +179,8 @@ export function ClubMap({
       window.clearTimeout(timer);
       observer?.disconnect();
       map.remove();
+      markerRefs.current.clear();
+      clubRefs.current.clear();
       mapRef.current = null;
       markerLayerRef.current = null;
       userMarkerRef.current = null;
@@ -182,19 +192,35 @@ export function ClubMap({
     if (!layer) return;
 
     layer.clearLayers();
+    markerRefs.current.clear();
+    clubRefs.current.clear();
+
     for (const club of clubs) {
       if (club.latitude == null || club.longitude == null) continue;
 
+      const isActive = club.id === activeClubIdRef.current;
       const marker = L.marker([club.latitude, club.longitude], {
-        icon: createClubIcon(club, club.id === activeClubId),
-        zIndexOffset: club.id === activeClubId ? 1000 : 0,
+        icon: createClubIcon(club, isActive),
+        zIndexOffset: isActive ? 1000 : 0,
         title: club.name,
       });
       marker.bindPopup(createPopupContent(club), { minWidth: 210 });
-      marker.on('click', () => onSelectClub?.(club.id));
+      marker.on('click', () => onSelectClubRef.current?.(club.id));
       marker.addTo(layer);
+      markerRefs.current.set(club.id, marker);
+      clubRefs.current.set(club.id, club);
     }
-  }, [clubs, activeClubId, onSelectClub]);
+  }, [clubs]);
+
+  useEffect(() => {
+    for (const [clubId, marker] of markerRefs.current) {
+      const club = clubRefs.current.get(clubId);
+      if (!club) continue;
+      const isActive = clubId === activeClubId;
+      marker.setIcon(createClubIcon(club, isActive));
+      marker.setZIndexOffset(isActive ? 1000 : 0);
+    }
+  }, [activeClubId]);
 
   useEffect(() => {
     const map = mapRef.current;
