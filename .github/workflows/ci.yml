@@ -86,8 +86,19 @@ jobs:
           curl --fail --silent http://127.0.0.1:3000/robots.txt | grep 'Disallow: /admin' > /dev/null
           curl --fail --silent http://127.0.0.1:3000/sitemap.xml > /tmp/sitemap.xml
           grep '/rayon/' /tmp/sitemap.xml > /dev/null
-          grep '/tip/' /tmp/sitemap.xml > /dev/null
+          grep '/bakida-pc-klublari' /tmp/sitemap.xml > /dev/null
+          grep '/bakida-playstation-klublari' /tmp/sitemap.xml > /dev/null
+          grep '/rayon/narimanov/pc' /tmp/sitemap.xml > /dev/null
           grep '/klub-sahibi' /tmp/sitemap.xml > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/bakida-pc-klublari > /tmp/pc.html
+          grep 'rel="canonical" href="https://gameyerr-gameyer.vercel.app/bakida-pc-klublari"' /tmp/pc.html > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/bakida-playstation-klublari > /tmp/ps.html
+          grep 'rel="canonical" href="https://gameyerr-gameyer.vercel.app/bakida-playstation-klublari"' /tmp/ps.html > /dev/null
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/tip/pc)" = "308"
+          curl --silent --dump-header /tmp/type-redirect --output /dev/null http://127.0.0.1:3000/tip/pc
+          grep -Ei '^location: /bakida-pc-klublari' /tmp/type-redirect > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/rayon/narimanov/pc > /tmp/narimanov-pc.html
+          grep 'rel="canonical" href="https://gameyerr-gameyer.vercel.app/rayon/narimanov/pc"' /tmp/narimanov-pc.html > /dev/null
           curl --fail --silent http://127.0.0.1:3000/elaqe > /tmp/elaqe.html
           grep 'rel="canonical" href="https://gameyerr-gameyer.vercel.app/elaqe"' /tmp/elaqe.html > /dev/null
           curl --fail --silent http://127.0.0.1:3000/mexfilik > /tmp/mexfilik.html
