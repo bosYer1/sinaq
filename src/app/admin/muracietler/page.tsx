@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { ClubSubmission } from '@/types/database';
+import { OwnerClaimSummary } from '@/components/admin/OwnerClaimSummary';
 import { deleteCompletedSubmission, updateSubmissionStatus, verifyOwnerClaim } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -78,10 +79,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
           <h1 className="text-3xl font-bold tracking-tight">Müraciətlər</h1>
           <p className="mt-1 text-sm text-gray-500">Düzəliş, yeni klub və klub sahibi təsdiq müraciətləri.</p>
         </div>
-        <Link
-          href="/admin/muracietler?status=pending"
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition hover:border-[#7C5CFC]/40"
-        >
+        <Link href="/admin/muracietler?status=pending" className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition hover:border-[#7C5CFC]/40">
           Gözləyən: <span className="font-bold text-gray-900">{pendingCount}</span>
         </Link>
       </div>
@@ -89,51 +87,30 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
       <form method="get" className="mt-6 grid gap-3 rounded-xl border border-gray-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_auto]">
         <div>
           <label htmlFor="submission-q" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Klub adı</label>
-          <input
-            id="submission-q"
-            name="q"
-            defaultValue={q}
-            maxLength={120}
-            placeholder="Klub adına görə axtar"
-            className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#7C5CFC]"
-          />
+          <input id="submission-q" name="q" defaultValue={q} maxLength={120} placeholder="Klub adına görə axtar" className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#7C5CFC]" />
         </div>
-
         <div>
           <label htmlFor="submission-status" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Status</label>
           <select id="submission-status" name="status" defaultValue={status ?? ''} className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm">
-            <option value="">Hamısı</option>
-            <option value="pending">Gözləyir</option>
-            <option value="reviewing">Yoxlanılır</option>
-            <option value="resolved">Həll olunub</option>
-            <option value="rejected">Rədd edilib</option>
+            <option value="">Hamısı</option><option value="pending">Gözləyir</option><option value="reviewing">Yoxlanılır</option><option value="resolved">Həll olunub</option><option value="rejected">Rədd edilib</option>
           </select>
         </div>
-
         <div>
           <label htmlFor="submission-kind" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Növ</label>
           <select id="submission-kind" name="kind" defaultValue={kind ?? ''} className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm">
-            <option value="">Hamısı</option>
-            <option value="correction">Düzəliş</option>
-            <option value="new_club">Yeni klub</option>
-            <option value="owner_claim">Klub sahibi</option>
+            <option value="">Hamısı</option><option value="correction">Düzəliş</option><option value="new_club">Yeni klub</option><option value="owner_claim">Klub sahibi</option>
           </select>
         </div>
-
         <div className="flex items-end gap-2">
           <button type="submit" className="h-10 rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white hover:bg-[#6A47F0]">Filtrlə</button>
-          {hasFilters ? (
-            <Link href="/admin/muracietler" className="flex h-10 items-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50">Təmizlə</Link>
-          ) : null}
+          {hasFilters ? <Link href="/admin/muracietler" className="flex h-10 items-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50">Təmizlə</Link> : null}
         </div>
       </form>
 
       <div className="mt-3 text-xs text-gray-500">Nəticə: {submissions.length}</div>
 
       {submissions.length === 0 ? (
-        <div className="mt-5 rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
-          {hasFilters ? 'Bu filtrlərə uyğun müraciət tapılmadı.' : 'Hələ müraciət yoxdur.'}
-        </div>
+        <div className="mt-5 rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">{hasFilters ? 'Bu filtrlərə uyğun müraciət tapılmadı.' : 'Hələ müraciət yoxdur.'}</div>
       ) : (
         <div className="mt-5 space-y-4">
           {submissions.map((item) => (
@@ -150,15 +127,10 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                 {item.club_id ? <Link href={`/admin/klublar/${item.club_id}`} className="text-sm font-semibold text-[#6A47F0] hover:underline">Klub admininə bax</Link> : null}
               </div>
 
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-gray-700">{item.message}</p>
+              {item.kind === 'owner_claim' ? <OwnerClaimSummary message={item.message} /> : <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-gray-700">{item.message}</p>}
 
               <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-                <a
-                  href={contactHref(item)}
-                  target={item.contact_type === 'instagram' ? '_blank' : undefined}
-                  rel={item.contact_type === 'instagram' ? 'noopener noreferrer' : undefined}
-                  className="text-sm font-semibold text-[#6A47F0] hover:underline"
-                >
+                <a href={contactHref(item)} target={item.contact_type === 'instagram' ? '_blank' : undefined} rel={item.contact_type === 'instagram' ? 'noopener noreferrer' : undefined} className="text-sm font-semibold text-[#6A47F0] hover:underline">
                   {item.contact_type}: {item.contact_value}
                 </a>
               </div>
@@ -176,14 +148,10 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                   <input type="hidden" name="id" value={item.id} />
                   <label htmlFor={`status-${item.id}`} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Status</label>
                   <select id={`status-${item.id}`} name="status" defaultValue={item.status} className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900">
-                    <option value="pending">Gözləyir</option>
-                    <option value="reviewing">Yoxlanılır</option>
-                    <option value="resolved">Həll olunub</option>
-                    <option value="rejected">Rədd edilib</option>
+                    <option value="pending">Gözləyir</option><option value="reviewing">Yoxlanılır</option><option value="resolved">Həll olunub</option><option value="rejected">Rədd edilib</option>
                   </select>
                   <button type="submit" className="h-9 rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white hover:bg-[#6A47F0]">Yadda saxla</button>
                 </form>
-
                 {item.status === 'resolved' || item.status === 'rejected' ? (
                   <form action={deleteCompletedSubmission}>
                     <input type="hidden" name="id" value={item.id} />
