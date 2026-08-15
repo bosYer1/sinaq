@@ -40,6 +40,12 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
           : typeSlugs[0] === 'playstation'
             ? 'PS'
             : 'Gaming';
+    const fallbackTint =
+      typeSlugs.length === 1 && typeSlugs[0] === 'playstation'
+        ? 'from-ps-tint'
+        : typeSlugs.length === 1 && typeSlugs[0] === 'pc'
+          ? 'from-pc-tint'
+          : 'from-primary/10';
 
     return (
       <a
@@ -64,7 +70,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
               className="object-cover transition-transform duration-200 group-hover:scale-[1.03]"
             />
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-pc-tint to-surface-alt text-center">
+            <div className={cn('flex h-full w-full flex-col items-center justify-center bg-gradient-to-br to-surface-alt text-center', fallbackTint)}>
               <span className="font-display text-xl font-bold text-primary">G</span>
               <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted">
                 {fallbackType}
