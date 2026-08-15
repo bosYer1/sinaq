@@ -80,7 +80,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           ))}
         </div>
       ) : (
-        <div className="mb-6 flex aspect-[16/7] items-center justify-center overflow-hidden rounded-card border border-border bg-gradient-to-br from-primary-light via-surface to-surface-alt">
+        <div className="mb-6 flex aspect-[16/7] items-center justify-center overflow-hidden rounded-card border border-border bg-gradient-to-br from-pc-tint via-surface to-surface-alt">
           <div className="px-6 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary font-display text-3xl font-bold text-white shadow-card">
               G
