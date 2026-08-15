@@ -1,4 +1,6 @@
-import { forwardRef } from 'react';
+'use client';
+
+import { forwardRef, useEffect, useState } from 'react';
 import Image from 'next/image';
 import type { ClubWithDistance } from '@/types/database';
 import { RatingBadge } from './RatingBadge';
@@ -18,8 +20,14 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
   function ClubCard({ club, active, onMouseEnter }, ref) {
     const cover = club.images.find((image) => image.is_cover) ?? club.images[0];
     const hasHours = club.opening_hours.length > 0;
-    const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
-    const premiumActive = isPremiumActive(club);
+    const [openNow, setOpenNow] = useState(false);
+    const [premiumActive, setPremiumActive] = useState(false);
+
+    useEffect(() => {
+      setOpenNow(hasHours ? isClubOpenNow(club.opening_hours) : false);
+      setPremiumActive(isPremiumActive(club));
+    }, [club, hasHours]);
+
     const statusLabel = !hasHours ? 'İş saatı məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
     const typeSlugs = inferClubTypeSlugs(club);
     const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
@@ -56,7 +64,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
               className="object-cover transition-transform duration-200 group-hover:scale-[1.03]"
             />
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-primary-light to-surface-alt text-center">
+            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-pc-tint to-surface-alt text-center">
               <span className="font-display text-xl font-bold text-primary">G</span>
               <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted">
                 {fallbackType}
