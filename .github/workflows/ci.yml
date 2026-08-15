@@ -5,6 +5,9 @@ on:
     branches: [main, launch-hardening]
   pull_request:
 
+permissions:
+  contents: write
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -28,15 +31,12 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Export resolved lockfile
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v7
-        with:
-          name: resolved-package-lock
-          path: package-lock.json
-          retention-days: 1
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
@@ -92,6 +92,18 @@ jobs:
             process.exit(1);
           });
           NODE
+
+      - name: Commit resolved lockfile
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          if git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore: lock dependency tree"
+          git push origin HEAD:main
 
       - name: Stop production server
         if: always()
