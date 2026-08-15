@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
-import { getDistricts } from '@/lib/queries/districts';
 import { getSiteUrl } from '@/lib/site-url';
 
 interface SitemapClub {
@@ -23,11 +22,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/mexfilik`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
-  const districts = await getDistricts();
-  for (const district of districts) {
-    entries.push({ url: `${baseUrl}/rayon/${district.slug}`, changeFrequency: 'weekly', priority: 0.75 });
-  }
-
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('clubs')
@@ -43,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (error) return entries;
   const clubs = (data ?? []) as unknown as SitemapClub[];
+  const activeDistricts = new Set<string>();
   const combinationCounts = new Map<string, number>();
 
   for (const club of clubs) {
@@ -54,12 +49,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
 
     if (!club.district?.slug) continue;
+    activeDistricts.add(club.district.slug);
     for (const assignment of club.type_assignments ?? []) {
       const type = assignment.club_type?.slug;
       if (type !== 'pc' && type !== 'playstation') continue;
       const key = `${club.district.slug}:${type}`;
       combinationCounts.set(key, (combinationCounts.get(key) ?? 0) + 1);
     }
+  }
+
+  for (const districtSlug of activeDistricts) {
+    entries.push({ url: `${baseUrl}/rayon/${districtSlug}`, changeFrequency: 'weekly', priority: 0.75 });
   }
 
   for (const [key, count] of combinationCounts) {
