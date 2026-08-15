@@ -78,14 +78,19 @@ jobs:
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/this-route-must-not-exist)" = "404"
           node <<'NODE'
           const fs = require('node:fs');
-          const xml = fs.readFileSync('/tmp/sitemap.xml', 'utf8');
-          const paths = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => new URL(match[1]).pathname);
-          if (paths.length < 33) throw new Error(`Expected at least 33 sitemap URLs, got ${paths.length}`);
-          for (const path of paths) {
-            const response = await fetch(`http://127.0.0.1:3000${path}`);
-            if (!response.ok) throw new Error(`${path} returned ${response.status}`);
-          }
-          console.log(`Smoke-tested ${paths.length} sitemap routes successfully.`);
+          (async () => {
+            const xml = fs.readFileSync('/tmp/sitemap.xml', 'utf8');
+            const paths = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => new URL(match[1]).pathname);
+            if (paths.length < 33) throw new Error(`Expected at least 33 sitemap URLs, got ${paths.length}`);
+            for (const path of paths) {
+              const response = await fetch(`http://127.0.0.1:3000${path}`);
+              if (!response.ok) throw new Error(`${path} returned ${response.status}`);
+            }
+            console.log(`Smoke-tested ${paths.length} sitemap routes successfully.`);
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
           NODE
 
       - name: Stop production server
