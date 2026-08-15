@@ -22,7 +22,10 @@ function sanitizeSearch(value?: string) {
 
 const missingLabels: Record<string, string> = {
   phone: 'Telefon çatmır',
+  description: 'Təsvir çatmır',
+  instagram: 'Instagram yoxdur',
   hours: 'İş saatı çatmır',
+  pricing: 'Qiymət çatmır',
   images: 'Şəkil çatmır',
   types: 'Klub tipi çatmır',
   coordinates: 'Koordinat çatmır',
@@ -40,9 +43,11 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       id,
       name,
       slug,
+      description,
       address,
       district_id,
       phone,
+      instagram_url,
       latitude,
       longitude,
       is_active,
@@ -73,11 +78,12 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
 
   const clubs = clubsResult.data ?? [];
 
-  const [districtsResult, hoursResult, imagesResult, typesResult] = await Promise.all([
+  const [districtsResult, hoursResult, imagesResult, typesResult, pricingResult] = await Promise.all([
     supabase.from('districts').select('id,name'),
     supabase.from('club_opening_hours').select('club_id'),
     supabase.from('club_images').select('club_id'),
     supabase.from('club_type_assignments').select('club_id'),
+    supabase.from('club_pricing').select('club_id'),
   ]);
 
   const districts = new Map<string, string>(
@@ -87,6 +93,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   const idsWithHours = new Set((hoursResult.data ?? []).map((row) => row.club_id));
   const idsWithImages = new Set((imagesResult.data ?? []).map((row) => row.club_id));
   const idsWithTypes = new Set((typesResult.data ?? []).map((row) => row.club_id));
+  const idsWithPricing = new Set((pricingResult.data ?? []).map((row) => row.club_id));
   const missingFilter = resolvedSearchParams.missing && missingLabels[resolvedSearchParams.missing]
     ? resolvedSearchParams.missing
     : '';
@@ -94,7 +101,10 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   const filteredClubs = clubs.filter((club) => {
     if (!missingFilter) return true;
     if (missingFilter === 'phone') return !club.phone;
+    if (missingFilter === 'description') return !club.description?.trim();
+    if (missingFilter === 'instagram') return !club.instagram_url;
     if (missingFilter === 'hours') return !idsWithHours.has(club.id);
+    if (missingFilter === 'pricing') return !idsWithPricing.has(club.id);
     if (missingFilter === 'images') return !idsWithImages.has(club.id);
     if (missingFilter === 'types') return !idsWithTypes.has(club.id);
     if (missingFilter === 'coordinates') return club.latitude == null || club.longitude == null;
@@ -151,7 +161,10 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
         >
           <option value="">Çatışmayan məlumat</option>
           <option value="phone">Telefon çatmır</option>
+          <option value="description">Təsvir çatmır</option>
+          <option value="instagram">Instagram yoxdur</option>
           <option value="hours">İş saatı çatmır</option>
+          <option value="pricing">Qiymət çatmır</option>
           <option value="images">Şəkil çatmır</option>
           <option value="types">Klub tipi çatmır</option>
           <option value="coordinates">Koordinat çatmır</option>
@@ -184,7 +197,10 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
               {filteredClubs.map((club) => {
                 const missing = [
                   !club.phone ? 'Telefon' : null,
+                  !club.description?.trim() ? 'Təsvir' : null,
+                  !club.instagram_url ? 'Instagram' : null,
                   !idsWithHours.has(club.id) ? 'Saat' : null,
+                  !idsWithPricing.has(club.id) ? 'Qiymət' : null,
                   !idsWithImages.has(club.id) ? 'Şəkil' : null,
                   !idsWithTypes.has(club.id) ? 'Tip' : null,
                   club.latitude == null || club.longitude == null ? 'Koordinat' : null,
@@ -221,7 +237,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                       {missing.length === 0 ? (
                         <span className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700">Tamdır</span>
                       ) : (
-                        <div className="flex max-w-[280px] flex-wrap gap-1">
+                        <div className="flex max-w-[320px] flex-wrap gap-1">
                           {missing.map((item) => <span key={item} className="rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700">{item}</span>)}
                         </div>
                       )}
