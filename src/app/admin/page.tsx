@@ -65,11 +65,11 @@ export default async function AdminPage() {
   }
 
   const completenessItems = [
-    { label: 'Telefon çatmır', value: missingPhone },
-    { label: 'İş saatı çatmır', value: missingHours },
-    { label: 'Şəkil çatmır', value: missingImages },
-    { label: 'Klub tipi çatmır', value: missingTypes },
-    { label: 'Koordinat çatmır', value: missingCoordinates },
+    { label: 'Telefon çatmır', value: missingPhone, key: 'phone' },
+    { label: 'İş saatı çatmır', value: missingHours, key: 'hours' },
+    { label: 'Şəkil çatmır', value: missingImages, key: 'images' },
+    { label: 'Klub tipi çatmır', value: missingTypes, key: 'types' },
+    { label: 'Koordinat çatmır', value: missingCoordinates, key: 'coordinates' },
   ];
 
   return (
@@ -95,17 +95,25 @@ export default async function AdminPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold">Məlumat keyfiyyəti</h2>
-            <p className="mt-1 text-sm text-gray-500">Aktiv klublarda tamamlanmalı sahələr. Sıfır olduqda həmin məlumat bloku tamdır.</p>
+            <p className="mt-1 text-sm text-gray-500">Kartın üzərinə vuraraq həmin məlumatı çatmayan klubları birbaşa görə bilərsən.</p>
           </div>
           <Link href="/admin/klublar" className="text-sm font-semibold text-[#6A47F0] hover:underline">Klubları idarə et</Link>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {completenessItems.map((item) => (
-            <div key={item.label} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">{item.label}</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">{item.value}</p>
-            </div>
+            <Link
+              key={item.key}
+              href={`/admin/klublar?missing=${item.key}`}
+              className="group rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-[#7C5CFC]/50 hover:bg-[#7C5CFC]/5"
+              title={`${item.label} olan klubları göstər`}
+            >
+              <p className="text-sm text-gray-500 transition group-hover:text-[#6A47F0]">{item.label}</p>
+              <div className="mt-1 flex items-end justify-between gap-2">
+                <p className="text-2xl font-bold text-gray-900">{item.value}</p>
+                <span className="text-xs font-semibold text-[#6A47F0] opacity-0 transition group-hover:opacity-100">Bax →</span>
+              </div>
+            </Link>
           ))}
         </div>
       </div>
