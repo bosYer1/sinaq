@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getClubBySlug } from '@/lib/queries/clubs';
 import { ClubDetail } from '@/components/clubs/ClubDetail';
@@ -75,6 +76,9 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const typeNames = typeAssignments
     .map((item) => item?.club_type?.name)
     .filter((name): name is string => Boolean(name));
+  const typeLinks = typeAssignments
+    .map((item) => item?.club_type)
+    .filter((type): type is NonNullable<typeof type> => Boolean(type?.slug));
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
   const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
   const openingHoursSpecification = openingHours
@@ -128,6 +132,18 @@ export default async function ClubPage({ params }: ClubPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }}
       />
       <ClubDetail club={club} />
+      <nav className="mx-auto flex max-w-5xl flex-wrap gap-2 px-4 pb-8 pt-2 text-xs sm:px-6" aria-label="Əlaqəli klub kateqoriyaları">
+        {club.district?.slug ? (
+          <Link href={`/rayon/${club.district.slug}`} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">
+            {club.district.name} rayonundakı digər klublar
+          </Link>
+        ) : null}
+        {typeLinks.map((type) => (
+          <Link key={type.slug} href={`/tip/${type.slug}`} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">
+            {type.slug === 'pc' ? 'Digər PC klubları' : type.slug === 'playstation' ? 'Digər PlayStation klubları' : `${type.name} klubları`}
+          </Link>
+        ))}
+      </nav>
     </>
   );
 }
