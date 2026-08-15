@@ -18,7 +18,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const { location, status, requestLocation } = useUserLocation();
   const [sortByDistance, setSortByDistance] = useState(false);
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
-  const [pendingMapFocus, setPendingMapFocus] = useState(false);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
@@ -30,18 +29,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     media.addEventListener?.('change', sync);
     return () => media.removeEventListener?.('change', sync);
   }, []);
-
-  useEffect(() => {
-    if (!pendingMapFocus || !location) return;
-    setLocationFocusRequest((value) => value + 1);
-    setPendingMapFocus(false);
-  }, [location, pendingMapFocus]);
-
-  useEffect(() => {
-    if (status === 'denied' || status === 'unsupported' || status === 'unavailable') {
-      setPendingMapFocus(false);
-    }
-  }, [status]);
 
   const clubsWithDistance = useMemo(() => {
     const enriched = clubs.map((club) => ({
@@ -74,17 +61,20 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       return;
     }
     setSortByDistance(true);
-    requestLocation();
+    void requestLocation();
   }
 
-  function handleMapLocation() {
+  async function handleMapLocation() {
     setSortByDistance(true);
     if (location) {
       setLocationFocusRequest((value) => value + 1);
       return;
     }
-    setPendingMapFocus(true);
-    requestLocation();
+
+    const nextLocation = await requestLocation();
+    if (nextLocation) {
+      setLocationFocusRequest((value) => value + 1);
+    }
   }
 
   function handleHoverCard(id: string) {
@@ -164,7 +154,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <div className="absolute left-3 right-3 top-3 z-[500] flex items-start justify-between gap-2 sm:left-auto sm:right-3 sm:flex-col sm:items-end">
               <button
                 type="button"
-                onClick={handleMapLocation}
+                onClick={() => void handleMapLocation()}
                 disabled={status === 'loading' || status === 'unsupported'}
                 className="inline-flex h-11 shrink-0 items-center gap-2 rounded-control border border-border-strong bg-surface/95 px-3 text-xs font-semibold text-ink shadow-card backdrop-blur transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5 sm:text-sm"
                 title={status === 'denied' ? 'Brauzer ayarlarından lokasiya icazəsini aktiv et.' : 'Konumunu göstər və sənə yaxın klubları tap.'}
