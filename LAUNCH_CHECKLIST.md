@@ -4,7 +4,7 @@
 - [x] Next.js 16.3.1 security upgrade
 - [x] React 19.2.8
 - [x] `@supabase/ssr` 0.12.4
-- [x] React-Leaflet çıxarılıb, stabil Leaflet 1.9 xəritə qatı
+- [x] Stabil Leaflet 1.9 xəritə qatı
 - [x] Next async params/searchParams/cookies migration
 - [x] Next 16 `middleware` → `proxy` migration
 - [x] GitHub Actions production dependency audit
@@ -13,10 +13,9 @@
 - [x] Smoke-test sitemap-dəki bütün public route-ları yoxlayır
 - [x] `/api/health` endpoint — yüngül DB probe, `no-store`, `noindex`, minimal response
 - [x] 404, loading və error boundaries
-- [x] Klub kartından detail route-a native navigation
+- [x] Klub kartından detail route-a Next client navigation
 - [x] Client runtime error telemetry + same-origin/body-size hardening
-- [x] 26 production migration versiyası repo manifesti ilə CI-da yoxlanılır
-- [x] Çatışmayan historical migration-lar production history-dən bərpa olunub
+- [x] Production migration manifest CI-da yoxlanılır
 - [x] Empty-project disaster recovery üçün core schema bootstrap sənədləşdirilib
 
 ## Mobil UX
@@ -29,42 +28,61 @@
 - [x] Siyahı/Xəritə toggle həmişə görünür
 - [x] Mobil siyahı rejimində Leaflet mount olunmur
 - [x] Xəritə ayrıca error boundary ilə izolasiya olunub
-- [x] Xəritə popup Google Maps CTA — göy fon + məcburi ağ mətn
+- [x] Xəritə popup Google Maps CTA
 - [x] Time-dependent statuslar hydration-safe edilib
+- [x] Şəkilsiz klub detail hero-su mobil ekranda kəsilmir
+- [x] PC/PlayStation label-i mobil hero-da normal badge kimi göstərilir
 
 ## Admin və təhlükəsizlik
 - [x] Admin proxy + `admin_users` yoxlaması
 - [x] Admin login və private route-lar `no-store`
 - [x] Bütün public cədvəllərdə RLS aktivdir
 - [x] Public anon yalnız aktiv klubları və onların relation-larını oxuyur
-- [x] Anon table privilege-ləri SELECT-lə məhdudlaşdırılıb
+- [x] Anon table privilege-ləri minimuma endirilib
 - [x] Admin write siyasətləri `is_admin()` ilə qorunur
 - [x] Storage write yalnız admin; JPG/PNG/WEBP, maksimum 5 MB
+- [x] Admin şəkilləri birbaşa Supabase Storage-a yükləyir; Vercel body limiti bypass olunur
 - [x] Şəkil URL-ləri yalnız GameYer-in öz Supabase Storage hostundan qəbul edilir
 - [x] Duplicate slug və server-side form validation
 - [x] Relation save atomik DB transaction-dır
 - [x] Edit rollback və create cleanup
 - [x] Slug / Instagram / premium DB constraint-ləri
 - [x] Premium müddəti Bakı vaxtı ↔ UTC düzgün çevrilir
-- [x] `pg_trgm` public schema-dan `extensions` schema-ya köçürülüb
 - [x] HSTS, CSP, frame deny, nosniff, referrer və permissions security headers
 - [x] Public submission honeypot + format validation + DB rate-limit
-- [x] Submission rate-limit eyni contact üzrə transaction lock ilə concurrency-safe edilib
-- [x] Supabase security advisor: leaked-password protection xaric əlavə security warning yoxdur
-- [ ] Supabase Auth leaked-password protection aktivləşdir — Dashboard/Auth təhlükəsizlik ayarı (connector-da write endpoint yoxdur)
+- [x] Owner claim qiymət, iş saatı və rəsmi Instagram məlumatını strukturlaşdırılmış toplayır
+- [x] Admin owner claim məlumatını ayrıca sahələr kimi görür
+- [x] Privacy-safe page analytics
+- [x] Analytics trafik mənbələri: Direct / Google / Instagram / Facebook / TikTok və digər hostname-lər
+- [x] Analytics RPC `SECURITY INVOKER`; raw page-view SELECT yalnız admin RLS-dən keçir
+- [x] Supabase security advisor: yalnız leaked-password protection warning-i qalır
+- [ ] Supabase Auth leaked-password protection-u aktivləşdir — Dashboard/Auth təhlükəsizlik ayarı
 
 ## SEO və public səth
 - [x] Canonical metadata
-- [x] Sitemap — bütün 30 aktiv klub
-- [x] Robots: admin/API disallow
-- [x] Admin metadata `noindex/nofollow`
-- [x] LocalBusiness structured data
-- [x] Open Graph image
+- [x] Sitemap — bütün aktiv klublar + SEO landing page-lər
+- [x] Robots — API crawl bloklanır; admin səhifələri öz `noindex/nofollow` metadata-sı ilə qorunur
+- [x] Filter/search query URL-ləri `noindex, follow`
+- [x] LocalBusiness / InternetCafe / EntertainmentBusiness structured data
+- [x] Breadcrumb structured data
+- [x] Open Graph/social preview
+- [x] Google large image/snippet preview direktivləri
+- [x] Bakıda PC/kompüter/internet klub landing page-i
+- [x] Bakıda PlayStation/PS klub landing page-i
+- [x] Rayon + klub tipi landing page-ləri yalnız kifayət qədər real data olduqda indexlənir
+- [x] Legacy `/tip/pc` və `/tip/playstation` server-side permanent redirect
 - [x] Apple touch icon
-- [x] PWA manifest + SVG, 192×192 və 512×512 PNG/maskable iconlar
+- [x] PWA manifest + PNG/maskable iconlar
 - [x] iPhone standalone metadata
 - [x] Privacy və Əlaqə/məlumat düzəlişi səhifələri
-- [x] Klub məlumatının dəyişə biləcəyi barədə istifadəçi disclaimer-i
+- [x] Klub məlumatının dəyişə biləcəyi barədə disclaimer
+
+## Klub vizualları
+- [x] Rəsmi mənbə ilə təsdiqlənən klub/filiallarda real brand logo registry-si
+- [x] Təsdiqlənməmiş klub üçün saxta logo istifadə olunmur
+- [x] Rəsmi logo olmayan klub üçün klub adına əsaslanan fərdi monogram fallback
+- [x] Logo yüklənməzsə avtomatik monogram fallback
+- [x] Real interyer/klub şəkilləri loqodan ayrıca saxlanılır
 
 ## Data integrity
 - [x] 30 aktiv klub
@@ -78,19 +96,20 @@
 - [x] Qrafiki olan bütün klublarda 7 tam gün
 
 ## Təsdiqlənmədiyi üçün qəsdən boş saxlanılan məlumatlar — launch blocker deyil
-- 2 klubun telefonu
-- 4 klubun tam iş qrafiki
-- 27 klubun real qiyməti
-- 30 klubun real şəkilləri; UI branded/type-aware fallback göstərir
+- Bəzi klublarda telefon
+- Bəzi klublarda tam iş qrafiki
+- Bir çox klubda real qiymət
+- Real interyer şəkilləri klub sahibləri/rəsmi mənbələrdən gəldikcə əlavə ediləcək
 
 ## Production status
-- [ ] Vercel build-rate-limit açılsın — hazırda `gameyerr` və `gameyer` check-ləri `build-rate-limit` səbəbilə failure-dır
-- [ ] Son `main` commit production-a deploy olunsun
-- [ ] Son `main` deploy-dan sonra production `/api/health` = 200 və DB = `ok` yenidən təsdiqlənsin
-- [ ] Son `main` deploy-dan sonra sitemap / robots / representative detail route smoke-test yenidən keçirilsin
+- [ ] Vercel build-rate-limit açılsın
+- [ ] Son `main` commit production-a bir dəfə deploy olunsun
+- [ ] Production `/api/health` = 200 və DB = `ok`
+- [ ] Production sitemap / robots / canonical / representative detail route smoke-test
+- [ ] Admin `/admin/statistika` real browser girişindən sonra page-view və traffic-source data göstərsin
 
-## Public linki paylaşmazdan əvvəl qalan manual addımlar
+## Public launchdan əvvəl manual addımlar
 1. Supabase Dashboard → Auth təhlükəsizlik ayarından leaked-password protection-u aktivləşdir.
-2. Vercel build-rate-limit açıldıqdan sonra son `main` commit-i production-a deploy et və health/sitemap/robots/detail smoke-testlərini yenidən keçir.
-3. Real iPhone Safari-də: Siyahı → klub detail → geri; Xəritə → marker → Kluba bax; Google Maps CTA; lokasiya düyməsi axınını bir dəfə yoxla.
-4. `gameyer.az` alınarsa Vercel project-ə bağla və `NEXT_PUBLIC_SITE_URL=https://gameyer.az` et; sonra canonical/sitemap/robots hostunu yoxla. Custom domain ilkin public launch üçün məcburi deyil.
+2. Vercel build-rate-limit açıldıqdan sonra final `main` production-a yalnız bir dəfə deploy et.
+3. Real iPhone Safari-də: Siyahı → klub detail → geri; Xəritə → marker → Kluba bax; Google Maps CTA; lokasiya düyməsini yoxla.
+4. `gameyer.az` alınarsa Vercel project-ə bağla və `NEXT_PUBLIC_SITE_URL=https://gameyer.az` et. Custom domain ilkin launch üçün məcburi deyil.
