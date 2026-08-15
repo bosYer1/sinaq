@@ -1,5 +1,6 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import type { District, ClubType } from '@/types/database';
 import { SearchFilter } from './SearchFilter';
 import { DistrictFilter } from './DistrictFilter';
@@ -15,13 +16,15 @@ interface FilterBarProps {
 
 export function FilterBar({ districts, types }: FilterBarProps) {
   const { hasActiveFilters, clearAll } = useFilters();
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') ?? '';
 
   return (
     <div className="shrink-0 border-b border-border bg-surface">
       <div className="w-full px-4 py-3 sm:px-6 lg:px-7">
         <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
           <div className="w-full shrink-0 md:w-[380px] lg:w-[420px]">
-            <SearchFilter />
+            <SearchFilter key={searchQuery} />
           </div>
 
           <div className="flex min-w-0 flex-1 items-center gap-2">
