@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -9,15 +10,21 @@ import { SeoClubList } from '@/components/seo/SeoClubList';
 
 interface DistrictPageProps { params: Promise<{ slug: string }> }
 
+const getDistrictPageData = cache(async (slug: string) => {
+  const [districts, clubs] = await Promise.all([getDistricts(), getClubs({ district: slug })]);
+  const district = districts.find((item) => item.slug === slug);
+  if (!district || clubs.length === 0) return null;
+  return { district, clubs };
+});
+
 export async function generateMetadata({ params }: DistrictPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const districts = await getDistricts();
-  const district = districts.find((item) => item.slug === slug);
-  if (!district) return { title: 'Rayon tapılmadı', robots: { index: false, follow: false } };
+  const data = await getDistrictPageData(slug);
+  if (!data) return { title: 'Rayonda aktiv klub tapılmadı', robots: { index: false, follow: true } };
 
-  const title = `${district.name} rayonunda PC, kompüter və PlayStation klubları`;
-  const description = `${district.name} rayonundakı PC, kompüter və PlayStation klublarını GameYer-də müqayisə et. Ünvan, qiymət, iş saatları və xəritə məlumatlarına bax.`;
-  const canonical = `/rayon/${district.slug}`;
+  const title = `${data.district.name} rayonunda PC, kompüter və PlayStation klubları`;
+  const description = `${data.district.name} rayonundakı ${data.clubs.length} aktiv PC, kompüter və PlayStation klubunu GameYer-də müqayisə et. Ünvan, qiymət, iş saatları və xəritə məlumatlarına bax.`;
+  const canonical = `/rayon/${data.district.slug}`;
   return {
     title, description, alternates: { canonical },
     openGraph: { type: 'website', locale: 'az_AZ', url: canonical, title: `${title} | GameYer`, description },
@@ -27,9 +34,9 @@ export async function generateMetadata({ params }: DistrictPageProps): Promise<M
 
 export default async function DistrictPage({ params }: DistrictPageProps) {
   const { slug } = await params;
-  const [districts, clubs] = await Promise.all([getDistricts(), getClubs({ district: slug })]);
-  const district = districts.find((item) => item.slug === slug);
-  if (!district) notFound();
+  const data = await getDistrictPageData(slug);
+  if (!data) notFound();
+  const { district, clubs } = data;
 
   const pcCount = clubs.filter((club) => inferClubTypeSlugs(club).includes('pc')).length;
   const playStationCount = clubs.filter((club) => inferClubTypeSlugs(club).includes('playstation')).length;
