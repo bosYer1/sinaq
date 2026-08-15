@@ -5,6 +5,12 @@ import { createClient } from '@/lib/supabase/server';
 
 const KINDS = new Set(['correction', 'new_club', 'owner_claim']);
 const CONTACT_TYPES = new Set(['instagram', 'phone', 'email']);
+const OWNER_ROLES: Record<string, string> = {
+  owner: 'Sahib',
+  manager: 'Menecer',
+  employee: 'Əməkdaş',
+  representative: 'Rəsmi nümayəndə',
+};
 type SubmissionResult = 'sent' | 'error' | 'rate';
 
 function text(formData: FormData, key: string, max: number) {
@@ -32,6 +38,43 @@ function validContact(type: string, value: string) {
   return false;
 }
 
+function validInstagram(value: string) {
+  if (!value) return true;
+  return /^@?[a-z0-9._]{1,30}$/i.test(value) || /^https:\/\/(?:www\.)?instagram\.com\/[a-z0-9._]+\/?(?:\?.*)?$/i.test(value);
+}
+
+function optionalPrice(formData: FormData, key: string) {
+  const raw = text(formData, key, 20);
+  if (!raw) return null;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 0 || value > 1000) return Number.NaN;
+  return value;
+}
+
+function ownerClaimMessage(formData: FormData, freeMessage: string) {
+  const role = text(formData, 'owner_role', 30);
+  const officialInstagram = text(formData, 'official_instagram', 200);
+  const hoursNote = text(formData, 'hours_note', 300);
+  const pcPrice = optionalPrice(formData, 'pc_price');
+  const psPrice = optionalPrice(formData, 'ps_price');
+
+  if (!OWNER_ROLES[role] || !validInstagram(officialInstagram) || Number.isNaN(pcPrice) || Number.isNaN(psPrice)) {
+    return null;
+  }
+
+  const lines = [
+    '[STRUKTURLAŞDIRILMIŞ KLUB SAHİBİ MƏLUMATI]',
+    `Klubla əlaqə: ${OWNER_ROLES[role]}`,
+    officialInstagram ? `Rəsmi Instagram: ${officialInstagram}` : null,
+    pcPrice != null ? `PC qiyməti: ${pcPrice} AZN/saat` : null,
+    psPrice != null ? `PlayStation qiyməti: ${psPrice} AZN/saat` : null,
+    hoursNote ? `İş saatları: ${hoursNote}` : null,
+    freeMessage ? `Əlavə qeyd: ${freeMessage}` : null,
+  ].filter((line): line is string => Boolean(line));
+
+  return lines.join('\n').slice(0, 3000);
+}
+
 export async function submitClubSubmission(formData: FormData) {
   const successUrl = resultUrl(formData, 'sent');
 
@@ -41,7 +84,7 @@ export async function submitClubSubmission(formData: FormData) {
   const kind = text(formData, 'kind', 30);
   const clubName = text(formData, 'club_name', 120);
   const clubSlug = text(formData, 'club_slug', 120);
-  const message = text(formData, 'message', 3000);
+  const freeMessage = text(formData, 'message', 3000);
   const contactType = text(formData, 'contact_type', 30);
   const contactValue = text(formData, 'contact_value', 200);
 
@@ -49,9 +92,13 @@ export async function submitClubSubmission(formData: FormData) {
     !KINDS.has(kind) ||
     !CONTACT_TYPES.has(contactType) ||
     clubName.length < 2 ||
-    message.length < 10 ||
     !validContact(contactType, contactValue)
   ) {
+    redirect(resultUrl(formData, 'error'));
+  }
+
+  const message = kind === 'owner_claim' ? ownerClaimMessage(formData, freeMessage) : freeMessage;
+  if (!message || (kind !== 'owner_claim' && message.length < 10)) {
     redirect(resultUrl(formData, 'error'));
   }
 
