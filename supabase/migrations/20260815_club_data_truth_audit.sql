@@ -39,10 +39,9 @@ update clubs
 set name = 'Adsız Playstation klub', updated_at = now()
 where slug = 'playstation-sarayevo';
 
--- Current directories disagree materially on Paris Playstation phone numbers.
--- Blank is safer than publishing a potentially wrong number.
+-- Current exact-location business index confirms this phone and daily 11:00-00:00 schedule.
 update clubs
-set phone = null, updated_at = now()
+set phone = '+994 77 550 33 34', updated_at = now()
 where slug = 'paris-playstation';
 
 -- Exact Waze entity matches the stored Yasamal Playstation phone and reports this public location.
@@ -53,7 +52,7 @@ where slug = 'yasamal-playstation';
 -- Rebuild audited opening hours so fresh environments match production truth.
 delete from club_opening_hours
 where club_id in (
-  select id from clubs where slug in ('butacybercafe', 'game-stop-playstation-club', 'yasamal-playstation')
+  select id from clubs where slug in ('butacybercafe', 'game-stop-playstation-club', 'yasamal-playstation', 'paris-playstation')
 );
 
 -- Buta: Mon-Thu 10:00-23:30, Fri-Sat 24h, Sun 10:00-23:30.
@@ -79,6 +78,13 @@ select c.id, d.day, '10:00'::time, '00:00'::time, false
 from clubs c
 cross join generate_series(0,6) as d(day)
 where c.slug = 'yasamal-playstation';
+
+-- Paris Playstation: daily 11:00-00:00.
+insert into club_opening_hours (club_id, day_of_week, open_time, close_time, is_closed)
+select c.id, d.day, '11:00'::time, '00:00'::time, false
+from clubs c
+cross join generate_series(0,6) as d(day)
+where c.slug = 'paris-playstation';
 
 -- Buta current published PC rate starts at 2 AZN/hour.
 insert into club_pricing (club_id, club_type_id, price_from, price_to, unit)
