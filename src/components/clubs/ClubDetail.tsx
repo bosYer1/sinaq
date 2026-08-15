@@ -114,14 +114,16 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           ))}
         </div>
       ) : (
-        <div className={cn('mb-6 flex aspect-[16/7] items-center justify-center overflow-hidden rounded-card border border-border bg-gradient-to-br via-surface to-surface-alt', fallbackTint)}>
-          <div className="px-6 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary font-display text-3xl font-bold text-white shadow-card">
+        <div className={cn('mb-6 flex min-h-[250px] items-center justify-center overflow-hidden rounded-card border border-border bg-gradient-to-br via-surface to-surface-alt px-5 py-7 sm:aspect-[16/7] sm:min-h-0 sm:px-6 sm:py-6', fallbackTint)}>
+          <div className="w-full max-w-xl text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary font-display text-2xl font-bold text-white shadow-card sm:h-16 sm:w-16 sm:text-3xl">
               G
             </div>
-            <p className="mt-4 font-display text-lg font-semibold text-ink">{club.name}</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">{fallbackType}</p>
-            <p className="mt-3 text-sm text-muted">Real klub şəkilləri əlavə ediləndə burada görünəcək.</p>
+            <p className="mt-4 break-words font-display text-lg font-semibold leading-snug text-ink sm:text-xl">{club.name}</p>
+            <span className="mt-2 inline-flex max-w-full items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary sm:text-xs">
+              {fallbackType}
+            </span>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-5 text-muted">Real klub şəkilləri əlavə ediləndə burada görünəcək.</p>
           </div>
         </div>
       )}
@@ -148,13 +150,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <span
-                className={
-                  openNow
-                    ? 'inline-flex items-center gap-1.5 text-sm font-medium text-live'
-                    : 'inline-flex items-center gap-1.5 text-sm font-medium text-muted'
-                }
-              >
+              <span className={openNow ? 'inline-flex items-center gap-1.5 text-sm font-medium text-live' : 'inline-flex items-center gap-1.5 text-sm font-medium text-muted'}>
                 <span className={openNow ? 'h-2 w-2 rounded-full bg-live' : 'h-2 w-2 rounded-full bg-muted'} />
                 {statusLabel}
               </span>
@@ -167,13 +163,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           </div>
 
           {googleMapsUrl ? (
-            <a
-              href={googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ backgroundColor: '#1A73E8', color: '#ffffff' }}
-              className="inline-flex h-11 shrink-0 items-center justify-center rounded-control px-5 text-sm font-semibold no-underline transition hover:opacity-90"
-            >
+            <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-11 shrink-0 items-center justify-center rounded-control px-5 text-sm font-semibold no-underline transition hover:opacity-90">
               Google Maps-də marşrut
             </a>
           ) : null}
@@ -194,23 +184,14 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
             {realPricing.length > 0 ? (
               <div className="overflow-hidden rounded-xl border border-border bg-surface">
                 {realPricing.map((pricing) => (
-                  <div
-                    key={pricing.id}
-                    className="flex items-center justify-between gap-4 border-b border-border px-4 py-3.5 last:border-b-0"
-                  >
-                    <Badge tone={pricing.club_type.slug === 'pc' ? 'pc' : 'ps'}>
-                      {pricing.club_type.name}
-                    </Badge>
-                    <span className="font-mono text-sm font-semibold text-ink">
-                      {formatPriceRange(pricing.price_from, pricing.price_to, pricing.unit)}
-                    </span>
+                  <div key={pricing.id} className="flex items-center justify-between gap-4 border-b border-border px-4 py-3.5 last:border-b-0">
+                    <Badge tone={pricing.club_type.slug === 'pc' ? 'pc' : 'ps'}>{pricing.club_type.name}</Badge>
+                    <span className="font-mono text-sm font-semibold text-ink">{formatPriceRange(pricing.price_from, pricing.price_to, pricing.unit)}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">
-                Qiymət məlumatı hələ təsdiqlənməyib.
-              </div>
+              <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">Qiymət məlumatı hələ təsdiqlənməyib.</div>
             )}
           </section>
 
@@ -219,29 +200,20 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
             {sortedHours.length > 0 ? (
               <div className="overflow-hidden rounded-xl border border-border bg-surface">
                 {sortedHours.map((hours) => (
-                  <div
-                    key={hours.id}
-                    className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 text-sm last:border-b-0"
-                  >
+                  <div key={hours.id} className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 text-sm last:border-b-0">
                     <span className="text-ink">{DAY_NAMES_AZ[hours.day_of_week]}</span>
                     <span className={hours.is_closed ? 'font-mono text-muted' : 'font-mono text-ink'}>
-                      {hours.is_closed
-                        ? 'Bağlıdır'
-                        : `${formatTime(hours.open_time)} – ${formatTime(hours.close_time)}`}
+                      {hours.is_closed ? 'Bağlıdır' : `${formatTime(hours.open_time)} – ${formatTime(hours.close_time)}`}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">
-                İş saatları hələ təsdiqlənməyib.
-              </div>
+              <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">İş saatları hələ təsdiqlənməyib.</div>
             )}
           </section>
 
-          <p className="mt-4 text-xs leading-5 text-muted">
-            Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl mümkün olduqda klubun rəsmi əlaqə kanalından məlumatı dəqiqləşdirin.
-          </p>
+          <p className="mt-4 text-xs leading-5 text-muted">Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl mümkün olduqda klubun rəsmi əlaqə kanalından məlumatı dəqiqləşdirin.</p>
         </div>
 
         <aside className="h-fit rounded-xl border border-border bg-surface p-5">
@@ -251,69 +223,34 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               <p className="text-xs font-medium uppercase tracking-wide text-muted">Ünvan</p>
               <p className="mt-1 leading-5 text-ink">{club.address || 'Ünvan göstərilməyib'}</p>
             </div>
-
             {phoneNumbers.length > 0 ? (
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted">Telefon</p>
                 <div className="mt-1 flex flex-col items-start gap-1">
                   {phoneNumbers.map((phone) => (
-                    <a
-                      key={phone}
-                      href={`tel:${phone.replace(/[^+\d]/g, '')}`}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {phone}
-                    </a>
+                    <a key={phone} href={`tel:${phone.replace(/[^+\d]/g, '')}`} className="font-medium text-primary hover:underline">{phone}</a>
                   ))}
                 </div>
               </div>
             ) : null}
-
             {club.instagram_url ? (
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted">Instagram</p>
-                <a
-                  href={club.instagram_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-block font-medium text-primary hover:underline"
-                >
-                  Instagram profilinə bax
-                </a>
+                <a href={club.instagram_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block font-medium text-primary hover:underline">Instagram profilinə bax</a>
               </div>
             ) : null}
           </div>
 
           {googleMapsUrl ? (
-            <a
-              href={googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ backgroundColor: '#1A73E8', color: '#ffffff' }}
-              className="mt-5 flex h-11 w-full items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90"
-            >
-              Marşrut qur
-            </a>
+            <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="mt-5 flex h-11 w-full items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut qur</a>
           ) : null}
 
           <div className="mt-5 border-t border-border pt-4">
-            {updatedLabel ? (
-              <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p>
-            ) : null}
-            {isVerified ? (
-              <p className="mt-2 text-xs leading-5 text-primary">
-                ✓ Klubun sahibi və ya rəsmi nümayəndəsi GameYer tərəfindən təsdiqlənib.
-              </p>
-            ) : null}
+            {updatedLabel ? <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p> : null}
+            {isVerified ? <p className="mt-2 text-xs leading-5 text-primary">✓ Klubun sahibi və ya rəsmi nümayəndəsi GameYer tərəfindən təsdiqlənib.</p> : null}
             <div className="mt-3 flex flex-col gap-2">
-              <Link href={correctionHref} className="text-sm font-semibold text-primary hover:underline">
-                Məlumatda səhv var? Bildir
-              </Link>
-              {!isVerified ? (
-                <Link href={ownerHref} className="text-sm font-semibold text-ink hover:text-primary">
-                  Bu klubun sahibisiniz? Klub məlumatını təsdiqləyin
-                </Link>
-              ) : null}
+              <Link href={correctionHref} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</Link>
+              {!isVerified ? <Link href={ownerHref} className="text-sm font-semibold text-ink hover:text-primary">Bu klubun sahibisiniz? Klub məlumatını təsdiqləyin</Link> : null}
             </div>
           </div>
         </aside>
