@@ -73,6 +73,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const typeAssignments = Array.isArray(club.type_assignments) ? club.type_assignments : [];
   const openingHours = Array.isArray(club.opening_hours) ? club.opening_hours : [];
   const images = Array.isArray(club.images) ? club.images : [];
+  const pricing = Array.isArray(club.pricing) ? club.pricing : [];
   const typeNames = typeAssignments
     .map((item) => item?.club_type?.name)
     .filter((name): name is string => Boolean(name));
@@ -98,6 +99,30 @@ export default async function ClubPage({ params }: ClubPageProps) {
       closes: hours.close_time!.slice(0, 5),
     }));
 
+  const validPrices = pricing
+    .flatMap((item) => {
+      const values = [item.price_from, item.price_to]
+        .filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0);
+      return values;
+    });
+  const priceRange = validPrices.length > 0
+    ? `${Math.min(...validPrices)}–${Math.max(...validPrices)} AZN`
+    : undefined;
+  const aggregateRating =
+    club.rating_avg != null &&
+    Number.isFinite(club.rating_avg) &&
+    club.rating_avg > 0 &&
+    club.rating_avg <= 5 &&
+    club.rating_count > 0
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: club.rating_avg,
+          ratingCount: club.rating_count,
+          bestRating: 5,
+          worstRating: 1,
+        }
+      : undefined;
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -106,6 +131,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
     description: club.description || undefined,
     image: coverImage || undefined,
     telephone: club.phone || undefined,
+    priceRange,
+    aggregateRating,
     address: {
       '@type': 'PostalAddress',
       streetAddress: club.address,
