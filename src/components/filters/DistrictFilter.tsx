@@ -8,18 +8,18 @@ export function DistrictFilter({ districts }: { districts: District[] }) {
   const { filters, setDistrict } = useFilters();
 
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <select
         value={filters.district ?? ''}
         onChange={(e) => setDistrict(e.target.value || undefined)}
         className={cn(
-          'h-10 appearance-none rounded-lg border border-border bg-surface pl-3 pr-7 text-sm text-ink md:h-9',
+          'h-10 min-w-[108px] appearance-none rounded-lg border border-border bg-surface pl-3 pr-7 text-sm text-ink md:h-9',
           'focus:border-primary focus:outline-none',
-          filters.district && 'border-primary/50 bg-primary-light text-primary-dark',
+          filters.district && 'border-primary/50 bg-primary/10 text-primary-dark',
         )}
         aria-label="Rayona görə filtr"
       >
-        <option value="">Bütün rayonlar</option>
+        <option value="">Rayonlar</option>
         {districts.map((d) => (
           <option key={d.id} value={d.slug}>
             {d.name}
