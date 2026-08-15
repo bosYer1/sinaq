@@ -7,7 +7,7 @@ const bodyFont = Inter({ subsets: ['latin'], variable: '--font-body', display: '
 const displayFont = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
 const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bosyer-web.vercel.app';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gameyerr-gameyer.vercel.app';
 
 export const viewport: Viewport = {
   themeColor: '#7C5CFC',
