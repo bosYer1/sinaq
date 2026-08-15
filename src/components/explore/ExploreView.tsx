@@ -151,7 +151,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         />
       </section>
 
-      <section className={`relative min-h-0 flex-1 bg-surface-alt p-2.5 sm:p-3 lg:bg-bg lg:p-3 lg:pl-0 ${view === 'map' ? 'block' : 'hidden'} lg:block`}>
+      <section className={`relative min-h-0 flex-1 bg-surface-alt p-2.5 sm:p-3 lg:bg-bg lg:p-3 ${view === 'map' ? 'block' : 'hidden'} lg:block`}>
         <div className="relative h-full min-h-0 overflow-hidden rounded-2xl border-2 border-border-strong bg-surface shadow-[0_8px_28px_rgba(20,22,28,0.12)] sm:rounded-xl sm:border lg:shadow-card">
           {shouldMountMap ? (
             <MapErrorBoundary>
