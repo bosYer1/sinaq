@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import Link from 'next/link';
 import { getSiteUrl } from '@/lib/site-url';
+import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import './globals.css';
 
 const bodyFont = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="az" className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable}`}>
       <body className="bg-bg font-body text-ink antialiased">
+        <PageViewTracker />
         <header className="sticky top-0 z-30 border-b border-border bg-surface">
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
             <Link href="/" className="flex items-center gap-2" aria-label="GameYer ana səhifə">
