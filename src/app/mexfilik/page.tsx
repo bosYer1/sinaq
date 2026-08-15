@@ -3,14 +3,14 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Məxfilik siyasəti',
-  description: 'GameYer məxfilik siyasəti və lokasiya məlumatlarının istifadəsi.',
+  description: 'GameYer məxfilik siyasəti, lokasiya və müraciət məlumatlarının istifadəsi.',
   alternates: { canonical: '/mexfilik' },
   openGraph: {
     type: 'website',
     locale: 'az_AZ',
     url: '/mexfilik',
     title: 'Məxfilik siyasəti | GameYer',
-    description: 'GameYer-də lokasiya və digər məlumatların necə istifadə edildiyini oxu.',
+    description: 'GameYer-də lokasiya, müraciət və digər məlumatların necə istifadə edildiyini oxu.',
   },
 };
 
@@ -46,6 +46,21 @@ export default function PrivacyPage() {
         </section>
 
         <section>
+          <h2 className="font-display text-lg font-bold">Müraciət və əlaqə məlumatları</h2>
+          <p className="mt-2 text-muted">
+            Düzəliş, yeni klub təklifi və ya klub sahibi təsdiq forması göndərdikdə klubun adı,
+            yazdığınız müraciət mətni, seçdiyiniz əlaqə üsulu və əlaqə məlumatı GameYer verilənlər
+            bazasında saxlanılır. Bu məlumatlar müraciəti yoxlamaq və lazım olduqda sizinlə əlaqə
+            saxlamaq üçün istifadə olunur; public klub səhifəsində avtomatik yayımlanmır.
+          </p>
+          <p className="mt-2 text-muted">
+            Müraciətlərin məzmunu və əlaqə məlumatları admin panelində yalnız səlahiyyətli admin
+            hesabları üçün görünür. Şifrə, SMS kodu, bank kartı məlumatı və ya hesab giriş məlumatı
+            göndərməyin.
+          </p>
+        </section>
+
+        <section>
           <h2 className="font-display text-lg font-bold">Klub məlumatları</h2>
           <p className="mt-2 text-muted">
             Klub adı, ünvan, telefon, iş saatı, sosial şəbəkə, qiymət və digər biznes məlumatları
@@ -65,11 +80,11 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="font-display text-lg font-bold">Əlaqə və düzəliş</h2>
+          <h2 className="font-display text-lg font-bold">Əlaqə, düzəliş və məlumatın silinməsi</h2>
           <p className="mt-2 text-muted">
-            GameYer-də klub barədə yanlış və ya köhnə məlumat görürsünüzsə, əlaqə səhifəsində
-            düzəliş üçün hansı məlumatların hazırlanmalı olduğunu və rəsmi müraciət kanalının cari
-            statusunu görə bilərsiniz.
+            GameYer-də klub barədə yanlış və ya köhnə məlumat görürsünüzsə, əlaqə səhifəsindən
+            birbaşa düzəliş göndərə bilərsiniz. Öz müraciətinizdə verdiyiniz əlaqə məlumatının
+            silinməsini istəsəniz GameYer-in rəsmi əlaqə kanallarından müraciət edə bilərsiniz.
           </p>
           <Link href="/elaqe" className="mt-3 inline-flex font-semibold text-primary hover:underline">
             Əlaqə səhifəsinə keç →
