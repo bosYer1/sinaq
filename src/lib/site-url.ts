@@ -9,6 +9,9 @@ export function getSiteUrl(): string {
 
   try {
     const url = new URL(configured);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      return GAMEYER_PRODUCTION_URL;
+    }
     return url.origin;
   } catch {
     return GAMEYER_PRODUCTION_URL;
