@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 interface BadgeProps {
   children: ReactNode;
-  tone?: 'pc' | 'ps' | 'live' | 'neutral' | 'premium';
+  tone?: 'pc' | 'ps' | 'live' | 'neutral' | 'premium' | 'verified';
   className?: string;
 }
 
@@ -13,6 +13,7 @@ const TONE_CLASSES: Record<NonNullable<BadgeProps['tone']>, string> = {
   live: 'bg-live-tint text-live',
   neutral: 'bg-surface-alt text-muted',
   premium: 'bg-warn-tint text-warn',
+  verified: 'bg-primary/10 text-primary',
 };
 
 export function Badge({ children, tone = 'neutral', className }: BadgeProps) {
