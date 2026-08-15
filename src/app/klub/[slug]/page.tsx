@@ -35,7 +35,8 @@ export async function generateMetadata({ params }: ClubPageProps): Promise<Metad
     club.description ??
     `${club.name}${districtName ? ` — ${districtName} rayonunda` : ''} gaming klubu. Qiymət, ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
   const canonical = `/klub/${club.slug}`;
-  const sortedImages = [...club.images].sort((a, b) => a.position - b.position);
+  const images = Array.isArray(club.images) ? club.images : [];
+  const sortedImages = [...images].sort((a, b) => a.position - b.position);
   const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
 
   return {
@@ -67,10 +68,15 @@ export default async function ClubPage({ params }: ClubPageProps) {
   if (!club) notFound();
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bosyer-web.vercel.app';
-  const typeNames = club.type_assignments.map((item) => item.club_type.name);
-  const sortedImages = [...club.images].sort((a, b) => a.position - b.position);
+  const typeAssignments = Array.isArray(club.type_assignments) ? club.type_assignments : [];
+  const openingHours = Array.isArray(club.opening_hours) ? club.opening_hours : [];
+  const images = Array.isArray(club.images) ? club.images : [];
+  const typeNames = typeAssignments
+    .map((item) => item?.club_type?.name)
+    .filter((name): name is string => Boolean(name));
+  const sortedImages = [...images].sort((a, b) => a.position - b.position);
   const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
-  const openingHoursSpecification = club.opening_hours
+  const openingHoursSpecification = openingHours
     .filter(
       (hours) =>
         !hours.is_closed &&
