@@ -5,10 +5,16 @@ import { getSiteUrl } from '@/lib/site-url';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
 export const metadata: Metadata = {
-  title: 'Bakıda PC klubları — qiymətlər, ünvanlar və xəritə',
-  description: 'Bakıda kompüter və gaming klub axtarırsan? PC klublarını qiymət, ünvan, rayon və xəritə məlumatları ilə GameYer-də müqayisə et.',
+  title: 'Bakıda PC və kompüter klubları — qiymətlər və ünvanlar',
+  description: 'Bakıda PC klub, kompüter klubu və internet klub axtarırsan? Gaming məkanlarını qiymət, ünvan, rayon, iş saatları və xəritə ilə GameYer-də müqayisə et.',
   alternates: { canonical: '/bakida-pc-klublari' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-pc-klublari', title: 'Bakıda PC klubları | GameYer', description: 'Bakıdakı PC və kompüter klublarını qiymət, ünvan və xəritə məlumatları ilə müqayisə et.' },
+  openGraph: {
+    type: 'website',
+    locale: 'az_AZ',
+    url: '/bakida-pc-klublari',
+    title: 'Bakıda PC və kompüter klubları | GameYer',
+    description: 'Bakıdakı PC, kompüter və internet klublarını qiymət, ünvan və xəritə məlumatları ilə müqayisə et.',
+  },
 };
 
 export default async function BakuPcClubsPage() {
@@ -30,7 +36,7 @@ export default async function BakuPcClubsPage() {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }} />
     <nav className="mb-5 text-xs text-muted"><Link href="/">GameYer</Link> / Bakıda PC klubları</nav>
     <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda PC və kompüter klubları</h1>
-    <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakıda PC klub, kompüter klubu və gaming klub axtaranlar üçün aktiv məkanları bir yerdə topladıq. Hazırda {clubs.length} PC klubu göstərilir. Klub səhifəsindən ünvanı, xəritəni, iş saatlarını və mövcud olduqda saatlıq qiymətləri yoxlaya bilərsən.</p>
+    <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakıda PC klub, kompüter klubu, internet klub və internet-kafe kimi axtarılan gaming məkanlarını bir yerdə müqayisə et. Hazırda {clubs.length} PC klubu göstərilir. Klub səhifəsindən ünvanı, xəritəni, iş saatlarını və mövcud olduqda saatlıq qiymətləri yoxlaya bilərsən.</p>
     <div className="mt-7"><SeoClubList clubs={clubs} /></div>
     <section className="mt-10 rounded-card border border-border bg-surface p-5">
       <h2 className="font-display text-lg font-bold">PC klubunu necə seçmək olar?</h2>

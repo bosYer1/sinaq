@@ -17,24 +17,39 @@ function typeLandingHref(slug: string) {
   return `/tip/${slug}`;
 }
 
+function clubCategory(typeSlugs: string[]) {
+  const hasPc = typeSlugs.includes('pc');
+  const hasPlayStation = typeSlugs.includes('playstation');
+  if (hasPc && hasPlayStation) return 'PC və PlayStation klubu';
+  if (hasPc) return 'PC klubu';
+  if (hasPlayStation) return 'PlayStation klubu';
+  return 'gaming klubu';
+}
+
 export async function generateMetadata({ params }: ClubPageProps): Promise<Metadata> {
   const { slug } = await params;
   const club = await getClubBySlug(slug);
   if (!club) return { title: 'Klub tapılmadı', robots: { index: false, follow: false } };
 
   const districtName = club.district?.name;
-  const description = club.description ?? `${club.name}${districtName ? ` — ${districtName} rayonunda` : ''} gaming klubu. Qiymət, ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
+  const typeSlugs = (club.type_assignments ?? [])
+    .map((item) => item?.club_type?.slug)
+    .filter((value): value is string => Boolean(value));
+  const category = clubCategory(typeSlugs);
+  const title = `${club.name} — ${districtName ? `${districtName} ` : ''}${category}`;
+  const locationText = districtName ? `${districtName} rayonunda` : 'Bakıda';
+  const description = `${club.name} ${locationText} ${category.toLowerCase()}. Ünvan: ${club.address}. Qiymət, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
   const canonical = `/klub/${club.slug}`;
   const images = Array.isArray(club.images) ? club.images : [];
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
   const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
 
   return {
-    title: club.name,
+    title,
     description,
     alternates: { canonical },
-    openGraph: { type: 'website', locale: 'az_AZ', url: canonical, siteName: 'GameYer', title: `${club.name} — GameYer`, description, images: coverImage ? [{ url: coverImage, alt: club.name }] : undefined },
-    twitter: { card: coverImage ? 'summary_large_image' : 'summary', title: `${club.name} — GameYer`, description, images: coverImage ? [coverImage] : undefined },
+    openGraph: { type: 'website', locale: 'az_AZ', url: canonical, siteName: 'GameYer', title: `${title} | GameYer`, description, images: coverImage ? [{ url: coverImage, alt: club.name }] : undefined },
+    twitter: { card: coverImage ? 'summary_large_image' : 'summary', title: `${title} | GameYer`, description, images: coverImage ? [coverImage] : undefined },
   };
 }
 
