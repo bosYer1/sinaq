@@ -9,6 +9,7 @@ const displayFont = Space_Grotesk({ subsets: ['latin'], variable: '--font-displa
 const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 
 const siteUrl = getSiteUrl();
+const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
 
 export const viewport: Viewport = {
   themeColor: '#7C5CFC',
@@ -25,6 +26,7 @@ export const metadata: Metadata = {
     'Bakıdakı PC gaming və PlayStation klublarını xəritə üzərində tap, rayon, tip və qiymətə görə filtr et.',
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
+  verification: googleVerification ? { google: googleVerification } : undefined,
   appleWebApp: {
     capable: true,
     title: 'GameYer',
@@ -41,7 +43,7 @@ export const metadata: Metadata = {
       'Bakıdakı PC gaming və PlayStation klublarını xəritə üzərində tap, rayon, tip və qiymətə görə filtr et.',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'GameYer — Bakıda gaming klubu tap',
     description: 'PC və PlayStation klublarını xəritə və filtrlərlə tap.',
   },
@@ -63,13 +65,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
 
             <nav className="flex items-center gap-3 text-[11px] font-medium text-muted sm:gap-4 sm:text-xs" aria-label="Əsas keçidlər">
+              <Link href="/rayon" className="hidden transition hover:text-ink sm:inline">Rayonlar</Link>
+              <Link href="/tip" className="hidden transition hover:text-ink sm:inline">PC / PS</Link>
               <Link href="/elaqe" className="transition hover:text-ink">Əlaqə</Link>
-              <Link href="/mexfilik" className="hidden transition hover:text-ink sm:inline">Məxfilik</Link>
-              <span className="hidden text-muted lg:inline">Bakıda gaming klubu tap</span>
+              <Link href="/mexfilik" className="hidden transition hover:text-ink md:inline">Məxfilik</Link>
             </nav>
           </div>
         </header>
         <main>{children}</main>
+        <footer className="border-t border-border bg-surface">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-5 text-xs text-muted sm:px-6">
+            <span>© GameYer</span>
+            <Link href="/rayon" className="hover:text-ink">Rayonlar üzrə klublar</Link>
+            <Link href="/tip/pc" className="hover:text-ink">PC klubları</Link>
+            <Link href="/tip/playstation" className="hover:text-ink">PlayStation klubları</Link>
+            <Link href="/elaqe" className="hover:text-ink">Əlaqə</Link>
+          </div>
+        </footer>
       </body>
     </html>
   );
