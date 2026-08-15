@@ -67,12 +67,12 @@ export async function submitClubSubmission(formData: FormData) {
     clubId = data?.id ?? null;
   }
 
-  const { error } = await (supabase as any).from('club_submissions').insert({
-    kind,
+  const { error } = await supabase.from('club_submissions').insert({
+    kind: kind as 'correction' | 'new_club' | 'owner_claim',
     club_id: clubId,
     club_name: clubName,
     message,
-    contact_type: contactType,
+    contact_type: contactType as 'instagram' | 'phone' | 'email',
     contact_value: contactValue,
     status: 'pending',
     reviewed_at: null,
