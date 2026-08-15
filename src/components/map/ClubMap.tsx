@@ -148,13 +148,20 @@ export function ClubMap({
   const onSelectClubRef = useRef(onSelectClub);
   const userMarkerRef = useRef<L.CircleMarker | null>(null);
 
-  onSelectClubRef.current = onSelectClub;
-  activeClubIdRef.current = activeClubId ?? null;
+  useEffect(() => {
+    onSelectClubRef.current = onSelectClub;
+  }, [onSelectClub]);
+
+  useEffect(() => {
+    activeClubIdRef.current = activeClubId ?? null;
+  }, [activeClubId]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container || mapRef.current) return;
 
+    const markerRegistry = markerRefs.current;
+    const clubRegistry = clubRefs.current;
     const map = L.map(container, {
       center: [40.4093, 49.8671],
       zoom: 12,
@@ -179,8 +186,8 @@ export function ClubMap({
       window.clearTimeout(timer);
       observer?.disconnect();
       map.remove();
-      markerRefs.current.clear();
-      clubRefs.current.clear();
+      markerRegistry.clear();
+      clubRegistry.clear();
       mapRef.current = null;
       markerLayerRef.current = null;
       userMarkerRef.current = null;
