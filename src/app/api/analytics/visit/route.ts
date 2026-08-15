@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 const SESSION_RE = /^[A-Za-z0-9_-]{8,64}$/;
+const HOST_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?::\d{1,5})?$/i;
 
 function isSameOrigin(request: Request) {
   const origin = request.headers.get('origin');
@@ -37,7 +38,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  const { sessionId, path } = body as { sessionId?: unknown; path?: unknown };
+  const { sessionId, path, referrerHost } = body as {
+    sessionId?: unknown;
+    path?: unknown;
+    referrerHost?: unknown;
+  };
+
   if (
     typeof sessionId !== 'string' ||
     !SESSION_RE.test(sessionId) ||
@@ -46,27 +52,26 @@ export async function POST(request: Request) {
     path.length > 300 ||
     !path.startsWith('/') ||
     path.startsWith('/admin') ||
-    path.startsWith('/api')
+    path.startsWith('/api') ||
+    (referrerHost != null && (
+      typeof referrerHost !== 'string' ||
+      referrerHost.length > 255 ||
+      !HOST_RE.test(referrerHost)
+    ))
   ) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  let referrerHost: string | null = null;
-  const referer = request.headers.get('referer');
-  if (referer) {
-    try {
-      const host = new URL(referer).host;
-      if (host && host !== new URL(request.url).host) referrerHost = host.slice(0, 255);
-    } catch {
-      referrerHost = null;
-    }
-  }
+  const requestHost = new URL(request.url).host;
+  const cleanReferrer = typeof referrerHost === 'string' && referrerHost !== requestHost
+    ? referrerHost.toLowerCase()
+    : null;
 
   const supabase = await createClient();
   const { error } = await supabase.from('page_views').insert({
     session_id: sessionId,
     path,
-    referrer_host: referrerHost,
+    referrer_host: cleanReferrer,
   });
 
   if (error) {
