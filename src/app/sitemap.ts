@@ -18,6 +18,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/bakida-24-saat-gaming-klublari`, changeFrequency: 'weekly', priority: 0.88 },
     { url: `${baseUrl}/rayon`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/tip`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/haqqimizda`, changeFrequency: 'monthly', priority: 0.62 },
+    { url: `${baseUrl}/melumat-metodologiyasi`, changeFrequency: 'monthly', priority: 0.58 },
     { url: `${baseUrl}/klub-sahibi`, changeFrequency: 'monthly', priority: 0.55 },
     { url: `${baseUrl}/elaqe`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${baseUrl}/mexfilik`, changeFrequency: 'yearly', priority: 0.2 },
