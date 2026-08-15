@@ -57,10 +57,10 @@
 - [x] Analytics trafik mənbələri: Direct / Google / Instagram / Facebook / TikTok və digər hostname-lər
 - [x] Analytics RPC `SECURITY INVOKER`; raw page-view SELECT yalnız admin RLS-dən keçir
 - [x] Supabase security advisor tətbiq səviyyəsində harden edilib
-- [ ] Supabase Auth leaked-password protection-u aktivləşdir — yalnız Dashboard/Auth ayarı
+- [ ] Supabase Auth leaked-password protection-u aktivləşdir — yalnız Dashboard/Auth ayarı, launch blocker deyil
 
 ## SEO və indekslənmə
-- [x] Əsas `gameyerr-gameyer.vercel.app` production response artıq `x-robots-tag: noindex` qaytarmır
+- [x] Əsas `gameyerr-gameyer.vercel.app` production response `x-robots-tag: noindex` qaytarmır
 - [x] Canonical metadata production GameYer URL-inə baxır
 - [x] Google verification meta aktivdir
 - [x] Sitemap — bütün aktiv klublar + SEO landing page-lər
@@ -74,7 +74,7 @@
 - [x] Bakıda PlayStation/PS klub landing page-i
 - [x] Bakıda 24 saat gaming klub landing page-i
 - [x] Rayon landing page-ləri
-- [x] Rayon + klub tipi landing page-ləri yalnız kifayət qədər real data olduqda sitemap-a düşür
+- [x] Rayon + klub tipi landing page-ləri kifayət qədər real data olduqda sitemap-a düşür
 - [x] Legacy `/tip/pc` və `/tip/playstation` server-side permanent redirect
 - [x] Klub detail səhifələrindən rayon/tip internal linking
 - [x] Apple touch icon + PWA manifest
@@ -91,50 +91,49 @@
 - [x] Real interyer/klub şəkilləri loqodan ayrıca saxlanılır
 
 ## Data integrity — 60 klub release
-- [x] **60 aktiv real klub**
-- [x] 60/60 unikal slug
-- [x] 60/60 rayon
-- [x] 60/60 ünvan
-- [x] 60/60 ən azı bir klub tipi
-- [x] 41/60 telefon nömrəsi mövcuddur
-- [x] 10/60 rəsmi Instagram URL-i mövcuddur
-- [x] Təsdiqlənən iş saatları əlavə olunub; bilinməyən qrafik uydurulmur
-- [x] PlayerCyberBar qiymətləri rəsmi sayta uyğun düzəldilib
-- [x] Vegas PC + PlayStation tipi rəsmi sayta uyğunlaşdırılıb
-- [x] LaLiga filial ünvan/telefon/Instagram məlumatları rəsmi brend mənbələri ilə yenilənib
-- [x] Duplicate slug = 0
-- [x] Orphan relation = 0
+- [x] Hazır production bazada 30 aktiv klub
+- [x] Əlavə 30 real klub üçün idempotent migration hazırdır: `20260815_add_30_verified_baku_clubs.sql`
+- [x] Mənbə manifesti hazırdır: `docs/CLUB_SOURCE_MANIFEST_2026-08-15.md`
+- [x] Mənbədə olmayan telefon/iş saatı/koordinat uydurulmur
+- [x] Yeni 30 klub üçün unikal slug və ən azı bir klub tipi hazırlanıb
+- [ ] Final release-dən dərhal əvvəl migration production DB-yə tətbiq edilsin
+- [ ] Tətbiqdən sonra aktiv klub sayı `>= 60`, duplicate slug = 0, orphan relation = 0 yoxlanılsın
 
 ## Custom domain — `gameyer.az`
 - [x] Kod custom domainə hazırdır: `NEXT_PUBLIC_SITE_URL` canonical, sitemap, robots, JSON-LD və sosial URL-lərin baza ünvanını idarə edir
 - [x] `gameyer.az` internet axtarışında aktiv/indexlənən sayt kimi görünmür
-- [ ] Domeni registrar-dan əldə et / mülkiyyəti təsdiqlə
-- [ ] Vercel project-ə `gameyer.az` və istəyə görə `www.gameyer.az` əlavə et
-- [ ] DNS Vercel-ə yönəldikdən sonra `NEXT_PUBLIC_SITE_URL=https://gameyer.az` et
-- [ ] Custom domain canlı olduqdan sonra canonical/robots/sitemap/Search Console property-ni bir dəfə yenidən yoxla
+- [ ] Domenin registrar mülkiyyəti — xarici ödəniş tələb edir; tətbiq kodu bunu özü edə bilməz
+- [ ] Domen alındıqda Vercel-ə `gameyer.az` / `www.gameyer.az` əlavə ediləcək və `NEXT_PUBLIC_SITE_URL=https://gameyer.az` ediləcək
 
-> Domain alınana qədər production canonical kimi `https://gameyerr-gameyer.vercel.app` qalmalıdır. Mövcud olmayan domenə canonical vermək olmaz.
+> Domain alınana qədər production canonical `https://gameyerr-gameyer.vercel.app` qalmalıdır. Mövcud olmayan domenə canonical vermək SEO səhvidir.
+
+## Search Console
+- [x] Google verification token metadata-da mövcuddur
+- [x] Ownership təsdiqi daha əvvəl uğurlu tamamlanıb
+- [x] `robots.txt` sitemap ünvanını canonical production host ilə generasiya edir
+- [x] Sitemap klub/rayon/tip/SEO landing route-larını əhatə edir
+- [ ] Custom domain alınarsa ayrıca `gameyer.az` property/canonical yoxlanışı ediləcək
 
 ## Social launch
-- [x] Sayt footer və Organization JSON-LD GameYer Instagram/TikTok handle-lərinə hazırdır
+- [x] Footer və Organization JSON-LD GameYer Instagram/TikTok handle-lərinə hazırdır
 - [x] Admin analytics Instagram/TikTok referrer-lərini ayrıca qruplaşdırır
 - [x] Social preview üçün 1200×630 Open Graph image route var
-- [x] Instagram/TikTok launch mətnləri və UTM planı `SOCIAL_LAUNCH.md`-də saxlanılır
-- [ ] Sosial hesabların öz platformalarında bio/post paylaşılması — hesab daxilində manual əməliyyat
+- [x] Instagram/TikTok launch mətnləri və UTM planı `SOCIAL_LAUNCH.md`-də hazırdır
+- [ ] Sosial hesabların öz platformalarında bio/post paylaşılması xarici hesab write əməliyyatıdır; repo/deploy blocker deyil
 
 ## Final release gate
-- [ ] `final-launch-8-stage` branch üçün GitHub CI tam yaşıl
+- [ ] `final-launch-8-stage` üçün GitHub CI tam yaşıl
+- [ ] +30 klub migration production DB-yə tətbiq olunsun və data integrity yoxlanılsın
 - [ ] Branch `main`-ə merge olunsun
 - [ ] **Yalnız bir** production deployment başlasın
 - [ ] Deployment `READY` olsun
 - [ ] `/api/health` = 200 və DB = `ok`
 - [ ] `/robots.txt` və `/sitemap.xml` = 200
-- [ ] Sitemap yeni 60 klub datasını əhatə etsin
+- [ ] Sitemap 60+ klub datasını əhatə etsin
 - [ ] Homepage və representative detail canonical eyni final domainə baxsın
 - [ ] Production-da `x-robots-tag: noindex` olmasın
-- [ ] OpenGraph/Twitter image final production domainindən gəlsin, preview alias-dan yox
-- [ ] LaLiga logo + logo-suz klub monogram fallback smoke-test
-- [ ] Mobil şəkilsiz hero və PC/PlayStation badge smoke-test
+- [ ] OpenGraph/Twitter image final production domainindən gəlsin
+- [ ] Logo fallback və mobil şəkilsiz hero smoke-test
 - [ ] `/admin/statistika` authentication ilə qorunsun və source analytics UI mövcud olsun
 
 ## Launch blocker sayılmayan qəsdən boş məlumatlar
@@ -142,3 +141,5 @@
 - Mənbədə tam iş qrafiki görünməyən klublar
 - Təsdiqlənməyən qiymətlər
 - Klub sahiblərindən/rəsmi mənbədən hələ alınmayan interyer şəkilləri
+- Ödəniş tələb edən `gameyer.az` registrar əməliyyatı
+- Instagram/TikTok hesabı daxilində faktiki post/bio write əməliyyatı
