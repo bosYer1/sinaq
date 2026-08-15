@@ -1,3 +1,4 @@
+import { ClubImageUploader } from '@/components/admin/ClubImageUploader';
 import type {
   ClubOpeningHours,
   ClubType,
@@ -91,14 +92,6 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
     (club?.opening_hours ?? []).map((item) => [item.day_of_week, item])
   );
   const hasHours = (club?.opening_hours ?? []).length > 0;
-
-  const imageUrls = [...(club?.images ?? [])]
-    .sort((a, b) => {
-      if (a.is_cover !== b.is_cover) return a.is_cover ? -1 : 1;
-      return a.position - b.position;
-    })
-    .map((image) => image.url)
-    .join('\n');
 
   const inputClass =
     'mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#7C5CFC] focus:ring-2 focus:ring-[#7C5CFC]/10';
@@ -201,23 +194,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-semibold">Şəkillər</h2>
-        <p className="mt-1 text-xs text-gray-500">JPG, PNG və WEBP yükləyə bilərsən. Hər fayl maksimum 5 MB, bir dəfəyə maksimum 8 şəkil. İlk şəkil cover olacaq.</p>
-        <label className="mt-4 block text-sm font-medium">
-          Yeni şəkillər yüklə
-          <input
-            type="file"
-            name="image_files"
-            multiple
-            accept="image/jpeg,image/png,image/webp"
-            className="mt-2 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-          />
-        </label>
-        <details className="mt-4">
-          <summary className="cursor-pointer text-xs font-medium text-gray-600">Mövcud Storage URL-lərini idarə et</summary>
-          <p className="mt-2 text-xs text-gray-500">Bu sahə əsasən mövcud şəkilləri silmək və ya sıralamaq üçündür. Yalnız GameYer Supabase Storage URL-ləri qəbul edilir.</p>
-          <textarea name="image_urls" rows={6} defaultValue={imageUrls} placeholder={'https://...\nhttps://...'} className={textareaClass} />
-        </details>
+        <ClubImageUploader clubId={club?.id} images={club?.images ?? []} />
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
