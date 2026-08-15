@@ -20,7 +20,7 @@ jobs:
       NEXT_TELEMETRY_DISABLED: '1'
       NEXT_PUBLIC_SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ZRyHR5Qj2LmbCZVsKTBZ4Q_eRByoSYf
-      NEXT_PUBLIC_SITE_URL: https://bosyer-web.vercel.app
+      NEXT_PUBLIC_SITE_URL: https://gameyerr-gameyer.vercel.app
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -60,9 +60,13 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent http://127.0.0.1:3000/ > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/rayon > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/tip > /dev/null
           curl --fail --silent http://127.0.0.1:3000/api/health | grep '"ok":true' > /dev/null
           curl --fail --silent http://127.0.0.1:3000/robots.txt | grep 'Disallow: /admin' > /dev/null
           curl --fail --silent http://127.0.0.1:3000/sitemap.xml > /tmp/sitemap.xml
+          grep '/rayon/' /tmp/sitemap.xml > /dev/null
+          grep '/tip/' /tmp/sitemap.xml > /dev/null
           curl --fail --silent http://127.0.0.1:3000/manifest.webmanifest > /dev/null
           curl --fail --silent http://127.0.0.1:3000/pwa-icon/192 > /dev/null
           curl --fail --silent http://127.0.0.1:3000/pwa-icon/512 > /dev/null
@@ -77,7 +81,7 @@ jobs:
           (async () => {
             const xml = fs.readFileSync('/tmp/sitemap.xml', 'utf8');
             const paths = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => new URL(match[1]).pathname);
-            if (paths.length < 33) throw new Error(`Expected at least 33 sitemap URLs, got ${paths.length}`);
+            if (paths.length < 35) throw new Error(`Expected at least 35 sitemap URLs, got ${paths.length}`);
             for (const path of paths) {
               const response = await fetch(`http://127.0.0.1:3000${path}`);
               if (!response.ok) throw new Error(`${path} returned ${response.status}`);
