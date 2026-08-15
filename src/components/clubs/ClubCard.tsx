@@ -19,12 +19,20 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(
   function ClubCard({ club, active, onMouseEnter }, ref) {
     const cover = club.images.find((image) => image.is_cover) ?? club.images[0];
     const hasHours = club.opening_hours.length > 0;
-    const [openNow, setOpenNow] = useState(false);
-    const [premiumActive, setPremiumActive] = useState(false);
+    const [openNow, setOpenNow] = useState(() =>
+      hasHours ? isClubOpenNow(club.opening_hours) : false
+    );
+    const [premiumActive, setPremiumActive] = useState(() => isPremiumActive(club));
 
     useEffect(() => {
-      setOpenNow(hasHours ? isClubOpenNow(club.opening_hours) : false);
-      setPremiumActive(isPremiumActive(club));
+      const refreshLiveState = () => {
+        setOpenNow(hasHours ? isClubOpenNow(club.opening_hours) : false);
+        setPremiumActive(isPremiumActive(club));
+      };
+
+      refreshLiveState();
+      const timer = window.setInterval(refreshLiveState, 60_000);
+      return () => window.clearInterval(timer);
     }, [club, hasHours]);
 
     const statusLabel = !hasHours ? 'İş saatı məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
