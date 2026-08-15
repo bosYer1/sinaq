@@ -1,0 +1,1 @@
+drop policy if exists "Authenticated users can insert clubs" on public.clubs;
