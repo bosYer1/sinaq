@@ -11,10 +11,13 @@
 - [x] GitHub Actions production build + TypeScript check
 - [x] GitHub Actions lokal production smoke-test
 - [x] Smoke-test sitemap-dəki bütün public route-ları yoxlayır
-- [x] `/api/health` endpoint
+- [x] `/api/health` endpoint — yüngül DB probe, `no-store`, `noindex`, minimal response
 - [x] 404, loading və error boundaries
 - [x] Klub kartından detail route-a native navigation
 - [x] Client runtime error telemetry + same-origin/body-size hardening
+- [x] 26 production migration versiyası repo manifesti ilə CI-da yoxlanılır
+- [x] Çatışmayan historical migration-lar production history-dən bərpa olunub
+- [x] Empty-project disaster recovery üçün core schema bootstrap sənədləşdirilib
 
 ## Mobil UX
 - [x] `100dvh` əsas layout
@@ -44,7 +47,10 @@
 - [x] Slug / Instagram / premium DB constraint-ləri
 - [x] Premium müddəti Bakı vaxtı ↔ UTC düzgün çevrilir
 - [x] `pg_trgm` public schema-dan `extensions` schema-ya köçürülüb
-- [x] HSTS, frame deny, nosniff, referrer və permissions security headers
+- [x] HSTS, CSP, frame deny, nosniff, referrer və permissions security headers
+- [x] Public submission honeypot + format validation + DB rate-limit
+- [x] Submission rate-limit eyni contact üzrə transaction lock ilə concurrency-safe edilib
+- [x] Supabase security advisor: leaked-password protection xaric əlavə security warning yoxdur
 - [ ] Supabase Auth leaked-password protection aktivləşdir — Dashboard/Auth təhlükəsizlik ayarı (connector-da write endpoint yoxdur)
 
 ## SEO və public səth
@@ -78,13 +84,13 @@
 - 30 klubun real şəkilləri; UI branded/type-aware fallback göstərir
 
 ## Production status
-- [x] Vercel build-rate-limit açılıb
-- [x] `main` production deploy yenidən işləyir
-- [x] Production `/api/health` = 200 və DB = `ok`
-- [x] Production sitemap / robots / representative detail route smoke-test
+- [ ] Vercel build-rate-limit açılsın — hazırda `gameyerr` və `gameyer` check-ləri `build-rate-limit` səbəbilə failure-dır
+- [ ] Son `main` commit production-a deploy olunsun
+- [ ] Son `main` deploy-dan sonra production `/api/health` = 200 və DB = `ok` yenidən təsdiqlənsin
+- [ ] Son `main` deploy-dan sonra sitemap / robots / representative detail route smoke-test yenidən keçirilsin
 
 ## Public linki paylaşmazdan əvvəl qalan manual addımlar
 1. Supabase Dashboard → Auth təhlükəsizlik ayarından leaked-password protection-u aktivləşdir.
-2. Son production commit CI-də dependency audit + build + bütün route smoke-test mərhələlərini yaşıl keçsin.
+2. Vercel build-rate-limit açıldıqdan sonra son `main` commit-i production-a deploy et və health/sitemap/robots/detail smoke-testlərini yenidən keçir.
 3. Real iPhone Safari-də: Siyahı → klub detail → geri; Xəritə → marker → Kluba bax; Google Maps CTA; lokasiya düyməsi axınını bir dəfə yoxla.
 4. `gameyer.az` alınarsa Vercel project-ə bağla və `NEXT_PUBLIC_SITE_URL=https://gameyer.az` et; sonra canonical/sitemap/robots hostunu yoxla. Custom domain ilkin public launch üçün məcburi deyil.
