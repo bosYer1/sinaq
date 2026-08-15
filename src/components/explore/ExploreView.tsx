@@ -6,6 +6,7 @@ import { ClubList } from '@/components/clubs/ClubList';
 import { MapWrapper } from '@/components/map/MapWrapper';
 import { MapErrorBoundary } from '@/components/map/MapErrorBoundary';
 import { useUserLocation } from '@/hooks/useUserLocation';
+import { useFilters } from '@/hooks/useFilters';
 import { formatDistance, haversineDistanceKm } from '@/lib/geo';
 
 interface ExploreViewProps {
@@ -16,6 +17,7 @@ interface ExploreViewProps {
 
 export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const { location, status, requestLocation } = useUserLocation();
+  const { clearAll, hasActiveFilters } = useFilters();
   const [sortByDistance, setSortByDistance] = useState(false);
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
@@ -99,21 +101,21 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             : 'Yaxınlığıma görə';
 
   const mapLocationLabel = status === 'loading'
-    ? 'Konum alınır...'
+    ? 'Lokasiya alınır...'
     : status === 'denied'
-      ? 'Konuma icazə ver'
+      ? 'Lokasiyaya icazə ver'
       : status === 'unavailable'
-        ? 'Konumu yenilə'
+        ? 'Lokasiyanı yenilə'
         : status === 'unsupported'
-          ? 'Konum dəstəklənmir'
+          ? 'Lokasiya dəstəklənmir'
           : location
-            ? 'Mənim konumum'
+            ? 'Mənim lokasiyam'
             : 'Yaxın klublar';
 
   const locationMessage = status === 'denied'
     ? 'Yaxın klubları görmək üçün brauzer ayarlarında GameYer üçün lokasiya icazəsini aktiv et.'
     : status === 'unavailable'
-      ? 'Konum alınmadı. GPS və internet bağlantısını yoxlayıb yenidən cəhd et.'
+      ? 'Lokasiya alınmadı. GPS və internet bağlantısını yoxlayıb yenidən cəhd et.'
       : status === 'unsupported'
         ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
         : null;
@@ -139,7 +141,14 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
           </div>
         </div>
         {locationMessage ? <div role="status" className="mb-3 rounded-control border border-warn/30 bg-warn-tint px-3 py-2 text-xs leading-5 text-ink">{locationMessage}</div> : null}
-        <ClubList clubs={clubsWithDistance} activeClubId={activeClubId} onHoverClub={handleHoverCard} cardRefs={cardRefs} searchActive={searchActive} />
+        <ClubList
+          clubs={clubsWithDistance}
+          activeClubId={activeClubId}
+          onHoverClub={handleHoverCard}
+          cardRefs={cardRefs}
+          searchActive={searchActive}
+          onClearFilters={hasActiveFilters ? clearAll : undefined}
+        />
       </section>
 
       <section className={`relative min-h-0 flex-1 bg-surface-alt p-2.5 sm:p-3 lg:bg-bg lg:p-3 lg:pl-0 ${view === 'map' ? 'block' : 'hidden'} lg:block`}>
@@ -157,8 +166,8 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 onClick={() => void handleMapLocation()}
                 disabled={status === 'loading' || status === 'unsupported'}
                 className="inline-flex h-11 shrink-0 items-center gap-2 rounded-control border border-border-strong bg-surface/95 px-3 text-xs font-semibold text-ink shadow-card backdrop-blur transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5 sm:text-sm"
-                title={status === 'denied' ? 'Brauzer ayarlarından lokasiya icazəsini aktiv et.' : 'Konumunu göstər və sənə yaxın klubları tap.'}
-                aria-label="Konumumu xəritədə göstər və yaxın klubları tap"
+                title={status === 'denied' ? 'Brauzer ayarlarından lokasiya icazəsini aktiv et.' : 'Lokasiyanı göstər və sənə yaxın klubları tap.'}
+                aria-label="Lokasiyamı xəritədə göstər və yaxın klubları tap"
               >
                 <span aria-hidden="true" className="text-base">⌖</span>
                 {mapLocationLabel}
