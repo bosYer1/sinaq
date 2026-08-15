@@ -25,6 +25,10 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
   const params = await searchParams;
   const selectedClub = params.club?.trim().slice(0, 120) || null;
   const selectedSlug = params.slug?.trim().slice(0, 120) || null;
+  const ownerParams = new URLSearchParams();
+  if (selectedClub) ownerParams.set('club', selectedClub);
+  if (selectedSlug) ownerParams.set('slug', selectedSlug);
+  const ownerHref = ownerParams.size > 0 ? `/klub-sahibi?${ownerParams.toString()}` : '/klub-sahibi';
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
@@ -72,35 +76,30 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
         </section>
       </div>
 
-      <section className="mt-6 rounded-xl border border-border bg-surface p-5 shadow-card">
+      <section className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-card">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">Klub sahibləri üçün</p>
             <h2 className="mt-1 font-display text-lg font-bold text-ink">Klub məlumatını təsdiqlə</h2>
           </div>
-          <span className="rounded-full bg-surface-alt px-3 py-1 text-xs font-semibold text-muted">Ödənişsiz</span>
+          <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold text-muted">Ödənişsiz</span>
         </div>
         <p className="mt-3 text-sm leading-6 text-muted">
-          Klubun sahibi və ya rəsmi nümayəndəsisinizsə, GameYer-dəki məlumatların sizə aid olduğunu
-          təsdiqləmək üçün rəsmi klub hesabından bizə yazın. Təsdiqdən sonra düzəlişlər rəsmi mənbə
-          kimi prioritet yoxlanılır.
+          Klubun sahibi və ya rəsmi nümayəndəsisinizsə, ayrıca klub sahibi təsdiq axınından istifadə edin.
+          {selectedClub ? ` ${selectedClub} üçün seçilmiş klub konteksti avtomatik saxlanılacaq.` : ''}
         </p>
-        <ol className="mt-4 space-y-2 text-sm leading-6 text-ink">
-          <li><span className="font-semibold">1.</span> Klubun adını və GameYer linkini göndərin.</li>
-          <li><span className="font-semibold">2.</span> Rəsmi Instagram hesabından və ya klubun açıq əlaqə nömrəsindən müraciət edin.</li>
-          <li><span className="font-semibold">3.</span> Dəyişməli məlumatları ayrıca qeyd edin: qiymət, iş saatı, telefon, ünvan və şəkillər.</li>
-        </ol>
-        <p className="mt-4 text-xs leading-5 text-muted">
-          GameYer heç vaxt şifrə və ya hesab giriş məlumatı istəmir. Təsdiq yalnız klubla əlaqənin
-          həqiqiliyini yoxlamaq üçündür.
-        </p>
+        <Link
+          href={ownerHref}
+          className="mt-4 inline-flex rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark"
+        >
+          Klub sahibi təsdiqinə keç
+        </Link>
       </section>
 
       <div className="mt-6 rounded-xl border border-border bg-surface-alt p-5">
         <h2 className="font-display text-base font-bold text-ink">Rəsmi müraciət kanalları</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Klub məlumatında səhv, yeni klub təklifi və ya klub sahibinin təsdiq müraciəti üçün
-          GameYer-in rəsmi sosial hesablarına yaza bilərsiniz.
+          Klub məlumatında səhv və ya yeni klub təklifi üçün GameYer-in rəsmi sosial hesablarına yaza bilərsiniz.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <a
