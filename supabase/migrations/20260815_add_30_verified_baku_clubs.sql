@@ -68,3 +68,27 @@ where not exists (
   select 1 from club_opening_hours h
   where h.club_id = c.id and h.day_of_week = d.day
 );
+
+-- Recovery guard: if clubs already existed before this migration, guarantee a type assignment.
+insert into club_type_assignments (club_id, club_type_id)
+select c.id, ct.id
+from clubs c
+join club_types ct on ct.slug = case
+  when c.slug in (
+    '77-playstation-game-room','fifa-playzone','fora-playstation-hazi-aslanov',
+    'maracana-game-club','playstation-mireli-seyidov','playstation-club-9qgv',
+    'ps-playstation-club-20-yanvar','psg-playstation-club','vegas-yeni-gunesli'
+  ) then 'playstation'
+  else 'pc'
+end
+where c.slug in (
+  '05-oyun-zali','77-playstation-game-room','bunker-racing-bar','derbi-game-club',
+  'fifa-playzone','fora-playstation-hazi-aslanov','game-mania','game-zone-xudadat',
+  'game-zone-107','internet-club-kunanbayev','internet-club-infiniti','m3-gaming-club',
+  'maracana-game-club','nil-gaming-club','nova-bizon-cyber','playstation-mireli-seyidov',
+  'playstation-club-9qgv','prime-cyber-club','ps-playstation-club-20-yanvar',
+  'psg-playstation-club','reburn-gaming','vegas-yeni-gunesli'
+)
+and not exists (
+  select 1 from club_type_assignments a where a.club_id = c.id and a.club_type_id = ct.id
+);
