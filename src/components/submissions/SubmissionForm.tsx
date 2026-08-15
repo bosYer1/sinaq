@@ -1,4 +1,5 @@
 import { submitClubSubmission } from '@/app/submissions/actions';
+import { SubmissionSubmitButton } from '@/components/submissions/SubmissionSubmitButton';
 
 type SubmissionKind = 'correction' | 'new_club' | 'owner_claim';
 
@@ -81,12 +82,7 @@ export function SubmissionForm({ kind, clubName, clubSlug, returnTo, submitLabel
         Müraciət yalnız məlumatın yoxlanması və sizinlə əlaqə üçün istifadə olunur. Şifrə, SMS kodu və ya hesab giriş məlumatı göndərməyin.
       </p>
 
-      <button
-        type="submit"
-        className="inline-flex h-11 items-center justify-center rounded-control bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-dark"
-      >
-        {submitLabel}
-      </button>
+      <SubmissionSubmitButton label={submitLabel} />
     </form>
   );
 }
