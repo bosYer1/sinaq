@@ -84,14 +84,17 @@ jobs:
           grep '"database":"ok"' /tmp/health.json > /dev/null
           ! grep -E 'activeClubs|responseMs|timestamp' /tmp/health.json > /dev/null
 
-          curl --fail --silent http://127.0.0.1:3000/robots.txt | grep 'Disallow: /admin' > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/robots.txt > /tmp/robots.txt
+          grep 'Disallow: /api/' /tmp/robots.txt > /dev/null
+          ! grep 'Disallow: /admin' /tmp/robots.txt > /dev/null
           curl --fail --silent http://127.0.0.1:3000/manifest.webmanifest > /dev/null
           curl --fail --silent http://127.0.0.1:3000/pwa-icon/192 > /dev/null
           curl --fail --silent http://127.0.0.1:3000/pwa-icon/512 > /dev/null
           curl --fail --silent http://127.0.0.1:3000/opengraph-image > /dev/null
           curl --fail --silent http://127.0.0.1:3000/apple-icon > /dev/null
 
-          curl --fail --silent http://127.0.0.1:3000/admin/login > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/admin/login > /tmp/admin-login.html
+          grep -E '<meta[^>]+name="robots"[^>]+content="noindex, nofollow, noarchive"' /tmp/admin-login.html > /dev/null
           curl --silent --dump-header /tmp/admin-headers --output /dev/null http://127.0.0.1:3000/admin
           grep -Ei '^location: .*\/admin\/login' /tmp/admin-headers > /dev/null
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/this-route-must-not-exist)" = "404"
