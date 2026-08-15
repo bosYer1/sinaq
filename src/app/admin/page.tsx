@@ -18,6 +18,7 @@ export default async function AdminPage() {
   let totalClubs = 0;
   let activeClubs = 0;
   let premiumClubs = 0;
+  let verifiedClubs = 0;
   let pendingSubmissions = 0;
   let missingPhone = 0;
   let missingDescription = 0;
@@ -33,6 +34,7 @@ export default async function AdminPage() {
     totalResult,
     activeResult,
     premiumResult,
+    verifiedResult,
     pendingSubmissionsResult,
     missingPhoneResult,
     activeRowsResult,
@@ -48,6 +50,7 @@ export default async function AdminPage() {
       .select('*', { count: 'exact', head: true })
       .eq('is_premium', true)
       .gt('premium_expires_at', nowIso),
+    supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_verified', true),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
     supabase.from('clubs').select('id,description,instagram_url,latitude,longitude').eq('is_active', true),
@@ -60,6 +63,7 @@ export default async function AdminPage() {
   totalClubs = totalResult.count ?? 0;
   activeClubs = activeResult.count ?? 0;
   premiumClubs = premiumResult.count ?? 0;
+  verifiedClubs = verifiedResult.count ?? 0;
   pendingSubmissions = pendingSubmissionsResult.count ?? 0;
   missingPhone = missingPhoneResult.count ?? 0;
 
@@ -108,11 +112,12 @@ export default async function AdminPage() {
         </Link>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Ümumi klub</p><p className="mt-2 text-4xl font-bold">{totalClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv</p><p className="mt-2 text-4xl font-bold">{activeClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv premium</p><p className="mt-2 text-4xl font-bold">{premiumClubs}</p></div>
-        <Link href="/admin/muracietler" className="rounded-xl border border-gray-200 bg-white p-6 transition hover:border-[#7C5CFC]/50 hover:bg-[#7C5CFC]/5">
+        <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Təsdiqlənmiş</p><p className="mt-2 text-4xl font-bold">{verifiedClubs}</p></div>
+        <Link href="/admin/muracietler?status=pending" className="rounded-xl border border-gray-200 bg-white p-6 transition hover:border-[#7C5CFC]/50 hover:bg-[#7C5CFC]/5">
           <p className="text-sm text-gray-500">Gözləyən müraciət</p>
           <div className="mt-2 flex items-end justify-between gap-3"><p className="text-4xl font-bold">{pendingSubmissions}</p><span className="text-sm font-semibold text-[#6A47F0]">Bax →</span></div>
         </Link>
