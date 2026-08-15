@@ -9,6 +9,12 @@ interface SitemapClub {
   type_assignments: Array<{ club_type: { slug: string } | null }>;
 }
 
+function newerIso(current: string | null, candidate: string | null) {
+  if (!candidate) return current;
+  if (!current) return candidate;
+  return Date.parse(candidate) > Date.parse(current) ? candidate : current;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
   const entries: MetadataRoute.Sitemap = [
@@ -42,8 +48,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const clubs = (data ?? []) as unknown as SitemapClub[];
   const activeDistricts = new Set<string>();
   const comboCounts = new Map<string, number>();
+  const districtLatest = new Map<string, string | null>();
+  const comboLatest = new Map<string, string | null>();
+  const typeLatest = new Map<string, string | null>();
+  let overallLatest: string | null = null;
 
   for (const club of clubs) {
+    overallLatest = newerIso(overallLatest, club.updated_at);
     entries.push({
       url: `${baseUrl}/klub/${club.slug}`,
       ...(club.updated_at ? { lastModified: new Date(club.updated_at) } : {}),
@@ -52,22 +63,51 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
 
     if (!club.district?.slug) continue;
-    activeDistricts.add(club.district.slug);
+    const districtSlug = club.district.slug;
+    activeDistricts.add(districtSlug);
+    districtLatest.set(districtSlug, newerIso(districtLatest.get(districtSlug) ?? null, club.updated_at));
+
     for (const assignment of club.type_assignments ?? []) {
       const typeSlug = assignment.club_type?.slug;
       if (typeSlug !== 'pc' && typeSlug !== 'playstation') continue;
-      const key = `${club.district.slug}/${typeSlug}`;
+      typeLatest.set(typeSlug, newerIso(typeLatest.get(typeSlug) ?? null, club.updated_at));
+      const key = `${districtSlug}/${typeSlug}`;
       comboCounts.set(key, (comboCounts.get(key) ?? 0) + 1);
+      comboLatest.set(key, newerIso(comboLatest.get(key) ?? null, club.updated_at));
     }
   }
 
+  const applyLatest = (url: string, latest: string | null) => {
+    if (!latest) return;
+    const entry = entries.find((item) => item.url === url);
+    if (entry) entry.lastModified = new Date(latest);
+  };
+
+  applyLatest(baseUrl, overallLatest);
+  applyLatest(`${baseUrl}/rayon`, overallLatest);
+  applyLatest(`${baseUrl}/tip`, overallLatest);
+  applyLatest(`${baseUrl}/bakida-pc-klublari`, typeLatest.get('pc') ?? null);
+  applyLatest(`${baseUrl}/bakida-playstation-klublari`, typeLatest.get('playstation') ?? null);
+
   for (const districtSlug of activeDistricts) {
-    entries.push({ url: `${baseUrl}/rayon/${districtSlug}`, changeFrequency: 'weekly', priority: 0.75 });
+    const latest = districtLatest.get(districtSlug) ?? null;
+    entries.push({
+      url: `${baseUrl}/rayon/${districtSlug}`,
+      ...(latest ? { lastModified: new Date(latest) } : {}),
+      changeFrequency: 'weekly',
+      priority: 0.75,
+    });
   }
 
   for (const [key, count] of comboCounts) {
     if (count < 2) continue;
-    entries.push({ url: `${baseUrl}/rayon/${key}`, changeFrequency: 'weekly', priority: 0.78 });
+    const latest = comboLatest.get(key) ?? null;
+    entries.push({
+      url: `${baseUrl}/rayon/${key}`,
+      ...(latest ? { lastModified: new Date(latest) } : {}),
+      changeFrequency: 'weekly',
+      priority: 0.78,
+    });
   }
 
   return entries;
