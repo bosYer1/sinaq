@@ -42,12 +42,29 @@ export default function ContactPage() {
       </div>
 
       <div className="mt-6 rounded-xl border border-border bg-surface-alt p-5">
-        <h2 className="font-display text-base font-bold text-ink">Rəsmi müraciət kanalı</h2>
+        <h2 className="font-display text-base font-bold text-ink">Rəsmi müraciət kanalları</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
-          GameYer-in rəsmi əlaqə ünvanı ayrıca elan ediləcək. Təhlükəsizlik və spam səbəbilə
-          təsdiqlənməmiş şəxsi e-poçt və ya açıq anonim forma yayımlamırıq. Rəsmi kanal əlavə
-          olunan kimi bu səhifə birbaşa müraciət keçidi ilə yenilənəcək.
+          Klub məlumatında səhv, yeni klub təklifi və ya klub sahibinin düzəliş müraciəti üçün
+          GameYer-in rəsmi sosial hesablarına yaza bilərsiniz.
         </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <a
+            href="https://www.instagram.com/gameyer.az/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
+          >
+            Instagram @gameyer.az
+          </a>
+          <a
+            href="https://www.tiktok.com/@gameyer.az"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
+          >
+            TikTok @gameyer.az
+          </a>
+        </div>
       </div>
 
       <p className="mt-8 text-xs leading-5 text-muted">
