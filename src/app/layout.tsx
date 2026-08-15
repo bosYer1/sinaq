@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import Link from 'next/link';
+import { getSiteUrl } from '@/lib/site-url';
 import './globals.css';
 
 const bodyFont = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
 const displayFont = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
 const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gameyerr-gameyer.vercel.app';
+const siteUrl = getSiteUrl();
 
 export const viewport: Viewport = {
   themeColor: '#7C5CFC',
