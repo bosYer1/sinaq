@@ -12,7 +12,7 @@ interface SitemapClub {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
   const entries: MetadataRoute.Sitemap = [
-    { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
+    { url: baseUrl, changeFrequency: 'daily', priority: 1 },
     { url: `${baseUrl}/bakida-pc-klublari`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/bakida-playstation-klublari`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/rayon`, changeFrequency: 'weekly', priority: 0.8 },
@@ -43,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const club of clubs) {
     entries.push({
       url: `${baseUrl}/klub/${club.slug}`,
-      lastModified: club.updated_at ? new Date(club.updated_at) : new Date(),
+      ...(club.updated_at ? { lastModified: new Date(club.updated_at) } : {}),
       changeFrequency: 'weekly',
       priority: 0.8,
     });
