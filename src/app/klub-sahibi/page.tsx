@@ -21,6 +21,7 @@ interface ClubOwnerPageProps {
     slug?: string;
     sent?: string;
     error?: string;
+    rate?: string;
   }>;
 }
 
@@ -49,6 +50,11 @@ export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps
       {params.sent === '1' ? (
         <div role="status" className="mt-6 rounded-xl border border-live/30 bg-live/10 p-4 text-sm text-ink">
           Təsdiq müraciəti qəbul edildi. Müraciətin klubun rəsmi nümayəndəsindən gəldiyi yoxlanıldıqdan sonra sizinlə əlaqə saxlanılacaq.
+        </div>
+      ) : null}
+      {params.rate === '1' ? (
+        <div role="alert" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Bu əlaqə məlumatından qısa müddətdə çox müraciət göndərilib. Təxminən 15 dəqiqə sonra yenidən cəhd edin.
         </div>
       ) : null}
       {params.error === '1' ? (

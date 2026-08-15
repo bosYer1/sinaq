@@ -21,6 +21,7 @@ interface ContactPageProps {
     slug?: string;
     sent?: string;
     error?: string;
+    rate?: string;
   }>;
 }
 
@@ -50,6 +51,11 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
       {params.sent === '1' ? (
         <div role="status" className="mt-6 rounded-xl border border-live/30 bg-live/10 p-4 text-sm text-ink">
           Müraciət qəbul edildi. Məlumat yoxlanıldıqdan sonra lazım olarsa göstərdiyiniz əlaqə vasitəsilə sizinlə əlaqə saxlanılacaq.
+        </div>
+      ) : null}
+      {params.rate === '1' ? (
+        <div role="alert" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Bu əlaqə məlumatından qısa müddətdə çox müraciət göndərilib. Təxminən 15 dəqiqə sonra yenidən cəhd edin.
         </div>
       ) : null}
       {params.error === '1' ? (

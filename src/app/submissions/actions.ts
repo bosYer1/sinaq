@@ -5,13 +5,14 @@ import { createClient } from '@/lib/supabase/server';
 
 const KINDS = new Set(['correction', 'new_club', 'owner_claim']);
 const CONTACT_TYPES = new Set(['instagram', 'phone', 'email']);
+type SubmissionResult = 'sent' | 'error' | 'rate';
 
 function text(formData: FormData, key: string, max: number) {
   const value = formData.get(key);
   return typeof value === 'string' ? value.trim().slice(0, max) : '';
 }
 
-function resultUrl(formData: FormData, result: 'sent' | 'error') {
+function resultUrl(formData: FormData, result: SubmissionResult) {
   const requested = text(formData, 'return_to', 30);
   const path = requested === '/klub-sahibi' ? '/klub-sahibi' : '/elaqe';
   const params = new URLSearchParams({ [result]: '1' });
@@ -79,6 +80,9 @@ export async function submitClubSubmission(formData: FormData) {
   });
 
   if (error) {
+    if (error.message.includes('Submission rate limit exceeded')) {
+      redirect(resultUrl(formData, 'rate'));
+    }
     console.error('GAMEYER_SUBMISSION_ERROR', error.message);
     redirect(resultUrl(formData, 'error'));
   }
