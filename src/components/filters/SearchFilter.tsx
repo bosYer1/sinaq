@@ -14,10 +14,6 @@ export function SearchFilter() {
   const [value, setValue] = useState(currentQuery);
 
   useEffect(() => {
-    setValue(currentQuery);
-  }, [currentQuery]);
-
-  useEffect(() => {
     const timer = window.setTimeout(() => {
       const nextQuery = value.trim();
       if (nextQuery === currentQuery) return;
