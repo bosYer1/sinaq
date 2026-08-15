@@ -1,29 +1,19 @@
-# GameYer unified admin panel
+# GameYer Admin / Launch qeydləri
 
-GameYer Next.js/Supabase layihəsinin admin hissəsi bir mərkəzi paneldə idarə olunur.
+## Admin
+- Admin route-ları `src/proxy.ts` ilə qorunur.
+- Supabase Auth istifadəçisi `admin_users` cədvəlində olmalıdır.
+- Klub create/edit relation yazmaları atomik RPC ilə saxlanır.
+- Yeni klub üçün koordinat və ən azı bir klub tipi məcburidir.
+- Şəkillər `club-images` bucket-ə yüklənir; JPG/PNG/WEBP, maksimum 5 MB.
+- Premium tarix admin panelində Bakı vaxtı ilə daxil edilir, DB-də UTC instant kimi saxlanır.
 
-Əsas fayllar:
-- `src/app/admin/layout.tsx`
-- `src/app/admin/page.tsx`
-- `src/app/admin/actions.ts`
-- `src/app/admin/klublar/page.tsx`
-- `src/app/admin/klublar/[id]/page.tsx`
-- `src/app/admin/klublar/yeni/page.tsx`
-- `src/components/admin/ClubAdminForm.tsx`
+## Public launch
+- Next.js 16.3.1 + React 19.2.8.
+- `@supabase/ssr` 0.12.4.
+- GitHub CI production dependency audit və `next build` keçirir.
+- Public klub kartları detail route-a native navigation ilə keçir; bu, stale client-router/RSC keçid problemlərindən qoruyur.
+- Xəritə popup-da Google Maps CTA mavi fonda məcburi ağ mətnlə göstərilir.
+- Public relation RLS yalnız aktiv klubların məlumatını anon istifadəçiyə göstərir.
 
-## Cari MVP imkanları
-
-- PC və PlayStation klublarının siyahısı və xəritəsi
-- Rayon, klub tipi və qiymət üzrə filtr
-- İstifadəçinin icazəsi ilə ən yaxın klublara görə sıralama
-- Klub detal səhifəsi, əlaqə və Google Maps marşrutu
-- Admin login və qorunan admin bölməsi
-- Klub yaratma, redaktə, aktiv/premium status idarəsi
-- İş saatları, qiymətlər, tiplər və şəkillərin idarəsi
-- Supabase Storage üzərindən klub şəkilləri
-- Data completeness göstəriciləri
-- Bakı saat qurşağına uyğun açıq/bağlı hesablaması
-
-## Data prinsipi
-
-Real məlumat təsdiqlənməyibsə qiymət, iş saatı, telefon və klub şəkli uydurulmur. Çatışmayan məlumat admin panelində görünür və yalnız təsdiqləndikdən sonra əlavə edilir.
+Qalan əsas xarici blocker Vercel build-rate-limit-dir. Limit açıldıqdan sonra `main` deploy edilərək `/api/health`, list/map, lokasiya, klub detail və admin login smoke-test olunmalıdır.
