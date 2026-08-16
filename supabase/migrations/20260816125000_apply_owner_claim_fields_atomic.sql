@@ -1,3 +1,7 @@
+alter table public.club_submissions
+  add column if not exists applied_fields jsonb not null default '{}'::jsonb,
+  add column if not exists applied_at timestamptz null;
+
 create or replace function public.apply_owner_claim_fields_atomic(
   p_submission_id uuid,
   p_instagram_url text default null,
@@ -16,6 +20,7 @@ declare
   v_type_id uuid;
   v_open_time time;
   v_close_time time;
+  v_applied jsonb := '{}'::jsonb;
 begin
   if not public.is_admin() then
     raise exception 'Admin access required';
@@ -44,6 +49,8 @@ begin
     update public.clubs
     set instagram_url = p_instagram_url
     where id = v_club_id;
+
+    v_applied := v_applied || jsonb_build_object('instagram_url', p_instagram_url);
   end if;
 
   if p_pc_price is not null then
@@ -63,6 +70,8 @@ begin
     values (v_club_id, v_type_id, p_pc_price, null, 'saat')
     on conflict (club_id, club_type_id)
     do update set price_from = excluded.price_from, price_to = null, unit = 'saat';
+
+    v_applied := v_applied || jsonb_build_object('pc_price', p_pc_price);
   end if;
 
   if p_ps_price is not null then
@@ -82,6 +91,8 @@ begin
     values (v_club_id, v_type_id, p_ps_price, null, 'saat')
     on conflict (club_id, club_type_id)
     do update set price_from = excluded.price_from, price_to = null, unit = 'saat';
+
+    v_applied := v_applied || jsonb_build_object('ps_price', p_ps_price);
   end if;
 
   if p_hours is not null then
@@ -107,10 +118,20 @@ begin
       open_time = excluded.open_time,
       close_time = excluded.close_time,
       is_closed = false;
+
+    v_applied := v_applied || jsonb_build_object('hours', p_hours);
+  end if;
+
+  if v_applied = '{}'::jsonb then
+    raise exception 'No owner claim fields selected';
   end if;
 
   update public.club_submissions
-  set status = 'reviewing', reviewed_at = now()
+  set
+    status = 'reviewing',
+    reviewed_at = now(),
+    applied_fields = coalesce(applied_fields, '{}'::jsonb) || v_applied,
+    applied_at = now()
   where id = p_submission_id;
 
   return v_club_id;
