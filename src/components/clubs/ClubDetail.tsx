@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { ClubWithRelations } from '@/types/database';
+import { TrackedClubLink } from '@/components/analytics/TrackedClubLink';
 import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
 import { inferClubTypeSlugs } from '@/lib/clubType';
@@ -72,7 +73,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               </div>
             </div>
           </div>
-          {googleMapsUrl ? <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-11 shrink-0 items-center justify-center rounded-control px-5 text-sm font-semibold no-underline transition hover:opacity-90">Google Maps-də marşrut</a> : null}
+          {googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubSlug={club.slug} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-11 shrink-0 items-center justify-center rounded-control px-5 text-sm font-semibold no-underline transition hover:opacity-90">Google Maps-də marşrut</TrackedClubLink> : null}
         </div>
       </div>
 
@@ -94,10 +95,10 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           <h2 className="font-display text-base font-semibold text-ink">Əlaqə və ünvan</h2>
           <div className="mt-4 space-y-4 text-sm">
             <div><p className="text-xs font-medium uppercase tracking-wide text-muted">Ünvan</p><p className="mt-1 leading-5 text-ink">{club.address || 'Ünvan göstərilməyib'}</p></div>
-            {phoneNumbers.length > 0 ? <div><p className="text-xs font-medium uppercase tracking-wide text-muted">Telefon</p><div className="mt-1 flex flex-col items-start gap-1">{phoneNumbers.map((phone) => <a key={phone} href={`tel:${phone.replace(/[^+\d]/g, '')}`} className="font-medium text-primary hover:underline">{phone}</a>)}</div></div> : null}
-            {club.instagram_url ? <div><p className="text-xs font-medium uppercase tracking-wide text-muted">Instagram</p><a href={club.instagram_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block font-medium text-primary hover:underline">Instagram profilinə bax</a></div> : null}
+            {phoneNumbers.length > 0 ? <div><p className="text-xs font-medium uppercase tracking-wide text-muted">Telefon</p><div className="mt-1 flex flex-col items-start gap-1">{phoneNumbers.map((phone) => <TrackedClubLink key={phone} href={`tel:${phone.replace(/[^+\d]/g, '')}`} eventType="phone_click" clubSlug={club.slug} className="font-medium text-primary hover:underline">{phone}</TrackedClubLink>)}</div></div> : null}
+            {club.instagram_url ? <div><p className="text-xs font-medium uppercase tracking-wide text-muted">Instagram</p><TrackedClubLink href={club.instagram_url} eventType="instagram_click" clubSlug={club.slug} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block font-medium text-primary hover:underline">Instagram profilinə bax</TrackedClubLink></div> : null}
           </div>
-          {googleMapsUrl ? <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="mt-5 flex h-11 w-full items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut qur</a> : null}
+          {googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubSlug={club.slug} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="mt-5 flex h-11 w-full items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut qur</TrackedClubLink> : null}
           <div className="mt-5 border-t border-border pt-4">
             {updatedLabel ? <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p> : null}
             {isVerified ? <p className="mt-2 text-xs leading-5 text-primary">✓ Klubun sahibi və ya rəsmi nümayəndəsi GameYer tərəfindən təsdiqlənib.</p> : null}

@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 type TopPage = { path: string; views: number; visitors: number };
 type DailyPoint = { date: string; views: number; visitors: number };
 type TrafficSource = { source: string; views: number; visitors: number };
+type ActionClub = { club_slug: string; actions: number };
 type AnalyticsData = {
   today_views: number;
   today_visitors: number;
@@ -14,6 +15,8 @@ type AnalyticsData = {
   visitors_7d: number;
   views_30d: number;
   visitors_30d: number;
+  cta_30d: { maps_click: number; phone_click: number; instagram_click: number };
+  top_action_clubs: ActionClub[];
   top_pages: TopPage[];
   top_sources: TrafficSource[];
   daily: DailyPoint[];
@@ -26,6 +29,8 @@ const EMPTY: AnalyticsData = {
   visitors_7d: 0,
   views_30d: 0,
   visitors_30d: 0,
+  cta_30d: { maps_click: 0, phone_click: 0, instagram_click: 0 },
+  top_action_clubs: [],
   top_pages: [],
   top_sources: [],
   daily: [],
@@ -35,10 +40,17 @@ function asNumber(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0;
 }
 
+function objectValue(value: Json | undefined) {
+  return value && !Array.isArray(value) && typeof value === 'object'
+    ? value as Record<string, Json | undefined>
+    : null;
+}
+
 function parseAnalytics(value: Json | null): AnalyticsData {
   if (!value || Array.isArray(value) || typeof value !== 'object') return EMPTY;
 
   const raw = value as Record<string, Json | undefined>;
+  const cta = objectValue(raw.cta_30d);
   const topPages = Array.isArray(raw.top_pages)
     ? raw.top_pages.flatMap((item) => {
         if (!item || Array.isArray(item) || typeof item !== 'object') return [];
@@ -54,6 +66,15 @@ function parseAnalytics(value: Json | null): AnalyticsData {
         const row = item as Record<string, Json | undefined>;
         return typeof row.source === 'string'
           ? [{ source: row.source, views: asNumber(row.views), visitors: asNumber(row.visitors) }]
+          : [];
+      })
+    : [];
+  const topActionClubs = Array.isArray(raw.top_action_clubs)
+    ? raw.top_action_clubs.flatMap((item) => {
+        if (!item || Array.isArray(item) || typeof item !== 'object') return [];
+        const row = item as Record<string, Json | undefined>;
+        return typeof row.club_slug === 'string'
+          ? [{ club_slug: row.club_slug, actions: asNumber(row.actions) }]
           : [];
       })
     : [];
@@ -74,6 +95,12 @@ function parseAnalytics(value: Json | null): AnalyticsData {
     visitors_7d: asNumber(raw.visitors_7d),
     views_30d: asNumber(raw.views_30d),
     visitors_30d: asNumber(raw.visitors_30d),
+    cta_30d: {
+      maps_click: asNumber(cta?.maps_click),
+      phone_click: asNumber(cta?.phone_click),
+      instagram_click: asNumber(cta?.instagram_click),
+    },
+    top_action_clubs: topActionClubs,
     top_pages: topPages,
     top_sources: topSources,
     daily,
@@ -96,13 +123,14 @@ export default async function AnalyticsPage() {
   const stats = error ? EMPTY : parseAnalytics(data);
   const maxDailyViews = Math.max(1, ...stats.daily.map((item) => item.views));
   const maxSourceViews = Math.max(1, ...stats.top_sources.map((item) => item.views));
+  const totalActions = stats.cta_30d.maps_click + stats.cta_30d.phone_click + stats.cta_30d.instagram_click;
 
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Giriş statistikası</h1>
-          <p className="mt-1 text-sm text-gray-500">GameYer ziyarətləri — IP ünvanı və şəxsi məlumat saxlanmır.</p>
+          <p className="mt-1 text-sm text-gray-500">GameYer ziyarətləri və klub CTA hərəkətləri — IP ünvanı və şəxsi məlumat saxlanmır.</p>
         </div>
         <Link href="/admin" className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium hover:bg-gray-50">Dashboard</Link>
       </div>
@@ -116,6 +144,33 @@ export default async function AnalyticsPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Son 7 gün</p><p className="mt-2 text-4xl font-bold">{stats.views_7d}</p><p className="mt-2 text-xs text-gray-500">{stats.visitors_7d} unikal ziyarətçi</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Son 30 gün</p><p className="mt-2 text-4xl font-bold">{stats.views_30d}</p><p className="mt-2 text-xs text-gray-500">{stats.visitors_30d} unikal ziyarətçi</p></div>
       </div>
+
+      <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold">Klub hərəkətləri</h2>
+            <p className="mt-1 text-sm text-gray-500">Son 30 gündə istifadəçinin klub səhifəsindən etdiyi real niyyət siqnalları.</p>
+          </div>
+          <span className="text-sm font-bold text-gray-900">Cəmi: {totalActions}</span>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Google Maps</p><p className="mt-2 text-3xl font-bold">{stats.cta_30d.maps_click}</p></div>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Telefon</p><p className="mt-2 text-3xl font-bold">{stats.cta_30d.phone_click}</p></div>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Instagram</p><p className="mt-2 text-3xl font-bold">{stats.cta_30d.instagram_click}</p></div>
+        </div>
+        <div className="mt-5 border-t border-gray-100 pt-4">
+          <h3 className="text-sm font-bold text-gray-900">Ən çox hərəkət yaradan klublar</h3>
+          <div className="mt-2 divide-y divide-gray-100">
+            {stats.top_action_clubs.length === 0 ? <p className="py-3 text-sm text-gray-500">Hələ CTA məlumatı toplanmayıb.</p> : stats.top_action_clubs.map((item, index) => (
+              <div key={item.club_slug} className="flex items-center gap-3 py-2.5">
+                <span className="w-5 text-xs font-bold text-gray-400">{index + 1}</span>
+                <Link href={`/klub/${item.club_slug}`} target="_blank" className="min-w-0 flex-1 truncate text-sm font-semibold text-[#6A47F0] hover:underline">{item.club_slug}</Link>
+                <span className="text-sm font-bold">{item.actions}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <section className="rounded-xl border border-gray-200 bg-white p-6">
@@ -173,7 +228,7 @@ export default async function AnalyticsPage() {
       </section>
 
       <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-600">
-        <strong className="text-gray-900">Necə hesablanır?</strong> Hər brauzerə anonim lokal identifikator verilir. IP, ad, telefon və dəqiq lokasiya analytics üçün saxlanmır. Xarici trafik mənbəyindən yalnız hostname saxlanır; URL yolu və query parametrləri saxlanmır. Admin səhifələrinə giriş statistikaya daxil edilmir.
+        <strong className="text-gray-900">Necə hesablanır?</strong> Hər brauzerə anonim lokal identifikator verilir. IP, ad, telefon və dəqiq lokasiya analytics üçün saxlanmır. CTA event-də yalnız event növü, klub slug-u və səhifə yolu saxlanır; klik edilən telefon nömrəsi, Instagram URL-i və koordinat saxlanmır. Xarici trafik mənbəyindən yalnız hostname saxlanır. Admin səhifələrinə giriş statistikaya daxil edilmir.
       </div>
     </div>
   );

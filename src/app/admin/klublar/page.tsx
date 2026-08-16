@@ -8,6 +8,7 @@ interface PageProps {
     q?: string;
     status?: string;
     missing?: string;
+    freshness?: string;
     sort?: string;
   }>;
 }
@@ -31,6 +32,18 @@ const missingLabels: Record<string, string> = {
   types: 'Klub tipi çatmır',
   coordinates: 'Koordinat çatmır',
 };
+
+const freshnessDays: Record<string, number> = {
+  stale60: 60,
+  stale90: 90,
+  stale180: 180,
+};
+
+function ageInDays(updatedAt: string, nowMs: number) {
+  const value = Date.parse(updatedAt);
+  if (!Number.isFinite(value)) return Number.POSITIVE_INFINITY;
+  return Math.max(0, Math.floor((nowMs - value) / 86_400_000));
+}
 
 export default async function AdminClubsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
@@ -98,7 +111,10 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   const missingFilter = resolvedSearchParams.missing && missingLabels[resolvedSearchParams.missing]
     ? resolvedSearchParams.missing
     : '';
-  const sort = resolvedSearchParams.sort === 'seo-low' || resolvedSearchParams.sort === 'seo-high'
+  const freshnessFilter = resolvedSearchParams.freshness && freshnessDays[resolvedSearchParams.freshness]
+    ? resolvedSearchParams.freshness
+    : '';
+  const sort = resolvedSearchParams.sort === 'seo-low' || resolvedSearchParams.sort === 'seo-high' || resolvedSearchParams.sort === 'oldest'
     ? resolvedSearchParams.sort
     : 'updated';
 
@@ -123,23 +139,30 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   const seoAverage = clubs.length > 0
     ? Math.round(clubs.reduce((sum, club) => sum + seoScoreForClub(club), 0) / clubs.length)
     : 0;
+  const stale90Count = clubs.filter((club) => club.is_active && ageInDays(club.updated_at, nowMs) >= 90).length;
 
   const filteredClubs = clubs
     .filter((club) => {
-      if (!missingFilter) return true;
-      if (missingFilter === 'phone') return !club.phone;
-      if (missingFilter === 'description') return !club.description?.trim();
-      if (missingFilter === 'instagram') return !club.instagram_url;
-      if (missingFilter === 'hours') return !idsWithHours.has(club.id);
-      if (missingFilter === 'pricing') return !idsWithPricing.has(club.id);
-      if (missingFilter === 'images') return !idsWithImages.has(club.id);
-      if (missingFilter === 'types') return !idsWithTypes.has(club.id);
-      if (missingFilter === 'coordinates') return club.latitude == null || club.longitude == null;
+      if (missingFilter === 'phone' && club.phone) return false;
+      if (missingFilter === 'description' && club.description?.trim()) return false;
+      if (missingFilter === 'instagram' && club.instagram_url) return false;
+      if (missingFilter === 'hours' && idsWithHours.has(club.id)) return false;
+      if (missingFilter === 'pricing' && idsWithPricing.has(club.id)) return false;
+      if (missingFilter === 'images' && idsWithImages.has(club.id)) return false;
+      if (missingFilter === 'types' && idsWithTypes.has(club.id)) return false;
+      if (missingFilter === 'coordinates' && club.latitude != null && club.longitude != null) return false;
+
+      if (freshnessFilter) {
+        const threshold = freshnessDays[freshnessFilter];
+        if (ageInDays(club.updated_at, nowMs) < threshold) return false;
+      }
+
       return true;
     })
     .sort((a, b) => {
       if (sort === 'seo-low') return seoScoreForClub(a) - seoScoreForClub(b) || a.name.localeCompare(b.name, 'az');
       if (sort === 'seo-high') return seoScoreForClub(b) - seoScoreForClub(a) || a.name.localeCompare(b.name, 'az');
+      if (sort === 'oldest') return Date.parse(a.updated_at) - Date.parse(b.updated_at);
       return Date.parse(b.updated_at) - Date.parse(a.updated_at);
     });
 
@@ -158,7 +181,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">SEO orta tamlıq</p>
           <p className="mt-1 text-2xl font-bold text-gray-900">{seoAverage}%</p>
@@ -174,12 +197,18 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           <p className="mt-1 text-2xl font-bold text-gray-900">{idsWithPricing.size}</p>
           <p className="mt-1 text-xs text-gray-500">SEO və istifadəçi müqayisəsi üçün ən zəif məlumat sahələrindən biri.</p>
         </div>
+        <Link href="/admin/klublar?status=active&freshness=stale90&sort=oldest" className="rounded-xl border border-amber-200 bg-amber-50 p-4 transition hover:border-amber-400">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">90+ gündür yenilənməyib</p>
+          <p className="mt-1 text-2xl font-bold text-amber-900">{stale90Count}</p>
+          <p className="mt-1 text-xs text-amber-700">Aktiv klubları köhnədən yeniyə yoxla.</p>
+        </Link>
       </div>
 
-      {missingFilter ? (
+      {missingFilter || freshnessFilter ? (
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <span className="font-semibold">Çatışmayan məlumat filtri:</span>
-          <span>{missingLabels[missingFilter]}</span>
+          <span className="font-semibold">Aktiv keyfiyyət filtri:</span>
+          {missingFilter ? <span>{missingLabels[missingFilter]}</span> : null}
+          {freshnessFilter ? <span>{freshnessDays[freshnessFilter]}+ gündür yenilənməyib</span> : null}
           <Link href="/admin/klublar" className="ml-auto font-semibold text-[#6A47F0] hover:underline">Filtri sil</Link>
         </div>
       ) : null}
@@ -212,15 +241,23 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           <option value="coordinates">Koordinat çatmır</option>
         </select>
 
+        <select name="freshness" defaultValue={freshnessFilter} className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm">
+          <option value="">Yenilənmə yaşı</option>
+          <option value="stale60">60+ gün köhnə</option>
+          <option value="stale90">90+ gün köhnə</option>
+          <option value="stale180">180+ gün köhnə</option>
+        </select>
+
         <select name="sort" defaultValue={sort} className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm">
           <option value="updated">Son yenilənən</option>
+          <option value="oldest">Ən köhnə məlumat</option>
           <option value="seo-low">SEO zəif → güclü</option>
           <option value="seo-high">SEO güclü → zəif</option>
         </select>
 
         <button type="submit" className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white">Axtar</button>
 
-        {(resolvedSearchParams.q || resolvedSearchParams.status || missingFilter || sort !== 'updated') ? (
+        {(resolvedSearchParams.q || resolvedSearchParams.status || missingFilter || freshnessFilter || sort !== 'updated') ? (
           <Link href="/admin/klublar" className="flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium">
             Təmizlə
           </Link>
@@ -229,7 +266,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
 
       <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1020px] text-left text-sm">
+          <table className="w-full min-w-[1120px] text-left text-sm">
             <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
               <tr>
                 <th className="px-4 py-3">Klub</th>
@@ -237,6 +274,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Premium</th>
                 <th className="px-4 py-3">SEO</th>
+                <th className="px-4 py-3">Yenilənmə</th>
                 <th className="px-4 py-3">Məlumat</th>
                 <th className="px-4 py-3 text-right">İdarəetmə</th>
               </tr>
@@ -246,11 +284,17 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
               {filteredClubs.map((club) => {
                 const missing = missingForClub(club);
                 const seoScore = seoScoreForClub(club);
+                const ageDays = ageInDays(club.updated_at, nowMs);
                 const seoTone = seoScore >= 88
                   ? 'bg-green-50 text-green-700'
                   : seoScore >= 63
                     ? 'bg-amber-50 text-amber-700'
                     : 'bg-red-50 text-red-700';
+                const ageTone = ageDays >= 90
+                  ? 'bg-amber-50 text-amber-700'
+                  : ageDays >= 60
+                    ? 'bg-yellow-50 text-yellow-700'
+                    : 'bg-gray-50 text-gray-600';
 
                 const premiumActive = Boolean(
                   club.is_premium &&
@@ -280,6 +324,9 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
                       )}
                     </td>
                     <td className="px-4 py-3"><span className={`rounded-md px-2 py-1 text-xs font-semibold ${seoTone}`}>{seoScore}%</span></td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-md px-2 py-1 text-xs font-medium ${ageTone}`}>{Number.isFinite(ageDays) ? `${ageDays} gün` : 'Tarix yoxdur'}</span>
+                    </td>
                     <td className="px-4 py-3">
                       {missing.length === 0 ? (
                         <span className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700">Tamdır</span>

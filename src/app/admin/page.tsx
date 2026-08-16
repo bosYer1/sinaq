@@ -9,6 +9,7 @@ type ActiveClubRow = {
   instagram_url: string | null;
   latitude: number | null;
   longitude: number | null;
+  updated_at: string;
 };
 type ClubIdRow = { club_id: string };
 
@@ -28,8 +29,11 @@ export default async function AdminPage() {
   let missingImages = 0;
   let missingTypes = 0;
   let missingCoordinates = 0;
+  let stale90 = 0;
 
   const nowIso = new Date().toISOString();
+  const nowMs = Date.parse(nowIso);
+  const stale90Ms = 90 * 86_400_000;
   const [
     totalResult,
     activeResult,
@@ -53,7 +57,7 @@ export default async function AdminPage() {
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_verified', true),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
-    supabase.from('clubs').select('id,description,instagram_url,latitude,longitude').eq('is_active', true),
+    supabase.from('clubs').select('id,description,instagram_url,latitude,longitude,updated_at').eq('is_active', true),
     supabase.from('club_opening_hours').select('club_id'),
     supabase.from('club_pricing').select('club_id'),
     supabase.from('club_images').select('club_id'),
@@ -86,6 +90,8 @@ export default async function AdminPage() {
     if (!idsWithImages.has(club.id)) missingImages += 1;
     if (!idsWithTypes.has(club.id)) missingTypes += 1;
     if (club.latitude == null || club.longitude == null) missingCoordinates += 1;
+    const updatedMs = Date.parse(club.updated_at);
+    if (!Number.isFinite(updatedMs) || nowMs - updatedMs >= stale90Ms) stale90 += 1;
   }
 
   const completenessItems = [
@@ -112,11 +118,15 @@ export default async function AdminPage() {
         </Link>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Ümumi klub</p><p className="mt-2 text-4xl font-bold">{totalClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv</p><p className="mt-2 text-4xl font-bold">{activeClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv premium</p><p className="mt-2 text-4xl font-bold">{premiumClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Təsdiqlənmiş</p><p className="mt-2 text-4xl font-bold">{verifiedClubs}</p></div>
+        <Link href="/admin/klublar?status=active&freshness=stale90&sort=oldest" className="rounded-xl border border-amber-200 bg-amber-50 p-6 transition hover:border-amber-400">
+          <p className="text-sm text-amber-700">90+ gün köhnə</p>
+          <div className="mt-2 flex items-end justify-between gap-3"><p className="text-4xl font-bold text-amber-900">{stale90}</p><span className="text-sm font-semibold text-amber-700">Yoxla →</span></div>
+        </Link>
         <Link href="/admin/muracietler?status=pending" className="rounded-xl border border-gray-200 bg-white p-6 transition hover:border-[#7C5CFC]/50 hover:bg-[#7C5CFC]/5">
           <p className="text-sm text-gray-500">Gözləyən müraciət</p>
           <div className="mt-2 flex items-end justify-between gap-3"><p className="text-4xl font-bold">{pendingSubmissions}</p><span className="text-sm font-semibold text-[#6A47F0]">Bax →</span></div>
