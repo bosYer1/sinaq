@@ -62,6 +62,16 @@ function ownerClaimMessage(formData: FormData, freeMessage: string) {
     return null;
   }
 
+  const hasEvidenceSignal = Boolean(
+    officialInstagram ||
+    hoursNote ||
+    pcPrice != null ||
+    psPrice != null ||
+    freeMessage.length >= 10
+  );
+
+  if (!hasEvidenceSignal) return null;
+
   const lines = [
     '[STRUKTURLAŞDIRILMIŞ KLUB SAHİBİ MƏLUMATI]',
     `Klubla əlaqə: ${OWNER_ROLES[role]}`,
