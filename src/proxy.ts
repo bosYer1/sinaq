@@ -31,6 +31,10 @@ function privateRedirect(request: NextRequest, pathname: string, next?: string) 
   return redirect;
 }
 
+function hasFreshAal2(aal: { currentLevel: string | null; nextLevel: string | null } | null | undefined) {
+  return aal?.currentLevel === 'aal2' && aal.nextLevel === 'aal2';
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -73,7 +77,7 @@ export async function proxy(request: NextRequest) {
 
       if (adminRow) {
         const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        return privateRedirect(request, aal?.currentLevel === 'aal2' ? '/admin' : '/admin/mfa');
+        return privateRedirect(request, hasFreshAal2(aal) ? '/admin' : '/admin/mfa');
       }
     }
 
@@ -101,7 +105,7 @@ export async function proxy(request: NextRequest) {
   }
 
   const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aalError || aal.currentLevel !== 'aal2') {
+  if (aalError || !hasFreshAal2(aal)) {
     return privateRedirect(request, '/admin/mfa', pathname);
   }
 
