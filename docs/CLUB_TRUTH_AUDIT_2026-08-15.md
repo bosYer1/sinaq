@@ -4,13 +4,14 @@
 GameYer public kataloqunda klub sayı yox, məlumat həqiqiliyi prioritetdir. Public klubun istifadəyə yararlı koordinatı olmalıdır. Telefon, iş saatı, qiymət və sosial hesab yalnız uyğun biznes izi ilə əsaslandırıldıqda əlavə olunur. Mənbələr ziddiyyətlidirsə sahə boş saxlanılır və ya konflikt sənədləşdirilir.
 
 ## Cari canlı vəziyyət
-- Aktiv public klub: **35**
+- Aktiv public klub: **34**
 - Koordinatsız aktiv klub: **0**
+- Duplicate koordinat qrupu: **0**
 - Telefonu boş qalan: **4**
 - İş saatı boş qalan: **4**
-- Instagram boş qalan: **28**
-- Qiymət məlumatı olmayan: **31**
-- Öz storage-mızda klub şəkli olmayan: **35**
+- Instagram boş qalan: **27**
+- Qiymət məlumatı olmayan: **30**
+- Öz storage-mızda klub şəkli olmayan: **34**
 - Klub sahibi/rəsmi nümayəndə tərəfindən təsdiqlənmiş (`is_verified=true`): **0**
 
 ## Public reytinq siyasəti
@@ -20,6 +21,8 @@ Xarici xəritə/business indekslərindən götürülmüş rating snapshot-ları 
 - Koordinatsız klub qeydləri public dataset-dən çıxarılıb.
 - `Level Up Gaming Club` bağlı göstərildiyi üçün deaktiv edilib.
 - `PLAYROOMS GAMECLUB` bir neçə cari kataloqda closed kimi göründüyü üçün deaktiv edilib.
+- `IGROTEKA CYBER CLUB` real klub kimi təsdiqlənir, lakin saxlanmış koordinatı Marvel-in dəqiq plus-code nöqtəsi ilə eyni idi. Dəqiq 4B marker koordinatı ayrıca təsdiqlənənədək public dataset-dən deaktiv edilib.
+- `Marvel PS Club & Lounge` üçün saxlanmış koordinat exact `9VV6+429` plus-code ilə uyğun gəlir və saxlanılır.
 - `FIFA Cyber Club`: `Sülh küçəsi 242, Bakı`, Sabunçu kimi düzəldilib.
 - `ButaCyberCafe`: rəsmi Instagram, audit olunmuş iş qrafiki və 2 AZN/saatdan PC qiyməti əlavə edilib.
 - `Vegas Gaming Center - Həzi Aslanov` və `Vegas Gaming Club - Mərkəz`: `@vegasgamingcenter` əlavə edilib.
@@ -46,13 +49,12 @@ Xarici xəritə/business indekslərindən götürülmüş rating snapshot-ları 
 ## Açıq data konfliktləri
 - `Milli Gaming Arena`: business/map mənbələri Təbriz küçəsi 95/97 tərəfini, klubun öz sayt footer-i isə Ağa Nemətulla 120 ünvanını göstərib. Telefon `+994 77 616 00 11` uyğun gəlir. Daha güclü relocation/filial təsdiqi olmadan dəyişdirilmir.
 - `Avallon Gaming`: ünvan variantları mövcuddur; Təbriz 94 bir neçə cari mənbədə göründüyü üçün mövcud DB saxlanılır.
-- `Kenza Gaming Lounge`: cari mənbələrdə Puşkin 54B və Fikrət Əmirov 24 variantları çıxır. Eyni telefon izi relocation/filial ehtimalını göstərir; rəsmi təsdiq olmadan avtomatik dəyişiklik edilmir.
-- `IGROTEKA CYBER CLUB` və `Marvel PS Club & Lounge`: ayrıca real biznes kimi təsdiqlənirlər, lakin DB-də eyni koordinatı paylaşırlar. Dəqiq giriş/marker koordinatı əlavə mənbə ilə təsdiqlənməlidir.
+- `Kenza Gaming Lounge`: alternativ kataloqlarda Fikrət Əmirov 24 izi olsa da, cari Yandex biznes qeydi Puşkin 54B, eyni `+994 99 900 28 28` telefonunu və 24/7 qrafiki göstərir; DB koordinatı da həmin Puşkin 54B xəritə nöqtəsinə uyğundur. Buna görə mövcud GameYer qeydi saxlanılır, lakin relocation/filial tarixi kimi konflikt qeyd olunur.
 
 ## Source-of-truth qaydası
 1. Canlı Supabase aktiv dataset.
 2. Bu truth-audit sənədi.
-3. `20260815_club_data_truth_audit.sql` və ondan sonrakı düzəliş migration-ları.
+3. `20260815_club_data_truth_audit.sql`, `20260816_deactivate_igroteka_until_coordinate_verified.sql` və onlardan sonrakı düzəliş migration-ları.
 4. `CLUB_SOURCE_MANIFEST_2026-08-15.md` yalnız tarixi arxivdir və restore üçün source-of-truth deyil.
 
 Şəkil, qiymət və owner verification boşluqları məlumat uydurmaqla doldurulmamalıdır.
