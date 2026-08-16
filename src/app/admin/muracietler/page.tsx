@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { ClubSubmission } from '@/types/database';
 import { OwnerClaimSummary } from '@/components/admin/OwnerClaimSummary';
-import { OwnerClaimApplyForm } from '@/components/admin/OwnerClaimApplyForm';
+import { OwnerClaimApplyForm, type OwnerClaimCurrentValues } from '@/components/admin/OwnerClaimApplyForm';
 import { deleteCompletedSubmission, linkOwnerClaimToClub, updateSubmissionStatus } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -11,6 +11,11 @@ type SubmissionRow = ClubSubmission;
 type SubmissionStatus = SubmissionRow['status'];
 type SubmissionKind = SubmissionRow['kind'];
 type ActiveClubOption = { id: string; name: string; slug: string };
+type ClubSnapshotRow = ActiveClubOption & {
+  instagram_url: string | null;
+  pricing: Array<{ price_from: number; club_type: { slug: string } | null }>;
+  opening_hours: Array<{ day_of_week: number; open_time: string | null; close_time: string | null; is_closed: boolean }>;
+};
 
 const KIND_LABELS: Record<SubmissionKind, string> = {
   correction: 'Düzəliş',
@@ -39,6 +44,31 @@ function contactHref(row: SubmissionRow) {
   return `https://www.instagram.com/${row.contact_value.replace(/^@/, '')}/`;
 }
 
+function currentHoursLabel(hours: ClubSnapshotRow['opening_hours']) {
+  const sorted = [...hours].sort((a, b) => a.day_of_week - b.day_of_week);
+  if (sorted.length === 0) return null;
+  if (sorted.some((row) => row.is_closed || !row.open_time || !row.close_time)) return 'Günlər üzrə fərqli qrafik';
+  if (sorted.length !== 7) return `${sorted.length}/7 gün üçün saat var`;
+
+  const pairs = new Set(sorted.map((row) => `${row.open_time!.slice(0, 5)}-${row.close_time!.slice(0, 5)}`));
+  if (pairs.size !== 1) return 'Günlər üzrə fərqli qrafik';
+  const [pair] = Array.from(pairs);
+  if (pair === '00:00-23:59') return '24/7';
+  const [open, close] = pair.split('-');
+  return `Hər gün ${open}–${close}`;
+}
+
+function currentValues(club: ClubSnapshotRow): OwnerClaimCurrentValues {
+  const pcPricing = club.pricing.find((row) => row.club_type?.slug === 'pc');
+  const psPricing = club.pricing.find((row) => row.club_type?.slug === 'playstation');
+  return {
+    instagram: club.instagram_url,
+    pcPrice: pcPricing?.price_from ?? null,
+    psPrice: psPricing?.price_from ?? null,
+    hours: currentHoursLabel(club.opening_hours),
+  };
+}
+
 export default async function AdminSubmissionsPage({ searchParams }: AdminSubmissionsPageProps) {
   const params = await searchParams;
   const status = VALID_STATUSES.has(params.status as SubmissionStatus) ? (params.status as SubmissionStatus) : null;
@@ -59,15 +89,21 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
   const [submissionsResult, pendingResult, clubsResult] = await Promise.all([
     query,
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('clubs').select('id,name,slug').eq('is_active', true).order('name', { ascending: true }),
+    supabase
+      .from('clubs')
+      .select('id,name,slug,instagram_url,pricing:club_pricing(price_from,club_type:club_types(slug)),opening_hours:club_opening_hours(day_of_week,open_time,close_time,is_closed)')
+      .eq('is_active', true)
+      .order('name', { ascending: true }),
   ]);
 
   if (submissionsResult.error) throw new Error(submissionsResult.error.message);
   if (clubsResult.error) throw new Error(clubsResult.error.message);
 
   const submissions = (submissionsResult.data ?? []) as SubmissionRow[];
-  const activeClubs = (clubsResult.data ?? []) as ActiveClubOption[];
+  const clubSnapshots = (clubsResult.data ?? []) as unknown as ClubSnapshotRow[];
+  const activeClubs = clubSnapshots.map(({ id, name, slug }) => ({ id, name, slug }));
   const activeClubById = new Map(activeClubs.map((club) => [club.id, club]));
+  const currentValuesByClubId = new Map(clubSnapshots.map((club) => [club.id, currentValues(club)]));
   const pendingCount = pendingResult.count ?? 0;
   const hasFilters = Boolean(status || kind || q);
 
@@ -155,7 +191,15 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                   </form>
                 ) : null}
 
-                {item.kind === 'owner_claim' ? <OwnerClaimApplyForm id={item.id} clubId={item.club_id} message={item.message} status={item.status} /> : null}
+                {item.kind === 'owner_claim' ? (
+                  <OwnerClaimApplyForm
+                    id={item.id}
+                    clubId={item.club_id}
+                    message={item.message}
+                    status={item.status}
+                    current={item.club_id ? currentValuesByClubId.get(item.club_id) : null}
+                  />
+                ) : null}
 
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <form action={updateSubmissionStatus} className="flex flex-wrap items-center gap-2">
