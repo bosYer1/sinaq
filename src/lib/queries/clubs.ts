@@ -21,6 +21,10 @@ const CLUB_SELECT = `
 function normalizeClubRelations(club: ClubWithRelations): ClubWithRelations {
   return {
     ...club,
+    // Rating snapshots come from external business/map sources. Keep them out of
+    // public UI and structured data until GameYer has first-party reviews.
+    rating_avg: null,
+    rating_count: 0,
     type_assignments: Array.isArray(club.type_assignments) ? club.type_assignments : [],
     pricing: Array.isArray(club.pricing) ? club.pricing : [],
     images: Array.isArray(club.images) ? club.images : [],
@@ -59,7 +63,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     .select(selectString)
     .eq('is_active', true)
     .order('is_premium', { ascending: false })
-    .order('rating_avg', { ascending: false, nullsFirst: false });
+    .order('name', { ascending: true });
 
   if (districtId) query = query.eq('district_id', districtId);
 
@@ -107,10 +111,6 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
   clubs = [...clubs].sort((a, b) => {
     const premiumDelta = Number(isPremiumActive(b)) - Number(isPremiumActive(a));
     if (premiumDelta !== 0) return premiumDelta;
-
-    const ratingDelta = (b.rating_avg ?? -1) - (a.rating_avg ?? -1);
-    if (ratingDelta !== 0) return ratingDelta;
-
     return a.name.localeCompare(b.name, 'az');
   });
 
