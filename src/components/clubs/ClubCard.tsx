@@ -34,7 +34,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     return () => window.clearInterval(timer);
   }, [club, hasHours]);
 
-  const statusLabel = !hasHours ? 'İş saatı məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
+  const statusLabel = !hasHours ? 'Saat məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
   const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
   const cheapestPricing = [...realPricing].sort((a, b) => a.price_from - b.price_from)[0];
@@ -46,37 +46,54 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
       className={cn(
-        'group flex gap-3 rounded-card border bg-surface p-3 transition-all duration-150',
-        active ? 'border-primary shadow-card-hover ring-1 ring-primary/15' : 'border-border shadow-card hover:border-border-strong hover:shadow-card-hover'
+        'group flex min-h-[112px] gap-3 rounded-xl border bg-white p-3 transition-all duration-150',
+        active
+          ? 'border-primary shadow-[0_8px_22px_rgba(124,92,252,0.12)] ring-1 ring-primary/10'
+          : 'border-border shadow-[0_4px_14px_rgba(31,35,48,0.04)] hover:border-primary/35 hover:shadow-[0_8px_22px_rgba(31,35,48,0.08)]',
       )}
     >
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[10px] bg-surface-alt">
+      <div className="relative h-[88px] w-[104px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#F0ECFF] to-[#EEF6FF] ring-1 ring-border sm:w-[112px]">
         {cover ? (
-          <Image src={cover.url} alt={club.name} fill sizes="80px" className="object-cover transition-transform duration-200 group-hover:scale-[1.03]" />
+          <Image src={cover.url} alt={club.name} fill sizes="112px" className="object-cover transition-transform duration-200 group-hover:scale-[1.03]" />
         ) : (
-          <ClubLogo slug={club.slug} name={club.name} className="h-full w-full rounded-[10px] border border-border text-3xl" />
+          <ClubLogo slug={club.slug} name={club.name} className="h-full w-full rounded-lg border-0 bg-transparent text-3xl" />
         )}
-        {openNow ? <span className="absolute left-2 top-2 h-2 w-2 rounded-full bg-live ring-2 ring-white" title="Hazırda açıqdır" /> : null}
+        {hasHours ? (
+          <span className={cn('absolute left-2 top-2 h-2.5 w-2.5 rounded-full ring-2 ring-white', openNow ? 'bg-live' : 'bg-red-500')} title={statusLabel} />
+        ) : null}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex min-w-0 items-start gap-2">
-          <h3 className="min-w-0 flex-1 truncate font-display text-sm font-semibold text-ink transition group-hover:text-primary">{club.name}</h3>
-          <div className="flex shrink-0 items-center gap-1">{isVerified ? <Badge tone="verified">✓</Badge> : null}{premiumActive ? <Badge tone="premium">VIP</Badge> : null}</div>
+          <h3 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold tracking-[-0.01em] text-ink transition group-hover:text-primary">{club.name}</h3>
+          <div className="flex shrink-0 items-center gap-1">
+            {isVerified ? <Badge tone="verified">✓</Badge> : null}
+            {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
+          </div>
         </div>
 
-        <div className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted">
+        <div className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-muted">
           <MapPinIcon width={13} height={13} className="shrink-0" />
           <span className="truncate">{club.district?.name ?? 'Rayon göstərilməyib'}{club.address ? ` · ${club.address}` : ''}</span>
         </div>
 
-        {typeSlugs.length > 0 ? <div className="mt-2 flex min-w-0 items-center gap-1.5 overflow-hidden">{typeSlugs.map((slug) => <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>{slug === 'pc' ? 'PC' : 'PlayStation'}</Badge>)}</div> : null}
+        {typeSlugs.length > 0 ? (
+          <div className="mt-1.5 flex min-w-0 items-center gap-1 overflow-hidden">
+            {typeSlugs.map((slug) => <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>{slug === 'pc' ? 'PC' : 'PlayStation'}</Badge>)}
+          </div>
+        ) : null}
 
-        <div className="mt-auto flex items-end justify-between gap-3 pt-2">
-          <div className="min-w-0">{club.distanceKm != null ? <span className="whitespace-nowrap text-[11px] text-muted">{formatDistance(club.distanceKm)}</span> : null}</div>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-1.5">
+          <div className="min-w-0">
+            {cheapestPricing ? (
+              <div className="truncate text-xs font-bold text-[#0F9F5D]">{formatPriceRange(cheapestPricing.price_from, cheapestPricing.price_to, cheapestPricing.unit)}</div>
+            ) : (
+              <div className="text-[10px] text-muted">Qiymət məlum deyil</div>
+            )}
+          </div>
           <div className="shrink-0 text-right">
-            {cheapestPricing ? <div className="font-mono text-xs font-semibold text-ink">{formatPriceRange(cheapestPricing.price_from, cheapestPricing.price_to, cheapestPricing.unit)}</div> : <div className="text-[10px] text-muted">Qiymət məlum deyil</div>}
-            <div className={cn('mt-0.5 text-[10px] font-medium', openNow ? 'text-live' : 'text-muted')}>{statusLabel}</div>
+            {club.distanceKm != null ? <div className="text-[10px] font-medium text-primary">{formatDistance(club.distanceKm)}</div> : null}
+            <div className={cn('mt-0.5 text-[10px] font-semibold', !hasHours ? 'text-muted' : openNow ? 'text-live' : 'text-red-500')}>{statusLabel}</div>
           </div>
         </div>
       </div>

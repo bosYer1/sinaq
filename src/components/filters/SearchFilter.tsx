@@ -30,11 +30,11 @@ export function SearchFilter() {
   }, [value, currentQuery, paramsString, pathname, router]);
 
   return (
-    <div className="relative w-full">
+    <div id="club-search" className="relative w-full scroll-mt-24">
       <SearchIcon
-        width={17}
-        height={17}
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
+        width={18}
+        height={18}
+        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-faint"
       />
 
       <input
@@ -45,7 +45,7 @@ export function SearchFilter() {
         aria-label="Klub axtar"
         enterKeyHint="search"
         autoComplete="off"
-        className="h-11 w-full rounded-control border border-border-strong bg-surface pl-10 pr-11 text-sm text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 md:h-10"
+        className="h-12 w-full rounded-xl border border-border-strong bg-surface pl-11 pr-11 text-sm text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 lg:h-11"
       />
 
       {value ? (
@@ -53,7 +53,7 @@ export function SearchFilter() {
           type="button"
           onClick={() => setValue('')}
           aria-label="Axtarışı təmizlə"
-          className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-xl leading-none text-faint transition hover:bg-surface-alt hover:text-ink"
+          className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-xl leading-none text-faint transition hover:bg-surface-alt hover:text-ink"
         >
           ×
         </button>

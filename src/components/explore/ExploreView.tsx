@@ -15,13 +15,14 @@ interface ExploreViewProps {
   searchActive?: boolean;
 }
 
-export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
+export function ExploreView({ clubs, searchActive }: ExploreViewProps) {
   const { location, status, requestLocation } = useUserLocation();
   const { clearAll, hasActiveFilters } = useFilters();
   const [sortByDistance, setSortByDistance] = useState(false);
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
 
   useEffect(() => {
@@ -57,6 +58,8 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity))[0] ?? null;
   }, [clubsWithDistance, location]);
 
+  const mobileClubs = mobileExpanded ? clubsWithDistance : clubsWithDistance.slice(0, 4);
+
   function handleLocationSort() {
     if (location) {
       setSortByDistance((value) => !value);
@@ -72,11 +75,8 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       setLocationFocusRequest((value) => value + 1);
       return;
     }
-
     const nextLocation = await requestLocation();
-    if (nextLocation) {
-      setLocationFocusRequest((value) => value + 1);
-    }
+    if (nextLocation) setLocationFocusRequest((value) => value + 1);
   }
 
   function handleHoverCard(id: string) {
@@ -97,7 +97,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         : status === 'unsupported'
           ? 'Lokasiya dəstəklənmir'
           : sortByDistance && location
-            ? 'Yaxınlıq sırası aktivdir'
+            ? 'Yaxınlıq sırası'
             : 'Yaxınlığıma görə';
 
   const mapLocationLabel = status === 'loading'
@@ -110,7 +110,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
           ? 'Lokasiya dəstəklənmir'
           : location
             ? 'Mənim lokasiyam'
-            : 'Yaxın klublar';
+            : 'Lokasiyam';
 
   const locationMessage = status === 'denied'
     ? 'Yaxın klubları görmək üçün brauzer ayarlarında GameYer üçün lokasiya icazəsini aktiv et.'
@@ -120,72 +120,124 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
         : null;
 
-  const shouldMountMap = view === 'map' || isDesktop;
+  function renderMapPanel() {
+    return (
+      <div className="relative h-full min-h-0 overflow-hidden rounded-[18px] border border-border bg-surface-alt shadow-[0_8px_24px_rgba(31,35,48,0.05)]">
+        <MapErrorBoundary>
+          <MapWrapper
+            clubs={clubsWithDistance}
+            activeClubId={activeClubId}
+            onSelectClub={handleSelectMarker}
+            userLocation={location}
+            locationFocusRequest={locationFocusRequest}
+          />
+        </MapErrorBoundary>
+
+        <div className="pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-2">
+          <div className="pointer-events-auto rounded-xl border border-border bg-white/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
+            <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-live" aria-hidden="true" />
+            Xəritədə {clubsWithDistance.length} klub
+          </div>
+        </div>
+
+        <div className="absolute right-3 top-3 z-[500]">
+          <button
+            type="button"
+            onClick={() => void handleMapLocation()}
+            disabled={status === 'loading' || status === 'unsupported'}
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-white/95 px-3 text-xs font-semibold text-ink shadow-card backdrop-blur transition hover:border-primary hover:text-primary disabled:opacity-60"
+          >
+            <span aria-hidden="true">⌖</span>
+            <span className="hidden sm:inline">{mapLocationLabel}</span>
+          </button>
+        </div>
+
+        {location && nearestClub?.distanceKm != null ? (
+          <div className="absolute bottom-3 right-3 z-[500] max-w-[240px] rounded-xl border border-border bg-white/95 px-3 py-2 text-right shadow-card backdrop-blur">
+            <p className="text-[10px] text-muted">Ən yaxın klub</p>
+            <p className="truncate text-xs font-semibold text-ink">{nearestClub.name}</p>
+            <p className="mt-0.5 text-[10px] font-semibold text-primary">{formatDistance(nearestClub.distanceKm)}</p>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-0 flex-1 overflow-hidden bg-bg lg:flex-row">
-      <section className={`min-h-0 w-full overflow-y-auto px-4 py-4 sm:px-6 lg:block lg:w-[400px] lg:shrink-0 xl:w-[420px] ${view === 'map' ? 'hidden' : 'block'}`}>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-ink">{clubsWithDistance.length} klub</p>
-          <div className="flex items-center gap-2">
+    <div className="bg-surface">
+      <div className="hidden h-[600px] min-h-0 grid-cols-[430px_minmax(0,1fr)] gap-4 lg:grid xl:grid-cols-[450px_minmax(0,1fr)]">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-border bg-[#FBFCFE]">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-white px-4 py-3">
+            <div>
+              <p className="text-base font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
+              <p className="mt-0.5 text-[11px] text-muted">Klubu seç, xəritədə yerini gör</p>
+            </div>
             <button
               type="button"
               onClick={handleLocationSort}
               disabled={status === 'loading' || status === 'unsupported'}
-              className={`rounded-control border px-2.5 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted hover:border-border-strong hover:text-ink'}`}
-              title={status === 'denied' ? 'Brauzerdə lokasiya icazəsini aktiv et və yenidən yoxla.' : 'Lokasiyan yalnız yaxın klubları hesablamaq üçün istifadə olunur.'}
+              className={`rounded-xl border px-3 py-2 text-xs font-semibold transition disabled:opacity-50 ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-white text-muted hover:border-primary hover:text-primary'}`}
             >
               {locationButtonLabel}
             </button>
-            <span className="text-xs text-muted">Bakı</span>
           </div>
-        </div>
-        {locationMessage ? <div role="status" className="mb-3 rounded-control border border-warn/30 bg-warn-tint px-3 py-2 text-xs leading-5 text-ink">{locationMessage}</div> : null}
-        <ClubList
-          clubs={clubsWithDistance}
-          activeClubId={activeClubId}
-          onHoverClub={handleHoverCard}
-          cardRefs={cardRefs}
-          searchActive={searchActive}
-          onClearFilters={hasActiveFilters ? clearAll : undefined}
-        />
-      </section>
+          {locationMessage ? <div className="mx-3 mt-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
+          <div className="min-h-0 flex-1 overflow-y-auto p-3 pr-2 [scrollbar-gutter:stable]">
+            <ClubList
+              clubs={clubsWithDistance}
+              activeClubId={activeClubId}
+              onHoverClub={handleHoverCard}
+              cardRefs={cardRefs}
+              searchActive={searchActive}
+              onClearFilters={hasActiveFilters ? clearAll : undefined}
+            />
+          </div>
+        </section>
 
-      <section className={`relative min-h-0 flex-1 bg-surface-alt p-2.5 sm:p-3 lg:bg-bg lg:p-4 ${view === 'map' ? 'block' : 'hidden'} lg:block`}>
-        <div className="relative h-full min-h-0 overflow-hidden rounded-2xl border-2 border-border-strong bg-surface shadow-[0_8px_28px_rgba(20,22,28,0.12)] sm:rounded-xl sm:border-2 lg:rounded-2xl lg:border-2 lg:shadow-[0_10px_32px_rgba(20,22,28,0.16)]">
-          {shouldMountMap ? (
-            <MapErrorBoundary>
-              <MapWrapper clubs={clubsWithDistance} activeClubId={activeClubId} onSelectClub={handleSelectMarker} userLocation={location} locationFocusRequest={locationFocusRequest} />
-            </MapErrorBoundary>
-          ) : null}
+        <section className="min-h-0 overflow-hidden rounded-[18px] bg-[#FBFCFE]">
+          {isDesktop === true ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
+        </section>
+      </div>
 
-          {shouldMountMap ? (
-            <div className="absolute left-3 right-3 top-3 z-[500] flex items-start justify-between gap-2 sm:left-auto sm:right-3 sm:flex-col sm:items-end">
-              <button
-                type="button"
-                onClick={() => void handleMapLocation()}
-                disabled={status === 'loading' || status === 'unsupported'}
-                className="inline-flex h-11 shrink-0 items-center gap-2 rounded-control border border-border-strong bg-surface/95 px-3 text-xs font-semibold text-ink shadow-card backdrop-blur transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5 sm:text-sm"
-                title={status === 'denied' ? 'Brauzer ayarlarından lokasiya icazəsini aktiv et.' : 'Lokasiyanı göstər və sənə yaxın klubları tap.'}
-                aria-label="Lokasiyamı xəritədə göstər və yaxın klubları tap"
-              >
-                <span aria-hidden="true" className="text-base">⌖</span>
-                {mapLocationLabel}
-              </button>
+      <div className="lg:hidden">
+        <section className="h-[340px] overflow-hidden rounded-[18px] sm:h-[410px]">
+          {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
+        </section>
 
-              {locationMessage ? (
-                <div role="status" className="max-w-[55%] rounded-control border border-warn/30 bg-surface/95 px-2.5 py-2 text-right text-[10px] leading-4 text-ink shadow-card backdrop-blur sm:max-w-[270px] sm:px-3 sm:text-[11px]">{locationMessage}</div>
-              ) : location && nearestClub?.distanceKm != null ? (
-                <div className="min-w-0 max-w-[55%] rounded-control border border-border bg-surface/95 px-2.5 py-2 text-right shadow-card backdrop-blur sm:max-w-[260px] sm:px-3">
-                  <p className="hidden text-[11px] font-medium text-muted sm:block">Ən yaxın klub</p>
-                  <p className="truncate text-[11px] font-semibold text-ink sm:text-xs">{nearestClub.name}</p>
-                  <p className="mt-0.5 text-[10px] font-medium text-primary sm:text-[11px]">{formatDistance(nearestClub.distanceKm)}</p>
-                </div>
-              ) : null}
+        <section className="pt-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
+              <p className="text-xs text-muted">Xəritədən sonra klubları müqayisə et</p>
             </div>
+            <button
+              type="button"
+              onClick={handleLocationSort}
+              disabled={status === 'loading' || status === 'unsupported'}
+              className={`rounded-xl border px-3 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-white text-muted'}`}
+            >
+              {locationButtonLabel}
+            </button>
+          </div>
+          {locationMessage ? <div className="mb-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
+          <ClubList
+            clubs={mobileClubs}
+            activeClubId={activeClubId}
+            onHoverClub={handleHoverCard}
+            searchActive={searchActive}
+            onClearFilters={hasActiveFilters ? clearAll : undefined}
+          />
+          {clubsWithDistance.length > 4 ? (
+            <button
+              type="button"
+              onClick={() => setMobileExpanded((value) => !value)}
+              className="mt-3 h-12 w-full rounded-xl border border-border bg-white text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
+            >
+              {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - 4})`}
+            </button>
           ) : null}
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

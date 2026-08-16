@@ -25,10 +25,7 @@ const siteStructuredData = {
       url: siteUrl,
       logo: brandLogo,
       description: 'Azərbaycanda PC və PlayStation klublarını tapmaq və müqayisə etmək üçün gaming klub kataloqu və xəritəsi.',
-      sameAs: [
-        'https://www.instagram.com/gameyer.az/',
-        'https://www.tiktok.com/@gameyer.az',
-      ],
+      sameAs: ['https://www.instagram.com/gameyer.az/', 'https://www.tiktok.com/@gameyer.az'],
     },
     {
       '@type': 'WebSite',
@@ -50,45 +47,66 @@ export const metadata: Metadata = {
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
   verification: { google: googleVerification },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-      'max-video-preview': -1,
-    },
-  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   appleWebApp: { capable: true, title: 'GameYer', statusBarStyle: 'default' },
   alternates: { canonical: '/' },
-  openGraph: {
-    type: 'website',
-    locale: 'az_AZ',
-    url: '/',
-    siteName: 'GameYer',
-    title: 'GameYer — Bakıda PC və PlayStation klubları',
-    description: 'Bakıda PC, kompüter və PlayStation klublarını qiymət, ünvan və xəritə məlumatları ilə tap.',
-    images: [{ url: socialImage, width: 1200, height: 630, alt: 'GameYer — Bakıda gaming klubu tap' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'GameYer — Bakıda gaming klubu tap',
-    description: 'PC və PlayStation klublarını xəritə, rayon və qiymətə görə tap.',
-    images: [socialImage],
-  },
+  openGraph: { type: 'website', locale: 'az_AZ', url: '/', siteName: 'GameYer', title: 'GameYer — Bakıda PC və PlayStation klubları', description: 'Bakıda PC, kompüter və PlayStation klublarını qiymət, ünvan və xəritə məlumatları ilə tap.', images: [{ url: socialImage, width: 1200, height: 630, alt: 'GameYer — Bakıda gaming klubu tap' }] },
+  twitter: { card: 'summary_large_image', title: 'GameYer — Bakıda gaming klubu tap', description: 'PC və PlayStation klublarını xəritə, rayon və qiymətə görə tap.', images: [socialImage] },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="az" className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable}`}><body className="bg-bg font-body text-ink antialiased">
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, '\\u003c') }} />
-    <PageViewTracker />
-    <header className="sticky top-0 z-30 border-b border-border bg-surface"><div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-      <Link href="/" className="flex items-center gap-2" aria-label="GameYer ana səhifə"><span className="flex h-7 w-7 items-center justify-center rounded-control bg-primary text-sm font-bold text-white">G</span><span className="font-display text-base font-bold tracking-tight text-ink">Game<span className="text-primary">Yer</span></span></Link>
-      <nav className="flex items-center gap-3 text-[11px] font-medium text-muted sm:gap-4 sm:text-xs" aria-label="Əsas keçidlər"><Link href="/rayon" className="hidden transition hover:text-ink sm:inline">Rayonlar</Link><Link href="/tip" className="hidden transition hover:text-ink sm:inline">PC / PS</Link><Link href="/klub-sahibi" className="hidden transition hover:text-primary md:inline">Klub sahibləri</Link><Link href="/elaqe" className="transition hover:text-ink">Əlaqə</Link><Link href="/mexfilik" className="hidden transition hover:text-ink lg:inline">Məxfilik</Link></nav>
-    </div></header>
-    <main>{children}</main>
-    <footer className="border-t border-border bg-surface"><div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-5 text-xs text-muted sm:px-6"><span>© GameYer</span><Link href="/bakida-pc-klublari" className="font-medium hover:text-ink">Bakıda PC klubları</Link><Link href="/bakida-playstation-klublari" className="font-medium hover:text-ink">Bakıda PlayStation klubları</Link><Link href="/bakida-24-saat-gaming-klublari" className="font-medium hover:text-ink">24 saat klublar</Link><Link href="/rayon" className="hover:text-ink">Rayonlar üzrə klublar</Link><Link href="/haqqimizda" className="hover:text-ink">Haqqımızda</Link><Link href="/melumat-metodologiyasi" className="hover:text-ink">Məlumat metodologiyası</Link><Link href="/klub-sahibi" className="font-semibold text-primary hover:underline">Klub sahibləri üçün</Link><Link href="/elaqe" className="hover:text-ink">Əlaqə</Link><a href="https://www.instagram.com/gameyer.az/" target="_blank" rel="noopener noreferrer" className="hover:text-ink">Instagram</a><a href="https://www.tiktok.com/@gameyer.az" target="_blank" rel="noopener noreferrer" className="hover:text-ink">TikTok</a></div></footer>
-  </body></html>;
+  return (
+    <html lang="az" className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable}`}>
+      <body className="bg-bg font-body text-ink antialiased">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, '\\u003c') }} />
+        <PageViewTracker />
+
+        <header className="sticky top-0 z-30 border-b border-border/80 bg-surface/95 backdrop-blur">
+          <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
+            <Link href="/" className="flex items-center gap-2.5" aria-label="GameYer ana səhifə">
+              <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#4D8DFF] text-sm font-black text-white shadow-sm">G</span>
+              <span className="font-display text-xl font-bold tracking-[-0.04em] text-ink">Game<span className="text-primary">Yer</span></span>
+            </Link>
+
+            <nav className="hidden items-center gap-8 text-sm font-medium text-muted md:flex" aria-label="Əsas keçidlər">
+              <Link href="/" className="font-semibold text-primary">Klublar</Link>
+              <Link href="/rayon" className="transition hover:text-ink">Rayonlar</Link>
+              <Link href="/tip" className="transition hover:text-ink">PC / PS</Link>
+              <Link href="/haqqimizda" className="transition hover:text-ink">Haqqımızda</Link>
+              <Link href="/elaqe" className="transition hover:text-ink">Əlaqə</Link>
+            </nav>
+
+            <div className="flex items-center gap-2">
+              <Link href="/klub-sahibi" className="hidden rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark sm:inline-flex">+ Klubunu əlavə et</Link>
+              <Link href="/elaqe" className="inline-flex h-10 items-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary sm:hidden">Əlaqə</Link>
+            </div>
+          </div>
+        </header>
+
+        <main className="pb-[76px] md:pb-0">{children}</main>
+
+        <footer className="border-t border-border bg-surface pb-[68px] md:pb-0">
+          <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6 lg:px-8">
+            <span className="font-semibold text-ink">© 2026 GameYer</span>
+            <Link href="/bakida-pc-klublari" className="hover:text-ink">PC klubları</Link>
+            <Link href="/bakida-playstation-klublari" className="hover:text-ink">PlayStation</Link>
+            <Link href="/bakida-24-saat-gaming-klublari" className="hover:text-ink">24/7</Link>
+            <Link href="/haqqimizda" className="hover:text-ink">Haqqımızda</Link>
+            <Link href="/melumat-metodologiyasi" className="hover:text-ink">Metodologiya</Link>
+            <Link href="/mexfilik" className="hover:text-ink">Məxfilik</Link>
+            <a href="https://www.instagram.com/gameyer.az/" target="_blank" rel="noopener noreferrer" className="ml-auto hover:text-ink">Instagram</a>
+            <a href="https://www.tiktok.com/@gameyer.az" target="_blank" rel="noopener noreferrer" className="hover:text-ink">TikTok</a>
+          </div>
+        </footer>
+
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-white/96 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] backdrop-blur md:hidden" aria-label="Mobil naviqasiya">
+          <Link href="/" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary"><span className="text-lg leading-none">⌖</span><span>Klublar</span></Link>
+          <Link href="/rayon" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">▦</span><span>Rayonlar</span></Link>
+          <Link href="/#club-search" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xl text-white shadow-[0_5px_16px_rgba(124,92,252,0.3)]">⌕</span><span>Axtar</span></Link>
+          <Link href="/elaqe" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">◌</span><span>Əlaqə</span></Link>
+          <Link href="/tip" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">☰</span><span>Menyu</span></Link>
+        </nav>
+      </body>
+    </html>
+  );
 }
