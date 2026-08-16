@@ -4,7 +4,9 @@ import { isPremiumActive } from '@/lib/utils';
 import type { ClubFilters, ClubWithRelations } from '@/types/database';
 
 const CLUB_SELECT = `
-  *,
+  id, name, slug, description, district_id, address, latitude, longitude,
+  phone, instagram_url, is_premium, premium_expires_at, is_active,
+  is_verified, verified_at, created_at, updated_at,
   district:districts ( id, name, slug ),
   type_assignments:club_type_assignments (
     club_type_id,
@@ -21,6 +23,11 @@ const CLUB_SELECT = `
 function normalizeClubRelations(club: ClubWithRelations): ClubWithRelations {
   return {
     ...club,
+    // External map/business rating snapshots are intentionally not selected by
+    // public queries. These neutral values keep the shared relation type stable
+    // until GameYer has first-party user reviews.
+    rating_avg: null,
+    rating_count: 0,
     type_assignments: Array.isArray(club.type_assignments) ? club.type_assignments : [],
     pricing: Array.isArray(club.pricing) ? club.pricing : [],
     images: Array.isArray(club.images) ? club.images : [],
@@ -59,7 +66,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     .select(selectString)
     .eq('is_active', true)
     .order('is_premium', { ascending: false })
-    .order('rating_avg', { ascending: false, nullsFirst: false });
+    .order('name', { ascending: true });
 
   if (districtId) query = query.eq('district_id', districtId);
 
@@ -107,10 +114,6 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
   clubs = [...clubs].sort((a, b) => {
     const premiumDelta = Number(isPremiumActive(b)) - Number(isPremiumActive(a));
     if (premiumDelta !== 0) return premiumDelta;
-
-    const ratingDelta = (b.rating_avg ?? -1) - (a.rating_avg ?? -1);
-    if (ratingDelta !== 0) return ratingDelta;
-
     return a.name.localeCompare(b.name, 'az');
   });
 

@@ -66,12 +66,22 @@ export default async function HomePage({ searchParams }: PageProps) {
     q: resolvedSearchParams.q?.trim() || undefined,
   };
   const view = resolvedSearchParams.view === 'map' ? 'map' : 'list';
+  const hasDataFilter = Boolean(filters.district || filters.type || filters.priceMax || filters.q);
+  const allClubsPromise = getClubs();
+  const filteredClubsPromise = hasDataFilter ? getClubs(filters) : allClubsPromise;
 
-  const [clubs, districts, types] = await Promise.all([
-    getClubs(filters),
+  const [clubs, discoveryClubs, districts, types] = await Promise.all([
+    filteredClubsPromise,
+    allClubsPromise,
     getDistricts(),
     getClubTypes(),
   ]);
+  const activeDistrictSlugs = new Set(
+    discoveryClubs
+      .map((club) => club.district?.slug)
+      .filter((slug): slug is string => Boolean(slug)),
+  );
+  const activeDistricts = districts.filter((district) => activeDistrictSlugs.has(district.slug));
 
   return (
     <div className="flex min-h-[calc(100dvh-56px)] flex-col">
@@ -99,7 +109,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           </div>
         }
       >
-        <FilterBar districts={districts} types={types} />
+        <FilterBar districts={activeDistricts} types={types} />
       </Suspense>
 
       <div className="flex min-h-[500px] flex-1">
@@ -114,7 +124,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <Link href="/bakida-pc-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Bakıda PC klubları</Link>
             <Link href="/bakida-playstation-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Bakıda PlayStation klubları</Link>
             <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">24 saat gaming klubları</Link>
-            {districts.map((district) => (
+            {activeDistricts.map((district) => (
               <Link key={district.slug} href={`/rayon/${district.slug}`} className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-medium text-muted hover:border-primary hover:text-ink">
                 {district.name} gaming klubları
               </Link>
