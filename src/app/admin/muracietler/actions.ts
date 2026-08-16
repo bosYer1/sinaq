@@ -8,6 +8,7 @@ import {
   parseOwnerDailyHours,
   parseOwnerPrice,
 } from '@/lib/ownerClaim';
+import type { Json } from '@/types/database';
 
 const STATUSES = new Set(['pending', 'reviewing', 'resolved', 'rejected']);
 
@@ -78,101 +79,40 @@ export async function applyOwnerClaimFields(formData: FormData) {
   }
 
   const { supabase, submission, claim } = await linkedOwnerClaim(id);
-  const clubId = submission.club_id!;
 
-  if (applyInstagram) {
-    const instagramUrl = normalizeOwnerInstagram(claim.officialInstagram);
-    if (!instagramUrl) throw new Error('Instagram məlumatı təhlükəsiz formatda deyil.');
-    const { error } = await supabase
-      .from('clubs')
-      .update({ instagram_url: instagramUrl, updated_at: new Date().toISOString() })
-      .eq('id', clubId);
-    if (error) throw new Error(error.message);
+  const instagramUrl = applyInstagram ? normalizeOwnerInstagram(claim.officialInstagram) : null;
+  const pcPrice = applyPcPrice ? parseOwnerPrice(claim.pcPrice) : null;
+  const psPrice = applyPsPrice ? parseOwnerPrice(claim.psPrice) : null;
+  const parsedHours = applyHours ? parseOwnerDailyHours(claim.hours) : null;
+
+  if (applyInstagram && !instagramUrl) throw new Error('Instagram məlumatı təhlükəsiz formatda deyil.');
+  if (applyPcPrice && pcPrice == null) throw new Error('PC qiyməti təhlükəsiz formatda deyil.');
+  if (applyPsPrice && psPrice == null) throw new Error('PlayStation qiyməti təhlükəsiz formatda deyil.');
+  if (applyHours && !parsedHours) {
+    throw new Error('İş saatları avtomatik tətbiq üçün tanınan formatda deyil. Manual yoxlama tələb olunur.');
   }
 
-  const pricingRequests = [
-    { enabled: applyPcPrice, slug: 'pc', value: parseOwnerPrice(claim.pcPrice) },
-    { enabled: applyPsPrice, slug: 'playstation', value: parseOwnerPrice(claim.psPrice) },
-  ].filter((item) => item.enabled);
-
-  if (pricingRequests.length > 0) {
-    const slugs = pricingRequests.map((item) => item.slug);
-    const { data: clubTypes, error: typesError } = await supabase
-      .from('club_types')
-      .select('id,slug')
-      .in('slug', slugs);
-    if (typesError) throw new Error(typesError.message);
-
-    for (const request of pricingRequests) {
-      if (request.value == null) throw new Error(`${request.slug} qiyməti təhlükəsiz formatda deyil.`);
-      const type = clubTypes?.find((item) => item.slug === request.slug);
-      if (!type) throw new Error(`${request.slug} klub tipi tapılmadı.`);
-
-      const { data: assignment, error: assignmentError } = await supabase
-        .from('club_type_assignments')
-        .select('club_id')
-        .eq('club_id', clubId)
-        .eq('club_type_id', type.id)
-        .maybeSingle();
-      if (assignmentError) throw new Error(assignmentError.message);
-      if (!assignment) {
-        throw new Error(`${request.slug} qiyməti tətbiq edilmədi: klubda bu tip aktiv deyil.`);
-      }
-
-      const { data: existing, error: pricingReadError } = await supabase
-        .from('club_pricing')
-        .select('id')
-        .eq('club_id', clubId)
-        .eq('club_type_id', type.id)
-        .limit(1)
-        .maybeSingle();
-      if (pricingReadError) throw new Error(pricingReadError.message);
-
-      if (existing) {
-        const { error } = await supabase
-          .from('club_pricing')
-          .update({ price_from: request.value, price_to: null, unit: 'saat' })
-          .eq('id', existing.id);
-        if (error) throw new Error(error.message);
-      } else {
-        const { error } = await supabase.from('club_pricing').insert({
-          club_id: clubId,
-          club_type_id: type.id,
-          price_from: request.value,
-          price_to: null,
-          unit: 'saat',
-        });
-        if (error) throw new Error(error.message);
-      }
-    }
+  let hoursPayload: Json | null = null;
+  if (parsedHours === '24/7') {
+    hoursPayload = { mode: '24/7' };
+  } else if (parsedHours) {
+    hoursPayload = {
+      mode: 'daily',
+      open_time: parsedHours.openTime,
+      close_time: parsedHours.closeTime,
+    };
   }
 
-  if (applyHours) {
-    const hours = parseOwnerDailyHours(claim.hours);
-    if (!hours) {
-      throw new Error('İş saatları avtomatik tətbiq üçün tanınan formatda deyil. Manual yoxlama tələb olunur.');
-    }
+  const { data: clubId, error } = await supabase.rpc('apply_owner_claim_fields_atomic', {
+    p_submission_id: id,
+    p_instagram_url: instagramUrl,
+    p_pc_price: pcPrice,
+    p_ps_price: psPrice,
+    p_hours: hoursPayload,
+  });
 
-    const rows = Array.from({ length: 7 }, (_, dayOfWeek) => ({
-      club_id: clubId,
-      day_of_week: dayOfWeek,
-      open_time: hours === '24/7' ? '00:00:00' : hours.openTime,
-      close_time: hours === '24/7' ? '23:59:59' : hours.closeTime,
-      is_closed: false,
-    }));
-
-    const { error: deleteError } = await supabase.from('club_opening_hours').delete().eq('club_id', clubId);
-    if (deleteError) throw new Error(deleteError.message);
-    const { error: insertError } = await supabase.from('club_opening_hours').insert(rows);
-    if (insertError) throw new Error(insertError.message);
-  }
-
-  const { error: reviewError } = await supabase
-    .from('club_submissions')
-    .update({ status: 'reviewing', reviewed_at: new Date().toISOString() })
-    .eq('id', id)
-    .neq('status', 'resolved');
-  if (reviewError) throw new Error(reviewError.message);
+  if (error) throw new Error(error.message);
+  if (!clubId || clubId !== submission.club_id) throw new Error('Məlumatların tətbiq olunduğu klub təsdiqlənmədi.');
 
   revalidateOwnerClaim(clubId);
 }
