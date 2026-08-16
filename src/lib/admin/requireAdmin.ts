@@ -24,8 +24,8 @@ export async function requireAdmin() {
   }
 
   const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aalError || aal.currentLevel !== 'aal2') {
-    throw new Error('Admin əməliyyatı üçün iki mərhələli doğrulama tələb olunur.');
+  if (aalError || aal.currentLevel !== 'aal2' || aal.nextLevel !== 'aal2') {
+    throw new Error('Admin əməliyyatı üçün aktiv iki mərhələli doğrulama tələb olunur.');
   }
 
   return { supabase, user };
