@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getClubBySlug } from '@/lib/queries/clubs';
 import { ClubDetail } from '@/components/clubs/ClubDetail';
+import { ShareClubButton } from '@/components/clubs/ShareClubButton';
 import { getSiteUrl } from '@/lib/site-url';
 
 interface ClubPageProps { params: Promise<{ slug: string }> }
@@ -90,9 +91,6 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
   const maxPrice = validPrices.length > 0 ? Math.max(...validPrices) : null;
   const priceRange = minPrice != null && maxPrice != null ? (minPrice === maxPrice ? `${minPrice} AZN` : `${minPrice}–${maxPrice} AZN`) : undefined;
-  const aggregateRating = club.rating_avg != null && Number.isFinite(club.rating_avg) && club.rating_avg > 0 && club.rating_avg <= 5 && club.rating_count > 0
-    ? { '@type': 'AggregateRating', ratingValue: club.rating_avg, ratingCount: club.rating_count, bestRating: 5, worstRating: 1 }
-    : undefined;
   const hasMap = club.latitude != null && club.longitude != null
     ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}`
     : undefined;
@@ -111,7 +109,6 @@ export default async function ClubPage({ params }: ClubPageProps) {
         telephone: club.phone || undefined,
         priceRange,
         currenciesAccepted: 'AZN',
-        aggregateRating,
         address: {
           '@type': 'PostalAddress',
           streetAddress: club.address,
@@ -141,7 +138,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
     <ClubDetail club={club} />
-    <nav className="mx-auto flex max-w-5xl flex-wrap gap-2 px-4 pb-8 pt-2 text-xs sm:px-6" aria-label="Əlaqəli klub kateqoriyaları">
+    <nav className="mx-auto flex max-w-5xl flex-wrap gap-2 px-4 pb-8 pt-2 text-xs sm:px-6" aria-label="Əlaqəli klub kateqoriyaları və paylaşım">
+      <ShareClubButton name={club.name} url={clubUrl} />
       {club.district?.slug ? <Link href={`/rayon/${club.district.slug}`} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">{club.district.name} rayonundakı digər klublar</Link> : null}
       {typeLinks.map((type) => <Link key={type.slug} href={typeLandingHref(type.slug)} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">{type.slug === 'pc' ? 'Digər PC klubları' : type.slug === 'playstation' ? 'Digər PlayStation klubları' : `${type.name} klubları`}</Link>)}
     </nav>
