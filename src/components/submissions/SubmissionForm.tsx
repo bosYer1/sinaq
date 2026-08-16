@@ -46,6 +46,7 @@ export function SubmissionForm({ kind, clubName, clubSlug, returnTo, submitLabel
         <div className="rounded-xl border border-border bg-surface p-4">
           <h3 className="font-display text-sm font-bold text-ink">Klub məlumatlarını göndər</h3>
           <p className="mt-1 text-xs leading-5 text-muted">Bildiyiniz sahələri doldurun. Bunlar admin yoxlamasından keçmədən public sayta əlavə olunmur.</p>
+          <p className="mt-2 text-xs leading-5 text-muted">Təsdiq üçün aşağıdakı sahələrdən ən azı birini doldurun: rəsmi Instagram, qiymət, iş saatı və ya əlavə qeyd.</p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div>
