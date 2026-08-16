@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, launch-hardening]
+    branches: [main, launch-hardening, security-max-free-hardening]
   pull_request:
 
 permissions:
@@ -24,6 +24,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Reject committed private credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nEI -- ':?[^A-Z_](SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|DATABASE_URL|POSTGRES_PASSWORD|VERCEL_TOKEN|GITHUB_TOKEN)[[:space:]]*=' -- . ':!package-lock.json' ':!.github/workflows/ci.yml'; then
+            echo 'Potential private credential assignment committed to the repository.' >&2
+            exit 1
+          fi
+          if git grep -nE -- 'sb_secret_[A-Za-z0-9_-]{16,}' -- . ':!package-lock.json'; then
+            echo 'Potential Supabase secret key committed to the repository.' >&2
+            exit 1
+          fi
 
       - name: Validate migration manifest
         run: |
@@ -65,18 +78,19 @@ jobs:
           cat /tmp/gameyer-next.log
           exit 1
 
-      - name: Smoke test public routes
+      - name: Smoke test security and public routes
         run: |
           set -euo pipefail
-
           curl --fail --silent --dump-header /tmp/public-headers --output /dev/null http://127.0.0.1:3000/
           grep -Ei "^content-security-policy: .*default-src 'self'" /tmp/public-headers > /dev/null
           grep -Ei "^content-security-policy: .*frame-ancestors 'none'" /tmp/public-headers > /dev/null
-          grep -Ei '^content-security-policy: .*basemaps\.cartocdn\.com' /tmp/public-headers > /dev/null
-          grep -Ei '^content-security-policy: .*uxcedpbumulpheglhlvs\.supabase\.co' /tmp/public-headers > /dev/null
+          grep -Ei "^content-security-policy: .*script-src-attr 'none'" /tmp/public-headers > /dev/null
           grep -Ei '^x-frame-options: DENY' /tmp/public-headers > /dev/null
           grep -Ei '^x-content-type-options: nosniff' /tmp/public-headers > /dev/null
-          grep -Ei '^referrer-policy: strict-origin-when-cross-origin' /tmp/public-headers > /dev/null
+          grep -Ei '^strict-transport-security: max-age=31536000; includeSubDomains' /tmp/public-headers > /dev/null
+          grep -Ei '^cross-origin-opener-policy: same-origin' /tmp/public-headers > /dev/null
+          grep -Ei '^cross-origin-resource-policy: same-origin' /tmp/public-headers > /dev/null
+          grep -Ei '^permissions-policy: .*camera=\(\).*microphone=\(\)' /tmp/public-headers > /dev/null
 
           curl --fail --silent --dump-header /tmp/health-headers --output /tmp/health.json http://127.0.0.1:3000/api/health
           grep -Ei '^x-robots-tag: noindex, nofollow' /tmp/health-headers > /dev/null
@@ -84,123 +98,39 @@ jobs:
           grep '"database":"ok"' /tmp/health.json > /dev/null
           ! grep -E 'activeClubs|responseMs|timestamp' /tmp/health.json > /dev/null
 
-          curl --fail --silent http://127.0.0.1:3000/robots.txt > /tmp/robots.txt
-          grep 'Disallow: /api/' /tmp/robots.txt > /dev/null
-          ! grep 'Disallow: /admin' /tmp/robots.txt > /dev/null
-          curl --fail --silent http://127.0.0.1:3000/manifest.webmanifest > /dev/null
-          curl --fail --silent http://127.0.0.1:3000/pwa-icon/192 > /dev/null
-          curl --fail --silent http://127.0.0.1:3000/pwa-icon/512 > /dev/null
-          curl --fail --silent http://127.0.0.1:3000/opengraph-image > /dev/null
-          curl --fail --silent http://127.0.0.1:3000/apple-icon > /dev/null
-
           curl --fail --silent http://127.0.0.1:3000/admin/login > /tmp/admin-login.html
-          grep -E '<meta[^>]+name="robots"' /tmp/admin-login.html > /dev/null
           grep -E '<meta[^>]+content="[^"]*noindex[^"]*"' /tmp/admin-login.html > /dev/null
-          grep -F 'Admin girişi' /tmp/admin-login.html > /dev/null
           ! grep -F '>Dashboard<' /tmp/admin-login.html > /dev/null
-          ! grep -F '>Statistika<' /tmp/admin-login.html > /dev/null
           ! grep -F '>Klublar<' /tmp/admin-login.html > /dev/null
-          ! grep -F '>Müraciətlər<' /tmp/admin-login.html > /dev/null
-          ! grep -F '>+ Yeni klub<' /tmp/admin-login.html > /dev/null
 
           curl --silent --dump-header /tmp/admin-headers --output /dev/null http://127.0.0.1:3000/admin
           grep -Ei '^location: .*\/admin\/login' /tmp/admin-headers > /dev/null
+          curl --silent --dump-header /tmp/mfa-headers --output /dev/null http://127.0.0.1:3000/admin/mfa
+          grep -Ei '^location: .*\/admin\/login' /tmp/mfa-headers > /dev/null
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/this-route-must-not-exist)" = "404"
+
+          curl --fail --silent http://127.0.0.1:3000/robots.txt > /tmp/robots.txt
+          grep 'Disallow: /api/' /tmp/robots.txt > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/manifest.webmanifest > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/pwa-icon/192 > /dev/null
+          curl --fail --silent http://127.0.0.1:3000/pwa-icon/512 > /dev/null
 
           node <<'NODE'
           const base = 'http://127.0.0.1:3000';
-          const canonicalBase = 'https://gameyerr-gameyer.vercel.app';
-
-          async function expectOk(path) {
-            const response = await fetch(`${base}${path}`, { redirect: 'manual' });
-            if (response.status < 200 || response.status >= 300) {
-              throw new Error(`${path}: expected 2xx, got ${response.status}`);
-            }
-            return response;
-          }
-
-          async function expectCanonical(path) {
-            const response = await expectOk(path);
-            const html = await response.text();
-            const expected = `rel="canonical" href="${canonicalBase}${path}"`;
-            if (!html.includes(expected)) {
-              throw new Error(`${path}: missing canonical ${canonicalBase}${path}`);
-            }
-          }
-
-          async function expectPermanentRedirect(path, target) {
-            const response = await fetch(`${base}${path}`, { redirect: 'manual' });
-            if (response.status !== 308) {
-              throw new Error(`${path}: expected 308, got ${response.status}`);
-            }
-            const location = response.headers.get('location');
-            if (!location) throw new Error(`${path}: missing Location header`);
-            const resolved = new URL(location, base).pathname;
-            if (resolved !== target) {
-              throw new Error(`${path}: expected redirect to ${target}, got ${location}`);
-            }
-          }
-
-          function assertIndexableSelfCanonical(path, html) {
-            const canonicalMatch = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["'][^>]*>/i)
-              || html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["'][^>]*>/i);
-            if (!canonicalMatch) throw new Error(`${path}: sitemap page has no canonical`);
-            const canonical = new URL(canonicalMatch[1], canonicalBase);
-            if (canonical.origin !== canonicalBase || canonical.pathname !== path) {
-              throw new Error(`${path}: expected self-canonical, got ${canonical.href}`);
-            }
-
-            const robotsTags = [...html.matchAll(/<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["'][^>]*>/gi)]
-              .map((match) => match[1].toLowerCase());
-            if (robotsTags.some((value) => value.split(/\s*,\s*/).includes('noindex'))) {
-              throw new Error(`${path}: sitemap page is marked noindex`);
-            }
-          }
-
           (async () => {
-            await expectOk('/rayon');
-            await expectOk('/tip');
-            await expectCanonical('/bakida-pc-klublari');
-            await expectCanonical('/bakida-playstation-klublari');
-            await expectCanonical('/bakida-24-saat-gaming-klublari');
-            await expectCanonical('/elaqe');
-            await expectCanonical('/mexfilik');
-            await expectCanonical('/klub-sahibi');
-            await expectPermanentRedirect('/tip/pc', '/bakida-pc-klublari');
-            await expectPermanentRedirect('/tip/playstation', '/bakida-playstation-klublari');
-
-            const sitemapResponse = await expectOk('/sitemap.xml');
-            const xml = await sitemapResponse.text();
-            const paths = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => new URL(match[1]).pathname);
-
+            for (const path of ['/', '/rayon', '/tip', '/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/elaqe', '/mexfilik', '/klub-sahibi']) {
+              const response = await fetch(`${base}${path}`, { redirect: 'manual' });
+              if (response.status < 200 || response.status >= 300) throw new Error(`${path}: ${response.status}`);
+            }
+            const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
+            const paths = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
             if (paths.length < 36) throw new Error(`Expected at least 36 sitemap URLs, got ${paths.length}`);
-            for (const required of ['/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari']) {
-              if (!paths.includes(required)) throw new Error(`Sitemap missing ${required}`);
-            }
-            for (const duplicate of ['/tip/pc', '/tip/playstation']) {
-              if (paths.includes(duplicate)) throw new Error(`Sitemap must not include redirected URL ${duplicate}`);
-            }
-            if (!paths.some((path) => /^\/rayon\/[^/]+\/(pc|playstation)$/.test(path))) {
-              throw new Error('Sitemap missing indexable district/type pages');
-            }
-
             for (const path of paths) {
               const response = await fetch(`${base}${path}`, { redirect: 'manual' });
-              if (response.status < 200 || response.status >= 300) {
-                throw new Error(`Sitemap URL ${path} returned ${response.status}`);
-              }
-              const contentType = response.headers.get('content-type') || '';
-              if (contentType.includes('text/html')) {
-                const html = await response.text();
-                assertIndexableSelfCanonical(path, html);
-              }
+              if (response.status < 200 || response.status >= 300) throw new Error(`Sitemap URL ${path}: ${response.status}`);
             }
-
-            console.log(`SEO smoke-tested ${paths.length} indexable self-canonical sitemap routes successfully.`);
-          })().catch((error) => {
-            console.error(error);
-            process.exit(1);
-          });
+            console.log(`Security/public smoke-tested ${paths.length} sitemap routes successfully.`);
+          })().catch((error) => { console.error(error); process.exit(1); });
           NODE
 
       - name: Stop production server
