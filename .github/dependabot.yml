@@ -13,3 +13,7 @@ updates:
       - dependencies
     commit-message:
       prefix: deps
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
