@@ -137,40 +137,49 @@ jobs:
       - name: Controlled API abuse regression tests
         run: |
           set -euo pipefail
-          endpoint='http://127.0.0.1:3000/api/analytics/visit'
-          same_origin='http://127.0.0.1:3000'
+          endpoint='http://localhost:3000/api/analytics/visit'
+          same_origin='http://localhost:3000'
+
+          expect_status() {
+            expected="$1"
+            label="$2"
+            shift 2
+            actual="$(curl --silent --output /dev/null --write-out '%{http_code}' "$@")"
+            echo "$label -> $actual"
+            test "$actual" = "$expected"
+          }
 
           # Every request below must be rejected before any database insert occurs.
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+          expect_status 403 cross-origin \
             -X POST "$endpoint" \
             -H 'Origin: https://attacker.invalid' \
             -H 'Content-Type: application/json' \
-            --data '{"sessionId":"securitytest1","path":"/"}')" = "403"
+            --data '{"sessionId":"securitytest1","path":"/"}'
 
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+          expect_status 415 wrong-content-type \
             -X POST "$endpoint" \
             -H "Origin: $same_origin" \
             -H 'Content-Type: text/plain' \
-            --data '{}')" = "415"
+            --data '{}'
 
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+          expect_status 400 malformed-json \
             -X POST "$endpoint" \
             -H "Origin: $same_origin" \
             -H 'Content-Type: application/json' \
-            --data '{')" = "400"
+            --data '{'
 
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+          expect_status 400 forbidden-path \
             -X POST "$endpoint" \
             -H "Origin: $same_origin" \
             -H 'Content-Type: application/json' \
-            --data '{"sessionId":"securitytest1","path":"/admin"}')" = "400"
+            --data '{"sessionId":"securitytest1","path":"/admin"}'
 
           node -e "process.stdout.write(JSON.stringify({sessionId:'securitytest1',path:'/',padding:'x'.repeat(2048)}))" > /tmp/oversized-analytics.json
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+          expect_status 413 oversized-body \
             -X POST "$endpoint" \
             -H "Origin: $same_origin" \
             -H 'Content-Type: application/json' \
-            --data-binary @/tmp/oversized-analytics.json)" = "413"
+            --data-binary @/tmp/oversized-analytics.json
 
       - name: Stop production server
         if: always()
