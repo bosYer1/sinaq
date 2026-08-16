@@ -103,10 +103,15 @@ function createPopupContent(club: ClubWithDistance) {
   appendText(
     meta,
     'span',
-    cheapest ? 'text-xs font-semibold text-ink' : 'text-xs text-muted',
+    cheapest ? 'text-xs font-bold text-[#0F9F5D]' : 'text-xs text-muted',
     cheapest ? formatPriceRange(cheapest.price_from, cheapest.price_to, cheapest.unit) : 'Qiymət məlum deyil'
   );
-  appendText(meta, 'span', openNow ? 'text-xs font-medium text-live' : 'text-xs text-muted', statusLabel);
+  appendText(
+    meta,
+    'span',
+    !hasHours ? 'text-xs font-medium text-muted' : openNow ? 'text-xs font-semibold text-live' : 'text-xs font-semibold text-red-500',
+    statusLabel
+  );
   root.appendChild(meta);
 
   const actions = document.createElement('div');
@@ -165,8 +170,11 @@ export function ClubMap({
     const map = L.map(container, {
       center: [40.4093, 49.8671],
       zoom: 12,
+      zoomControl: false,
       scrollWheelZoom: true,
     });
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
@@ -211,7 +219,7 @@ export function ClubMap({
         zIndexOffset: isActive ? 1000 : 0,
         title: club.name,
       });
-      marker.bindPopup(createPopupContent(club), { minWidth: 210 });
+      marker.bindPopup(createPopupContent(club), { minWidth: 210, maxWidth: 280, className: 'gameyer-map-popup' });
       marker.on('click', () => onSelectClubRef.current?.(club.id));
       marker.addTo(layer);
       markerRefs.current.set(club.id, marker);
