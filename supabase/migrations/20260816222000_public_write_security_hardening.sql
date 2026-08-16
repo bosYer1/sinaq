@@ -23,6 +23,13 @@ alter table public.club_submissions validate constraint club_submissions_message
 alter table public.club_submissions validate constraint club_submissions_contact_type_check;
 alter table public.club_submissions validate constraint club_submissions_contact_length_check;
 
+-- These indexes make the security circuit-breakers cheap even while traffic spikes.
+create index if not exists idx_club_submissions_created_at
+  on public.club_submissions (created_at desc);
+
+create index if not exists idx_analytics_events_session_created_at
+  on public.analytics_events (session_id, created_at desc);
+
 create or replace function public.enforce_club_submission_rate_limit()
 returns trigger
 language plpgsql
@@ -127,7 +134,7 @@ begin
      or new.event_type not in ('maps_click', 'phone_click', 'instagram_click')
      or new.club_slug is null
      or new.club_slug !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'
-     or new.path <> '/klub/' || new.club_slug then
+     or new.path <> ('/klub/' || new.club_slug) then
     raise exception 'Invalid analytics payload';
   end if;
 
