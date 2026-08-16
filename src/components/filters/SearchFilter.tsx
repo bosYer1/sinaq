@@ -32,20 +32,20 @@ export function SearchFilter() {
   return (
     <div className="relative w-full">
       <SearchIcon
-        width={17}
-        height={17}
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
+        width={18}
+        height={18}
+        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-primary"
       />
 
       <input
         type="search"
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder="Klub adı və ya ünvan axtar"
-        aria-label="Klub axtar"
+        placeholder="Harada oynamaq istəyirsən?"
+        aria-label="Klub adı və ya ünvan üzrə axtar"
         enterKeyHint="search"
         autoComplete="off"
-        className="h-11 w-full rounded-control border border-border-strong bg-surface pl-10 pr-11 text-sm text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 md:h-10"
+        className="h-12 w-full rounded-xl border border-border-strong bg-surface pl-11 pr-11 text-sm font-medium text-ink shadow-sm outline-none transition placeholder:font-normal placeholder:text-faint hover:border-primary/40 focus:border-primary focus:ring-4 focus:ring-primary/10 md:h-10 md:rounded-control"
       />
 
       {value ? (
