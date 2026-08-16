@@ -1,32 +1,56 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import type { District, ClubType } from '@/types/database';
+import { SearchFilter } from './SearchFilter';
 import { DistrictFilter } from './DistrictFilter';
 import { TypeFilter } from './TypeFilter';
 import { PriceFilter } from './PriceFilter';
 import { ViewToggle } from './ViewToggle';
 import { useFilters } from '@/hooks/useFilters';
 
-interface FilterBarProps { districts: District[]; types: ClubType[]; }
+interface FilterBarProps {
+  districts: District[];
+  types: ClubType[];
+}
 
 export function FilterBar({ districts, types }: FilterBarProps) {
   const { hasActiveFilters, clearAll } = useFilters();
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') ?? '';
 
   return (
-    <div className="sticky top-16 z-20 shrink-0 border-b border-white/5 bg-[#0D0F14]/88 backdrop-blur-xl">
-      <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-          <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Klub filtrləri">
-            <TypeFilter types={types}/>
-            <DistrictFilter districts={districts}/>
-            <PriceFilter/>
-            {hasActiveFilters ? (
-              <button type="button" onClick={clearAll} className="h-10 shrink-0 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary/35 hover:text-white">
-                Təmizlə
-              </button>
-            ) : null}
+    <div className="shrink-0 border-b border-border bg-surface">
+      <div className="w-full px-4 py-3 sm:px-6 lg:px-7">
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
+          <div className="w-full shrink-0 md:w-[380px] lg:w-[420px]">
+            <SearchFilter key={searchQuery} />
           </div>
-          <div className="shrink-0"><ViewToggle/></div>
+
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div
+              className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:overflow-visible md:pb-0"
+              aria-label="Klub filtrləri"
+            >
+              <TypeFilter types={types} />
+              <DistrictFilter districts={districts} />
+              <PriceFilter />
+
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={clearAll}
+                  className="h-10 shrink-0 px-2 text-sm font-medium text-muted transition hover:text-ink"
+                >
+                  Təmizlə
+                </button>
+              ) : null}
+            </div>
+
+            <div className="shrink-0">
+              <ViewToggle />
+            </div>
+          </div>
         </div>
       </div>
     </div>

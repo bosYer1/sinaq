@@ -11,7 +11,11 @@ import { inferClubTypeSlugs } from '@/lib/clubType';
 import { cn, formatPriceRange, isClubOpenNow, isPremiumActive } from '@/lib/utils';
 import { formatDistance } from '@/lib/geo';
 
-interface ClubCardProps { club: ClubWithDistance; active?: boolean; onMouseEnter?: () => void; }
+interface ClubCardProps {
+  club: ClubWithDistance;
+  active?: boolean;
+  onMouseEnter?: () => void;
+}
 
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, active, onMouseEnter }, ref) {
   const isVerified = club.is_verified;
@@ -30,7 +34,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     return () => window.clearInterval(timer);
   }, [club, hasHours]);
 
-  const statusLabel = !hasHours ? 'Saat məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
+  const statusLabel = !hasHours ? 'İş saatı məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
   const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
   const cheapestPricing = [...realPricing].sort((a, b) => a.price_from - b.price_from)[0];
@@ -42,56 +46,37 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
       className={cn(
-        'group relative overflow-hidden rounded-[20px] border bg-surface shadow-[0_18px_50px_-34px_rgba(0,0,0,.9)] transition-all duration-200',
-        active
-          ? 'border-primary/55 ring-1 ring-primary/15 shadow-[0_20px_55px_-30px_rgba(155,107,255,.45)]'
-          : 'border-white/8 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_24px_60px_-34px_rgba(155,107,255,.32)]'
+        'group flex gap-3 rounded-card border bg-surface p-3 transition-all duration-150',
+        active ? 'border-primary shadow-card-hover ring-1 ring-primary/15' : 'border-border shadow-card hover:border-border-strong hover:shadow-card-hover'
       )}
     >
-      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-[#241B3B] via-[#171D2A] to-[#102B35]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(155,107,255,.28),transparent_42%),radial-gradient(circle_at_88%_90%,rgba(50,211,242,.17),transparent_38%)]" />
+      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[10px] bg-surface-alt">
         {cover ? (
-          <Image src={cover.url} alt={club.name} fill sizes="(max-width: 1024px) 100vw, 420px" className="object-cover transition-transform duration-500 group-hover:scale-[1.035]" />
+          <Image src={cover.url} alt={club.name} fill sizes="80px" className="object-cover transition-transform duration-200 group-hover:scale-[1.03]" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center"><ClubLogo slug={club.slug} name={club.name} className="h-20 w-20 rounded-2xl border border-white/10 bg-white/[.055] text-3xl text-white shadow-lg backdrop-blur" /></div>
+          <ClubLogo slug={club.slug} name={club.name} className="h-full w-full rounded-[10px] border border-border text-3xl" />
         )}
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/55 to-transparent" />
-        <div className="absolute left-3 top-3 flex items-center gap-1.5">
-          {typeSlugs.map((slug) => <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>{slug === 'pc' ? 'PC' : 'PlayStation'}</Badge>)}
-        </div>
-        <div className="absolute right-3 top-3 flex items-center gap-1.5">
-          {isVerified ? <Badge tone="verified">✓</Badge> : null}
-          {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
-        </div>
+        {openNow ? <span className="absolute left-2 top-2 h-2 w-2 rounded-full bg-live ring-2 ring-white" title="Hazırda açıqdır" /> : null}
       </div>
 
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate font-display text-[17px] font-bold tracking-[-.025em] text-white transition group-hover:text-[#D6C7FF]">{club.name}</h3>
-            <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[11px] text-muted">
-              <MapPinIcon width={13} height={13} className="shrink-0 text-primary"/>
-              <span className="truncate">{club.district?.name ?? 'Rayon göstərilməyib'}{club.address ? ` · ${club.address}` : ''}</span>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-1.5 pt-1 text-[10px] font-semibold">
-            <span className={cn('h-2 w-2 rounded-full', !hasHours ? 'bg-faint' : openNow ? 'bg-live shadow-[0_0_9px_rgba(57,217,138,.65)]' : 'bg-red-400')} />
-            <span className={cn(!hasHours ? 'text-faint' : openNow ? 'text-live' : 'text-red-400')}>{statusLabel}</span>
-          </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 items-start gap-2">
+          <h3 className="min-w-0 flex-1 truncate font-display text-sm font-semibold text-ink transition group-hover:text-primary">{club.name}</h3>
+          <div className="flex shrink-0 items-center gap-1">{isVerified ? <Badge tone="verified">✓</Badge> : null}{premiumActive ? <Badge tone="premium">VIP</Badge> : null}</div>
         </div>
 
-        <div className="mt-5 flex items-end justify-between gap-4 border-t border-white/6 pt-4">
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-[.16em] text-faint">Başlayan qiymət</p>
-            {cheapestPricing ? (
-              <div className="mt-1 font-display text-[25px] font-bold leading-none tracking-[-.04em] text-primary">{formatPriceRange(cheapestPricing.price_from, cheapestPricing.price_to, cheapestPricing.unit)}</div>
-            ) : (
-              <div className="mt-1 text-xs font-medium text-muted">Qiymət məlum deyil</div>
-            )}
-          </div>
-          <div className="text-right">
-            {club.distanceKm != null ? <p className="text-xs font-semibold text-white">{formatDistance(club.distanceKm)}</p> : <p className="text-[10px] text-faint">GameYer klub</p>}
-            <p className="mt-1 text-[10px] font-medium text-primary opacity-0 transition group-hover:opacity-100">Ətraflı bax →</p>
+        <div className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted">
+          <MapPinIcon width={13} height={13} className="shrink-0" />
+          <span className="truncate">{club.district?.name ?? 'Rayon göstərilməyib'}{club.address ? ` · ${club.address}` : ''}</span>
+        </div>
+
+        {typeSlugs.length > 0 ? <div className="mt-2 flex min-w-0 items-center gap-1.5 overflow-hidden">{typeSlugs.map((slug) => <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>{slug === 'pc' ? 'PC' : 'PlayStation'}</Badge>)}</div> : null}
+
+        <div className="mt-auto flex items-end justify-between gap-3 pt-2">
+          <div className="min-w-0">{club.distanceKm != null ? <span className="whitespace-nowrap text-[11px] text-muted">{formatDistance(club.distanceKm)}</span> : null}</div>
+          <div className="shrink-0 text-right">
+            {cheapestPricing ? <div className="font-mono text-xs font-semibold text-ink">{formatPriceRange(cheapestPricing.price_from, cheapestPricing.price_to, cheapestPricing.unit)}</div> : <div className="text-[10px] text-muted">Qiymət məlum deyil</div>}
+            <div className={cn('mt-0.5 text-[10px] font-medium', openNow ? 'text-live' : 'text-muted')}>{statusLabel}</div>
           </div>
         </div>
       </div>
