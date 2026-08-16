@@ -21,6 +21,7 @@ export default async function AdminLayout({
   const { data: { user } } = await supabase.auth.getUser();
 
   let isAdmin = false;
+  let hasAal2 = false;
 
   if (user) {
     const { data: adminRow } = await supabase
@@ -30,9 +31,16 @@ export default async function AdminLayout({
       .maybeSingle();
 
     isAdmin = Boolean(adminRow);
+
+    if (isAdmin) {
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      hasAal2 = aal?.currentLevel === 'aal2';
+    }
   }
 
-  if (!isAdmin) {
+  // Login and MFA enrollment/challenge must never expose admin navigation before
+  // the session has reached authenticator assurance level 2.
+  if (!isAdmin || !hasAal2) {
     return (
       <div className="min-h-screen bg-[#f7f7f9] text-[#14161c]">
         <main>{children}</main>
