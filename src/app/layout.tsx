@@ -85,7 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <main className="pb-[76px] md:pb-0">{children}</main>
 
-        <footer className="border-t border-border bg-surface">
+        <footer className="border-t border-border bg-surface pb-[68px] md:pb-0">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6 lg:px-8">
             <span className="font-semibold text-ink">© 2026 GameYer</span>
             <Link href="/bakida-pc-klublari" className="hover:text-ink">PC klubları</Link>
