@@ -1,27 +1,7 @@
 -- Harden public write surfaces against direct REST abuse while preserving the
 -- current anonymous submission/analytics flows.
-
--- Submission payload integrity is enforced in the database as well as in the app.
-alter table public.club_submissions
-  add constraint club_submissions_kind_check
-    check (kind in ('correction', 'new_club', 'owner_claim')) not valid,
-  add constraint club_submissions_status_check
-    check (status in ('pending', 'reviewing', 'resolved', 'rejected')) not valid,
-  add constraint club_submissions_name_length_check
-    check (char_length(btrim(club_name)) between 2 and 120) not valid,
-  add constraint club_submissions_message_length_check
-    check (char_length(message) between 1 and 3000) not valid,
-  add constraint club_submissions_contact_type_check
-    check (contact_type in ('instagram', 'phone', 'email')) not valid,
-  add constraint club_submissions_contact_length_check
-    check (char_length(btrim(contact_value)) between 3 and 200) not valid;
-
-alter table public.club_submissions validate constraint club_submissions_kind_check;
-alter table public.club_submissions validate constraint club_submissions_status_check;
-alter table public.club_submissions validate constraint club_submissions_name_length_check;
-alter table public.club_submissions validate constraint club_submissions_message_length_check;
-alter table public.club_submissions validate constraint club_submissions_contact_type_check;
-alter table public.club_submissions validate constraint club_submissions_contact_length_check;
+-- Core submission CHECK constraints are created by earlier production migrations;
+-- this migration adds the abuse-resistant DB backstops only.
 
 -- These indexes make the security circuit-breakers cheap even while traffic spikes.
 create index if not exists idx_club_submissions_created_at
