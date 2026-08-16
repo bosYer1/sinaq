@@ -66,10 +66,13 @@ export default async function HomePage({ searchParams }: PageProps) {
     q: resolvedSearchParams.q?.trim() || undefined,
   };
   const view = resolvedSearchParams.view === 'map' ? 'map' : 'list';
+  const hasDataFilter = Boolean(filters.district || filters.type || filters.priceMax || filters.q);
+  const allClubsPromise = getClubs();
+  const filteredClubsPromise = hasDataFilter ? getClubs(filters) : allClubsPromise;
 
   const [clubs, discoveryClubs, districts, types] = await Promise.all([
-    getClubs(filters),
-    getClubs(),
+    filteredClubsPromise,
+    allClubsPromise,
     getDistricts(),
     getClubTypes(),
   ]);
@@ -106,7 +109,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           </div>
         }
       >
-        <FilterBar districts={districts} types={types} />
+        <FilterBar districts={activeDistricts} types={types} />
       </Suspense>
 
       <div className="flex min-h-[500px] flex-1">
