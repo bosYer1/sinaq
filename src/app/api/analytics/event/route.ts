@@ -7,6 +7,17 @@ const SESSION_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const EVENT_TYPES = new Set(['maps_click', 'phone_click', 'instagram_click']);
 
+type AnalyticsInsertClient = {
+  from: (table: 'analytics_events') => {
+    insert: (row: {
+      session_id: string;
+      path: string;
+      event_type: string;
+      club_slug: string;
+    }) => PromiseLike<{ error: { message: string } | null }>;
+  };
+};
+
 function isSameOrigin(request: Request) {
   const origin = request.headers.get('origin');
   if (!origin) return false;
@@ -44,7 +55,8 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from('analytics_events').insert({
+  const analytics = supabase as unknown as AnalyticsInsertClient;
+  const { error } = await analytics.from('analytics_events').insert({
     session_id: sessionId,
     path,
     event_type: eventType,
