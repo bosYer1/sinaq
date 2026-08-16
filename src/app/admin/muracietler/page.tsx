@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { ClubSubmission } from '@/types/database';
 import { OwnerClaimSummary } from '@/components/admin/OwnerClaimSummary';
-import { deleteCompletedSubmission, updateSubmissionStatus, verifyOwnerClaim } from './actions';
+import { OwnerClaimApplyForm } from '@/components/admin/OwnerClaimApplyForm';
+import { deleteCompletedSubmission, updateSubmissionStatus } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,11 +28,7 @@ const VALID_STATUSES = new Set<SubmissionStatus>(['pending', 'reviewing', 'resol
 const VALID_KINDS = new Set<SubmissionKind>(['correction', 'new_club', 'owner_claim']);
 
 interface AdminSubmissionsPageProps {
-  searchParams: Promise<{
-    status?: string;
-    kind?: string;
-    q?: string;
-  }>;
+  searchParams: Promise<{ status?: string; kind?: string; q?: string }>;
 }
 
 function contactHref(row: SubmissionRow) {
@@ -43,12 +40,8 @@ function contactHref(row: SubmissionRow) {
 
 export default async function AdminSubmissionsPage({ searchParams }: AdminSubmissionsPageProps) {
   const params = await searchParams;
-  const status = VALID_STATUSES.has(params.status as SubmissionStatus)
-    ? (params.status as SubmissionStatus)
-    : null;
-  const kind = VALID_KINDS.has(params.kind as SubmissionKind)
-    ? (params.kind as SubmissionKind)
-    : null;
+  const status = VALID_STATUSES.has(params.status as SubmissionStatus) ? (params.status as SubmissionStatus) : null;
+  const kind = VALID_KINDS.has(params.kind as SubmissionKind) ? (params.kind as SubmissionKind) : null;
   const q = params.q?.trim().slice(0, 120) ?? '';
 
   const supabase = await createClient();
@@ -120,6 +113,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-[#7C5CFC]/10 px-2.5 py-1 text-xs font-semibold text-[#6A47F0]">{KIND_LABELS[item.kind]}</span>
                     <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">{STATUS_LABELS[item.status]}</span>
+                    {item.kind === 'owner_claim' && !item.club_id ? <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">Kluba bağlı deyil</span> : null}
                   </div>
                   <h2 className="mt-3 text-lg font-bold text-gray-900">{item.club_name}</h2>
                   <p className="mt-1 text-xs text-gray-400">{new Date(item.created_at).toLocaleString('az-AZ', { timeZone: 'Asia/Baku' })}</p>
@@ -135,13 +129,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                 </a>
               </div>
 
-              {item.kind === 'owner_claim' && item.club_id && item.status !== 'resolved' ? (
-                <form action={verifyOwnerClaim} className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                  <input type="hidden" name="id" value={item.id} />
-                  <p className="text-xs leading-5 text-emerald-800">Rəsmi kanal yoxlamasını tamamladıqdan sonra bu düymə klubu təsdiqlənmiş kimi işarələyəcək və müraciəti həll olunmuş statusuna keçirəcək.</p>
-                  <button type="submit" className="mt-2 h-9 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700">Klub sahibini təsdiqlə</button>
-                </form>
-              ) : null}
+              {item.kind === 'owner_claim' ? <OwnerClaimApplyForm id={item.id} clubId={item.club_id} message={item.message} status={item.status} /> : null}
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <form action={updateSubmissionStatus} className="flex flex-wrap items-center gap-2">
