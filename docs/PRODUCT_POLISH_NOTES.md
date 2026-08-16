@@ -1,1 +1,0 @@
-Admin authentication UI note: the shared admin layout now performs a server-side Supabase auth lookup plus `admin_users` membership check. Non-admin and unauthenticated requests render only child content, preventing admin navigation from leaking on the login screen.
