@@ -23,5 +23,10 @@ export async function requireAdmin() {
     throw new Error('Admin icazəsi tələb olunur.');
   }
 
+  const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aalError || aal.currentLevel !== 'aal2') {
+    throw new Error('Admin əməliyyatı üçün iki mərhələli doğrulama tələb olunur.');
+  }
+
   return { supabase, user };
 }
