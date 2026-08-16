@@ -42,25 +42,26 @@
 - [x] PC / PlayStation / 24 saat landing page-ləri
 - [x] Yalnız aktiv klubu olan rayonlara crawlable internal links
 - [x] Rayon + tip səhifələri yalnız kifayət qədər real data olduqda sitemap-a düşür
-- [x] Xarici map/business rating snapshot-ları public UI və `AggregateRating` schema-dan çıxarılıb
+- [x] Xarici map/business rating snapshot-ları public query-də neytrallaşdırılıb; UI və `AggregateRating` schema onları göstərmir
 - [ ] Google Search-də faktiki indekslənmə/impression — Search Console və crawl vaxtından asılı xarici mərhələ
 
 ## Cari data integrity
-- [x] **35 aktiv public klub**
-- [x] 35/35 istifadəyə yararlı koordinat
+- [x] **34 aktiv public klub**
+- [x] 34/34 istifadəyə yararlı və unikal marker koordinatı
+- [x] Duplicate koordinat qrupu = 0
 - [x] Duplicate slug = 0
 - [x] Koordinatsız aktiv klub = 0
 - [x] Bağlanmış/zəif əsaslandırılmış qeydlər public dataset-dən çıxarılıb
-- [x] 31 klubda telefon mövcuddur; 4 klubda etibarlı telefon tapılmadığı üçün boşdur
-- [x] 31 klubda iş saatı mövcuddur; 4 klubda etibarlı qrafik tapılmadığı üçün boşdur
+- [x] IGROTEKA real klubdur, lakin səhv Marvel markerini paylaşdığı üçün dəqiq 4B koordinatı tapılanadək deaktivdir
+- [x] 30 klubda telefon mövcuddur; 4 klubda etibarlı telefon tapılmadığı üçün boşdur
+- [x] 30 klubda iş saatı mövcuddur; 4 klubda etibarlı qrafik tapılmadığı üçün boşdur
 - [x] 7 klubda Instagram mövcuddur; qalanlarında təsdiqsiz hesab yazılmır
 - [x] 4 klubda təsdiqlənmiş pricing mövcuddur; qalanlarında qiymət uydurulmur
-- [ ] Klub sahibi/rəsmi nümayəndə təsdiqi: 0/35 — outreach tələb edir
-- [ ] Real/icazəli klub şəkilləri: 0/35 — klub/rəsmi mənbədən material tələb edir
+- [ ] Klub sahibi/rəsmi nümayəndə təsdiqi: 0/34 — outreach tələb edir
+- [ ] Real/icazəli klub şəkilləri: 0/34 — klub/rəsmi mənbədən material tələb edir
 
 ## Açıq data konfliktləri — avtomatik dəyişdirilməməlidir
-- [ ] Kenza Gaming Lounge — Puşkin 54B vs Fikrət Əmirov 24 mənbə konflikti
-- [ ] IGROTEKA CYBER CLUB / Marvel PS Club & Lounge — DB-də eyni koordinat; dəqiq marker ayrıca təsdiqlənməlidir
+- [ ] Kenza Gaming Lounge — cari Yandex Puşkin 54B və DB koordinatı üst-üstə düşür; Fikrət Əmirov 24 alternativ kataloq izi relocation/filial tarixi kimi ayrıca qeyd olunur
 - [ ] Milli Gaming Arena — Təbriz 95/97 vs Ağa Nemətulla 120 mənbə konflikti
 - [ ] Avallon Gaming — ünvan variantları; cari DB bir neçə mənbə ilə əsaslandırılır
 
