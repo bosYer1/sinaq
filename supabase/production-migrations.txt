@@ -30,3 +30,4 @@
 20260815_add_30_verified_baku_clubs
 20260815_club_data_truth_audit
 20260816_deactivate_igroteka_until_coordinate_verified
+20260816125000_apply_owner_claim_fields_atomic
