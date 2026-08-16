@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
 
 const IMAGE_BUCKET = 'club-images';
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -53,7 +54,6 @@ function premiumExpiryUtc(formData: FormData) {
     throw new Error('Premium aktivdirsə bitmə tarixi mütləq yazılmalıdır.');
   }
 
-  // datetime-local timezone daşımır. Admin panelində bu sahə həmişə Bakı vaxtıdır (UTC+4).
   const parsed = new Date(`${localValue}:00+04:00`);
   if (Number.isNaN(parsed.getTime())) {
     throw new Error('Premium bitmə tarixi düzgün deyil.');
@@ -317,9 +317,9 @@ async function replaceRelations(clubId: string, formData: FormData) {
 }
 
 export async function saveClub(formData: FormData) {
+  const { supabase } = await requireAdmin();
   validateCoreFormInput(formData);
   validateRelationFormInput(formData);
-  const supabase = await createClient();
   const id = text(formData, 'id');
   if (!id) throw new Error('Klub ID tapılmadı.');
 
@@ -384,9 +384,9 @@ export async function saveClub(formData: FormData) {
 }
 
 export async function createClub(formData: FormData) {
+  const { supabase } = await requireAdmin();
   validateCoreFormInput(formData);
   validateRelationFormInput(formData);
-  const supabase = await createClient();
 
   const name = text(formData, 'name');
   if (!name) throw new Error('Klub adı boş ola bilməz.');
@@ -440,7 +440,7 @@ export async function createClub(formData: FormData) {
 }
 
 export async function toggleClubActive(formData: FormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const id = text(formData, 'id');
   if (!id) throw new Error('Klub ID tapılmadı.');
 

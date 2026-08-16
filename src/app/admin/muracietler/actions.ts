@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
 import {
   normalizeOwnerInstagram,
   parseOwnerClaimMessage,
@@ -96,6 +97,7 @@ async function linkSubmissionToClub(formData: FormData, kind: LinkableSubmission
 }
 
 export async function updateSubmissionStatus(formData: FormData) {
+  await requireAdmin();
   const id = submissionId(formData);
   const status = typeof formData.get('status') === 'string' ? String(formData.get('status')).trim() : '';
   if (!id || !STATUSES.has(status)) throw new Error('Müraciət statusu düzgün deyil.');
@@ -114,14 +116,17 @@ export async function updateSubmissionStatus(formData: FormData) {
 }
 
 export async function linkOwnerClaimToClub(formData: FormData) {
+  await requireAdmin();
   await linkSubmissionToClub(formData, 'owner_claim');
 }
 
 export async function linkCorrectionToClub(formData: FormData) {
+  await requireAdmin();
   await linkSubmissionToClub(formData, 'correction');
 }
 
 export async function applyOwnerClaimFields(formData: FormData) {
+  await requireAdmin();
   const id = submissionId(formData);
   if (!id) throw new Error('Klub sahibi müraciəti tapılmadı.');
 
@@ -173,6 +178,7 @@ export async function applyOwnerClaimFields(formData: FormData) {
 }
 
 export async function verifyOwnerClaim(formData: FormData) {
+  await requireAdmin();
   const id = submissionId(formData);
   if (!id) throw new Error('Klub sahibi müraciəti tapılmadı.');
 
@@ -188,6 +194,7 @@ export async function verifyOwnerClaim(formData: FormData) {
 }
 
 export async function deleteCompletedSubmission(formData: FormData) {
+  await requireAdmin();
   const id = submissionId(formData);
   if (!id) throw new Error('Müraciət ID tapılmadı.');
 

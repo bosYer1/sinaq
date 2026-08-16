@@ -1,30 +1,28 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { guardPublicPost } from '@/lib/security/publicRequestGuard';
 
 export const dynamic = 'force-dynamic';
 
 const SESSION_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const HOST_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?::\d{1,5})?$/i;
 
-function isSameOrigin(request: Request) {
-  const origin = request.headers.get('origin');
-  if (!origin) return false;
-
-  try {
-    return new URL(origin).host === new URL(request.url).host;
-  } catch {
-    return false;
-  }
-}
-
 export async function POST(request: Request) {
-  if (!isSameOrigin(request)) {
-    return NextResponse.json({ ok: false }, { status: 403 });
-  }
-
-  const contentLength = Number(request.headers.get('content-length') ?? '0');
-  if (contentLength > 1024) {
-    return NextResponse.json({ ok: false }, { status: 413 });
+  const guard = guardPublicPost(request, {
+    keyPrefix: 'analytics-visit',
+    limit: 120,
+    windowMs: 5 * 60_000,
+    maxBodyBytes: 1024,
+    requireJson: true,
+  });
+  if (!guard.ok) {
+    return NextResponse.json(
+      { ok: false },
+      {
+        status: guard.status,
+        headers: guard.status === 429 ? { 'Retry-After': String(guard.retryAfter) } : undefined,
+      },
+    );
   }
 
   let body: unknown;
