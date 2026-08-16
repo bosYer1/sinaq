@@ -6,7 +6,6 @@ import { SearchFilter } from './SearchFilter';
 import { DistrictFilter } from './DistrictFilter';
 import { TypeFilter } from './TypeFilter';
 import { PriceFilter } from './PriceFilter';
-import { ViewToggle } from './ViewToggle';
 import { useFilters } from '@/hooks/useFilters';
 
 interface FilterBarProps {
@@ -20,38 +19,25 @@ export function FilterBar({ districts, types }: FilterBarProps) {
   const searchQuery = searchParams.get('q') ?? '';
 
   return (
-    <div className="shrink-0 border-b border-border bg-surface">
-      <div className="w-full px-4 py-3 sm:px-6 lg:px-7">
-        <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
-          <div className="w-full shrink-0 md:w-[380px] lg:w-[420px]">
-            <SearchFilter key={searchQuery} />
-          </div>
+    <div className="mb-4 rounded-2xl border border-border bg-surface p-3 shadow-[0_6px_24px_rgba(31,35,48,0.04)] sm:p-4">
+      <div className="grid gap-3 lg:grid-cols-[minmax(280px,1.55fr)_minmax(0,2fr)_auto] lg:items-center">
+        <SearchFilter key={searchQuery} />
 
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <div
-              className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:overflow-visible md:pb-0"
-              aria-label="Klub filtrləri"
-            >
-              <TypeFilter types={types} />
-              <DistrictFilter districts={districts} />
-              <PriceFilter />
-
-              {hasActiveFilters ? (
-                <button
-                  type="button"
-                  onClick={clearAll}
-                  className="h-10 shrink-0 px-2 text-sm font-medium text-muted transition hover:text-ink"
-                >
-                  Təmizlə
-                </button>
-              ) : null}
-            </div>
-
-            <div className="shrink-0">
-              <ViewToggle />
-            </div>
-          </div>
+        <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:overflow-visible lg:pb-0" aria-label="Klub filtrləri">
+          <TypeFilter types={types} />
+          <DistrictFilter districts={districts} />
+          <PriceFilter />
         </div>
+
+        {hasActiveFilters ? (
+          <button type="button" onClick={clearAll} className="h-10 shrink-0 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-muted transition hover:border-primary hover:text-primary">
+            Filtrləri təmizlə
+          </button>
+        ) : (
+          <div className="hidden h-10 min-w-[126px] items-center justify-center rounded-xl border border-border bg-[#FAFBFD] px-4 text-xs font-medium text-faint lg:flex">
+            Filtrlər hazırdır
+          </div>
+        )}
       </div>
     </div>
   );
