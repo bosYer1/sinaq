@@ -70,8 +70,7 @@ function currentValues(club: ClubSnapshotRow): OwnerClaimCurrentValues {
 }
 
 function ClubLinkForm({ item, activeClubs }: { item: SubmissionRow; activeClubs: ActiveClubOption[] }) {
-  const owner = item.kind === 'owner_claim';
-  const action = owner ? linkOwnerClaimToClub : linkCorrectionToClub;
+  const action = item.kind === 'owner_claim' ? linkOwnerClaimToClub : linkCorrectionToClub;
   return (
     <form action={action} className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
       <input type="hidden" name="id" value={item.id} />
@@ -152,7 +151,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
         <div>
           <label htmlFor="submission-kind" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Növ</label>
           <select id="submission-kind" name="kind" defaultValue={kind ?? ''} className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm">
-            <option value="">Hamısı</option><option value="pending">Gözləyir</option><option value="reviewing">Yoxlanılır</option><option value="resolved">Həll olunub</option><option value="rejected">Rədd edilib</option>
+            <option value="">Hamısı</option><option value="correction">Düzəliş</option><option value="new_club">Yeni klub</option><option value="owner_claim">Klub sahibi</option>
           </select>
         </div>
         <div className="flex items-end gap-2">
