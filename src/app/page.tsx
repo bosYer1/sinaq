@@ -75,36 +75,36 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-[1440px] px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-        <section className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" aria-labelledby="home-title">
-          <div>
-            <h1 id="home-title" className="font-display text-2xl font-bold tracking-[-0.035em] text-ink sm:text-3xl">
+      <div className="mx-auto max-w-[1440px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-8">
+        <section className="mb-4 flex items-end justify-between gap-3 sm:mb-5" aria-labelledby="home-title">
+          <div className="min-w-0">
+            <h1 id="home-title" className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-ink sm:text-3xl">
               Bakıda PC və PlayStation klubları
             </h1>
-            <p className="mt-1.5 text-sm text-muted">Sevdiyin oyunu, sənə uyğun məkanı seç.</p>
+            <p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">Sevdiyin oyunu, sənə uyğun məkanı seç.</p>
           </div>
-          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[#F0ECFF] px-3.5 py-2 text-sm font-semibold text-primary">
+          <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#F0ECFF] px-3 py-1.5 text-xs font-semibold text-primary sm:gap-2 sm:px-3.5 sm:py-2 sm:text-sm">
             <span aria-hidden="true">🎮</span>
             {discoveryClubs.length} klub
           </div>
         </section>
 
-        <Suspense fallback={<div className="mb-4 rounded-2xl border border-border bg-surface p-4"><Skeleton className="h-11 w-full rounded-control" /></div>}>
+        <Suspense fallback={<div className="mb-3 rounded-2xl border border-border bg-surface p-3 sm:mb-4 sm:p-4"><Skeleton className="h-11 w-full rounded-control" /></div>}>
           <FilterBar districts={activeDistricts} types={types} />
         </Suspense>
 
-        <section className="overflow-hidden rounded-2xl border border-border bg-surface p-3 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:p-4" aria-label="Klub siyahısı və xəritə">
+        <section className="overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:p-4" aria-label="Klub siyahısı və xəritə">
           <ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} />
         </section>
 
-        <section className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="GameYer üstünlükləri">
+        <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:mt-7 lg:grid-cols-4" aria-label="GameYer üstünlükləri">
           <div className="rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-live-tint text-lg">✓</span><div><h2 className="text-sm font-bold text-ink">Dəqiq lokasiyalar</h2><p className="mt-0.5 text-xs text-muted">Xəritədə real klub nöqtələri</p></div></div></div>
           <div className="rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-warn-tint text-lg">₼</span><div><h2 className="text-sm font-bold text-ink">Məlum qiymətlər</h2><p className="mt-0.5 text-xs text-muted">Yalnız təsdiqlənən qiymətlər</p></div></div></div>
           <div className="rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-pc-tint text-lg">◷</span><div><h2 className="text-sm font-bold text-ink">İş saatları</h2><p className="mt-0.5 text-xs text-muted">Açıq və bağlı statusunu gör</p></div></div></div>
           <div className="rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-ps-tint text-lg">⌖</span><div><h2 className="text-sm font-bold text-ink">Asan axtarış</h2><p className="mt-0.5 text-xs text-muted">Rayon, tip və qiymət üzrə filtr</p></div></div></div>
         </section>
 
-        <section className="mt-7 rounded-2xl border border-border bg-surface px-4 py-5 sm:px-6" aria-labelledby="discover-heading">
+        <section className="mt-6 rounded-2xl border border-border bg-surface px-4 py-5 sm:px-6 lg:mt-7" aria-labelledby="discover-heading">
           <h2 id="discover-heading" className="font-display text-base font-bold text-ink">Gaming klublarını daha konkret tap</h2>
           <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">PC, PlayStation, 24 saat işləyən klublar və Bakı rayonları üzrə ayrıca siyahılara keç.</p>
           <nav className="mt-3 flex flex-wrap gap-2" aria-label="Gaming klub kateqoriyaları">
