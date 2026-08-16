@@ -60,10 +60,10 @@
 - [ ] Klub sahibi/rəsmi nümayəndə təsdiqi: 0/34 — outreach tələb edir
 - [ ] Real/icazəli klub şəkilləri: 0/34 — klub/rəsmi mənbədən material tələb edir
 
-## Açıq data konfliktləri — avtomatik dəyişdirilməməlidir
-- [ ] Kenza Gaming Lounge — cari Yandex Puşkin 54B və DB koordinatı üst-üstə düşür; Fikrət Əmirov 24 alternativ kataloq izi relocation/filial tarixi kimi ayrıca qeyd olunur
-- [ ] Milli Gaming Arena — Təbriz 95/97 vs Ağa Nemətulla 120 mənbə konflikti
-- [ ] Avallon Gaming — ünvan variantları; cari DB bir neçə mənbə ilə əsaslandırılır
+## Data konfliktləri və qərar qeydləri
+- [ ] Kenza Gaming Lounge — həll olunmayıb. Cari Yandex Puşkin 54B göstərir və DB bununla üst-üstə düşür; Epoint/LanGame və digər cari izlər Fikrət Əmirov 24 göstərir. Rəsmi sahib təsdiqi və ya birbaşa məkan sübutu olmadan avtomatik dəyişdirilmir.
+- [x] Milli Gaming Arena — DB-də Təbriz küçəsi 97 saxlanılır. Cari local business nəticəsi, Waze və Buro Təbriz 97-ni dəstəkləyir; rəsmi saytın Ağa Nemətulla 120 yazısı köhnə/alternativ iz kimi saxlanılır, avtomatik üstün tutulmur.
+- [x] Avallon Gaming — DB-də Təbriz küçəsi 94 saxlanılır; cari Waze/local business izi eyni ünvanı göstərir. Əvvəlki ünvan variantları cari qərarı dəyişdirmək üçün kifayət etmir.
 
 ## Custom domain — `gameyer.az`
 - [x] Kod `NEXT_PUBLIC_SITE_URL` ilə custom domain-ə hazırdır
