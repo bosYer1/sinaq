@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LogoutButton } from '@/components/admin/LogoutButton';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'Admin',
@@ -11,11 +12,34 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let isAdmin = false;
+
+  if (user) {
+    const { data: adminRow } = await supabase
+      .from('admin_users')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    isAdmin = Boolean(adminRow);
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-[#f7f7f9] text-[#14161c]">
+        <main>{children}</main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f7f9] text-[#14161c]">
       <div className="mx-auto flex min-h-screen max-w-[1500px]">
