@@ -22,11 +22,19 @@ export function ExploreView({ clubs, searchActive }: ExploreViewProps) {
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState(false);
-  const [mapReady, setMapReady] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [responsiveReady, setResponsiveReady] = useState(false);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
 
   useEffect(() => {
-    setMapReady(true);
+    const media = window.matchMedia('(min-width: 1024px)');
+    const sync = () => {
+      setIsDesktop(media.matches);
+      setResponsiveReady(true);
+    };
+    sync();
+    media.addEventListener?.('change', sync);
+    return () => media.removeEventListener?.('change', sync);
   }, []);
 
   const clubsWithDistance = useMemo(() => {
@@ -81,7 +89,7 @@ export function ExploreView({ clubs, searchActive }: ExploreViewProps) {
 
   function handleSelectMarker(id: string) {
     setActiveClubId(id);
-    cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (isDesktop) cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   const locationButtonLabel = status === 'loading'
@@ -116,48 +124,52 @@ export function ExploreView({ clubs, searchActive }: ExploreViewProps) {
         ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
         : null;
 
-  const mapPanel = (
-    <div className="relative h-full min-h-0 overflow-hidden rounded-xl border border-border bg-surface-alt">
-      {mapReady ? (
-        <MapErrorBoundary>
-          <MapWrapper
-            clubs={clubsWithDistance}
-            activeClubId={activeClubId}
-            onSelectClub={handleSelectMarker}
-            userLocation={location}
-            locationFocusRequest={locationFocusRequest}
-          />
-        </MapErrorBoundary>
-      ) : null}
+  function renderMapPanel(mountMap: boolean) {
+    return (
+      <div className="relative h-full min-h-0 overflow-hidden rounded-xl border border-border bg-surface-alt">
+        {responsiveReady && mountMap ? (
+          <MapErrorBoundary>
+            <MapWrapper
+              clubs={clubsWithDistance}
+              activeClubId={activeClubId}
+              onSelectClub={handleSelectMarker}
+              userLocation={location}
+              locationFocusRequest={locationFocusRequest}
+            />
+          </MapErrorBoundary>
+        ) : (
+          <div className="h-full w-full animate-pulse bg-surface-alt" aria-hidden="true" />
+        )}
 
-      <div className="pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-2">
-        <div className="pointer-events-auto rounded-xl border border-border bg-white/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
-          <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-live" aria-hidden="true" />
-          Xəritədə {clubsWithDistance.length} klub
+        <div className="pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-2">
+          <div className="pointer-events-auto rounded-xl border border-border bg-white/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
+            <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-live" aria-hidden="true" />
+            Xəritədə {clubsWithDistance.length} klub
+          </div>
         </div>
-      </div>
 
-      <div className="absolute right-3 top-3 z-[500]">
-        <button
-          type="button"
-          onClick={() => void handleMapLocation()}
-          disabled={status === 'loading' || status === 'unsupported'}
-          className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-white/95 px-3 text-xs font-semibold text-ink shadow-card backdrop-blur transition hover:border-primary hover:text-primary disabled:opacity-60"
-        >
-          <span aria-hidden="true">⌖</span>
-          <span className="hidden sm:inline">{mapLocationLabel}</span>
-        </button>
-      </div>
-
-      {location && nearestClub?.distanceKm != null ? (
-        <div className="absolute bottom-3 right-3 z-[500] max-w-[240px] rounded-xl border border-border bg-white/95 px-3 py-2 text-right shadow-card backdrop-blur">
-          <p className="text-[10px] text-muted">Ən yaxın klub</p>
-          <p className="truncate text-xs font-semibold text-ink">{nearestClub.name}</p>
-          <p className="mt-0.5 text-[10px] font-semibold text-primary">{formatDistance(nearestClub.distanceKm)}</p>
+        <div className="absolute right-3 top-3 z-[500]">
+          <button
+            type="button"
+            onClick={() => void handleMapLocation()}
+            disabled={status === 'loading' || status === 'unsupported'}
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-white/95 px-3 text-xs font-semibold text-ink shadow-card backdrop-blur transition hover:border-primary hover:text-primary disabled:opacity-60"
+          >
+            <span aria-hidden="true">⌖</span>
+            <span className="hidden sm:inline">{mapLocationLabel}</span>
+          </button>
         </div>
-      ) : null}
-    </div>
-  );
+
+        {location && nearestClub?.distanceKm != null ? (
+          <div className="absolute bottom-3 right-3 z-[500] max-w-[240px] rounded-xl border border-border bg-white/95 px-3 py-2 text-right shadow-card backdrop-blur">
+            <p className="text-[10px] text-muted">Ən yaxın klub</p>
+            <p className="truncate text-xs font-semibold text-ink">{nearestClub.name}</p>
+            <p className="mt-0.5 text-[10px] font-semibold text-primary">{formatDistance(nearestClub.distanceKm)}</p>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface">
@@ -166,7 +178,7 @@ export function ExploreView({ clubs, searchActive }: ExploreViewProps) {
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-white px-4 py-3">
             <div>
               <p className="text-base font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
-              <p className="mt-0.5 text-[11px] text-muted">Ən azı 4 klub eyni ekranda görünür</p>
+              <p className="mt-0.5 text-[11px] text-muted">Klublar panel daxilində sürüşür</p>
             </div>
             <button
               type="button"
@@ -190,14 +202,14 @@ export function ExploreView({ clubs, searchActive }: ExploreViewProps) {
           </div>
         </section>
 
-        <section className="min-h-0 overflow-hidden rounded-xl bg-[#FBFCFE] p-0">
-          {mapPanel}
+        <section className="min-h-0 overflow-hidden rounded-xl bg-[#FBFCFE]">
+          {renderMapPanel(isDesktop)}
         </section>
       </div>
 
       <div className="lg:hidden">
         <section className="h-[350px] overflow-hidden rounded-xl sm:h-[420px]">
-          {mapPanel}
+          {renderMapPanel(!isDesktop)}
         </section>
 
         <section className="pt-4">
