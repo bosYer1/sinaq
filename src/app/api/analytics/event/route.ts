@@ -9,70 +9,42 @@ const EVENT_TYPES = new Set(['maps_click', 'phone_click', 'instagram_click']);
 
 type AnalyticsInsertClient = {
   from: (table: 'analytics_events') => {
-    insert: (row: {
-      session_id: string;
-      path: string;
-      event_type: string;
-      club_slug: string;
-    }) => PromiseLike<{ error: { message: string } | null }>;
+    insert: (row: { session_id: string; path: string; event_type: string; club_slug: string }) => PromiseLike<{ error: { message: string } | null }>;
   };
 };
 
 function isSameOrigin(request: Request) {
   const origin = request.headers.get('origin');
   if (!origin) return false;
-
-  try {
-    return new URL(origin).host === new URL(request.url).host;
-  } catch {
-    return false;
-  }
+  try { return new URL(origin).host === new URL(request.url).host; } catch { return false; }
 }
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return NextResponse.json({ ok: false }, { status: 403 });
-
   const contentLength = Number(request.headers.get('content-length') ?? '0');
   if (contentLength > 1024) return NextResponse.json({ ok: false }, { status: 413 });
 
   let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 400 });
-  }
-
+  try { body = await request.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
   if (!body || typeof body !== 'object') return NextResponse.json({ ok: false }, { status: 400 });
 
   const { sessionId, path, eventType, clubSlug } = body as Record<string, unknown>;
   if (
     typeof sessionId !== 'string' || !SESSION_RE.test(sessionId) ||
-    typeof path !== 'string' || path.length < 1 || path.length > 300 || !path.startsWith('/') || path.startsWith('/admin') || path.startsWith('/api') ||
+    typeof path !== 'string' || path.length < 7 || path.length > 300 || !path.startsWith('/klub/') ||
     typeof eventType !== 'string' || !EVENT_TYPES.has(eventType) ||
-    typeof clubSlug !== 'string' || !SLUG_RE.test(clubSlug)
-  ) {
-    return NextResponse.json({ ok: false }, { status: 400 });
-  }
+    typeof clubSlug !== 'string' || clubSlug.length > 120 || !SLUG_RE.test(clubSlug) ||
+    path !== `/klub/${clubSlug}`
+  ) return NextResponse.json({ ok: false }, { status: 400 });
 
   const supabase = await createClient();
   const analytics = supabase as unknown as AnalyticsInsertClient;
-  const { error } = await analytics.from('analytics_events').insert({
-    session_id: sessionId,
-    path,
-    event_type: eventType,
-    club_slug: clubSlug,
-  });
+  const { error } = await analytics.from('analytics_events').insert({ session_id: sessionId, path, event_type: eventType, club_slug: clubSlug });
 
   if (error) {
     console.error('analytics event insert failed:', error.message);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 
-  return new NextResponse(null, {
-    status: 204,
-    headers: {
-      'cache-control': 'no-store',
-      'x-robots-tag': 'noindex, nofollow',
-    },
-  });
+  return new NextResponse(null, { status: 204, headers: { 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' } });
 }
