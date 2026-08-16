@@ -15,7 +15,9 @@ export default function AdminMfaPage() {
   const supabase = useMemo(() => createClient(), []);
   const [state, setState] = useState<SetupState>({ mode: 'loading' });
   const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() =>
+    supabase ? null : 'Supabase konfiqurasiyası tapılmadı.'
+  );
   const [busy, setBusy] = useState(false);
 
   const requestedNext = searchParams.get('next');
@@ -25,10 +27,7 @@ export default function AdminMfaPage() {
       : '/admin';
 
   useEffect(() => {
-    if (!supabase) {
-      setError('Supabase konfiqurasiyası tapılmadı.');
-      return;
-    }
+    if (!supabase) return;
 
     let cancelled = false;
 
