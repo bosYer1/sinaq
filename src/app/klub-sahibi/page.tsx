@@ -75,6 +75,28 @@ export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps
         </div>
       ) : null}
 
+      <section className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Niyə təsdiqləmək faydalıdır?</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <h2 className="font-display text-sm font-bold text-ink">Daha dəqiq profil</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Telefon, ünvan, iş saatı, qiymət və sosial hesablar klubun rəsmi məlumatına əsasən saxlanılır.</p>
+          </div>
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <h2 className="font-display text-sm font-bold text-ink">Təsdiqlənmiş klub statusu</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Yoxlama uğurla tamamlandıqdan sonra klub profili GameYer-də təsdiqlənmiş məlumat kimi işarələnə bilər.</p>
+          </div>
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <h2 className="font-display text-sm font-bold text-ink">Səhvlərin daha tez düzəldilməsi</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Rəsmi nümayəndədən gələn düzəlişlər ayrıca yoxlanaraq prioritetləşdirilə bilər.</p>
+          </div>
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <h2 className="font-display text-sm font-bold text-ink">Gələcək funksiyalara hazırlıq</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Klub sahibi axını gələcəkdə profil idarəetməsi və önə çıxarma funksiyalarına keçid üçün əsas yaradır.</p>
+          </div>
+        </div>
+      </section>
+
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <section className="rounded-xl border border-border bg-surface p-5 shadow-card">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">1</span>
