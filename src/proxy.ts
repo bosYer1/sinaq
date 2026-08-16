@@ -21,6 +21,16 @@ type CookieToSet = {
   options?: CookieOptions;
 };
 
+function privateRedirect(request: NextRequest, pathname: string, next?: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = '';
+  if (next) url.searchParams.set('next', next);
+  const redirect = NextResponse.redirect(url);
+  redirect.headers.set('Cache-Control', 'private, no-store');
+  return redirect;
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -48,7 +58,6 @@ export async function proxy(request: NextRequest) {
   );
 
   const pathname = request.nextUrl.pathname;
-
   const {
     data: { user },
     error: userError,
@@ -63,12 +72,8 @@ export async function proxy(request: NextRequest) {
         .maybeSingle();
 
       if (adminRow) {
-        const adminUrl = request.nextUrl.clone();
-        adminUrl.pathname = '/admin';
-        adminUrl.search = '';
-        const redirect = NextResponse.redirect(adminUrl);
-        redirect.headers.set('Cache-Control', 'private, no-store');
-        return redirect;
+        const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        return privateRedirect(request, aal?.currentLevel === 'aal2' ? '/admin' : '/admin/mfa');
       }
     }
 
@@ -77,12 +82,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (userError || !user) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = '/admin/login';
-    loginUrl.searchParams.set('next', pathname);
-    const redirect = NextResponse.redirect(loginUrl);
-    redirect.headers.set('Cache-Control', 'private, no-store');
-    return redirect;
+    return privateRedirect(request, '/admin/login', pathname);
   }
 
   const { data: adminRow, error: adminError } = await supabase
@@ -92,12 +92,17 @@ export async function proxy(request: NextRequest) {
     .maybeSingle();
 
   if (adminError || !adminRow) {
-    const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = '/';
-    homeUrl.search = '';
-    const redirect = NextResponse.redirect(homeUrl);
-    redirect.headers.set('Cache-Control', 'private, no-store');
-    return redirect;
+    return privateRedirect(request, '/');
+  }
+
+  if (pathname.startsWith('/admin/mfa')) {
+    response.headers.set('Cache-Control', 'private, no-store');
+    return response;
+  }
+
+  const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aalError || aal.currentLevel !== 'aal2') {
+    return privateRedirect(request, '/admin/mfa', pathname);
   }
 
   response.headers.set('Cache-Control', 'private, no-store');
