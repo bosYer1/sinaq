@@ -134,6 +134,44 @@ jobs:
           })().catch((error) => { console.error(error); process.exit(1); });
           NODE
 
+      - name: Controlled API abuse regression tests
+        run: |
+          set -euo pipefail
+          endpoint='http://127.0.0.1:3000/api/analytics/visit'
+          same_origin='http://127.0.0.1:3000'
+
+          # Every request below must be rejected before any database insert occurs.
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X POST "$endpoint" \
+            -H 'Origin: https://attacker.invalid' \
+            -H 'Content-Type: application/json' \
+            --data '{"sessionId":"securitytest1","path":"/"}')" = "403"
+
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X POST "$endpoint" \
+            -H "Origin: $same_origin" \
+            -H 'Content-Type: text/plain' \
+            --data '{}')" = "415"
+
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X POST "$endpoint" \
+            -H "Origin: $same_origin" \
+            -H 'Content-Type: application/json' \
+            --data '{')" = "400"
+
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X POST "$endpoint" \
+            -H "Origin: $same_origin" \
+            -H 'Content-Type: application/json' \
+            --data '{"sessionId":"securitytest1","path":"/admin"}')" = "400"
+
+          node -e "process.stdout.write(JSON.stringify({sessionId:'securitytest1',path:'/',padding:'x'.repeat(2048)}))" > /tmp/oversized-analytics.json
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X POST "$endpoint" \
+            -H "Origin: $same_origin" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/oversized-analytics.json)" = "413"
+
       - name: Stop production server
         if: always()
         run: |
