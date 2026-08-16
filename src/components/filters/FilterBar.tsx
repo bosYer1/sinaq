@@ -20,16 +20,16 @@ export function FilterBar({ districts, types }: FilterBarProps) {
   const searchQuery = searchParams.get('q') ?? '';
 
   return (
-    <div className="shrink-0 border-b border-border bg-surface">
+    <div className="shrink-0 border-b border-border bg-surface/95 backdrop-blur">
       <div className="w-full px-4 py-3 sm:px-6 lg:px-7">
-        <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="w-full shrink-0 md:w-[380px] lg:w-[420px]">
             <SearchFilter key={searchQuery} />
           </div>
 
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 md:flex md:flex-1">
             <div
-              className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:overflow-visible md:pb-0"
+              className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-1 md:overflow-visible md:pb-0"
               aria-label="Klub filtrləri"
             >
               <TypeFilter types={types} />
@@ -40,14 +40,14 @@ export function FilterBar({ districts, types }: FilterBarProps) {
                 <button
                   type="button"
                   onClick={clearAll}
-                  className="h-10 shrink-0 px-2 text-sm font-medium text-muted transition hover:text-ink"
+                  className="h-10 shrink-0 rounded-control px-2 text-sm font-medium text-muted transition hover:bg-surface-alt hover:text-ink"
                 >
                   Təmizlə
                 </button>
               ) : null}
             </div>
 
-            <div className="shrink-0">
+            <div className="shrink-0 self-start md:self-auto">
               <ViewToggle />
             </div>
           </div>
