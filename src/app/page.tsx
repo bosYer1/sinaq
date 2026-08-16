@@ -67,11 +67,18 @@ export default async function HomePage({ searchParams }: PageProps) {
   };
   const view = resolvedSearchParams.view === 'map' ? 'map' : 'list';
 
-  const [clubs, districts, types] = await Promise.all([
+  const [clubs, discoveryClubs, districts, types] = await Promise.all([
     getClubs(filters),
+    getClubs(),
     getDistricts(),
     getClubTypes(),
   ]);
+  const activeDistrictSlugs = new Set(
+    discoveryClubs
+      .map((club) => club.district?.slug)
+      .filter((slug): slug is string => Boolean(slug)),
+  );
+  const activeDistricts = districts.filter((district) => activeDistrictSlugs.has(district.slug));
 
   return (
     <div className="flex min-h-[calc(100dvh-56px)] flex-col">
@@ -114,7 +121,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <Link href="/bakida-pc-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Bakıda PC klubları</Link>
             <Link href="/bakida-playstation-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Bakıda PlayStation klubları</Link>
             <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">24 saat gaming klubları</Link>
-            {districts.map((district) => (
+            {activeDistricts.map((district) => (
               <Link key={district.slug} href={`/rayon/${district.slug}`} className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-medium text-muted hover:border-primary hover:text-ink">
                 {district.name} gaming klubları
               </Link>
