@@ -64,9 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-30 border-b border-border/80 bg-surface/95 backdrop-blur">
           <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link href="/" className="flex items-center gap-2.5" aria-label="GameYer ana səhifə">
-              <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#4D8DFF] text-sm font-black text-white shadow-sm">
-                G
-              </span>
+              <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#4D8DFF] text-sm font-black text-white shadow-sm">G</span>
               <span className="font-display text-xl font-bold tracking-[-0.04em] text-ink">Game<span className="text-primary">Yer</span></span>
             </Link>
 
@@ -79,17 +77,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </nav>
 
             <div className="flex items-center gap-2">
-              <Link href="/klub-sahibi" className="hidden rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark sm:inline-flex">
-                + Klubunu əlavə et
-              </Link>
-              <Link href="/elaqe" className="inline-flex h-10 items-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary sm:hidden">
-                Əlaqə
-              </Link>
+              <Link href="/klub-sahibi" className="hidden rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark sm:inline-flex">+ Klubunu əlavə et</Link>
+              <Link href="/elaqe" className="inline-flex h-10 items-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary sm:hidden">Əlaqə</Link>
             </div>
           </div>
         </header>
 
-        <main>{children}</main>
+        <main className="pb-[76px] md:pb-0">{children}</main>
 
         <footer className="border-t border-border bg-surface">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6 lg:px-8">
@@ -104,6 +98,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="https://www.tiktok.com/@gameyer.az" target="_blank" rel="noopener noreferrer" className="hover:text-ink">TikTok</a>
           </div>
         </footer>
+
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-white/96 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] backdrop-blur md:hidden" aria-label="Mobil naviqasiya">
+          <Link href="/" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary"><span className="text-lg leading-none">⌖</span><span>Klublar</span></Link>
+          <Link href="/rayon" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">▦</span><span>Rayonlar</span></Link>
+          <Link href="/" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xl text-white shadow-[0_5px_16px_rgba(124,92,252,0.3)]">⌕</span><span>Axtar</span></Link>
+          <Link href="/elaqe" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">◌</span><span>Əlaqə</span></Link>
+          <Link href="/tip" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">☰</span><span>Menyu</span></Link>
+        </nav>
       </body>
     </html>
   );
