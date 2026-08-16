@@ -20,7 +20,6 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
   const typeSlugs = inferClubTypeSlugs(club);
   const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0 && pricing.club_type);
   const phoneNumbers = (club.phone ?? '').split(/\s*\/\s*|\s*,\s*|\s*;\s*/).map((phone) => phone.trim()).filter(Boolean);
-  const hasRating = club.rating_avg != null && Number.isFinite(club.rating_avg) && club.rating_avg > 0 && club.rating_avg <= 5 && club.rating_count > 0;
   const updatedAt = new Date(club.updated_at);
   const updatedLabel = Number.isNaN(updatedAt.getTime()) ? null : BAKU_DATE_FORMATTER.format(updatedAt);
   const sortedHours = [...club.opening_hours].filter((hours) => hours.day_of_week >= 0 && hours.day_of_week <= 6).sort((a, b) => a.day_of_week - b.day_of_week);
@@ -70,7 +69,6 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               <p className="mt-2 text-sm text-muted">{club.district?.name ?? 'Rayon göstərilməyib'}{club.address ? ` · ${club.address}` : ''}</p>
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <span className={openNow ? 'inline-flex items-center gap-1.5 text-sm font-medium text-live' : 'inline-flex items-center gap-1.5 text-sm font-medium text-muted'}><span className={openNow ? 'h-2 w-2 rounded-full bg-live' : 'h-2 w-2 rounded-full bg-muted'} />{statusLabel}</span>
-                {hasRating ? <span className="text-sm font-medium text-ink" aria-label={`${club.rating_avg} reytinq, ${club.rating_count} rəy`}>★ {club.rating_avg!.toFixed(1)} <span className="font-normal text-muted">({club.rating_count})</span></span> : null}
               </div>
             </div>
           </div>

@@ -19,10 +19,20 @@ interface ClubListProps {
  */
 export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchActive, onClearFilters }: ClubListProps) {
   if (clubs.length === 0) {
+    const title = searchActive
+      ? 'Axtarışa uyğun klub tapılmadı'
+      : 'Bu filtrə uyğun klub tapılmadı';
+
+    const description = onClearFilters
+      ? 'Axtarış sözünü dəyiş və ya aktiv filtrləri təmizlə.'
+      : searchActive
+        ? 'Başqa klub adı, rayon və ya açar söz yoxla.'
+        : 'Hazırda bu seçimə uyğun aktiv klub yoxdur.';
+
     return (
       <EmptyState
-        title={searchActive ? 'Axtarışa uyğun klub tapılmadı' : 'Bu filtrə uyğun klub tapılmadı'}
-        description="Başqa axtarış sözü yoxla və ya aktiv filtrləri təmizlə."
+        title={title}
+        description={description}
         actionLabel={onClearFilters ? 'Filtrləri təmizlə' : undefined}
         onAction={onClearFilters}
       />

@@ -49,15 +49,32 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  if (pathname.startsWith('/admin/login')) {
-    response.headers.set('Cache-Control', 'private, no-store');
-    return response;
-  }
-
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
+
+  if (pathname.startsWith('/admin/login')) {
+    if (!userError && user) {
+      const { data: adminRow } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (adminRow) {
+        const adminUrl = request.nextUrl.clone();
+        adminUrl.pathname = '/admin';
+        adminUrl.search = '';
+        const redirect = NextResponse.redirect(adminUrl);
+        redirect.headers.set('Cache-Control', 'private, no-store');
+        return redirect;
+      }
+    }
+
+    response.headers.set('Cache-Control', 'private, no-store');
+    return response;
+  }
 
   if (userError || !user) {
     const loginUrl = request.nextUrl.clone();
