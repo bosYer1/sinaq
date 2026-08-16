@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { ClubSubmission } from '@/types/database';
 import { OwnerClaimSummary } from '@/components/admin/OwnerClaimSummary';
 import { OwnerClaimApplyForm, type OwnerClaimCurrentValues } from '@/components/admin/OwnerClaimApplyForm';
-import { deleteCompletedSubmission, linkOwnerClaimToClub, updateSubmissionStatus } from './actions';
+import { deleteCompletedSubmission, linkCorrectionToClub, linkOwnerClaimToClub, updateSubmissionStatus } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +67,25 @@ function currentValues(club: ClubSnapshotRow): OwnerClaimCurrentValues {
     psPrice: psPricing?.price_from ?? null,
     hours: currentHoursLabel(club.opening_hours),
   };
+}
+
+function ClubLinkForm({ item, activeClubs }: { item: SubmissionRow; activeClubs: ActiveClubOption[] }) {
+  const owner = item.kind === 'owner_claim';
+  const action = owner ? linkOwnerClaimToClub : linkCorrectionToClub;
+  return (
+    <form action={action} className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+      <input type="hidden" name="id" value={item.id} />
+      <p className="text-xs font-semibold text-amber-900">Əvvəl müraciəti real klub profilinə bağla.</p>
+      <p className="mt-1 text-xs leading-5 text-amber-800">Klub adı sərbəst yazıldığı üçün avtomatik uyğunlaşdırmırıq. Səhv klubun məlumatının dəyişməməsi üçün seçimi admin edir.</p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <select name="club_id" required defaultValue="" className="h-10 min-w-0 flex-1 rounded-lg border border-amber-300 bg-white px-3 text-sm text-gray-900">
+          <option value="" disabled>Aktiv klub seç</option>
+          {activeClubs.map((club) => <option key={club.id} value={club.id}>{club.name}</option>)}
+        </select>
+        <button type="submit" className="h-10 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white transition hover:bg-amber-700">Kluba bağla</button>
+      </div>
+    </form>
+  );
 }
 
 export default async function AdminSubmissionsPage({ searchParams }: AdminSubmissionsPageProps) {
@@ -133,7 +152,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
         <div>
           <label htmlFor="submission-kind" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Növ</label>
           <select id="submission-kind" name="kind" defaultValue={kind ?? ''} className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm">
-            <option value="">Hamısı</option><option value="correction">Düzəliş</option><option value="new_club">Yeni klub</option><option value="owner_claim">Klub sahibi</option>
+            <option value="">Hamısı</option><option value="pending">Gözləyir</option><option value="reviewing">Yoxlanılır</option><option value="resolved">Həll olunub</option><option value="rejected">Rədd edilib</option>
           </select>
         </div>
         <div className="flex items-end gap-2">
@@ -150,7 +169,8 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
         <div className="mt-5 space-y-4">
           {submissions.map((item) => {
             const linkedClub = item.club_id ? activeClubById.get(item.club_id) : null;
-            const canLinkOwnerClaim = item.kind === 'owner_claim' && !item.club_id && item.status !== 'resolved' && item.status !== 'rejected';
+            const completed = item.status === 'resolved' || item.status === 'rejected';
+            const canLinkExisting = (item.kind === 'owner_claim' || item.kind === 'correction') && !item.club_id && !completed;
 
             return (
               <article key={item.id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -159,7 +179,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-[#7C5CFC]/10 px-2.5 py-1 text-xs font-semibold text-[#6A47F0]">{KIND_LABELS[item.kind]}</span>
                       <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">{STATUS_LABELS[item.status]}</span>
-                      {item.kind === 'owner_claim' && !item.club_id ? <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">Kluba bağlı deyil</span> : null}
+                      {(item.kind === 'owner_claim' || item.kind === 'correction') && !item.club_id ? <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">Kluba bağlı deyil</span> : null}
                     </div>
                     <h2 className="mt-3 text-lg font-bold text-gray-900">{item.club_name}</h2>
                     <p className="mt-1 text-xs text-gray-400">{new Date(item.created_at).toLocaleString('az-AZ', { timeZone: 'Asia/Baku' })}</p>
@@ -176,19 +196,20 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                   </a>
                 </div>
 
-                {canLinkOwnerClaim ? (
-                  <form action={linkOwnerClaimToClub} className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                    <input type="hidden" name="id" value={item.id} />
-                    <p className="text-xs font-semibold text-amber-900">Əvvəl müraciəti real klub profilinə bağla.</p>
-                    <p className="mt-1 text-xs leading-5 text-amber-800">Klub adı müraciətdə sərbəst yazıldığı üçün avtomatik uyğunlaşdırmırıq. Səhv kluba məlumat yazılmaması üçün seçimi admin edir.</p>
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      <select name="club_id" required defaultValue="" className="h-10 min-w-0 flex-1 rounded-lg border border-amber-300 bg-white px-3 text-sm text-gray-900">
-                        <option value="" disabled>Aktiv klub seç</option>
-                        {activeClubs.map((club) => <option key={club.id} value={club.id}>{club.name}</option>)}
-                      </select>
-                      <button type="submit" className="h-10 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white transition hover:bg-amber-700">Kluba bağla</button>
-                    </div>
-                  </form>
+                {canLinkExisting ? <ClubLinkForm item={item} activeClubs={activeClubs} /> : null}
+
+                {item.kind === 'correction' && item.club_id && !completed ? (
+                  <div className="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-3">
+                    <p className="text-xs leading-5 text-sky-800">Düzəliş mətnini yoxla, sonra real klub admin səhifəsində yalnız təsdiqlədiyin sahələri dəyiş.</p>
+                    <Link href={`/admin/klublar/${item.club_id}`} className="mt-2 inline-flex h-9 items-center rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-700">Klub məlumatını düzəlt</Link>
+                  </div>
+                ) : null}
+
+                {item.kind === 'new_club' && !completed ? (
+                  <div className="mt-4 rounded-lg border border-violet-200 bg-violet-50 p-3">
+                    <p className="text-xs leading-5 text-violet-800">Klubun real olduğunu və xəritə koordinatını ayrıca yoxla. Sonra yeni klub formasını bu müraciətlə aç.</p>
+                    <Link href={`/admin/klublar/yeni?submission=${encodeURIComponent(item.id)}`} className="mt-2 inline-flex h-9 items-center rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white hover:bg-[#6A47F0]">Yeni klub formasında aç</Link>
+                  </div>
                 ) : null}
 
                 {item.kind === 'owner_claim' ? (
@@ -210,7 +231,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                     </select>
                     <button type="submit" className="h-9 rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white hover:bg-[#6A47F0]">Yadda saxla</button>
                   </form>
-                  {item.status === 'resolved' || item.status === 'rejected' ? (
+                  {completed ? (
                     <form action={deleteCompletedSubmission}>
                       <input type="hidden" name="id" value={item.id} />
                       <button type="submit" className="h-9 rounded-lg border border-red-200 bg-white px-4 text-sm font-semibold text-red-600 transition hover:bg-red-50">Müraciəti sil</button>
