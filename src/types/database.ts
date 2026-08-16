@@ -311,6 +311,16 @@ export interface Database {
         };
         Returns: undefined;
       };
+      apply_owner_claim_fields_atomic: {
+        Args: {
+          p_submission_id: string;
+          p_instagram_url?: string | null;
+          p_pc_price?: number | null;
+          p_ps_price?: number | null;
+          p_hours?: Json | null;
+        };
+        Returns: string;
+      };
       verify_owner_claim_atomic: {
         Args: {
           p_submission_id: string;
