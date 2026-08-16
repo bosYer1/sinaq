@@ -1,0 +1,1 @@
+Pre-domain polish branch keeps production unchanged until explicit approval. Current fix: unauthenticated admin users see login content only; admin navigation renders only for authenticated `admin_users` members.
