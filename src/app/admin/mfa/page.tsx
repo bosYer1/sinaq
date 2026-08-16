@@ -34,8 +34,17 @@ export default function AdminMfaPage() {
     async function prepare() {
       const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalError) throw aalError;
-      if (aal.currentLevel === 'aal2') {
+
+      if (aal.currentLevel === 'aal2' && aal.nextLevel === 'aal2') {
         if (!cancelled) setState({ mode: 'ready' });
+        return;
+      }
+
+      // Supabase defines aal2 -> aal1 as a stale JWT after the MFA factor was disabled.
+      // End that session instead of treating the stale aal2 claim as sufficient admin access.
+      if (aal.currentLevel === 'aal2' && aal.nextLevel === 'aal1') {
+        await supabase.auth.signOut();
+        if (!cancelled) window.location.assign('/admin/login');
         return;
       }
 
