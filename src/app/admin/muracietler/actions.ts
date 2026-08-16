@@ -13,6 +13,7 @@ import type { Json } from '@/types/database';
 const STATUSES = new Set(['pending', 'reviewing', 'resolved', 'rejected']);
 
 type SubmissionStatus = 'pending' | 'reviewing' | 'resolved' | 'rejected';
+type LinkableSubmissionKind = 'owner_claim' | 'correction';
 
 function submissionId(formData: FormData) {
   const value = formData.get('id');
@@ -40,11 +41,58 @@ async function linkedOwnerClaim(id: string) {
   return { supabase, submission: data, claim };
 }
 
-function revalidateOwnerClaim(clubId?: string | null) {
+function revalidateSubmission(clubId?: string | null) {
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/muracietler');
   if (clubId) revalidatePath(`/admin/klublar/${clubId}`);
+}
+
+async function linkSubmissionToClub(formData: FormData, kind: LinkableSubmissionKind) {
+  const id = submissionId(formData);
+  const clubIdValue = formData.get('club_id');
+  const clubId = typeof clubIdValue === 'string' ? clubIdValue.trim() : '';
+  if (!id || !clubId) throw new Error('Müraciət və klub seçimi tələb olunur.');
+
+  const supabase = await createClient();
+  const [{ data: submission, error: submissionError }, { data: club, error: clubError }] = await Promise.all([
+    supabase
+      .from('club_submissions')
+      .select('id,kind,club_id,status')
+      .eq('id', id)
+      .eq('kind', kind)
+      .maybeSingle(),
+    supabase
+      .from('clubs')
+      .select('id,is_active')
+      .eq('id', clubId)
+      .eq('is_active', true)
+      .maybeSingle(),
+  ]);
+
+  if (submissionError) throw new Error(submissionError.message);
+  if (clubError) throw new Error(clubError.message);
+  if (!submission) throw new Error('Müraciət tapılmadı.');
+  if (!club) throw new Error('Seçilən aktiv klub tapılmadı.');
+  if (submission.status === 'resolved' || submission.status === 'rejected') {
+    throw new Error('Tamamlanmış müraciəti kluba bağlamaq olmaz.');
+  }
+  if (submission.club_id) throw new Error('Bu müraciət artıq real kluba bağlıdır.');
+
+  const { data: linked, error } = await supabase
+    .from('club_submissions')
+    .update({ club_id: club.id, status: 'reviewing', reviewed_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('kind', kind)
+    .is('club_id', null)
+    .in('status', ['pending', 'reviewing'])
+    .select('club_id')
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!linked?.club_id) throw new Error('Müraciət kluba bağlanmadı. Səhifəni yeniləyib yenidən yoxlayın.');
+
+  revalidateSubmission(linked.club_id);
 }
 
 export async function updateSubmissionStatus(formData: FormData) {
@@ -62,55 +110,15 @@ export async function updateSubmissionStatus(formData: FormData) {
     .eq('id', id);
 
   if (error) throw new Error(error.message);
-  revalidateOwnerClaim();
+  revalidateSubmission();
 }
 
 export async function linkOwnerClaimToClub(formData: FormData) {
-  const id = submissionId(formData);
-  const clubIdValue = formData.get('club_id');
-  const clubId = typeof clubIdValue === 'string' ? clubIdValue.trim() : '';
-  if (!id || !clubId) throw new Error('Müraciət və klub seçimi tələb olunur.');
+  await linkSubmissionToClub(formData, 'owner_claim');
+}
 
-  const supabase = await createClient();
-
-  const [{ data: submission, error: submissionError }, { data: club, error: clubError }] = await Promise.all([
-    supabase
-      .from('club_submissions')
-      .select('id,kind,club_id,status')
-      .eq('id', id)
-      .eq('kind', 'owner_claim')
-      .maybeSingle(),
-    supabase
-      .from('clubs')
-      .select('id,is_active')
-      .eq('id', clubId)
-      .eq('is_active', true)
-      .maybeSingle(),
-  ]);
-
-  if (submissionError) throw new Error(submissionError.message);
-  if (clubError) throw new Error(clubError.message);
-  if (!submission) throw new Error('Klub sahibi müraciəti tapılmadı.');
-  if (!club) throw new Error('Seçilən aktiv klub tapılmadı.');
-  if (submission.status === 'resolved' || submission.status === 'rejected') {
-    throw new Error('Tamamlanmış müraciəti kluba bağlamaq olmaz.');
-  }
-  if (submission.club_id) throw new Error('Bu müraciət artıq real kluba bağlıdır.');
-
-  const { data: linked, error } = await supabase
-    .from('club_submissions')
-    .update({ club_id: club.id, status: 'reviewing', reviewed_at: new Date().toISOString() })
-    .eq('id', id)
-    .eq('kind', 'owner_claim')
-    .is('club_id', null)
-    .in('status', ['pending', 'reviewing'])
-    .select('club_id')
-    .maybeSingle();
-
-  if (error) throw new Error(error.message);
-  if (!linked?.club_id) throw new Error('Müraciət kluba bağlanmadı. Səhifəni yeniləyib yenidən yoxlayın.');
-
-  revalidateOwnerClaim(linked.club_id);
+export async function linkCorrectionToClub(formData: FormData) {
+  await linkSubmissionToClub(formData, 'correction');
 }
 
 export async function applyOwnerClaimFields(formData: FormData) {
@@ -161,7 +169,7 @@ export async function applyOwnerClaimFields(formData: FormData) {
   if (error) throw new Error(error.message);
   if (!clubId || clubId !== submission.club_id) throw new Error('Məlumatların tətbiq olunduğu klub təsdiqlənmədi.');
 
-  revalidateOwnerClaim(clubId);
+  revalidateSubmission(clubId);
 }
 
 export async function verifyOwnerClaim(formData: FormData) {
@@ -176,7 +184,7 @@ export async function verifyOwnerClaim(formData: FormData) {
   if (error) throw new Error(error.message);
   if (!clubId) throw new Error('Təsdiqlənən klub tapılmadı.');
 
-  revalidateOwnerClaim(clubId);
+  revalidateSubmission(clubId);
 }
 
 export async function deleteCompletedSubmission(formData: FormData) {
@@ -195,5 +203,5 @@ export async function deleteCompletedSubmission(formData: FormData) {
   if (error) throw new Error(error.message);
   if (!data) throw new Error('Yalnız həll olunmuş və ya rədd edilmiş müraciət silinə bilər.');
 
-  revalidateOwnerClaim();
+  revalidateSubmission();
 }
