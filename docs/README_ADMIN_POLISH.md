@@ -1,0 +1,1 @@
+Admin navigation is intentionally hidden until the request is authenticated as a member of `admin_users`.
