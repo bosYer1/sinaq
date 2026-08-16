@@ -1,7 +1,16 @@
-# GameYer — Social Launch Playbook
+# GameYer — No-budget Social & Owner Growth Playbook
 
 ## Məqsəd
-İlk sosial trafik dalğasını GameYer-in əsas dəyər təklifinə bağlamaq: **Bakıda PC və PlayStation klublarını bir yerdə tapmaq və müqayisə etmək.**
+GameYer-in ilk real trafik və klub-sahibi təsdiq dalğasını reklam büdcəsi olmadan başlatmaq.
+
+Əsas dəyər təklifi: **Bakıda PC və PlayStation klublarını bir yerdə tapmaq, müqayisə etmək və xəritədə görmək.**
+
+## Cari canonical link
+Custom domain alınana qədər:
+
+`https://gameyerr-gameyer.vercel.app`
+
+Bütün bio, post və outreach linkləri bu hosta baxmalıdır. Domain dəyişəndə yalnız host dəyişdirilir.
 
 ## Profil bio
 **Instagram / TikTok bio**
@@ -9,53 +18,119 @@
 > Bakıda PC və PlayStation klublarını tap 🎮  
 > Ünvan • iş saatı • xəritə • mövcud olduqda qiymət
 
-Sayt linki həmin anda istifadə olunan canonical production domain olmalıdır. `gameyer.az` canlı və Vercel-ə qoşulanadək mövcud GameYer production URL-i istifadə olunur.
-
 ## UTM qaydası
-- Instagram: `/?utm_source=instagram&utm_medium=social&utm_campaign=launch`
-- TikTok: `/?utm_source=tiktok&utm_medium=social&utm_campaign=launch`
+- Instagram bio: `/?utm_source=instagram&utm_medium=social&utm_campaign=launch`
+- TikTok bio: `/?utm_source=tiktok&utm_medium=social&utm_campaign=launch`
+- Instagram story: `/?utm_source=instagram&utm_medium=story&utm_campaign=launch`
+- Klub owner outreach: `/klub-sahibi?utm_source=owner_outreach&utm_medium=direct&utm_campaign=verification`
 
-Custom domain aktiv olduqda yalnız host dəyişir.
+Kontent konkret landing page-ə gedirsə UTM həmin route-a əlavə olunur.
 
-## İlk launch postu
-**Başlıq:**
-> Bakıda oyun klubu axtarmaq artıq daha rahatdır. 🎮
+## 7 günlük ilk trafik planı
 
-**Mətn:**
-> GameYer-də Bakıdakı PC və PlayStation klublarını bir yerdə görə, rayon və klub tipinə görə filtr edə, ünvanı, xəritəni, iş saatlarını və mövcud olduqda qiymətləri müqayisə edə bilərsən.
+### Gün 1 — GameYer nədir?
+Video: ana səhifə → filter → xəritə → klub detail.
+
+Hook: **“Bakıda PC/PS klubu axtarmaq üçün 10 ayrı səhifəyə baxmağa ehtiyac yoxdur.”**
+
+CTA: `GameYer-də klubunu tap`.
+
+### Gün 2 — 24 saat klublar
+Landing:
+`/bakida-24-saat-gaming-klublari?utm_source=instagram&utm_medium=social&utm_campaign=24hour`
+
+Yalnız GameYer-də iş saatı ilə təsdiqlənmiş klublardan istifadə et.
+
+### Gün 3 — PC klubları
+Landing:
+`/bakida-pc-klublari?utm_source=tiktok&utm_medium=social&utm_campaign=pc-clubs`
+
+Hook nümunəsi: **“Bakıda PC klub axtarırsansa bu siyahını saxla.”**
+
+### Gün 4 — PlayStation klubları
+Landing:
+`/bakida-playstation-klublari?utm_source=instagram&utm_medium=social&utm_campaign=ps-clubs`
+
+### Gün 5 — Rayon kontenti
+Yalnız cari datasetdə aktiv klubu olan rayonlardan istifadə et.
+
+Məsələn:
+- `/rayon/narimanov`
+- `/rayon/yasamal`
+- `/rayon/sabail`
+- `/rayon/xatai`
+- `/rayon/nasimi`
+- `/rayon/sabuncu`
+
+### Gün 6 — Məlumat etibarı
+Kontent ideyası: **“GameYer-də klub məlumatlarını necə yoxlayırıq?”**
+
+Landing: `/melumat-metodologiyasi`
+
+Vurğu:
+- fake klub əlavə edilmir;
+- dəqiq olmayan koordinat public xəritədə saxlanmır;
+- qiymət/saat tapılmadıqda uydurulmur;
+- klub sahibi düzəliş və təsdiq göndərə bilər.
+
+### Gün 7 — Klub sahibisən?
+Landing:
+`/klub-sahibi?utm_source=instagram&utm_medium=social&utm_campaign=owner-verification`
+
+CTA: **“Klubunuz GameYer-dədirsə məlumatınızı ödənişsiz təsdiqləyin.”**
+
+## Owner verification outreach
+
+### Prioritet 1 — rəsmi Instagramı artıq məlum olan klublar
+Əvvəlcə bu qrupdan başla, çünki DM vasitəsilə rəsmi nümayəndəyə çatmaq ehtimalı daha yüksəkdir:
+- ButaCyberCafe
+- Vegas Gaming Club / Vegas Gaming Center
+- LaLiga Game Center
+- Forsaj Game Club
+- Galatasaray Playstation Club
+- Kenza Gaming Lounge
+
+### Prioritet 2 — public telefon əlaqəsi olan klublar
+Instagramı tapılmayan, amma açıq biznes telefonu olan klublara qısa WhatsApp/SMS və ya zəng sonrası link göndərilə bilər.
+
+### Outreach mətni
+> Salam. GameYer Azərbaycandakı PC və PlayStation klublarını bir platformada toplayan gaming-club kataloqudur. Klubunuz üçün artıq məlumat səhifəsi yaradılıb. Məlumatların düzgünlüyünü ödənişsiz təsdiqləyə, iş saatı, qiymət, Instagram və şəkilləri rəsmi məlumatla yeniləyə bilərsiniz: [klubun GameYer linki]
 >
-> Platformadakı klub məlumatları say çoxaltmaq üçün deyil, xəritə və açıq mənbələrlə yoxlanmış aktiv dataset prinsipi ilə saxlanılır. Məlumatı səhv və ya köhnə olan klub görsən, GameYer üzərindən düzəliş göndərə bilərsən.
+> Təsdiq səhifəsi: https://gameyerr-gameyer.vercel.app/klub-sahibi
 
-**CTA:**
-> Klubunu tap → profildəki link
+Şifrə, SMS kodu və hesab girişi istənilmir.
 
-## İlk qısa video / Reel / TikTok ssenarisi
-1. 0–2 san: “Bakıda PC/PS klubu axtarırsan?”
-2. 2–5 san: GameYer ana səhifəsi və aktiv klub xəritəsi.
-3. 5–8 san: PC / PlayStation / rayon filtrləri.
-4. 8–11 san: xəritədə markerlər və “Yaxınlığıma görə”.
-5. 11–14 san: klub detail — ünvan, saat, qiymət varsa qiymət.
-6. 14–16 san: “GameYer — klubunu tap.” + profil linki.
+## Paylaşım dövrəsi
+Hər klub detail səhifəsində **“Klubu paylaş”** funksiyası var. Mobil cihazlarda native share sheet, uyğun olmayan cihazlarda link kopyalama işləyir.
 
-## Kontent mövzuları
-- Bakıda 24 saat işləyən gaming klubları
-- Nərimanovda PC klubları
-- Yasamalda PlayStation klubları
-- Saatlıq qiyməti təsdiqlənmiş klublar
-- “Sən hansı klubda oynayırsan?” engagement postu
+Owner təsdiqdən sonra klub sahibinə birbaşa öz GameYer profil linkini vermək lazımdır. Məqsəd odur ki, klub həmin linki Instagram story/bio-da özü də paylaşsın. Bu həm referral trafik, həm də brand mention yaradır.
 
-## Launch ölçümü
+## Kontent qaydaları
+- Sabit klub sayı post mətninə yazma; dataset dəyişə bilər.
+- “Ən yaxşı” ifadəsini first-party rating/review sistemi olmadan işlətmə.
+- “Ən ucuz” yalnız kifayət qədər cari qiymət datası olduqda istifadə edilə bilər.
+- Hardware/spec məlumatını rəsmi təsdiq olmadan yazma.
+- Hər video bir konkret landing page-ə aparsın; hər şeyi ana səhifəyə yığma.
+
+## Ölçüm
 Admin → **Statistika** ekranında:
-- günlük page view
-- unikal anonim session
-- ən çox baxılan səhifələr
-- trafik mənbələri: Direct / Google / Instagram / Facebook / TikTok
+- günlük page view;
+- unikal anonim session;
+- ən çox baxılan səhifələr;
+- Direct / Google / Instagram / Facebook / TikTok mənbələri.
+
+İlk mərhələdə izlənəcək KPI-lar:
+1. social referral session;
+2. ən çox açılan klub profilləri;
+3. owner claim sayı;
+4. owner tərəfindən təsdiqlənən klub sayı;
+5. Google Search impression başlayıb-başlamaması.
 
 ## Paylaşmadan əvvəl son yoxlama
-- production link 200 qaytarır
-- `x-robots-tag: noindex` yoxdur
-- OG şəkil production host-dan gəlir
-- mobil ana səhifə və klub detail normal görünür
-- Instagram/TikTok bio linkində düzgün UTM var
-- yanlış klub məlumatı üçün Əlaqə / klub sahibi müraciət axını işləyir
-- postda sabit klub sayı yazılmır; cari say dəyişə bilər
+- production link 200;
+- `x-robots-tag: noindex` yoxdur;
+- canonical production hosta baxır;
+- mobil ana səhifə və klub detail normaldır;
+- bio linkində UTM var;
+- yanlış məlumat üçün Əlaqə / owner claim işləyir;
+- postda təsdiqlənməmiş qiymət, saat, hardware və rating yoxdur.
