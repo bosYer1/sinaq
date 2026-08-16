@@ -4,7 +4,9 @@ import { isPremiumActive } from '@/lib/utils';
 import type { ClubFilters, ClubWithRelations } from '@/types/database';
 
 const CLUB_SELECT = `
-  *,
+  id, name, slug, description, district_id, address, latitude, longitude,
+  phone, instagram_url, is_premium, premium_expires_at, is_active,
+  is_verified, verified_at, created_at, updated_at,
   district:districts ( id, name, slug ),
   type_assignments:club_type_assignments (
     club_type_id,
@@ -21,8 +23,9 @@ const CLUB_SELECT = `
 function normalizeClubRelations(club: ClubWithRelations): ClubWithRelations {
   return {
     ...club,
-    // Rating snapshots come from external business/map sources. Keep them out of
-    // public UI and structured data until GameYer has first-party reviews.
+    // External map/business rating snapshots are intentionally not selected by
+    // public queries. These neutral values keep the shared relation type stable
+    // until GameYer has first-party user reviews.
     rating_avg: null,
     rating_count: 0,
     type_assignments: Array.isArray(club.type_assignments) ? club.type_assignments : [],
