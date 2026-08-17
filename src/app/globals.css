@@ -46,6 +46,10 @@ body {
   height: 100%;
   font-family: var(--font-body);
   background: var(--color-surface-alt);
+  /* Leaflet panes use z-index values up to the hundreds. Keep them inside
+     the map's own stacking context so they can never cover sticky app chrome. */
+  isolation: isolate;
+  z-index: 0;
 }
 
 /* Tailwind preflight Leaflet tile ölçülərini pozmasın. */
