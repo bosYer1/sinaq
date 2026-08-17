@@ -19,7 +19,7 @@ export function FilterBar({ districts, types }: FilterBarProps) {
   const searchQuery = searchParams.get('q') ?? '';
 
   return (
-    <div className="mb-3 rounded-2xl border border-border bg-surface p-2.5 shadow-[0_6px_24px_rgba(31,35,48,0.04)] sm:mb-4 sm:p-4">
+    <div id="club-search" className="mb-3 scroll-mt-20 rounded-2xl border border-border bg-surface p-2.5 shadow-[0_6px_24px_rgba(31,35,48,0.04)] sm:mb-4 sm:p-4">
       <div className="grid gap-2.5 xl:grid-cols-[minmax(300px,1.35fr)_minmax(0,2fr)_auto] xl:items-center xl:gap-3">
         <SearchFilter key={searchQuery} />
 
