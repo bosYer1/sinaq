@@ -1,0 +1,84 @@
+name: Responsive
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: responsive-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  responsive:
+    name: Responsive
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      NEXT_PUBLIC_SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ZRyHR5Qj2LmbCZVsKTBZ4Q_eRByoSYf
+      NEXT_PUBLIC_SITE_URL: https://gameyerr-gameyer.vercel.app
+      TEST_BASE_URL: http://127.0.0.1:3000
+      RESPONSIVE_ARTIFACT_DIR: /tmp/gameyer-responsive
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Production build
+        run: npm run build
+
+      - name: Start production server
+        run: |
+          npm run start > /tmp/gameyer-responsive-next.log 2>&1 &
+          echo $! > /tmp/gameyer-responsive-next.pid
+          for i in {1..40}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/gameyer-responsive-next.log
+          exit 1
+
+      - name: Locate Chrome
+        run: |
+          set -euo pipefail
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME_BIN" ]; then
+            echo 'No Chromium-compatible browser found on runner.' >&2
+            exit 1
+          fi
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+          "$CHROME_BIN" --version
+
+      - name: Mobile and desktop browser regression
+        run: node scripts/responsive-browser-smoke.mjs
+
+      - name: Upload responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: responsive-screenshots
+          path: /tmp/gameyer-responsive/*.png
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Stop production server
+        if: always()
+        run: |
+          if [ -f /tmp/gameyer-responsive-next.pid ]; then
+            kill "$(cat /tmp/gameyer-responsive-next.pid)" || true
+          fi
