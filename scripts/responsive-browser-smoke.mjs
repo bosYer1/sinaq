@@ -123,7 +123,10 @@ async function setViewport(client, width, height, mobile) {
     screenWidth: width,
     screenHeight: height,
   });
-  await client.send('Emulation.setTouchEmulationEnabled', { enabled: mobile, maxTouchPoints: mobile ? 5 : 0 });
+  await client.send(
+    'Emulation.setTouchEmulationEnabled',
+    mobile ? { enabled: true, maxTouchPoints: 5 } : { enabled: false },
+  );
 }
 
 async function capture(client, name) {
