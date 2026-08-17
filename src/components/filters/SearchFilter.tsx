@@ -30,7 +30,7 @@ export function SearchFilter() {
   }, [value, currentQuery, paramsString, pathname, router]);
 
   return (
-    <div id="club-search" className="relative w-full scroll-mt-24">
+    <div className="relative w-full">
       <SearchIcon
         width={18}
         height={18}
