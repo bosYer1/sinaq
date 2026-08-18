@@ -21,7 +21,7 @@ jobs:
       NEXT_TELEMETRY_DISABLED: '1'
       NEXT_PUBLIC_SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ZRyHR5Qj2LmbCZVsKTBZ4Q_eRByoSYf
-      NEXT_PUBLIC_SITE_URL: https://gameyerr-gameyer.vercel.app
+      NEXT_PUBLIC_SITE_URL: https://gameyer.az
     steps:
       - name: Checkout
         uses: actions/checkout@v7
