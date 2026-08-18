@@ -42,7 +42,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         club_type:club_types ( slug )
       )
     `)
-    .eq('is_active', true);
+    .eq('is_active', true)
+    .not('latitude', 'is', null)
+    .not('longitude', 'is', null);
   if (error) return entries;
 
   const clubs = (data ?? []) as unknown as SitemapClub[];
