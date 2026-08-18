@@ -29,7 +29,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="font-display text-lg font-bold">İstifadə statistikası</h2>
-          <p className="mt-2 text-muted">GameYer saytın hansı səhifələrinin daha çox istifadə olunduğunu, ziyarət sayını və trafik mənbələrini anlamaq üçün baxış statistikası toplayır. Bunun üçün brauzerdə təsadüfi lokal identifikator yaradılır və səhifə yolu ilə birlikdə saxlanılır. Serverin gördüyü public IP ünvanı da təhlükəsizlik və trafik analizi üçün qeyd olunur.</p>
+          <p className="mt-2 text-muted">GameYer saytın hansı səhifələrinin daha çox istifadə olunduğunu, ziyarət sayını və trafik mənbələrini anlamaq üçün baxış statistikası toplayır. Bunun üçün brauzerdə təsadüfi lokal identifikator yaradılır və səhifə yolu ilə birlikdə saxlanılır. Serverin gördüyü public IP ünvanı və ümumi cihaz/brauzer texniki məlumatı da təhlükəsizlik və trafik analizi üçün qeyd olunur.</p>
           <p className="mt-2 text-muted">IP ünvanı public səhifələrdə göstərilmir və yalnız səlahiyyətli admin hesabının statistika panelində görünür. Unikal ziyarətçi sayı IP ünvanı ilə deyil, anonim browser identifikatoru ilə hesablanır. Admin hesabı ilə daxil olunmuş şəxsin public səhifələrə baxışları və klub CTA klikləri statistikaya daxil edilmir.</p>
         </section>
 
