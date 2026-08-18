@@ -13,7 +13,7 @@ This runbook is intentionally prepared before domain activation. Do not merge th
 ## DNS and Vercel
 
 1. Add `gameyer.az` to the existing GameYer Vercel project.
-2. Add `www.gameyer.az` if desired and configure it to redirect to the apex canonical domain.
+2. Add `www.gameyer.az` and canonicalize it to the apex domain.
 3. Copy the exact DNS records supplied by Vercel into the DNS provider.
 4. Wait until Vercel reports the domain as configured and the TLS certificate is valid.
 5. Keep the legacy Vercel production alias attached during migration so old links can redirect.
@@ -22,12 +22,26 @@ This runbook is intentionally prepared before domain activation. Do not merge th
 
 1. Confirm canonical URL generation resolves to `https://gameyer.az` even if a stale legacy `NEXT_PUBLIC_SITE_URL` is still present.
 2. Confirm the legacy host `gameyerr-gameyer.vercel.app` permanently redirects to the equivalent `https://gameyer.az/...` path.
-3. Confirm `robots.txt` advertises `https://gameyer.az/sitemap.xml`.
-4. Confirm every `<loc>` in `sitemap.xml` uses `https://gameyer.az`.
-5. Confirm homepage, club pages, district pages and category pages each emit exactly one canonical URL on `gameyer.az`.
-6. Confirm Organization/WebSite/ItemList structured data use `gameyer.az` URLs.
-7. Confirm Open Graph and Twitter image URLs use the canonical domain.
-8. Confirm admin routes remain noindex and API routes remain disallowed in robots.
+3. Confirm `www.gameyer.az` permanently redirects to the equivalent apex path.
+4. Confirm `robots.txt` advertises `https://gameyer.az/sitemap.xml`.
+5. Confirm every `<loc>` in `sitemap.xml` uses `https://gameyer.az`.
+6. Confirm homepage, club pages, district pages and category pages each emit exactly one canonical URL on `gameyer.az`.
+7. Confirm Organization/WebSite/ItemList structured data use `gameyer.az` URLs.
+8. Confirm Open Graph and Twitter image URLs use the canonical domain.
+9. Confirm admin routes remain noindex and API routes remain disallowed in robots.
+10. Do not reuse a stale URL-prefix Search Console verification token. The planned `gameyer.az` Domain Property is verified with Google's DNS TXT record; a meta verification tag is emitted only if `GOOGLE_SITE_VERIFICATION` is explicitly configured.
+
+## Automated production acceptance
+
+After DNS, TLS and the production cutover are live, run:
+
+```bash
+node scripts/domain-cutover-smoke.mjs
+```
+
+The script fails the cutover if it detects a broken apex route, an unhealthy `/api/health`, a non-canonical sitemap/robots URL, a wrong/missing canonical, a legacy host leak, a missing permanent redirect from `www` or the Vercel production alias, an indexable admin login, or missing baseline security headers.
+
+Optional origin overrides are available through `CUTOVER_CANONICAL_ORIGIN`, `CUTOVER_WWW_ORIGIN`, and `CUTOVER_LEGACY_ORIGIN` for controlled testing.
 
 ## Production acceptance checks
 
@@ -41,7 +55,7 @@ This runbook is intentionally prepared before domain activation. Do not merge th
 - Mobile and desktop smoke tests pass.
 - No new Vercel runtime error clusters appear after cutover.
 - Analytics continues recording public traffic while excluding authenticated admin traffic.
-- Legacy Vercel URLs preserve their path and redirect permanently to the canonical domain.
+- Legacy Vercel and `www` URLs preserve their path and redirect permanently to the canonical domain.
 
 ## Google Search Console
 
