@@ -55,6 +55,12 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.gameyer.az' }],
+        destination: 'https://gameyer.az/:path*',
+        permanent: true,
+      },
+      {
         source: '/tip/pc',
         destination: '/bakida-pc-klublari',
         permanent: true,
