@@ -46,6 +46,14 @@ export async function POST(request: Request) {
   ) return NextResponse.json({ ok: false }, { status: 400 });
 
   const supabase = await createClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (authData.user) {
+    const { data: isAdmin } = await supabase.rpc('is_admin');
+    if (isAdmin) {
+      return new NextResponse(null, { status: 204, headers: { 'cache-control': 'no-store' } });
+    }
+  }
+
   const analytics = supabase as unknown as AnalyticsInsertClient;
   const { error } = await analytics.from('analytics_events').insert({ session_id: sessionId, path, event_type: eventType, club_slug: clubSlug });
 
