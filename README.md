@@ -4,11 +4,11 @@ GameYer Azərbaycanda PC və PlayStation gaming klublarını tapmaq üçün xər
 
 ## Production
 
-Canonical domain: `https://gameyer.az`
+Canonical domain after registrar/DNS activation: `https://gameyer.az`
 
-Legacy Vercel production alias: `https://gameyerr-gameyer.vercel.app`
+Current legacy Vercel production alias: `https://gameyerr-gameyer.vercel.app`
 
-The legacy alias is retained only for migration/compatibility and redirects to the canonical domain after the domain cutover is activated.
+The legacy alias is retained for migration/compatibility and is configured to redirect to the canonical domain only after the domain-readiness change is merged at cutover.
 
 ## Stack
 
