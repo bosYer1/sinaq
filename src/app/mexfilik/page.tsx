@@ -3,14 +3,14 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Məxfilik siyasəti',
-  description: 'GameYer məxfilik siyasəti, lokasiya, anonim statistika və müraciət məlumatlarının istifadəsi.',
+  description: 'GameYer məxfilik siyasəti, lokasiya, statistika və müraciət məlumatlarının istifadəsi.',
   alternates: { canonical: '/mexfilik' },
   openGraph: {
     type: 'website',
     locale: 'az_AZ',
     url: '/mexfilik',
     title: 'Məxfilik siyasəti | GameYer',
-    description: 'GameYer-də lokasiya, anonim statistika, müraciət və digər məlumatların necə istifadə edildiyini oxu.',
+    description: 'GameYer-də lokasiya, statistika, müraciət və digər məlumatların necə istifadə edildiyini oxu.',
   },
 };
 
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <Link href="/" className="text-sm font-semibold text-primary hover:underline">← GameYer-ə qayıt</Link>
       <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-ink">Məxfilik siyasəti</h1>
-      <p className="mt-2 text-sm text-muted">Son yenilənmə: 15 avqust 2026</p>
+      <p className="mt-2 text-sm text-muted">Son yenilənmə: 18 avqust 2026</p>
 
       <div className="mt-8 space-y-7 text-sm leading-7 text-ink">
         <section>
@@ -28,8 +28,9 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="font-display text-lg font-bold">Anonim istifadə statistikası</h2>
-          <p className="mt-2 text-muted">GameYer saytın hansı səhifələrinin daha çox istifadə olunduğunu anlamaq üçün anonim baxış statistikası toplayır. Bunun üçün brauzerdə təsadüfi lokal identifikator yaradılır və səhifə yolu ilə birlikdə saxlanılır. Analytics üçün IP ünvanı, ad, telefon, dəqiq lokasiya və hesab giriş məlumatı saxlanmır. Admin səhifələrinə giriş statistikaya daxil edilmir.</p>
+          <h2 className="font-display text-lg font-bold">İstifadə statistikası</h2>
+          <p className="mt-2 text-muted">GameYer saytın hansı səhifələrinin daha çox istifadə olunduğunu, ziyarət sayını və trafik mənbələrini anlamaq üçün baxış statistikası toplayır. Bunun üçün brauzerdə təsadüfi lokal identifikator yaradılır və səhifə yolu ilə birlikdə saxlanılır. Serverin gördüyü public IP ünvanı da təhlükəsizlik və trafik analizi üçün qeyd olunur.</p>
+          <p className="mt-2 text-muted">IP ünvanı public səhifələrdə göstərilmir və yalnız səlahiyyətli admin hesabının statistika panelində görünür. Unikal ziyarətçi sayı IP ünvanı ilə deyil, anonim browser identifikatoru ilə hesablanır. Admin hesabı ilə daxil olunmuş şəxsin public səhifələrə baxışları və klub CTA klikləri statistikaya daxil edilmir.</p>
         </section>
 
         <section>
