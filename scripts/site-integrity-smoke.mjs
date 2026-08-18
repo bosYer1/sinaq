@@ -1,6 +1,7 @@
 import process from 'node:process';
 
 const BASE_URL = (process.env.TEST_BASE_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
+const EXPECTED_CANONICAL_ORIGIN = (process.env.EXPECTED_CANONICAL_ORIGIN || 'https://gameyer.az').replace(/\/$/, '');
 
 function assert(condition, message, context = undefined) {
   if (!condition) {
@@ -69,6 +70,7 @@ async function checkRobotsAndSitemap() {
   assert(robots.response.status === 200, 'robots.txt must return HTTP 200', { status: robots.response.status });
   assert(!/disallow:\s*\/$/im.test(robots.text), 'robots.txt must not block the whole site', robots.text);
   assert(/sitemap:/i.test(robots.text), 'robots.txt must advertise a sitemap', robots.text);
+  assert(robots.text.includes(`${EXPECTED_CANONICAL_ORIGIN}/sitemap.xml`), 'robots.txt must advertise the canonical gameyer.az sitemap', robots.text);
 
   const sitemap = await fetchText('/sitemap.xml');
   assert(sitemap.response.status === 200, 'sitemap.xml must return HTTP 200', { status: sitemap.response.status });
@@ -76,6 +78,7 @@ async function checkRobotsAndSitemap() {
   assert(urls.length > 0, 'sitemap.xml must contain at least one URL');
   const duplicates = duplicateValues(urls);
   assert(duplicates.length === 0, 'sitemap.xml contains duplicate URLs', duplicates);
+  assert(urls.every((url) => new URL(url).origin === EXPECTED_CANONICAL_ORIGIN), 'Every sitemap URL must use gameyer.az canonical origin', urls.filter((url) => new URL(url).origin !== EXPECTED_CANONICAL_ORIGIN));
   assert(urls.some((url) => new URL(url).pathname.startsWith('/klub/')), 'sitemap.xml must contain club detail pages', urls.slice(0, 10));
   return urls;
 }
@@ -95,6 +98,7 @@ async function checkHtmlPage(url) {
   const canonical = canonicalHref(text);
   assert(canonical.count === 1, 'Page must have exactly one canonical URL', { path, canonical });
   const canonicalUrl = new URL(canonical.href, target.origin);
+  assert(canonicalUrl.origin === EXPECTED_CANONICAL_ORIGIN, 'Canonical origin must be gameyer.az', { path, canonical: canonical.href });
   assert(canonicalUrl.pathname === target.pathname, 'Canonical pathname must match sitemap pathname', { path, canonical: canonical.href });
 
   const duplicateIds = duplicateValues(extractIds(text));
@@ -125,4 +129,4 @@ for (const url of sitemapUrls) {
 if (!homeHtml) homeHtml = await checkHtmlPage(absolute('/'));
 await checkInternalLinks(homeHtml);
 
-console.log(`Site integrity smoke passed for ${sitemapUrls.length} sitemap URLs.`);
+console.log(`Site integrity smoke passed for ${sitemapUrls.length} sitemap URLs on ${EXPECTED_CANONICAL_ORIGIN}.`);
