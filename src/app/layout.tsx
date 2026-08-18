@@ -9,7 +9,7 @@ const bodyFont = Inter({ subsets: ['latin'], variable: '--font-body', display: '
 const displayFont = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
 const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 const siteUrl = getSiteUrl();
-const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim() || 'p4_LT_BjLRiy0oSjt8chd_QgipidT5IWv1N0rKzUl3I';
+const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
 const socialImage = `${siteUrl}/opengraph-image`;
 const brandLogo = `${siteUrl}/apple-icon`;
 const organizationId = `${siteUrl}/#organization`;
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   description: 'Bakıda PC klub, kompüter klubu və PlayStation klub tap. Qiymət, ünvan, rayon, iş saatları və xəritəyə görə gaming klublarını GameYer-də müqayisə et.',
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
-  verification: { google: googleVerification },
+  ...(googleVerification ? { verification: { google: googleVerification } } : {}),
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   appleWebApp: { capable: true, title: 'GameYer', statusBarStyle: 'default' },
   alternates: { canonical: '/' },
