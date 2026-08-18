@@ -8,18 +8,19 @@ This runbook is intentionally prepared before domain activation. Do not merge th
 - DNS management is available at the registrar/DNS provider.
 - Current production deployment is healthy before cutover.
 - PR #87 is green in CI and Vercel preview.
+- No domain DNS record is guessed; only records shown by Vercel/registrar are used.
 
 ## DNS and Vercel
 
 1. Add `gameyer.az` to the existing GameYer Vercel project.
 2. Add `www.gameyer.az` if desired and configure it to redirect to the apex canonical domain.
-3. Copy the exact DNS records supplied by Vercel into the DNS provider. Do not guess A/CNAME values.
+3. Copy the exact DNS records supplied by Vercel into the DNS provider.
 4. Wait until Vercel reports the domain as configured and the TLS certificate is valid.
 5. Keep the legacy Vercel production alias attached during migration so old links can redirect.
 
 ## Application cutover
 
-1. Confirm canonical URL generation resolves to `https://gameyer.az`.
+1. Confirm canonical URL generation resolves to `https://gameyer.az` even if a stale legacy `NEXT_PUBLIC_SITE_URL` is still present.
 2. Confirm the legacy host `gameyerr-gameyer.vercel.app` permanently redirects to the equivalent `https://gameyer.az/...` path.
 3. Confirm `robots.txt` advertises `https://gameyer.az/sitemap.xml`.
 4. Confirm every `<loc>` in `sitemap.xml` uses `https://gameyer.az`.
@@ -40,6 +41,7 @@ This runbook is intentionally prepared before domain activation. Do not merge th
 - Mobile and desktop smoke tests pass.
 - No new Vercel runtime error clusters appear after cutover.
 - Analytics continues recording public traffic while excluding authenticated admin traffic.
+- Legacy Vercel URLs preserve their path and redirect permanently to the canonical domain.
 
 ## Google Search Console
 
