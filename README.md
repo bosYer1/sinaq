@@ -10,6 +10,8 @@ Current legacy Vercel production alias: `https://gameyerr-gameyer.vercel.app`
 
 The legacy alias is retained for migration/compatibility and is configured to redirect to the canonical domain only after the domain-readiness change is merged at cutover.
 
+Cutover runbook: `docs/GAMEYER_AZ_CUTOVER.md`
+
 ## Stack
 
 - Next.js
