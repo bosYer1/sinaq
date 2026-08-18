@@ -14,6 +14,10 @@ type AnalyticsInsertClient = {
   };
 };
 
+type AdminRpcClient = {
+  rpc: (fn: 'is_admin') => PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
+};
+
 export async function POST(request: Request) {
   const guard = guardPublicPost(request, {
     keyPrefix: 'analytics-event',
@@ -48,7 +52,8 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
   if (authData.user) {
-    const { data: isAdmin } = await supabase.rpc('is_admin');
+    const adminClient = supabase as unknown as AdminRpcClient;
+    const { data: isAdmin } = await adminClient.rpc('is_admin');
     if (isAdmin) {
       return new NextResponse(null, { status: 204, headers: { 'cache-control': 'no-store' } });
     }
