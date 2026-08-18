@@ -14,6 +14,7 @@ type PageViewInsertClient = {
       path: string;
       referrer_host: string | null;
       ip_address: string | null;
+      user_agent: string | null;
     }) => PromiseLike<{ error: { message: string } | null }>;
   };
 };
@@ -27,6 +28,12 @@ function clientIp(request: Request) {
   if (!value) return null;
   const ip = value.split(',')[0]?.trim();
   return ip && ip.length <= 45 ? ip : null;
+}
+
+function userAgent(request: Request) {
+  const value = request.headers.get('user-agent')?.trim();
+  if (!value) return null;
+  return value.slice(0, 500);
 }
 
 export async function POST(request: Request) {
@@ -103,6 +110,7 @@ export async function POST(request: Request) {
     path,
     referrer_host: cleanReferrer,
     ip_address: clientIp(request),
+    user_agent: userAgent(request),
   });
 
   if (error) {
