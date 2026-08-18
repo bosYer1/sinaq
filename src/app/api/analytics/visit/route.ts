@@ -7,6 +7,35 @@ export const dynamic = 'force-dynamic';
 const SESSION_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const HOST_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?::\d{1,5})?$/i;
 
+type PageViewInsertClient = {
+  from: (table: 'page_views') => {
+    insert: (row: {
+      session_id: string;
+      path: string;
+      referrer_host: string | null;
+      ip_address: string | null;
+      user_agent: string | null;
+    }) => PromiseLike<{ error: { message: string } | null }>;
+  };
+};
+
+type AdminRpcClient = {
+  rpc: (fn: 'is_admin') => PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
+};
+
+function clientIp(request: Request) {
+  const value = request.headers.get('x-vercel-forwarded-for') ?? request.headers.get('x-forwarded-for');
+  if (!value) return null;
+  const ip = value.split(',')[0]?.trim();
+  return ip && ip.length <= 45 ? ip : null;
+}
+
+function userAgent(request: Request) {
+  const value = request.headers.get('user-agent')?.trim();
+  if (!value) return null;
+  return value.slice(0, 500);
+}
+
 export async function POST(request: Request) {
   const guard = guardPublicPost(request, {
     keyPrefix: 'analytics-visit',
@@ -66,10 +95,22 @@ export async function POST(request: Request) {
     : null;
 
   const supabase = await createClient();
-  const { error } = await supabase.from('page_views').insert({
+  const { data: authData } = await supabase.auth.getUser();
+  if (authData.user) {
+    const adminClient = supabase as unknown as AdminRpcClient;
+    const { data: isAdmin } = await adminClient.rpc('is_admin');
+    if (isAdmin) {
+      return new NextResponse(null, { status: 204, headers: { 'cache-control': 'no-store' } });
+    }
+  }
+
+  const analytics = supabase as unknown as PageViewInsertClient;
+  const { error } = await analytics.from('page_views').insert({
     session_id: sessionId,
     path,
     referrer_host: cleanReferrer,
+    ip_address: clientIp(request),
+    user_agent: userAgent(request),
   });
 
   if (error) {

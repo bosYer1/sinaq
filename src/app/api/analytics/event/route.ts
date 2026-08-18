@@ -14,6 +14,10 @@ type AnalyticsInsertClient = {
   };
 };
 
+type AdminRpcClient = {
+  rpc: (fn: 'is_admin') => PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
+};
+
 export async function POST(request: Request) {
   const guard = guardPublicPost(request, {
     keyPrefix: 'analytics-event',
@@ -46,6 +50,15 @@ export async function POST(request: Request) {
   ) return NextResponse.json({ ok: false }, { status: 400 });
 
   const supabase = await createClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (authData.user) {
+    const adminClient = supabase as unknown as AdminRpcClient;
+    const { data: isAdmin } = await adminClient.rpc('is_admin');
+    if (isAdmin) {
+      return new NextResponse(null, { status: 204, headers: { 'cache-control': 'no-store' } });
+    }
+  }
+
   const analytics = supabase as unknown as AnalyticsInsertClient;
   const { error } = await analytics.from('analytics_events').insert({ session_id: sessionId, path, event_type: eventType, club_slug: clubSlug });
 
