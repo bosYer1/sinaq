@@ -65,6 +65,8 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     .from('clubs')
     .select(selectString)
     .eq('is_active', true)
+    .not('latitude', 'is', null)
+    .not('longitude', 'is', null)
     .order('is_premium', { ascending: false })
     .order('name', { ascending: true });
 
@@ -128,6 +130,8 @@ export async function getClubBySlug(slug: string): Promise<ClubWithRelations | n
     .select(CLUB_SELECT)
     .eq('slug', slug)
     .eq('is_active', true)
+    .not('latitude', 'is', null)
+    .not('longitude', 'is', null)
     .maybeSingle()
     .returns<ClubWithRelations>();
 
