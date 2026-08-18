@@ -1,5 +1,6 @@
-// Production URL source for canonical and SEO links.
-const GAMEYER_PRODUCTION_URL = 'https://gameyerr-gameyer.vercel.app';
+// Canonical production URL for GameYer.
+// NEXT_PUBLIC_SITE_URL can override this for previews or controlled environments.
+const GAMEYER_PRODUCTION_URL = 'https://gameyer.az';
 
 export function getSiteUrl(): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
