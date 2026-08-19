@@ -40,3 +40,4 @@
 20260818115000_admin_analytics_v2
 20260818182000_fix_page_view_insert_permissions
 20260818182500_drop_duplicate_page_views_index
+20260819210848_add_admin_rolling_24h_analytics
