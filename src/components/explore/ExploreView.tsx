@@ -201,13 +201,16 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
       <div className="lg:hidden">
         {view === 'map' ? (
-          <section className="h-[340px] overflow-hidden rounded-[18px] sm:h-[410px]">
+          <section className="h-[430px] overflow-hidden rounded-[18px] sm:h-[500px]">
             {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
           </section>
         ) : null}
 
         {view === 'list' ? (
           <section>
+            <div className="mb-3 h-[280px] overflow-hidden rounded-[18px] sm:h-[340px]">
+              {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
+            </div>
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
