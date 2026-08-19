@@ -1,18 +1,25 @@
-// Production URL source for canonical and SEO links.
-const GAMEYER_PRODUCTION_URL = 'https://gameyerr-gameyer.vercel.app';
+// Canonical production URL for GameYer.
+const GAMEYER_PRODUCTION_URL = 'https://gameyer.az';
+const LEGACY_HOSTS = new Set([
+  'gameyerr-gameyer.vercel.app',
+  'bosyer-web.vercel.app',
+]);
 
 export function getSiteUrl(): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
-  if (!configured || configured.toLowerCase().includes('bosyer')) {
-    return GAMEYER_PRODUCTION_URL;
-  }
+  if (!configured) return GAMEYER_PRODUCTION_URL;
 
   try {
     const url = new URL(configured);
     if (url.protocol !== 'https:' && url.protocol !== 'http:') {
       return GAMEYER_PRODUCTION_URL;
     }
+
+    if (LEGACY_HOSTS.has(url.hostname.toLowerCase()) || url.hostname.toLowerCase().includes('bosyer')) {
+      return GAMEYER_PRODUCTION_URL;
+    }
+
     return url.origin;
   } catch {
     return GAMEYER_PRODUCTION_URL;

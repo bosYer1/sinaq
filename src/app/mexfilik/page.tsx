@@ -29,13 +29,13 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="font-display text-lg font-bold">İstifadə statistikası</h2>
-          <p className="mt-2 text-muted">GameYer saytın hansı səhifələrinin daha çox istifadə olunduğunu, ziyarət sayını və trafik mənbələrini anlamaq üçün baxış statistikası toplayır. Bunun üçün brauzerdə təsadüfi lokal identifikator yaradılır və səhifə yolu ilə birlikdə saxlanılır. Serverin gördüyü public IP ünvanı və ümumi cihaz/brauzer texniki məlumatı da təhlükəsizlik və trafik analizi üçün qeyd olunur.</p>
-          <p className="mt-2 text-muted">IP ünvanı public səhifələrdə göstərilmir və yalnız səlahiyyətli admin hesabının statistika panelində görünür. Unikal ziyarətçi sayı IP ünvanı ilə deyil, anonim browser identifikatoru ilə hesablanır. Admin hesabı ilə daxil olunmuş şəxsin public səhifələrə baxışları və klub CTA klikləri statistikaya daxil edilmir.</p>
+          <p className="mt-2 text-muted">GameYer xidmətin keyfiyyətini yaxşılaşdırmaq, trafik mənbələrini və səhifə istifadəsini anlamaq üçün məhdud texniki statistika toplaya bilər. Bu məlumatlar analitika və təhlükəsizlik məqsədləri üçün istifadə olunur və public səhifələrdə göstərilmir.</p>
+          <p className="mt-2 text-muted">Admin hesabı ilə edilmiş daxili baxışlar ümumi istifadə statistikasına daxil edilmir.</p>
         </section>
 
         <section>
           <h2 className="font-display text-lg font-bold">Lokasiya</h2>
-          <p className="mt-2 text-muted">“Yaxın klublar” və ya “Mənim konumum” funksiyasını seçəndə brauzer cihazının lokasiyasına giriş üçün səndən icazə istəyir. Lokasiya yalnız sənə yaxın klubların məsafəsini hesablamaq və xəritəni mövqeyinə fokuslamaq üçün brauzerdə istifadə olunur. GameYer bu koordinatları öz verilənlər bazasında saxlamır.</p>
+          <p className="mt-2 text-muted">Yaxın klubları göstərmək və xəritəni mövqeyinizə uyğunlaşdırmaq üçün lokasiya yalnız sizin icazənizlə istifadə olunur. GameYer cihazınızın lokasiya koordinatlarını öz verilənlər bazasında saxlamır.</p>
         </section>
 
         <section>

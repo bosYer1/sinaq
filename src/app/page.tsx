@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts, getClubTypes } from '@/lib/queries/districts';
 import { isSupabaseConfigured } from '@/lib/config';
+import { getSiteUrl } from '@/lib/site-url';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { ExploreView } from '@/components/explore/ExploreView';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -66,6 +67,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
   const activeDistrictSlugs = new Set(discoveryClubs.map((club) => club.district?.slug).filter((slug): slug is string => Boolean(slug)));
   const activeDistricts = districts.filter((district) => activeDistrictSlugs.has(district.slug));
+  const siteUrl = getSiteUrl();
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -75,7 +77,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       '@type': 'ListItem',
       position: index + 1,
       name: club.name,
-      url: `https://gameyerr-gameyer.vercel.app/klub/${club.slug}`,
+      url: `${siteUrl}/klub/${club.slug}`,
     })),
   };
 

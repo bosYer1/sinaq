@@ -22,26 +22,29 @@ export default function OpenGraphImage() {
           color: '#14161C',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-          <div
-            style={{
-              width: 92,
-              height: 92,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 24,
-              background: '#7C5CFC',
-              color: '#FFFFFF',
-              fontSize: 54,
-              fontWeight: 800,
-            }}
-          >
-            G
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+            <div
+              style={{
+                width: 92,
+                height: 92,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 24,
+                background: '#7C5CFC',
+                color: '#FFFFFF',
+                fontSize: 54,
+                fontWeight: 800,
+              }}
+            >
+              G
+            </div>
+            <div style={{ display: 'flex', fontSize: 64, fontWeight: 800 }}>
+              Game<span style={{ color: '#7C5CFC' }}>Yer</span>
+            </div>
           </div>
-          <div style={{ display: 'flex', fontSize: 64, fontWeight: 800 }}>
-            Game<span style={{ color: '#7C5CFC' }}>Yer</span>
-          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#6A47F0' }}>gameyer.az</div>
         </div>
 
         <div style={{ marginTop: 58, fontSize: 54, fontWeight: 750, lineHeight: 1.12, maxWidth: 980 }}>

@@ -21,7 +21,7 @@ jobs:
       NEXT_TELEMETRY_DISABLED: '1'
       NEXT_PUBLIC_SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ZRyHR5Qj2LmbCZVsKTBZ4Q_eRByoSYf
-      NEXT_PUBLIC_SITE_URL: https://gameyerr-gameyer.vercel.app
+      NEXT_PUBLIC_SITE_URL: https://gameyer.az
       TEST_BASE_URL: http://127.0.0.1:3000
       RESPONSIVE_ARTIFACT_DIR: /tmp/gameyer-responsive
     steps:

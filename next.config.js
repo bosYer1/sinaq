@@ -49,6 +49,18 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'gameyerr-gameyer.vercel.app' }],
+        destination: 'https://gameyer.az/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.gameyer.az' }],
+        destination: 'https://gameyer.az/:path*',
+        permanent: true,
+      },
+      {
         source: '/tip/pc',
         destination: '/bakida-pc-klublari',
         permanent: true,
