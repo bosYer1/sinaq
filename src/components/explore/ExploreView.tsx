@@ -208,7 +208,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
         {view === 'list' ? (
           <section>
-            <div className="mb-3 h-[320px] overflow-hidden rounded-[18px] sm:h-[380px]">
+            <div className="mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]">
               {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
             </div>
             <div className="mb-3 flex items-center justify-between gap-3">
