@@ -6,6 +6,7 @@ import { SearchFilter } from './SearchFilter';
 import { DistrictFilter } from './DistrictFilter';
 import { TypeFilter } from './TypeFilter';
 import { PriceFilter } from './PriceFilter';
+import { ViewToggle } from './ViewToggle';
 import { useFilters } from '@/hooks/useFilters';
 
 interface FilterBarProps {
@@ -24,6 +25,7 @@ export function FilterBar({ districts, types }: FilterBarProps) {
         <SearchFilter key={searchQuery} />
 
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:overflow-visible xl:pb-0" aria-label="Klub filtrləri">
+          <ViewToggle />
           <TypeFilter types={types} />
           <DistrictFilter districts={districts} />
           <PriceFilter />

@@ -15,7 +15,7 @@ interface ExploreViewProps {
   searchActive?: boolean;
 }
 
-export function ExploreView({ clubs, searchActive }: ExploreViewProps) {
+export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const { location, status, requestLocation } = useUserLocation();
   const { clearAll, hasActiveFilters } = useFilters();
   const [sortByDistance, setSortByDistance] = useState(false);
@@ -200,43 +200,47 @@ export function ExploreView({ clubs, searchActive }: ExploreViewProps) {
       </div>
 
       <div className="lg:hidden">
-        <section className="h-[340px] overflow-hidden rounded-[18px] sm:h-[410px]">
-          {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
-        </section>
+        {view === 'map' ? (
+          <section className="h-[340px] overflow-hidden rounded-[18px] sm:h-[410px]">
+            {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
+          </section>
+        ) : null}
 
-        <section className="pt-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
-              <p className="text-xs text-muted">Xəritədən sonra klubları müqayisə et</p>
+        {view === 'list' ? (
+          <section>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
+                <p className="text-xs text-muted">Klubları müqayisə et</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLocationSort}
+                disabled={status === 'loading' || status === 'unsupported'}
+                className={`rounded-xl border px-3 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-white text-muted'}`}
+              >
+                {locationButtonLabel}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleLocationSort}
-              disabled={status === 'loading' || status === 'unsupported'}
-              className={`rounded-xl border px-3 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-white text-muted'}`}
-            >
-              {locationButtonLabel}
-            </button>
-          </div>
-          {locationMessage ? <div className="mb-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
-          <ClubList
-            clubs={mobileClubs}
-            activeClubId={activeClubId}
-            onHoverClub={handleHoverCard}
-            searchActive={searchActive}
-            onClearFilters={hasActiveFilters ? clearAll : undefined}
-          />
-          {clubsWithDistance.length > 4 ? (
-            <button
-              type="button"
-              onClick={() => setMobileExpanded((value) => !value)}
-              className="mt-3 h-12 w-full rounded-xl border border-border bg-white text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
-            >
-              {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - 4})`}
-            </button>
-          ) : null}
-        </section>
+            {locationMessage ? <div className="mb-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
+            <ClubList
+              clubs={mobileClubs}
+              activeClubId={activeClubId}
+              onHoverClub={handleHoverCard}
+              searchActive={searchActive}
+              onClearFilters={hasActiveFilters ? clearAll : undefined}
+            />
+            {clubsWithDistance.length > 4 ? (
+              <button
+                type="button"
+                onClick={() => setMobileExpanded((value) => !value)}
+                className="mt-3 h-12 w-full rounded-xl border border-border bg-white text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
+              >
+                {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - 4})`}
+              </button>
+            ) : null}
+          </section>
+        ) : null}
       </div>
     </div>
   );

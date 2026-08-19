@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 type SetupState =
@@ -11,6 +11,7 @@ type SetupState =
   | { mode: 'ready' };
 
 export default function AdminMfaPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
   const [state, setState] = useState<SetupState>({ mode: 'loading' });
@@ -44,7 +45,7 @@ export default function AdminMfaPage() {
       // End that session instead of treating the stale aal2 claim as sufficient admin access.
       if (aal.currentLevel === 'aal2' && aal.nextLevel === 'aal1') {
         await supabase.auth.signOut();
-        if (!cancelled) window.location.assign('/admin/login');
+        if (!cancelled) router.push('/admin/login');
         return;
       }
 
@@ -80,7 +81,7 @@ export default function AdminMfaPage() {
     return () => {
       cancelled = true;
     };
-  }, [supabase]);
+  }, [router, supabase]);
 
   useEffect(() => {
     if (state.mode === 'ready') window.location.assign(destination);
