@@ -22,9 +22,10 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState(false);
-  const [mobileMapActive, setMobileMapActive] = useState(false);
+  const [mobileListMapActive, setMobileListMapActive] = useState(false);
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const mobileMapActive = view === 'map' || mobileListMapActive;
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');
@@ -33,11 +34,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     media.addEventListener?.('change', sync);
     return () => media.removeEventListener?.('change', sync);
   }, []);
-
-  useEffect(() => {
-    if (view === 'map') setMobileMapActive(true);
-    if (view === 'list') setMobileMapActive(false);
-  }, [view]);
 
   const clubsWithDistance = useMemo(() => {
     const enriched = clubs.map((club) => ({
@@ -223,7 +219,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
               {!mobileMapActive && isDesktop === false ? (
                 <button
                   type="button"
-                  onClick={() => setMobileMapActive(true)}
+                  onClick={() => setMobileListMapActive(true)}
                   className="absolute inset-0 z-[650] flex touch-pan-y items-center justify-center bg-transparent"
                   aria-label="Xəritəni aktiv et"
                 >
