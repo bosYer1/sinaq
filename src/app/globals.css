@@ -111,14 +111,14 @@ body {
 }
 
 @media (max-width: 1023px) and (pointer: coarse) {
-  /* Siyahı görünüşündə xəritə yalnız preview-dur; səhifə rahat scroll olunur. */
-  [data-explore-view='list'] .leaflet-container {
+  /* Siyahı görünüşündə xəritə ilk toxunuşa qədər səhifə scroll-una mane olmur. */
+  [data-explore-view='list'][data-mobile-map-active='false'] .leaflet-container {
     pointer-events: none;
     touch-action: pan-y;
   }
 
-  /* Tam xəritədə Leaflet-in öz touch-action qaydalarını override etmə.
-     Bu, iOS-da drag/pinch interaksiyasının işləməsini qoruyur. */
+  /* İstifadəçi xəritəni aktiv etdikdən sonra Leaflet tam interaktiv olur. */
+  [data-explore-view='list'][data-mobile-map-active='true'] .leaflet-container,
   [data-explore-view='map'] .leaflet-container {
     pointer-events: auto;
     overscroll-behavior: contain;

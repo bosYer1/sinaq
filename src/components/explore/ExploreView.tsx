@@ -22,8 +22,10 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState(false);
+  const [mobileListMapActive, setMobileListMapActive] = useState(false);
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const mobileMapActive = view === 'map' || mobileListMapActive;
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');
@@ -164,7 +166,11 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   }
 
   return (
-    <div className="bg-surface" data-explore-view={view}>
+    <div
+      className="bg-surface"
+      data-explore-view={view}
+      data-mobile-map-active={mobileMapActive ? 'true' : 'false'}
+    >
       <div className="hidden h-[clamp(590px,68vh,660px)] min-h-0 grid-cols-[360px_minmax(0,1fr)] gap-3 lg:grid xl:grid-cols-[420px_minmax(0,1fr)] xl:gap-4 2xl:grid-cols-[450px_minmax(0,1fr)]">
         <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-border bg-[#FBFCFE]">
           <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-white px-3.5 py-3 xl:gap-3 xl:px-4">
@@ -208,8 +214,20 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
         {view === 'list' ? (
           <section>
-            <div className="mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]">
+            <div className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]">
               {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
+              {!mobileMapActive && isDesktop === false ? (
+                <button
+                  type="button"
+                  onClick={() => setMobileListMapActive(true)}
+                  className="absolute inset-0 z-[20] flex touch-pan-y items-center justify-center bg-transparent"
+                  aria-label="Xəritəni aktiv et"
+                >
+                  <span className="rounded-xl border border-border bg-white/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
+                    Xəritəni hərəkət etdirmək üçün toxun
+                  </span>
+                </button>
+              ) : null}
             </div>
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
