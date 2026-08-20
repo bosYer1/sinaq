@@ -17,6 +17,7 @@ interface MapWrapperProps {
   onSelectClub?: (id: string) => void;
   userLocation?: UserLocation | null;
   locationFocusRequest?: number;
+  interactionMode?: 'full' | 'scroll';
 }
 
 export function MapWrapper({
@@ -25,6 +26,7 @@ export function MapWrapper({
   onSelectClub,
   userLocation,
   locationFocusRequest = 0,
+  interactionMode = 'full',
 }: MapWrapperProps) {
   const [mapReady, setMapReady] = useState(false);
 
@@ -42,6 +44,7 @@ export function MapWrapper({
           onSelectClub={onSelectClub}
           userLocation={userLocation}
           locationFocusRequest={locationFocusRequest}
+          interactionMode={interactionMode}
         />
       ) : (
         <Skeleton className="h-full w-full rounded-none" />
