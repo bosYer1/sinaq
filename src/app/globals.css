@@ -110,6 +110,14 @@ body {
   opacity: 0.72;
 }
 
+@media (max-width: 1023px) and (pointer: coarse) {
+  /* Mobil siyahı görünüşündə şaquli birbarmaq jestini səhifə scroll-u kimi saxla.
+     Xəritə görünüşünə keçəndə Leaflet-in standart pan davranışı dəyişmir. */
+  [data-explore-view='list'] .leaflet-container.leaflet-touch-drag {
+    touch-action: pan-y pinch-zoom;
+  }
+}
+
 @media (max-width: 639px) {
   /* Telefonda pinch-zoom var; düymələri gizlətmək konum overlay-i ilə toqquşmanı aradan qaldırır. */
   .leaflet-control-zoom {
