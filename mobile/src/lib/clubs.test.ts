@@ -1,4 +1,4 @@
-import { cheapestPrice, clubsWithCoordinates, filterClubs, validClubSlug } from '@/lib/clubs';
+import { cheapestPrice, clubsWithCoordinates, filterClubs, normalizeClub, validClubSlug } from '@/lib/clubs';
 import type { Club } from '@/types/club';
 
 const CLUB: Club = {
@@ -38,5 +38,10 @@ describe('filterClubs', () => {
     expect(validClubSlug('arena-gaming-24')).toBe(true);
     expect(validClubSlug('../admin')).toBe(false);
     expect(validClubSlug('javascript:alert')).toBe(false);
+  });
+
+  test('normalizes missing relation arrays without inventing data', () => {
+    const malformed = { ...CLUB, type_assignments: undefined, pricing: null, images: undefined, opening_hours: null } as unknown as Club;
+    expect(normalizeClub(malformed)).toMatchObject({ type_assignments: [], pricing: [], images: [], opening_hours: [] });
   });
 });

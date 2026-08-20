@@ -85,19 +85,29 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
     return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, 'az'));
   }, [clubs]);
 
+  const filteredClubs = useMemo(
+    () => filterClubs(clubs, { ...filters, query: deferredQuery }),
+    [clubs, deferredQuery, filters],
+  );
+  const setFilters = useCallback((next: Partial<ClubFilters>) => {
+    setFilterState((current) => ({ ...current, ...next }));
+  }, []);
+  const clearFilters = useCallback(() => setFilterState(INITIAL_FILTERS), []);
+  const reload = useCallback(() => load(true), [load]);
+
   const value = useMemo<ClubDataValue>(() => ({
     clubs,
-    filteredClubs: filterClubs(clubs, { ...filters, query: deferredQuery }),
+    filteredClubs,
     districts,
     types,
     filters,
     loading,
     refreshing,
     error,
-    setFilters: (next) => setFilterState((current) => ({ ...current, ...next })),
-    clearFilters: () => setFilterState(INITIAL_FILTERS),
-    reload: () => load(true),
-  }), [clubs, deferredQuery, districts, error, filters, load, loading, refreshing, types]);
+    setFilters,
+    clearFilters,
+    reload,
+  }), [clearFilters, clubs, districts, error, filteredClubs, filters, loading, refreshing, reload, setFilters, types]);
 
   return <ClubDataContext.Provider value={value}>{children}</ClubDataContext.Provider>;
 }

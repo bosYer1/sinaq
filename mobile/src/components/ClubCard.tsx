@@ -1,12 +1,13 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '@/constants/theme';
+import { ClubImage } from '@/components/ClubImage';
 import { cheapestPrice, clubTypeLabels, coverImage } from '@/lib/clubs';
 import { formatPrice } from '@/lib/format';
 import type { Club } from '@/types/club';
 
-export function ClubCard({ club }: { club: Club }) {
+export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
   const image = coverImage(club);
   const types = clubTypeLabels(club);
   const firstPrice = cheapestPrice(club);
@@ -18,11 +19,7 @@ export function ClubCard({ club }: { club: Club }) {
       accessibilityRole="button"
       accessibilityLabel={`${club.name} klub detalına bax`}
     >
-      {image ? (
-        <Image source={{ uri: image }} style={styles.image} contentFit="cover" transition={180} />
-      ) : (
-        <View style={[styles.image, styles.placeholder]}><Text style={styles.placeholderText}>GY</Text></View>
-      )}
+      <ClubImage key={image ?? 'fallback'} uri={image} name={club.name} style={styles.image} />
       <View style={styles.content}>
         <View style={styles.titleRow}>
           <Text style={styles.title} numberOfLines={1}>{club.name}</Text>
@@ -35,14 +32,12 @@ export function ClubCard({ club }: { club: Club }) {
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: { flexDirection: 'row', minHeight: 138, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface, overflow: 'hidden' },
   pressed: { opacity: 0.78 },
   image: { width: 122, minHeight: 138, backgroundColor: colors.surfaceAlt },
-  placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primaryTint },
-  placeholderText: { color: colors.primary, fontSize: 24, fontWeight: '800' },
   content: { flex: 1, padding: spacing.md, gap: spacing.xs },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   title: { flex: 1, color: colors.ink, fontSize: 16, fontWeight: '800' },

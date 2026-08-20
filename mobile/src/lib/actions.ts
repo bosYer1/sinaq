@@ -2,7 +2,8 @@ const PHONE_PATTERN = /^\+?\d{7,15}$/;
 
 export function phoneUrl(phone: string | null) {
   if (!phone) return null;
-  const normalized = phone.replace(/[^+\d]/g, '');
+  const firstNumber = phone.split(/\s*[\/,;]\s*/).find(Boolean) ?? '';
+  const normalized = firstNumber.replace(/[^+\d]/g, '');
   return PHONE_PATTERN.test(normalized) ? `tel:${normalized}` : null;
 }
 
@@ -11,7 +12,7 @@ export function instagramUrl(value: string | null) {
   try {
     const url = new URL(value);
     const hostname = url.hostname.toLowerCase();
-    if (url.protocol !== 'https:' || (hostname !== 'instagram.com' && hostname !== 'www.instagram.com')) return null;
+    if (url.protocol !== 'https:' || url.username || url.password || url.port || (hostname !== 'instagram.com' && hostname !== 'www.instagram.com')) return null;
     return url.toString();
   } catch {
     return null;

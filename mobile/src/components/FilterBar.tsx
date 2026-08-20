@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   searchBox: { minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, paddingHorizontal: spacing.md },
   input: { flex: 1, minHeight: 48, color: colors.ink, fontSize: 15 },
   row: { gap: spacing.sm, paddingRight: spacing.lg },
-  chip: { minHeight: 42, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: spacing.lg },
+  chip: { minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: spacing.lg },
   chipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryTint },
   chipText: { color: colors.muted, fontSize: 13, fontWeight: '600' },
   chipTextSelected: { color: colors.primaryDark },

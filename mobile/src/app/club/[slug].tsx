@@ -1,9 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { ScreenState } from '@/components/ScreenState';
+import { ClubImage } from '@/components/ClubImage';
 import { colors, radius, spacing } from '@/constants/theme';
 import { clubTypeLabels, coverImage, fetchClubBySlug } from '@/lib/clubs';
 import { directionsUrl, instagramUrl, phoneUrl } from '@/lib/actions';
@@ -75,7 +75,7 @@ export default function ClubDetailScreen() {
     <ScrollView contentContainerStyle={styles.content}>
       {image ? (
         <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} accessibilityLabel={`${club.name} şəkilləri`}>
-          {club.images.map((clubImage) => <Image key={clubImage.id} source={{ uri: clubImage.url }} style={[styles.heroImage, { width: galleryWidth }]} contentFit="cover" transition={180} accessibilityLabel={`${club.name} klub şəkli`} />)}
+          {club.images.map((clubImage, index) => <ClubImage key={`${clubImage.id}:${clubImage.url}`} uri={clubImage.url} name={club.name} style={[styles.heroImage, { width: galleryWidth }]} priority={index === 0 ? 'high' : 'normal'} />)}
         </ScrollView>
       ) : (
         <View style={[styles.heroImage, styles.placeholder]}><Text style={styles.placeholderText}>GameYer</Text></View>

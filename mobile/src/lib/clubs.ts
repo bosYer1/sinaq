@@ -33,7 +33,7 @@ const DETAIL_SELECT = `
   )
 `;
 
-function normalizeClub(club: Club): Club {
+export function normalizeClub(club: Club): Club {
   return {
     ...club,
     description: club.description ?? null,

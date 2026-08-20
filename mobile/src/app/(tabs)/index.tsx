@@ -35,6 +35,8 @@ export default function DiscoveryScreen() {
       initialNumToRender={8}
       maxToRenderPerBatch={8}
       windowSize={7}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
     />
   );
 }

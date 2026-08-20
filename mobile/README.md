@@ -8,7 +8,7 @@ GameYer-in mövcud Supabase backend-i ilə işləyən Expo/React Native mobil t�
 - `ClubDataProvider` ilə vahid read-only data cache-i
 - Siyahı/map üçün yüngül summary query, detail açıldıqda isə slug üzrə ayrıca tam query
 - Supabase publishable key + production RLS
-- Native `react-native-maps` ekranı; list scroll-u ilə gesture konflikti yoxdur
+- Native `react-native-maps` ekranı və dependency-siz region əsaslı marker clustering-i
 - Route-lar: discovery, map, `club/[slug]`
 - Konfiqurasiya yoxdur və ya səhvdirsə production fallback edilmir
 
@@ -35,6 +35,8 @@ npm start
 ```
 
 `npm run build` Android və iOS JavaScript bundle export-u yaradır. App Store/Play Store native binary signing və Android Google Maps production credential-ı ayrıca release mərhələsidir; bu repo heç bir paid map xidmətini avtomatik aktivləşdirmir.
+
+Real cihaz release yoxlamaları üçün [DEVICE_QA.md](./DEVICE_QA.md) checklist-inə baxın.
 
 ## Production təhlükəsizliyi
 
