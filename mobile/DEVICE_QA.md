@@ -1,0 +1,49 @@
+# GameYer device QA checklist
+
+Bu checklist real Android və iOS cihazında release candidate yoxlaması üçündür. Aşağıdakı maddələr desktop bundle export ilə təsdiqlənmiş sayılmır.
+
+## Release-blocking ilk 10 ssenari
+
+Hər testi ən azı bir real Android və bir real iPhone-da aparın. Crash, ağ ekran, 15 saniyədən uzun spinner, yanlış klub detalı və ya təkrarlanan detail screen release blocker-dir.
+
+1. Təmiz install edin; düzgün splash/icon-dan sonra discovery-nin açıldığını, missing/səhv env olan ayrıca test build-də isə raw exception əvəzinə retry UI göründüyünü yoxlayın.
+2. App-ı offline başladın, 15 saniyə ərzində timeout/error UI gözləyin; şəbəkəni açıb bir dəfə retry edin və siyahının bərpa olunduğunu yoxlayın.
+3. Refresh zamanı şəbəkəni kəsin, dərhal list/map arasında keçin və geri qayıdın; spinner dayanmalı, son uğurlu siyahı qalmalı, paralel retry storm olmamalıdır.
+4. 20 fərqli klub kartına sürətlə toxunun; yalnız bir detail screen açılmalıdır. Hardware back/iOS swipe-back ilə bir addımda siyahıya qayıdın.
+5. Bir detail yüklənərkən geri qayıdıb başqa klub açın; əvvəlki klubun adı, şəkli və məlumatı heç vaxt yeni route-da görünməməlidir.
+6. Xəritədə 20 markerə sürətlə toxunun, sonra cluster və marker arasında keçin; son seçim preview-də görünməli və kamera nəzarətsiz animasiya növbəsinə düşməməlidir.
+7. Map/list arasında təkrar keçin, discovery-də filtri dəyişib map-a qayıdın; köhnə marker seçimi/preview bərpa olmamalı və location icazəsi istənməməlidir.
+8. Şəkilli siyahını sürətlə yuxarı-aşağı scroll edin və qırıq image URL olan klub açın; scroll cavabdeh qalmalı, fallback görünməli, gallery ağ/boş sahədə ilişməməlidir.
+9. Kiçik ekran və maksimum accessibility font ilə uzun ad/ünvanlı detail-i yoxlayın; badge, action-lar, qiymətlər və saatlar kəsilmədən scroll edilə bilməlidir.
+10. Zəng, Instagram və Marşrut action-larını açın və ləğv edib app-a qayıdın; yalnız `tel:` və yoxlanmış HTTPS hədəflər açılmalı, dəstəklənməyən action professional alert göstərməlidir.
+
+## Hər iki platforma
+
+- Təmiz install, splash, GameYer icon və ilk discovery yüklənməsini yoxla.
+- Wi-Fi və mobil şəbəkədə discovery siyahısını, pull-to-refresh və retry-ni yoxla.
+- Offline start, request zamanı şəbəkənin kəsilməsi və yenidən qoşulma vəziyyətlərini yoxla.
+- Uzun klub adı/ünvanı, şəkilsiz və qırıq şəkilli kartları yoxla.
+- Search keyboard-u, clear düyməsi, keyboard dismiss və Azərbaycan hərfləri ilə axtarışı yoxla.
+- PC/PlayStation, rayon və təsdiqlənmiş filtrləri ayrı-ayrılıqda və birlikdə yoxla.
+- Xəritədə pan, pinch zoom, compass, marker seçimi və boş sahəyə toxunaraq seçimi bağlamağı yoxla.
+- Uzaq zoom-da cluster saylarını, cluster-ə toxunaraq yaxınlaşmanı və yaxın zoom-da markerə ayrılmanı yoxla.
+- Seçilmiş markerin kamera fokusunu, preview kartını və detail keçidini yoxla.
+- Detail qalereyasında swipe, qırıq şəkil fallback-i, uzun mətn və bütün missing-data vəziyyətlərini yoxla.
+- Telefon zəngi, yalnız rəsmi Instagram HTTPS linki və directions action-larını yoxla; cancel etdikdə app-a təhlükəsiz qayıtmalıdır.
+- Kiçik ekran, böyük accessibility font ölçüsü, landscape bloklanması və tablet layout-u yoxla.
+- Status bar, notch/Dynamic Island, home indicator və tab bar safe-area davranışını yoxla.
+- Sistem light və dark rejimlərində app-ın qəsdən light theme saxladığını və kontrastın pozulmadığını yoxla.
+
+## Android
+
+- Hardware/system back və predictive back ilə detail-dən geri qayıtmağı yoxla.
+- Google Maps native tiles, marker/cluster rendering və gesture-ləri ən azı bir real Play Services cihazında yoxla.
+- Telefon/Instagram/directions üçün app chooser və dəstəklənməyən action alert-ini yoxla.
+- Location icazəsinin istənmədiyini təsdiqlə.
+
+## iOS
+
+- Navigation back swipe, scroll-to-top və gallery horizontal swipe konfliktini yoxla.
+- Apple Maps əsaslı map tile, marker/cluster rendering və gesture-ləri yoxla.
+- Telefon/Instagram/directions action-larını və Safari/Maps-dən app-a qayıdışı yoxla.
+- Location permission prompt-un görünmədiyini təsdiqlə.
