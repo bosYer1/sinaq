@@ -181,6 +181,35 @@ jobs:
             -H 'Content-Type: application/json' \
             --data-binary @/tmp/oversized-analytics.json
 
+          node <<'NODE'
+          const endpoint = 'http://localhost:3000/api/analytics/visit';
+          const encoder = new TextEncoder();
+          const stream = new ReadableStream({
+            start(controller) {
+              controller.enqueue(encoder.encode('{"sessionId":"securitytest2","path":"/","padding":"'));
+              controller.enqueue(encoder.encode('x'.repeat(2048)));
+              controller.enqueue(encoder.encode('"}'));
+              controller.close();
+            },
+          });
+
+          fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              Origin: 'http://localhost:3000',
+              'Content-Type': 'application/json',
+            },
+            body: stream,
+            duplex: 'half',
+          }).then((response) => {
+            console.log(`chunked-oversized-body -> ${response.status}`);
+            if (response.status !== 413) process.exit(1);
+          }).catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
       - name: Stop production server
         if: always()
         run: |

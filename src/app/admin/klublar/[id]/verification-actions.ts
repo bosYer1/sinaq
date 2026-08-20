@@ -1,13 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
 
 export async function revokeClubVerification(formData: FormData) {
+  const { supabase } = await requireAdmin();
   const id = typeof formData.get('id') === 'string' ? String(formData.get('id')).trim() : '';
   if (!id) throw new Error('Klub ID tapılmadı.');
 
-  const supabase = await createClient();
   const { data: club, error: readError } = await supabase
     .from('clubs')
     .select('slug')
