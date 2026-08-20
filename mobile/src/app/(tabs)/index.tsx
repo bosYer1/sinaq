@@ -1,9 +1,14 @@
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View, type ListRenderItemInfo } from 'react-native';
 import { ClubCard } from '@/components/ClubCard';
 import { FilterBar } from '@/components/FilterBar';
 import { ScreenState } from '@/components/ScreenState';
 import { colors, spacing } from '@/constants/theme';
 import { useClubData } from '@/context/ClubDataContext';
+import type { Club } from '@/types/club';
+
+const keyExtractor = (club: Club) => club.id;
+const renderClub = ({ item }: ListRenderItemInfo<Club>) => <ClubCard club={item} />;
+const renderSeparator = () => <View style={styles.separator} />;
 
 export default function DiscoveryScreen() {
   const { filteredClubs, clubs, loading, refreshing, error, reload } = useClubData();
@@ -14,10 +19,10 @@ export default function DiscoveryScreen() {
   return (
     <FlatList
       data={filteredClubs}
-      keyExtractor={(club) => club.id}
-      renderItem={({ item }) => <ClubCard club={item} />}
+      keyExtractor={keyExtractor}
+      renderItem={renderClub}
       contentContainerStyle={styles.content}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      ItemSeparatorComponent={renderSeparator}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void reload()} tintColor={colors.primary} />}
       ListHeaderComponent={
         <View>
@@ -34,6 +39,7 @@ export default function DiscoveryScreen() {
       ListEmptyComponent={<ScreenState title="Uyğun klub tapılmadı" message="Filtrləri dəyişərək yenidən yoxlayın." />}
       initialNumToRender={8}
       maxToRenderPerBatch={8}
+      updateCellsBatchingPeriod={40}
       windowSize={7}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"

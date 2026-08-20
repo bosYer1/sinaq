@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '@/constants/theme';
@@ -6,6 +5,7 @@ import { ClubImage } from '@/components/ClubImage';
 import { cheapestPrice, clubTypeLabels, coverImage } from '@/lib/clubs';
 import { formatPrice } from '@/lib/format';
 import type { Club } from '@/types/club';
+import { openClub } from '@/lib/navigation';
 
 export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
   const image = coverImage(club);
@@ -14,7 +14,7 @@ export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
 
   return (
     <Pressable
-      onPress={() => router.push({ pathname: '/club/[slug]', params: { slug: club.slug } })}
+      onPress={() => openClub(club.slug)}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       accessibilityRole="button"
       accessibilityLabel={`${club.name} klub detalına bax`}

@@ -35,14 +35,17 @@ export default function ClubDetailScreen() {
   const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadedSlug, setLoadedSlug] = useState<string | undefined>();
   const loadClub = useCallback(async () => {
     setLoading(true);
+    setLoadedSlug(undefined);
     setError(null);
     try {
-      setClub(slug ? await fetchClubBySlug(slug) : null);
+      setClub(slug ? await fetchClubBySlug(slug, true) : null);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Klub məlumatı alınmadı.');
     } finally {
+      setLoadedSlug(slug);
       setLoading(false);
     }
   }, [slug]);
@@ -51,16 +54,22 @@ export default function ClubDetailScreen() {
     let active = true;
     const request = slug ? fetchClubBySlug(slug) : Promise.resolve(null);
     request.then((nextClub) => {
-      if (active) setClub(nextClub);
+      if (active) {
+        setClub(nextClub);
+        setError(null);
+      }
     }).catch((reason: unknown) => {
       if (active) setError(reason instanceof Error ? reason.message : 'Klub məlumatı alınmadı.');
     }).finally(() => {
-      if (active) setLoading(false);
+      if (active) {
+        setLoadedSlug(slug);
+        setLoading(false);
+      }
     });
     return () => { active = false; };
   }, [slug]);
 
-  if (loading) return <ScreenState loading title="Klub məlumatı yüklənir" />;
+  if (loading || loadedSlug !== slug) return <ScreenState loading title="Klub məlumatı yüklənir" />;
   if (error) return <ScreenState title="Klub məlumatı alınmadı" message={error} actionLabel="Yenidən yoxla" onAction={() => void loadClub()} />;
   if (!club) return <ScreenState title="Klub tapılmadı" message="Bu klub aktiv deyil və ya link yanlışdır." />;
 

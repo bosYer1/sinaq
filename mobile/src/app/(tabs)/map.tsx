@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ClubMap } from '@/components/ClubMap';
@@ -9,6 +8,7 @@ import { useClubData } from '@/context/ClubDataContext';
 import { cheapestPrice, clubsWithCoordinates, clubTypeLabels } from '@/lib/clubs';
 import { formatPrice } from '@/lib/format';
 import type { Club } from '@/types/club';
+import { openClub } from '@/lib/navigation';
 
 export default function MapScreen() {
   const { filteredClubs, loading, error, reload } = useClubData();
@@ -32,7 +32,7 @@ export default function MapScreen() {
 
 function MapClubCard({ club }: { club: Club }) {
   const price = cheapestPrice(club);
-  return <Pressable style={({ pressed }) => [styles.clubCard, pressed && styles.pressed]} onPress={() => router.push({ pathname: '/club/[slug]', params: { slug: club.slug } })} accessibilityRole="button" accessibilityLabel={`${club.name} klub detalına bax`}>
+  return <Pressable style={({ pressed }) => [styles.clubCard, pressed && styles.pressed]} onPress={() => openClub(club.slug)} accessibilityRole="button" accessibilityLabel={`${club.name} klub detalına bax`}>
     <View style={styles.cardBody}><View style={styles.cardTitleRow}><Text style={styles.cardTitle} numberOfLines={1}>{club.name}</Text>{club.is_verified ? <Text style={styles.verified}>✓</Text> : null}</View><Text style={styles.cardMeta} numberOfLines={1}>{[club.district?.name, ...clubTypeLabels(club)].filter(Boolean).join(' · ')}</Text><Text style={styles.cardAddress} numberOfLines={1}>{club.address}</Text><Text style={price ? styles.cardPrice : styles.cardMissing}>{price ? formatPrice(price) : 'Qiymət göstərilməyib'}</Text></View>
     <Ionicons name="chevron-forward" size={22} color={colors.primary} />
   </Pressable>;

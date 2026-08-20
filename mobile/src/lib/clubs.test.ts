@@ -14,6 +14,15 @@ const CLUB: Club = {
 describe('filterClubs', () => {
   test('matches Azerbaijani search across name, district and address', () => {
     expect(filterClubs([CLUB], { query: 'nizami', district: null, type: null, verifiedOnly: false })).toHaveLength(1);
+    expect(filterClubs([{ ...CLUB, name: 'İnternet Klub' }], { query: 'internet', district: null, type: null, verifiedOnly: false })).toHaveLength(1);
+  });
+
+  test('keeps rapid Azerbaijani search updates deterministic', () => {
+    const clubs = [{ ...CLUB, name: 'Əyləncə üçün Işıqlı Ödənişsiz Üzvlük Çeşidi və Yağış' }];
+    for (const query of ['ə', 'ı', 'ö', 'ü', 'ş', 'ç', 'ğ', 'mövcud deyil', 'yağış']) {
+      const result = filterClubs(clubs, { query, district: null, type: null, verifiedOnly: false });
+      expect(result).toHaveLength(query === 'mövcud deyil' ? 0 : 1);
+    }
   });
 
   test('combines district, type and verified filters', () => {
@@ -43,5 +52,19 @@ describe('filterClubs', () => {
   test('normalizes missing relation arrays without inventing data', () => {
     const malformed = { ...CLUB, type_assignments: undefined, pricing: null, images: undefined, opening_hours: null } as unknown as Club;
     expect(normalizeClub(malformed)).toMatchObject({ type_assignments: [], pricing: [], images: [], opening_hours: [] });
+  });
+
+  test('drops malformed relations and unsafe remote images', () => {
+    const malformed = {
+      ...CLUB,
+      images: [
+        { id: 'ok', url: 'https://cdn.example.com/club.jpg', is_cover: true, position: 0 },
+        { id: 'http', url: 'http://cdn.example.com/club.jpg', is_cover: false, position: 1 },
+        { id: 'credentials', url: 'https://user:pass@cdn.example.com/club.jpg', is_cover: false, position: 2 },
+      ],
+      pricing: [{ id: 'bad', price_from: Number.NaN, price_to: null, unit: 'saat', club_type: null }],
+    };
+    expect(normalizeClub(malformed).images.map((image) => image.id)).toEqual(['ok']);
+    expect(normalizeClub(malformed).pricing).toEqual([]);
   });
 });

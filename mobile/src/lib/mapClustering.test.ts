@@ -1,7 +1,7 @@
 import { clusterClubs } from '@/lib/mapClustering';
-import type { Club } from '@/types/club';
+import type { MappableClub } from '@/types/club';
 
-const club = (id: string, latitude: number, longitude: number): Club => ({
+const club = (id: string, latitude: number, longitude: number): MappableClub => ({
   id, name: id, slug: id, description: null, address: '', latitude, longitude,
   phone: null, instagram_url: null, is_premium: false, premium_expires_at: null,
   is_verified: false, verified_at: null, updated_at: '2026-08-20', district: null,

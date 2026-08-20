@@ -1,5 +1,12 @@
-import type { Club, ClubFilters } from '@/types/club';
+import type { Club, ClubFilters, MappableClub } from '@/types/club';
 import { getSupabaseClient } from '@/lib/supabase';
+import { createRequestCoordinator, withRequestTimeout } from '@/lib/request';
+
+const REQUEST_TIMEOUT_MS = 15_000;
+const DETAIL_CACHE_MS = 5 * 60_000;
+const listRequests = createRequestCoordinator<Club[]>();
+const detailRequests = createRequestCoordinator<Club | null>(DETAIL_CACHE_MS);
+const searchIndex = new WeakMap<Club, string>();
 
 const LIST_SELECT = `
   id, name, slug, address, latitude, longitude,
@@ -36,44 +43,80 @@ const DETAIL_SELECT = `
 export function normalizeClub(club: Club): Club {
   return {
     ...club,
+    name: club.name.trim(),
+    address: typeof club.address === 'string' ? club.address.trim() : '',
     description: club.description ?? null,
     phone: club.phone ?? null,
     instagram_url: club.instagram_url ?? null,
     verified_at: club.verified_at ?? null,
-    type_assignments: Array.isArray(club.type_assignments) ? club.type_assignments : [],
-    pricing: Array.isArray(club.pricing) ? club.pricing : [],
-    images: Array.isArray(club.images) ? [...club.images].sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.position - b.position) : [],
-    opening_hours: Array.isArray(club.opening_hours) ? [...club.opening_hours].filter((hours) => hours.day_of_week >= 0 && hours.day_of_week <= 6).sort((a, b) => a.day_of_week - b.day_of_week) : [],
+    district: club.district && typeof club.district.name === 'string' ? club.district : null,
+    type_assignments: Array.isArray(club.type_assignments)
+      ? club.type_assignments.filter((assignment) => assignment && typeof assignment === 'object')
+      : [],
+    pricing: Array.isArray(club.pricing)
+      ? club.pricing.filter((price) => price && typeof price.id === 'string' && Number.isFinite(price.price_from))
+      : [],
+    images: Array.isArray(club.images)
+      ? club.images.filter((image) => image && typeof image.id === 'string' && safeHttpsUrl(image.url)).sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.position - b.position)
+      : [],
+    opening_hours: Array.isArray(club.opening_hours)
+      ? club.opening_hours.filter((hours) => hours && hours.day_of_week >= 0 && hours.day_of_week <= 6).sort((a, b) => a.day_of_week - b.day_of_week)
+      : [],
   };
 }
 
-export async function fetchClubs(): Promise<Club[]> {
-  const { data, error } = await getSupabaseClient()
-    .from('clubs')
-    .select(LIST_SELECT)
-    .eq('is_active', true)
-    .order('is_premium', { ascending: false })
-    .order('name', { ascending: true })
-    .returns<Club[]>();
+function safeHttpsUrl(value: unknown) {
+  if (typeof value !== 'string') return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
 
-  if (error) throw new Error(`Klub məlumatları alınmadı: ${error.message}`);
+export function fetchClubs(): Promise<Club[]> {
+  return listRequests.run('active-clubs', () => withRequestTimeout(async (signal) => {
+    const { data, error } = await getSupabaseClient()
+      .from('clubs')
+      .select(LIST_SELECT)
+      .eq('is_active', true)
+      .order('is_premium', { ascending: false })
+      .order('name', { ascending: true })
+      .abortSignal(signal)
+      .returns<Club[]>();
 
-  return (data ?? []).map(normalizeClub);
+    if (error) throw new Error('Klub məlumatları hazırda alınmadı. Yenidən cəhd edin.');
+    return (data ?? []).filter(isUsableClub).map(normalizeClub);
+  }, REQUEST_TIMEOUT_MS));
 }
 
 export function validClubSlug(slug: string) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 120;
 }
 
-export async function fetchClubBySlug(slug: string): Promise<Club | null> {
-  if (!validClubSlug(slug)) return null;
-  const { data, error } = await getSupabaseClient().from('clubs').select(DETAIL_SELECT).eq('slug', slug).eq('is_active', true).maybeSingle().returns<Club>();
-  if (error) throw new Error(`Klub məlumatı alınmadı: ${error.message}`);
-  return data ? normalizeClub(data) : null;
+export function fetchClubBySlug(slug: string, force = false): Promise<Club | null> {
+  if (!validClubSlug(slug)) return Promise.resolve(null);
+  return detailRequests.run(slug, () => withRequestTimeout(async (signal) => {
+    const { data, error } = await getSupabaseClient()
+      .from('clubs')
+      .select(DETAIL_SELECT)
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .abortSignal(signal)
+      .maybeSingle()
+      .returns<Club>();
+    if (error) throw new Error('Klub məlumatı hazırda alınmadı. Yenidən cəhd edin.');
+    return data && isUsableClub(data) ? normalizeClub(data) : null;
+  }, REQUEST_TIMEOUT_MS), force);
+}
+
+function isUsableClub(club: Club) {
+  return Boolean(club && typeof club.id === 'string' && club.id && typeof club.name === 'string' && club.name.trim() && typeof club.slug === 'string' && validClubSlug(club.slug));
 }
 
 export function filterClubs(clubs: Club[], filters: ClubFilters) {
-  const query = filters.query.trim().toLocaleLowerCase('az');
+  const query = normalizeSearchText(filters.query);
 
   return clubs.filter((club) => {
     if (filters.verifiedOnly && !club.is_verified) return false;
@@ -84,14 +127,21 @@ export function filterClubs(clubs: Club[], filters: ClubFilters) {
     ) return false;
     if (!query) return true;
 
-    return [club.name, club.address, club.district?.name]
-      .filter((value): value is string => Boolean(value))
-      .some((value) => value.toLocaleLowerCase('az').includes(query));
+    let indexed = searchIndex.get(club);
+    if (!indexed) {
+      indexed = normalizeSearchText([club.name, club.address, club.district?.name, club.slug].filter(Boolean).join(' '));
+      searchIndex.set(club, indexed);
+    }
+    return indexed.includes(query);
   });
 }
 
+export function normalizeSearchText(value: string) {
+  return value.trim().toLocaleLowerCase('az-AZ');
+}
+
 export function clubsWithCoordinates(clubs: Club[]) {
-  return clubs.filter((club) => (
+  return clubs.filter((club): club is MappableClub => (
     club.latitude != null && club.longitude != null &&
     Number.isFinite(club.latitude) && Number.isFinite(club.longitude) &&
     club.latitude >= -90 && club.latitude <= 90 &&

@@ -7,6 +7,8 @@ GameYer-in mövcud Supabase backend-i ilə işləyən Expo/React Native mobil t�
 - Expo SDK 57 və stable Expo Router
 - `ClubDataProvider` ilə vahid read-only data cache-i
 - Siyahı/map üçün yüngül summary query, detail açıldıqda isə slug üzrə ayrıca tam query
+- Şəbəkə sorğuları üçün 15 saniyəlik sərhəd, paralel sorğu deduplication-u və məhdud detail cache-i
+- Route səviyyəsində bərpa edilə bilən error boundary və sürətli təkrar keçid qoruması
 - Supabase publishable key + production RLS
 - Native `react-native-maps` ekranı və dependency-siz region əsaslı marker clustering-i
 - Route-lar: discovery, map, `club/[slug]`

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
 import { colors } from '@/constants/theme';
 import { clusterClubs, type ClubMapPoint } from '@/lib/mapClustering';
-import type { Club } from '@/types/club';
+import type { MappableClub } from '@/types/club';
 
 const AZERBAIJAN_REGION: Region = {
   latitude: 40.28,
@@ -13,15 +13,16 @@ const AZERBAIJAN_REGION: Region = {
 };
 
 type Props = {
-  clubs: Club[];
+  clubs: MappableClub[];
   selectedClubId: string | null;
-  onSelectClub: (club: Club) => void;
+  onSelectClub: (club: MappableClub) => void;
   onClearSelection: () => void;
 };
 
 export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectClub, onClearSelection }: Props) {
   const mapRef = useRef<MapView>(null);
   const hasFittedRef = useRef(false);
+  const lastFocusedClubRef = useRef<string | null>(null);
   const [region, setRegion] = useState(AZERBAIJAN_REGION);
   const [mapReady, setMapReady] = useState(false);
   const points = useMemo(() => clusterClubs(clubs, region, selectedClubId), [clubs, region, selectedClubId]);
@@ -31,18 +32,20 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
     if (!hasFittedRef.current) {
       hasFittedRef.current = true;
       mapRef.current?.fitToCoordinates(
-        clubs.map((club) => ({ latitude: club.latitude!, longitude: club.longitude! })),
+        clubs.map((club) => ({ latitude: club.latitude, longitude: club.longitude })),
         { edgePadding: { top: 80, right: 44, bottom: 190, left: 44 }, animated: false },
       );
       return;
     }
     const selected = clubs.find((club) => club.id === selectedClubId);
-    if (selected) {
+    if (selected && selected.id !== lastFocusedClubRef.current) {
+      lastFocusedClubRef.current = selected.id;
       mapRef.current?.animateCamera(
-        { center: { latitude: selected.latitude!, longitude: selected.longitude! }, zoom: 15 },
+        { center: { latitude: selected.latitude, longitude: selected.longitude }, zoom: 15 },
         { duration: 350 },
       );
     }
+    if (!selectedClubId) lastFocusedClubRef.current = null;
   }, [clubs, mapReady, selectedClubId]);
 
   const openCluster = (point: Extract<ClubMapPoint, { kind: 'cluster' }>) => {
@@ -62,9 +65,6 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
       toolbarEnabled={false}
       showsCompass
       showsMyLocationButton={false}
-      loadingEnabled
-      loadingIndicatorColor={colors.primary}
-      loadingBackgroundColor={colors.surfaceAlt}
       moveOnMarkerPress={false}
       onPress={onClearSelection}
       onMapReady={() => setMapReady(true)}

@@ -55,6 +55,8 @@ export type Club = {
   opening_hours: OpeningHours[];
 };
 
+export type MappableClub = Club & { latitude: number; longitude: number };
+
 export type ClubFilters = {
   query: string;
   district: string | null;
