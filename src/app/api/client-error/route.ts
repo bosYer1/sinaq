@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { guardPublicPost } from '@/lib/security/publicRequestGuard';
+import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicRequestGuard';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,25 +38,20 @@ export async function POST(request: Request) {
     );
   }
 
-  try {
-    const raw = await request.text();
-    if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) {
-      return jsonResponse({ ok: false }, 413);
-    }
+  const parsed = await readJsonBodyLimited(request, MAX_BODY_BYTES);
+  if (!parsed.ok) return jsonResponse({ ok: false }, parsed.status);
+  if (!parsed.data || typeof parsed.data !== 'object') return jsonResponse({ ok: false }, 400);
 
-    const body = JSON.parse(raw) as Record<string, unknown>;
-    const payload = {
-      message: clean(body.message, 1000),
-      stack: clean(body.stack, 4000),
-      digest: clean(body.digest, 200),
-      path: clean(body.path, 500),
-    };
+  const body = parsed.data as Record<string, unknown>;
+  const payload = {
+    message: clean(body.message, 1000),
+    stack: clean(body.stack, 4000),
+    digest: clean(body.digest, 200),
+    path: clean(body.path, 500),
+  };
 
-    if (payload.message) {
-      console.error('GAMEYER_CLIENT_ERROR', JSON.stringify(payload));
-    }
-  } catch {
-    return jsonResponse({ ok: false }, 400);
+  if (payload.message) {
+    console.error('GAMEYER_CLIENT_ERROR', JSON.stringify(payload));
   }
 
   return jsonResponse({ ok: true });
