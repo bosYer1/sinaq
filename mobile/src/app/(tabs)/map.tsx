@@ -14,14 +14,14 @@ import { openClub } from '@/lib/navigation';
 
 export default function MapScreen() {
   const { filteredClubs, loading, error, reload } = useClubData();
-  const [selectedClub, setSelectedClub] = useState<Club | null>(null);
+  const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
   const mapped = useMemo(() => clubsWithCoordinates(filteredClubs), [filteredClubs]);
-  const selected = selectedClub && mapped.some((club) => club === selectedClub) ? selectedClub : null;
-  const selectClub = useCallback((club: Club) => setSelectedClub(club), []);
-  const clearSelection = useCallback(() => setSelectedClub(null), []);
+  const selected = mapped.find((club) => club.id === selectedClubId) ?? null;
+  const selectClub = useCallback((club: Club) => setSelectedClubId(club.id), []);
+  const clearSelection = useCallback(() => setSelectedClubId(null), []);
 
   useFocusEffect(useCallback(() => {
-    setSelectedClub(null);
+    setSelectedClubId(null);
   }, []));
 
   if (loading) return <ScreenState loading title="Xəritə hazırlanır" />;

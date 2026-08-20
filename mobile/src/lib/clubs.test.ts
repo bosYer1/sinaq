@@ -1,4 +1,4 @@
-import { cheapestPrice, clubsWithCoordinates, filterClubs, normalizeClub, validClubSlug } from '@/lib/clubs';
+import { cheapestPrice, clubsWithCoordinates, filterClubs, normalizeClub, normalizeClubList, validClubSlug } from '@/lib/clubs';
 import type { Club } from '@/types/club';
 
 const CLUB: Club = {
@@ -53,6 +53,11 @@ describe('filterClubs', () => {
   test('normalizes missing relation arrays without inventing data', () => {
     const malformed = { ...CLUB, type_assignments: undefined, pricing: null, images: undefined, opening_hours: null } as unknown as Club;
     expect(normalizeClub(malformed)).toMatchObject({ type_assignments: [], pricing: [], images: [], opening_hours: [] });
+  });
+
+  test('drops malformed list payloads and blank identifiers', () => {
+    expect(normalizeClubList(null)).toEqual([]);
+    expect(normalizeClubList([{ ...CLUB, id: '   ' }, CLUB])).toEqual([CLUB]);
   });
 
   test('drops malformed relations and unsafe remote images', () => {

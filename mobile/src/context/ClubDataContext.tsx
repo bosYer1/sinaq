@@ -69,6 +69,7 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    mounted.current = true;
 
     fetchClubs()
       .then((nextClubs) => {

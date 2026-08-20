@@ -22,15 +22,18 @@ type Props = {
 export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectClub, onClearSelection }: Props) {
   const mapRef = useRef<MapView>(null);
   const hasFittedRef = useRef(false);
+  const fittedClubSetRef = useRef('');
   const lastFocusedClubRef = useRef<string | null>(null);
   const [region, setRegion] = useState(AZERBAIJAN_REGION);
   const [mapReady, setMapReady] = useState(false);
+  const clubSet = useMemo(() => clubs.map((club) => club.id).sort().join(':'), [clubs]);
   const points = useMemo(() => clusterClubs(clubs, region, selectedClubId), [clubs, region, selectedClubId]);
 
   useEffect(() => {
     if (!mapReady || clubs.length === 0) return;
-    if (!hasFittedRef.current) {
+    if (!hasFittedRef.current || fittedClubSetRef.current !== clubSet) {
       hasFittedRef.current = true;
+      fittedClubSetRef.current = clubSet;
       if (clubs.length === 1) {
         mapRef.current?.setCamera({
           center: { latitude: clubs[0].latitude, longitude: clubs[0].longitude },
@@ -53,7 +56,7 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
       );
     }
     if (!selectedClubId) lastFocusedClubRef.current = null;
-  }, [clubs, mapReady, selectedClubId]);
+  }, [clubs, clubSet, mapReady, selectedClubId]);
 
   const openCluster = (point: Extract<ClubMapPoint, { kind: 'cluster' }>) => {
     mapRef.current?.animateToRegion({

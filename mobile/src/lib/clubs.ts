@@ -152,8 +152,12 @@ export function fetchClubs(): Promise<Club[]> {
       .returns<Club[]>();
 
     if (error) throw publicQueryError(error, 'Klub məlumatları hazırda alınmadı. Yenidən cəhd edin.');
-    return Array.isArray(data) ? data.filter(isUsableClub).map(normalizeClub) : [];
+    return normalizeClubList(data);
   }, REQUEST_TIMEOUT_MS));
+}
+
+export function normalizeClubList(data: unknown): Club[] {
+  return Array.isArray(data) ? data.filter(isUsableClub).map(normalizeClub) : [];
 }
 
 export function validClubSlug(slug: string) {
@@ -177,7 +181,7 @@ export function fetchClubBySlug(slug: string, force = false): Promise<Club | nul
 }
 
 function isUsableClub(club: Club) {
-  return Boolean(club && typeof club.id === 'string' && club.id && typeof club.name === 'string' && club.name.trim() && typeof club.slug === 'string' && validClubSlug(club.slug));
+  return Boolean(club && typeof club.id === 'string' && club.id.trim() && typeof club.name === 'string' && club.name.trim() && typeof club.slug === 'string' && validClubSlug(club.slug));
 }
 
 function publicQueryError(error: unknown, fallback: string) {
