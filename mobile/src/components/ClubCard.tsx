@@ -11,6 +11,7 @@ export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
   const image = coverImage(club);
   const types = clubTypeLabels(club);
   const firstPrice = cheapestPrice(club);
+  const meta = [club.district?.name, ...types].filter(Boolean).join(' · ');
 
   return (
     <Pressable
@@ -19,15 +20,15 @@ export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
       accessibilityRole="button"
       accessibilityLabel={`${club.name} klub detalına bax`}
     >
-      <ClubImage key={image ?? 'fallback'} uri={image} name={club.name} style={styles.image} />
+      <ClubImage key={image ?? 'fallback'} uri={image} name={club.name} style={styles.image} priority="low" />
       <View style={styles.content}>
         <View style={styles.titleRow}>
           <Text style={styles.title} numberOfLines={1}>{club.name}</Text>
           {club.is_verified ? <Text style={styles.verified}>✓</Text> : null}
           {club.is_premium ? <Text style={styles.premium}>VIP</Text> : null}
         </View>
-        <Text style={styles.meta} numberOfLines={1}>{[club.district?.name, ...types].filter(Boolean).join(' · ')}</Text>
-        <Text style={styles.address} numberOfLines={2}>{club.address}</Text>
+        <Text style={meta ? styles.meta : styles.missing} numberOfLines={1}>{meta || 'Klub tipi göstərilməyib'}</Text>
+        <Text style={club.address ? styles.address : styles.missing} numberOfLines={2}>{club.address || 'Ünvan göstərilməyib'}</Text>
         {firstPrice ? <Text style={styles.price}>{formatPrice(firstPrice)}</Text> : <Text style={styles.missing}>Qiymət göstərilməyib</Text>}
       </View>
     </Pressable>

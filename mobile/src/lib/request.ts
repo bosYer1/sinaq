@@ -39,7 +39,8 @@ export function createRequestCoordinator<T>(ttlMs = 0, maxEntries = 20) {
       const existing = inFlight.get(key);
       if (existing) return existing;
 
-      const request = task()
+      const request = Promise.resolve()
+        .then(task)
         .then((value) => {
           if (ttlMs > 0) {
             if (!cache.has(key) && cache.size >= maxEntries) {

@@ -25,6 +25,14 @@ describe('request stability', () => {
     await expect(coordinator.run('list', task)).resolves.toBe('recovered');
   });
 
+  test('converts synchronous startup failures into recoverable rejections', async () => {
+    const coordinator = createRequestCoordinator<string>();
+    await expect(coordinator.run('startup', () => {
+      throw new Error('missing config');
+    })).rejects.toThrow('missing config');
+    await expect(coordinator.run('startup', async () => 'recovered')).resolves.toBe('recovered');
+  });
+
   test('bounds cached detail entries', async () => {
     const coordinator = createRequestCoordinator<string>(1000, 2);
     const task = jest.fn(async () => 'club');
@@ -37,12 +45,17 @@ describe('request stability', () => {
 
   test('aborts and rejects a request that exceeds its deadline', async () => {
     jest.useFakeTimers();
+    let aborted = false;
     const request = withRequestTimeout(
-      (signal) => new Promise<string>((_, reject) => signal.addEventListener('abort', () => reject(new Error('aborted')))),
+      (signal) => new Promise<string>((_, reject) => signal.addEventListener('abort', () => {
+        aborted = true;
+        reject(new Error('aborted'));
+      })),
       100,
     );
     const expectation = expect(request).rejects.toBeInstanceOf(RequestTimeoutError);
     await jest.advanceTimersByTimeAsync(101);
     await expectation;
+    expect(aborted).toBe(true);
   });
 });

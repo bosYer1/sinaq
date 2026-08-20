@@ -2,6 +2,21 @@
 
 Bu checklist real Android və iOS cihazında release candidate yoxlaması üçündür. Aşağıdakı maddələr desktop bundle export ilə təsdiqlənmiş sayılmır.
 
+## Release-blocking ilk 10 ssenari
+
+Hər testi ən azı bir real Android və bir real iPhone-da aparın. Crash, ağ ekran, 15 saniyədən uzun spinner, yanlış klub detalı və ya təkrarlanan detail screen release blocker-dir.
+
+1. Təmiz install edin; düzgün splash/icon-dan sonra discovery-nin açıldığını, missing/səhv env olan ayrıca test build-də isə raw exception əvəzinə retry UI göründüyünü yoxlayın.
+2. App-ı offline başladın, 15 saniyə ərzində timeout/error UI gözləyin; şəbəkəni açıb bir dəfə retry edin və siyahının bərpa olunduğunu yoxlayın.
+3. Refresh zamanı şəbəkəni kəsin, dərhal list/map arasında keçin və geri qayıdın; spinner dayanmalı, son uğurlu siyahı qalmalı, paralel retry storm olmamalıdır.
+4. 20 fərqli klub kartına sürətlə toxunun; yalnız bir detail screen açılmalıdır. Hardware back/iOS swipe-back ilə bir addımda siyahıya qayıdın.
+5. Bir detail yüklənərkən geri qayıdıb başqa klub açın; əvvəlki klubun adı, şəkli və məlumatı heç vaxt yeni route-da görünməməlidir.
+6. Xəritədə 20 markerə sürətlə toxunun, sonra cluster və marker arasında keçin; son seçim preview-də görünməli və kamera nəzarətsiz animasiya növbəsinə düşməməlidir.
+7. Map/list arasında təkrar keçin, discovery-də filtri dəyişib map-a qayıdın; köhnə marker seçimi/preview bərpa olmamalı və location icazəsi istənməməlidir.
+8. Şəkilli siyahını sürətlə yuxarı-aşağı scroll edin və qırıq image URL olan klub açın; scroll cavabdeh qalmalı, fallback görünməli, gallery ağ/boş sahədə ilişməməlidir.
+9. Kiçik ekran və maksimum accessibility font ilə uzun ad/ünvanlı detail-i yoxlayın; badge, action-lar, qiymətlər və saatlar kəsilmədən scroll edilə bilməlidir.
+10. Zəng, Instagram və Marşrut action-larını açın və ləğv edib app-a qayıdın; yalnız `tel:` və yoxlanmış HTTPS hədəflər açılmalı, dəstəklənməyən action professional alert göstərməlidir.
+
 ## Hər iki platforma
 
 - Təmiz install, splash, GameYer icon və ilk discovery yüklənməsini yoxla.

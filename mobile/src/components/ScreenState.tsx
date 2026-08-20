@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '@/constants/theme';
 
 type Props = {
@@ -11,7 +12,7 @@ type Props = {
 
 export function ScreenState({ title, message, loading, actionLabel, onAction }: Props) {
   return (
-    <View style={styles.container} accessibilityRole="alert">
+    <SafeAreaView style={styles.container} accessibilityRole="alert">
       {loading ? <ActivityIndicator size="large" color={colors.primary} /> : null}
       <Text style={styles.title}>{title}</Text>
       {message ? <Text style={styles.message}>{message}</Text> : null}
@@ -20,7 +21,7 @@ export function ScreenState({ title, message, loading, actionLabel, onAction }: 
           <Text style={styles.buttonText}>{actionLabel}</Text>
         </Pressable>
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 }
 

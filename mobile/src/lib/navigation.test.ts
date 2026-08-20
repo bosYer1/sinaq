@@ -10,8 +10,14 @@ describe('club navigation guard', () => {
     expect(shouldNavigateToClub('arena-gaming', 1800)).toBe(true);
   });
 
-  test('allows rapid selection of a different club', () => {
+  test('blocks rapid pushes even when a different card is tapped', () => {
     expect(shouldNavigateToClub('arena-gaming', 1000)).toBe(true);
-    expect(shouldNavigateToClub('next-club', 1100)).toBe(true);
+    expect(shouldNavigateToClub('next-club', 1100)).toBe(false);
+    expect(shouldNavigateToClub('next-club', 1800)).toBe(true);
+  });
+
+  test('allows only one push during a 20-tap hammer test', () => {
+    const results = Array.from({ length: 20 }, (_, index) => shouldNavigateToClub(`club-${index}`, 1000 + index * 20));
+    expect(results.filter(Boolean)).toHaveLength(1);
   });
 });

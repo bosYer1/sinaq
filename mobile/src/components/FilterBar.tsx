@@ -35,6 +35,7 @@ export function FilterBar() {
           returnKeyType="search"
           autoCapitalize="none"
           autoCorrect={false}
+          maxLength={120}
           accessibilityLabel="Klub axtarışı"
         />
         {filters.query ? (

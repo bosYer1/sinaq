@@ -1,5 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ClubMap } from '@/components/ClubMap';
 import { ScreenState } from '@/components/ScreenState';
@@ -12,11 +14,15 @@ import { openClub } from '@/lib/navigation';
 
 export default function MapScreen() {
   const { filteredClubs, loading, error, reload } = useClubData();
-  const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
+  const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const mapped = useMemo(() => clubsWithCoordinates(filteredClubs), [filteredClubs]);
-  const selected = mapped.find((club) => club.id === selectedClubId) ?? null;
-  const selectClub = useCallback((club: Club) => setSelectedClubId(club.id), []);
-  const clearSelection = useCallback(() => setSelectedClubId(null), []);
+  const selected = selectedClub && mapped.some((club) => club === selectedClub) ? selectedClub : null;
+  const selectClub = useCallback((club: Club) => setSelectedClub(club), []);
+  const clearSelection = useCallback(() => setSelectedClub(null), []);
+
+  useFocusEffect(useCallback(() => {
+    setSelectedClub(null);
+  }, []));
 
   if (loading) return <ScreenState loading title="Xəritə hazırlanır" />;
   if (error && mapped.length === 0) return <ScreenState title="Xəritə məlumatı alınmadı" message={error} actionLabel="Yenidən yoxla" onAction={() => void reload()} />;
@@ -24,16 +30,19 @@ export default function MapScreen() {
   const withoutCoordinates = filteredClubs.length - mapped.length;
 
   return <View style={styles.container}>
-    <ClubMap clubs={mapped} selectedClubId={selectedClubId} onSelectClub={selectClub} onClearSelection={clearSelection} />
-    <View style={styles.counter} pointerEvents="none"><Text style={styles.counterText}>{mapped.length} klub xəritədə</Text>{withoutCoordinates > 0 ? <Text style={styles.counterSubtext}>{withoutCoordinates} klubun koordinatı yoxdur</Text> : null}</View>
-    {selected ? <MapClubCard club={selected} /> : null}
+    <AppErrorBoundary title="Xəritə göstərilə bilmədi" message="Klub siyahısı işləməyə davam edir. Xəritəni yenidən aça bilərsiniz." actionLabel="Xəritəni yenidən aç" onReset={clearSelection}>
+      <ClubMap clubs={mapped} selectedClubId={selected?.id ?? null} onSelectClub={selectClub} onClearSelection={clearSelection} />
+      <View style={styles.counter} pointerEvents="none"><Text style={styles.counterText}>{mapped.length} klub xəritədə</Text>{withoutCoordinates > 0 ? <Text style={styles.counterSubtext}>{withoutCoordinates} klubun koordinatı yoxdur</Text> : null}</View>
+      {selected ? <MapClubCard club={selected} /> : null}
+    </AppErrorBoundary>
   </View>;
 }
 
 function MapClubCard({ club }: { club: Club }) {
   const price = cheapestPrice(club);
+  const meta = [club.district?.name, ...clubTypeLabels(club)].filter(Boolean).join(' · ');
   return <Pressable style={({ pressed }) => [styles.clubCard, pressed && styles.pressed]} onPress={() => openClub(club.slug)} accessibilityRole="button" accessibilityLabel={`${club.name} klub detalına bax`}>
-    <View style={styles.cardBody}><View style={styles.cardTitleRow}><Text style={styles.cardTitle} numberOfLines={1}>{club.name}</Text>{club.is_verified ? <Text style={styles.verified}>✓</Text> : null}</View><Text style={styles.cardMeta} numberOfLines={1}>{[club.district?.name, ...clubTypeLabels(club)].filter(Boolean).join(' · ')}</Text><Text style={styles.cardAddress} numberOfLines={1}>{club.address}</Text><Text style={price ? styles.cardPrice : styles.cardMissing}>{price ? formatPrice(price) : 'Qiymət göstərilməyib'}</Text></View>
+    <View style={styles.cardBody}><View style={styles.cardTitleRow}><Text style={styles.cardTitle} numberOfLines={1}>{club.name}</Text>{club.is_verified ? <Text style={styles.verified}>✓</Text> : null}</View><Text style={meta ? styles.cardMeta : styles.cardMissing} numberOfLines={1}>{meta || 'Klub tipi göstərilməyib'}</Text><Text style={club.address ? styles.cardAddress : styles.cardMissing} numberOfLines={1}>{club.address || 'Ünvan göstərilməyib'}</Text><Text style={price ? styles.cardPrice : styles.cardMissing}>{price ? formatPrice(price) : 'Qiymət göstərilməyib'}</Text></View>
     <Ionicons name="chevron-forward" size={22} color={colors.primary} />
   </Pressable>;
 }

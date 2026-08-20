@@ -31,6 +31,13 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
     if (!mapReady || clubs.length === 0) return;
     if (!hasFittedRef.current) {
       hasFittedRef.current = true;
+      if (clubs.length === 1) {
+        mapRef.current?.setCamera({
+          center: { latitude: clubs[0].latitude, longitude: clubs[0].longitude },
+          zoom: 14,
+        });
+        return;
+      }
       mapRef.current?.fitToCoordinates(
         clubs.map((club) => ({ latitude: club.latitude, longitude: club.longitude })),
         { edgePadding: { top: 80, right: 44, bottom: 190, left: 44 }, animated: false },

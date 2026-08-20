@@ -32,6 +32,7 @@ describe('filterClubs', () => {
 
   test('excludes invalid coordinates without changing valid club data', () => {
     expect(clubsWithCoordinates([CLUB, { ...CLUB, id: '2', latitude: 95 }])).toEqual([CLUB]);
+    expect(clubsWithCoordinates([{ ...CLUB, latitude: null, longitude: null }])).toEqual([]);
   });
 
   test('uses the cheapest positive verified price', () => {
@@ -66,5 +67,26 @@ describe('filterClubs', () => {
     };
     expect(normalizeClub(malformed).images.map((image) => image.id)).toEqual(['ok']);
     expect(normalizeClub(malformed).pricing).toEqual([]);
+  });
+
+  test('deduplicates relations and rejects invalid prices and hours', () => {
+    const malformed = {
+      ...CLUB,
+      type_assignments: [CLUB.type_assignments[0], CLUB.type_assignments[0], { club_type: { id: '', name: 'Bad', slug: '../bad' } }],
+      pricing: [
+        { id: 'price', price_from: 5, price_to: 4, unit: 'saat', club_type: null },
+        { id: 'valid', price_from: 5, price_to: 8, unit: 'saat', club_type: null },
+        { id: 'valid', price_from: 5, price_to: 8, unit: 'saat', club_type: null },
+      ],
+      opening_hours: [
+        { id: 'bad', day_of_week: 0, open_time: '99:00', close_time: '18:00', is_closed: false },
+        { id: 'monday', day_of_week: 0, open_time: '09:00', close_time: '18:00', is_closed: false },
+        { id: 'duplicate-day', day_of_week: 0, open_time: '10:00', close_time: '19:00', is_closed: false },
+      ],
+    } as unknown as Club;
+    const normalized = normalizeClub(malformed);
+    expect(normalized.type_assignments).toHaveLength(1);
+    expect(normalized.pricing.map((price) => price.id)).toEqual(['valid']);
+    expect(normalized.opening_hours.map((hours) => hours.id)).toEqual(['monday']);
   });
 });

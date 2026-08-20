@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { fetchClubs, filterClubs } from '@/lib/clubs';
 import type { Club, ClubFilters, ClubType, District } from '@/types/club';
 
@@ -25,13 +25,29 @@ type ClubDataValue = {
 
 const ClubDataContext = createContext<ClubDataValue | null>(null);
 
+export function reconcileFilters(filters: ClubFilters, clubs: Club[]) {
+  const districtExists = !filters.district || clubs.some((club) => club.district?.slug === filters.district);
+  const typeExists = !filters.type || clubs.some((club) => club.type_assignments.some((assignment) => assignment.club_type?.slug === filters.type));
+  if (districtExists && typeExists) return filters;
+  return {
+    ...filters,
+    district: districtExists ? filters.district : null,
+    type: typeExists ? filters.type : null,
+  };
+}
+
 export function ClubDataProvider({ children }: { children: ReactNode }) {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [filters, setFilterState] = useState(INITIAL_FILTERS);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(true);
   const deferredQuery = useDeferredValue(filters.query);
+  const acceptClubs = useCallback((nextClubs: Club[]) => {
+    setClubs(nextClubs);
+    setFilterState((current) => reconcileFilters(current, nextClubs));
+  }, []);
 
   const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
@@ -39,21 +55,24 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      setClubs(await fetchClubs());
+      const nextClubs = await fetchClubs();
+      if (mounted.current) acceptClubs(nextClubs);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Klub məlumatları alınmadı.');
+      if (mounted.current) setError(reason instanceof Error ? reason.message : 'Klub məlumatları alınmadı.');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (mounted.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-  }, []);
+  }, [acceptClubs]);
 
   useEffect(() => {
     let active = true;
 
     fetchClubs()
       .then((nextClubs) => {
-        if (active) setClubs(nextClubs);
+        if (active) acceptClubs(nextClubs);
       })
       .catch((reason: unknown) => {
         if (active) setError(reason instanceof Error ? reason.message : 'Klub məlumatları alınmadı.');
@@ -64,8 +83,9 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
 
     return () => {
       active = false;
+      mounted.current = false;
     };
-  }, []);
+  }, [acceptClubs]);
 
   const districts = useMemo(() => {
     const unique = new Map<string, District>();

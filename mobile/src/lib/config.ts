@@ -6,14 +6,17 @@ export type MobileConfig = {
 function validSupabaseUrl(value: string) {
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' && url.hostname.endsWith('.supabase.co');
+    return url.protocol === 'https:' &&
+      /^[a-z0-9-]+\.supabase\.co$/.test(url.hostname) &&
+      !url.username && !url.password && !url.port &&
+      (url.pathname === '/' || url.pathname === '') && !url.search && !url.hash;
   } catch {
     return false;
   }
 }
 
 function validPublishableKey(value: string) {
-  if (value.startsWith('sb_publishable_')) return true;
+  if (/^sb_publishable_[A-Za-z0-9_-]{16,}$/.test(value)) return true;
   if (!value.startsWith('eyJ')) return false;
   try {
     const payload = value.split('.')[1];

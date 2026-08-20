@@ -8,10 +8,10 @@ describe('readMobileConfig', () => {
   test('accepts explicit publishable client configuration', () => {
     expect(readMobileConfig({
       EXPO_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
-      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_example',
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_example_public_key',
     })).toEqual({
       supabaseUrl: 'https://example.supabase.co',
-      supabasePublishableKey: 'sb_publishable_example',
+      supabasePublishableKey: 'sb_publishable_example_public_key',
     });
   });
 
@@ -19,6 +19,17 @@ describe('readMobileConfig', () => {
     expect(() => readMobileConfig({
       EXPO_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'forbidden_private_key',
+    })).toThrow('konfiqurasiyası yoxdur');
+  });
+
+  test('rejects malformed endpoints and incomplete publishable keys', () => {
+    expect(() => readMobileConfig({
+      EXPO_PUBLIC_SUPABASE_URL: 'https://user@example.supabase.co/path?key=value',
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_example_public_key',
+    })).toThrow('konfiqurasiyası yoxdur');
+    expect(() => readMobileConfig({
+      EXPO_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_',
     })).toThrow('konfiqurasiyası yoxdur');
   });
 

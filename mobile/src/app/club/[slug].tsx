@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, FlatList, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { ScreenState } from '@/components/ScreenState';
 import { ClubImage } from '@/components/ClubImage';
 import { colors, radius, spacing } from '@/constants/theme';
@@ -36,37 +36,46 @@ export default function ClubDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadedSlug, setLoadedSlug] = useState<string | undefined>();
+  const requestSequence = useRef(0);
   const loadClub = useCallback(async () => {
+    const requestId = ++requestSequence.current;
     setLoading(true);
     setLoadedSlug(undefined);
     setError(null);
     try {
-      setClub(slug ? await fetchClubBySlug(slug, true) : null);
+      const nextClub = slug ? await fetchClubBySlug(slug, true) : null;
+      if (requestSequence.current === requestId) setClub(nextClub);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Klub məlumatı alınmadı.');
+      if (requestSequence.current === requestId) {
+        setError(reason instanceof Error ? reason.message : 'Klub məlumatı alınmadı.');
+      }
     } finally {
-      setLoadedSlug(slug);
-      setLoading(false);
+      if (requestSequence.current === requestId) {
+        setLoadedSlug(slug);
+        setLoading(false);
+      }
     }
   }, [slug]);
 
   useEffect(() => {
-    let active = true;
+    const requestId = ++requestSequence.current;
     const request = slug ? fetchClubBySlug(slug) : Promise.resolve(null);
     request.then((nextClub) => {
-      if (active) {
+      if (requestSequence.current === requestId) {
         setClub(nextClub);
         setError(null);
       }
     }).catch((reason: unknown) => {
-      if (active) setError(reason instanceof Error ? reason.message : 'Klub məlumatı alınmadı.');
+      if (requestSequence.current === requestId) {
+        setError(reason instanceof Error ? reason.message : 'Klub məlumatı alınmadı.');
+      }
     }).finally(() => {
-      if (active) {
+      if (requestSequence.current === requestId) {
         setLoadedSlug(slug);
         setLoading(false);
       }
     });
-    return () => { active = false; };
+    return () => { requestSequence.current += 1; };
   }, [slug]);
 
   if (loading || loadedSlug !== slug) return <ScreenState loading title="Klub məlumatı yüklənir" />;
@@ -75,6 +84,7 @@ export default function ClubDetailScreen() {
 
   const image = coverImage(club);
   const typeLabels = clubTypeLabels(club);
+  const meta = [club.district?.name, ...typeLabels].filter(Boolean).join(' · ');
   const routeUrl = directionsUrl(club.latitude, club.longitude);
   const callUrl = phoneUrl(club.phone);
   const socialUrl = instagramUrl(club.instagram_url);
@@ -83,9 +93,21 @@ export default function ClubDetailScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       {image ? (
-        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} accessibilityLabel={`${club.name} şəkilləri`}>
-          {club.images.map((clubImage, index) => <ClubImage key={`${clubImage.id}:${clubImage.url}`} uri={clubImage.url} name={club.name} style={[styles.heroImage, { width: galleryWidth }]} priority={index === 0 ? 'high' : 'normal'} />)}
-        </ScrollView>
+        <FlatList
+          horizontal
+          pagingEnabled
+          snapToInterval={galleryWidth}
+          disableIntervalMomentum
+          data={club.images}
+          keyExtractor={(clubImage) => `${clubImage.id}:${clubImage.url}`}
+          renderItem={({ item: clubImage, index }) => <ClubImage uri={clubImage.url} name={club.name} style={[styles.heroImage, { width: galleryWidth }]} priority={index === 0 ? 'high' : 'normal'} />}
+          getItemLayout={(_, index) => ({ length: galleryWidth, offset: galleryWidth * index, index })}
+          initialNumToRender={1}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          showsHorizontalScrollIndicator={false}
+          accessibilityLabel={`${club.name} şəkilləri`}
+        />
       ) : (
         <View style={[styles.heroImage, styles.placeholder]}><Text style={styles.placeholderText}>GameYer</Text></View>
       )}
@@ -97,8 +119,8 @@ export default function ClubDetailScreen() {
             <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Təsdiqlənib</Text></View>
           ) : null}
         </View>
-        <Text style={styles.meta}>{[club.district?.name, ...typeLabels].filter(Boolean).join(' · ')}</Text>
-        <Text style={styles.address}>{club.address}</Text>
+        <Text style={meta ? styles.meta : styles.missing}>{meta || 'Klub tipi göstərilməyib'}</Text>
+        <Text style={club.address ? styles.address : styles.missing}>{club.address || 'Ünvan göstərilməyib'}</Text>
 
         <View style={styles.actions}>
           {routeUrl ? (
