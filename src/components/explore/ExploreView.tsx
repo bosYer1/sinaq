@@ -220,7 +220,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 <button
                   type="button"
                   onClick={() => setMobileListMapActive(true)}
-                  className="absolute inset-0 z-[650] flex touch-pan-y items-center justify-center bg-transparent"
+                  className="absolute inset-0 z-[20] flex touch-pan-y items-center justify-center bg-transparent"
                   aria-label="Xəritəni aktiv et"
                 >
                   <span className="rounded-xl border border-border bg-white/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
