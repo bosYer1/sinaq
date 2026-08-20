@@ -9,7 +9,7 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline'",
   "script-src-attr 'none'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://uxcedpbumulpheglhlvs.supabase.co https://*.basemaps.cartocdn.com https://unavatar.io https://www.google.com https://marsol.az",
+  "img-src 'self' data: blob: https://uxcedpbumulpheglhlvs.supabase.co https://*.basemaps.cartocdn.com https://marsol.az",
   "font-src 'self' data:",
   "connect-src 'self' https://uxcedpbumulpheglhlvs.supabase.co wss://uxcedpbumulpheglhlvs.supabase.co",
   "media-src 'self'",
@@ -31,18 +31,8 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'unavatar.io',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'www.google.com',
-        pathname: '/s2/favicons**',
-      },
-      {
-        protocol: 'https',
         hostname: 'marsol.az',
-        pathname: '/**',
+        pathname: '/wp-content/uploads/2021/12/laliga-logo-sayt.jpg',
       },
     ],
   },
