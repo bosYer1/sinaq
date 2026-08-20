@@ -23,11 +23,20 @@ type AdminRpcClient = {
   rpc: (fn: 'is_admin') => PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
 };
 
-function clientIp(request: Request) {
+function privacySafeClientIp(request: Request) {
   const value = request.headers.get('x-vercel-forwarded-for') ?? request.headers.get('x-forwarded-for');
   if (!value) return null;
+
   const ip = value.split(',')[0]?.trim();
-  return ip && ip.length <= 45 ? ip : null;
+  if (!ip || ip.length > 45) return null;
+
+  // Keep only a coarse IPv4 /24-equivalent value. Do not persist raw IPv6 addresses.
+  const octets = ip.split('.');
+  if (octets.length !== 4) return null;
+  const numbers = octets.map((octet) => Number(octet));
+  if (numbers.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) return null;
+
+  return `${numbers[0]}.${numbers[1]}.${numbers[2]}.0`;
 }
 
 function userAgent(request: Request) {
@@ -39,7 +48,7 @@ function userAgent(request: Request) {
 export async function POST(request: Request) {
   const guard = guardPublicPost(request, {
     keyPrefix: 'analytics-visit',
-    limit: 120,
+    limit: 60,
     windowMs: 5 * 60_000,
     maxBodyBytes: 1024,
     requireJson: true,
@@ -109,7 +118,7 @@ export async function POST(request: Request) {
     session_id: sessionId,
     path,
     referrer_host: cleanReferrer,
-    ip_address: clientIp(request),
+    ip_address: privacySafeClientIp(request),
     user_agent: userAgent(request),
   });
 
