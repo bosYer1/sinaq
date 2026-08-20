@@ -111,17 +111,16 @@ body {
 }
 
 @media (max-width: 1023px) and (pointer: coarse) {
-  /* Siyahı görünüşündə xəritə preview-dur: bütün birbarmaq jestlərini səhifəyə burax. */
+  /* Siyahı görünüşündə xəritə yalnız preview-dur; səhifə rahat scroll olunur. */
   [data-explore-view='list'] .leaflet-container {
     pointer-events: none;
     touch-action: pan-y;
   }
 
-  /* Tam xəritə görünüşündə jest Leaflet-ə məxsusdur: səhifənin şaquli scroll-u
-     xəritəni sürükləyərkən hərəkət etməsin. */
+  /* Tam xəritədə Leaflet-in öz touch-action qaydalarını override etmə.
+     Bu, iOS-da drag/pinch interaksiyasının işləməsini qoruyur. */
   [data-explore-view='map'] .leaflet-container {
     pointer-events: auto;
-    touch-action: none;
     overscroll-behavior: contain;
   }
 }
