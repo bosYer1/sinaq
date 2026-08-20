@@ -164,7 +164,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   }
 
   return (
-    <div className="bg-surface">
+    <div className="bg-surface" data-explore-view={view}>
       <div className="hidden h-[clamp(590px,68vh,660px)] min-h-0 grid-cols-[360px_minmax(0,1fr)] gap-3 lg:grid xl:grid-cols-[420px_minmax(0,1fr)] xl:gap-4 2xl:grid-cols-[450px_minmax(0,1fr)]">
         <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-border bg-[#FBFCFE]">
           <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-white px-3.5 py-3 xl:gap-3 xl:px-4">
