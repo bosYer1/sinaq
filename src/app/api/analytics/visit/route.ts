@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { guardPublicPost } from '@/lib/security/publicRequestGuard';
+import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicRequestGuard';
 
 export const dynamic = 'force-dynamic';
 
+const MAX_BODY_BYTES = 1024;
 const SESSION_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const HOST_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?::\d{1,5})?$/i;
 
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     keyPrefix: 'analytics-visit',
     limit: 60,
     windowMs: 5 * 60_000,
-    maxBodyBytes: 1024,
+    maxBodyBytes: MAX_BODY_BYTES,
     requireJson: true,
   });
   if (!guard.ok) {
@@ -63,18 +64,13 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
+  const parsed = await readJsonBodyLimited(request, MAX_BODY_BYTES);
+  if (!parsed.ok) return NextResponse.json({ ok: false }, { status: parsed.status });
+  if (!parsed.data || typeof parsed.data !== 'object') {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  if (!body || typeof body !== 'object') {
-    return NextResponse.json({ ok: false }, { status: 400 });
-  }
-
-  const { sessionId, path, referrerHost } = body as {
+  const { sessionId, path, referrerHost } = parsed.data as {
     sessionId?: unknown;
     path?: unknown;
     referrerHost?: unknown;
