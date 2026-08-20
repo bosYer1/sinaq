@@ -2,14 +2,14 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '@/constants/theme';
-import { clubTypeLabels, coverImage } from '@/lib/clubs';
+import { cheapestPrice, clubTypeLabels, coverImage } from '@/lib/clubs';
 import { formatPrice } from '@/lib/format';
 import type { Club } from '@/types/club';
 
 export function ClubCard({ club }: { club: Club }) {
   const image = coverImage(club);
   const types = clubTypeLabels(club);
-  const firstPrice = club.pricing.find((price) => price.price_from > 0);
+  const firstPrice = cheapestPrice(club);
 
   return (
     <Pressable
@@ -27,6 +27,7 @@ export function ClubCard({ club }: { club: Club }) {
         <View style={styles.titleRow}>
           <Text style={styles.title} numberOfLines={1}>{club.name}</Text>
           {club.is_verified ? <Text style={styles.verified}>✓</Text> : null}
+          {club.is_premium ? <Text style={styles.premium}>VIP</Text> : null}
         </View>
         <Text style={styles.meta} numberOfLines={1}>{[club.district?.name, ...types].filter(Boolean).join(' · ')}</Text>
         <Text style={styles.address} numberOfLines={2}>{club.address}</Text>
@@ -46,6 +47,7 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   title: { flex: 1, color: colors.ink, fontSize: 16, fontWeight: '800' },
   verified: { color: colors.primary, fontSize: 16, fontWeight: '800' },
+  premium: { color: colors.warning, backgroundColor: colors.warningTint, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 2, fontSize: 10, fontWeight: '900' },
   meta: { color: colors.primary, fontSize: 12, fontWeight: '700' },
   address: { color: colors.muted, fontSize: 13, lineHeight: 18 },
   price: { color: colors.ink, fontSize: 12, fontWeight: '700', marginTop: 'auto' },

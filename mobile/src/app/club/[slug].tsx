@@ -1,12 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { ScreenState } from '@/components/ScreenState';
 import { colors, radius, spacing } from '@/constants/theme';
-import { useClubData } from '@/context/ClubDataContext';
-import { clubTypeLabels, coverImage } from '@/lib/clubs';
+import { clubTypeLabels, coverImage, fetchClubBySlug } from '@/lib/clubs';
+import { directionsUrl, instagramUrl, phoneUrl } from '@/lib/actions';
 import { formatHours, formatPrice } from '@/lib/format';
+import type { Club } from '@/types/club';
 
 function ActionButton({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
   return (
@@ -17,24 +19,64 @@ function ActionButton({ icon, label, onPress }: { icon: keyof typeof Ionicons.gl
   );
 }
 
+async function openExternalUrl(url: string) {
+  try {
+    if (!(await Linking.canOpenURL(url))) throw new Error('unsupported');
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert('Keçid açıla bilmədi', 'Bu əməliyyat cihazda hazırda dəstəklənmir.');
+  }
+}
+
 export default function ClubDetailScreen() {
   const params = useLocalSearchParams<{ slug?: string | string[] }>();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
-  const { clubBySlug, loading, error, reload } = useClubData();
-  const club = slug ? clubBySlug(slug) : undefined;
+  const { width } = useWindowDimensions();
+  const [club, setClub] = useState<Club | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const loadClub = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setClub(slug ? await fetchClubBySlug(slug) : null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Klub məlumatı alınmadı.');
+    } finally {
+      setLoading(false);
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    let active = true;
+    const request = slug ? fetchClubBySlug(slug) : Promise.resolve(null);
+    request.then((nextClub) => {
+      if (active) setClub(nextClub);
+    }).catch((reason: unknown) => {
+      if (active) setError(reason instanceof Error ? reason.message : 'Klub məlumatı alınmadı.');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [slug]);
 
   if (loading) return <ScreenState loading title="Klub məlumatı yüklənir" />;
-  if (error) return <ScreenState title="Klub məlumatı alınmadı" message={error} actionLabel="Yenidən yoxla" onAction={() => void reload()} />;
+  if (error) return <ScreenState title="Klub məlumatı alınmadı" message={error} actionLabel="Yenidən yoxla" onAction={() => void loadClub()} />;
   if (!club) return <ScreenState title="Klub tapılmadı" message="Bu klub aktiv deyil və ya link yanlışdır." />;
 
   const image = coverImage(club);
   const typeLabels = clubTypeLabels(club);
-  const hasCoordinates = club.latitude != null && club.longitude != null;
+  const routeUrl = directionsUrl(club.latitude, club.longitude);
+  const callUrl = phoneUrl(club.phone);
+  const socialUrl = instagramUrl(club.instagram_url);
+  const galleryWidth = Math.min(width, 720);
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
       {image ? (
-        <Image source={{ uri: image }} style={styles.heroImage} contentFit="cover" transition={180} />
+        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} accessibilityLabel={`${club.name} şəkilləri`}>
+          {club.images.map((clubImage) => <Image key={clubImage.id} source={{ uri: clubImage.url }} style={[styles.heroImage, { width: galleryWidth }]} contentFit="cover" transition={180} accessibilityLabel={`${club.name} klub şəkli`} />)}
+        </ScrollView>
       ) : (
         <View style={[styles.heroImage, styles.placeholder]}><Text style={styles.placeholderText}>GameYer</Text></View>
       )}
@@ -50,18 +92,18 @@ export default function ClubDetailScreen() {
         <Text style={styles.address}>{club.address}</Text>
 
         <View style={styles.actions}>
-          {hasCoordinates ? (
+          {routeUrl ? (
             <ActionButton
               icon="navigate-outline"
               label="Marşrut"
-              onPress={() => void Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}`)}
+              onPress={() => void openExternalUrl(routeUrl)}
             />
           ) : null}
-          {club.phone ? (
-            <ActionButton icon="call-outline" label="Zəng et" onPress={() => void Linking.openURL(`tel:${club.phone!.replace(/[^+\d]/g, '')}`)} />
+          {callUrl ? (
+            <ActionButton icon="call-outline" label="Zəng et" onPress={() => void openExternalUrl(callUrl)} />
           ) : null}
-          {club.instagram_url ? (
-            <ActionButton icon="logo-instagram" label="Instagram" onPress={() => void Linking.openURL(club.instagram_url!)} />
+          {socialUrl ? (
+            <ActionButton icon="logo-instagram" label="Instagram" onPress={() => void openExternalUrl(socialUrl)} />
           ) : null}
         </View>
 
@@ -85,6 +127,7 @@ export default function ClubDetailScreen() {
               ? 'Klub sahibi və ya rəsmi nümayəndə məlumatı GameYer tərəfindən təsdiqləyib.'
               : 'Məlumat açıq mənbələr əsasında göstərilir və rəsmi təsdiq gözləyir.'}
           </Text>
+          <Text style={styles.disclaimer}>Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl klubun rəsmi əlaqə kanalından dəqiqləşdirin.</Text>
         </Section>
       </View>
     </ScrollView>
@@ -113,6 +156,7 @@ const styles = StyleSheet.create({
   section: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.md },
   sectionTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' },
   paragraph: { color: colors.muted, fontSize: 14, lineHeight: 22 },
+  disclaimer: { color: colors.faint, fontSize: 12, lineHeight: 18, marginTop: spacing.sm },
   rowText: { color: colors.ink, fontSize: 14, lineHeight: 22 },
   missing: { color: colors.faint, fontSize: 14, lineHeight: 22 },
 });

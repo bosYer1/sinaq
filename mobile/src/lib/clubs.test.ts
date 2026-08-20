@@ -1,4 +1,4 @@
-import { filterClubs } from '@/lib/clubs';
+import { cheapestPrice, clubsWithCoordinates, filterClubs, validClubSlug } from '@/lib/clubs';
 import type { Club } from '@/types/club';
 
 const CLUB: Club = {
@@ -19,5 +19,24 @@ describe('filterClubs', () => {
   test('combines district, type and verified filters', () => {
     expect(filterClubs([CLUB], { query: '', district: 'baki', type: 'pc', verifiedOnly: true })).toEqual([CLUB]);
     expect(filterClubs([CLUB], { query: '', district: 'gence', type: 'pc', verifiedOnly: true })).toEqual([]);
+  });
+
+  test('excludes invalid coordinates without changing valid club data', () => {
+    expect(clubsWithCoordinates([CLUB, { ...CLUB, id: '2', latitude: 95 }])).toEqual([CLUB]);
+  });
+
+  test('uses the cheapest positive verified price', () => {
+    const club = { ...CLUB, pricing: [
+      { id: 'bad', price_from: 0, price_to: null, unit: 'saat', club_type: null },
+      { id: 'high', price_from: 8, price_to: null, unit: 'saat', club_type: null },
+      { id: 'low', price_from: 5, price_to: null, unit: 'saat', club_type: null },
+    ] };
+    expect(cheapestPrice(club)?.id).toBe('low');
+  });
+
+  test('accepts only bounded public route slugs', () => {
+    expect(validClubSlug('arena-gaming-24')).toBe(true);
+    expect(validClubSlug('../admin')).toBe(false);
+    expect(validClubSlug('javascript:alert')).toBe(false);
   });
 });

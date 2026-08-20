@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { fetchClubs, filterClubs } from '@/lib/clubs';
 import type { Club, ClubFilters, ClubType, District } from '@/types/club';
 
@@ -21,7 +21,6 @@ type ClubDataValue = {
   setFilters: (next: Partial<ClubFilters>) => void;
   clearFilters: () => void;
   reload: () => Promise<void>;
-  clubBySlug: (slug: string) => Club | undefined;
 };
 
 const ClubDataContext = createContext<ClubDataValue | null>(null);
@@ -32,6 +31,7 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const deferredQuery = useDeferredValue(filters.query);
 
   const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
@@ -87,7 +87,7 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<ClubDataValue>(() => ({
     clubs,
-    filteredClubs: filterClubs(clubs, filters),
+    filteredClubs: filterClubs(clubs, { ...filters, query: deferredQuery }),
     districts,
     types,
     filters,
@@ -97,8 +97,7 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
     setFilters: (next) => setFilterState((current) => ({ ...current, ...next })),
     clearFilters: () => setFilterState(INITIAL_FILTERS),
     reload: () => load(true),
-    clubBySlug: (slug) => clubs.find((club) => club.slug === slug),
-  }), [clubs, districts, error, filters, load, loading, refreshing, types]);
+  }), [clubs, deferredQuery, districts, error, filters, load, loading, refreshing, types]);
 
   return <ClubDataContext.Provider value={value}>{children}</ClubDataContext.Provider>;
 }

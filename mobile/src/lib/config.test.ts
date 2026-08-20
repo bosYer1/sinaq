@@ -21,4 +21,10 @@ describe('readMobileConfig', () => {
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'forbidden_private_key',
     })).toThrow('konfiqurasiyası yoxdur');
   });
+
+  test('allows legacy anon JWT but rejects legacy service-role JWT', () => {
+    const jwt = (role: string) => `eyJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ role })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')}.signature`;
+    expect(readMobileConfig({ EXPO_PUBLIC_SUPABASE_URL: 'https://example.supabase.co', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: jwt('anon') }).supabasePublishableKey).toBe(jwt('anon'));
+    expect(() => readMobileConfig({ EXPO_PUBLIC_SUPABASE_URL: 'https://example.supabase.co', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: jwt('service_role') })).toThrow('konfiqurasiyası yoxdur');
+  });
 });

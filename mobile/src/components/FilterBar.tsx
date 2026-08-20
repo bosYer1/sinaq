@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScrollView, StyleSheet, Text, TextInput, Pressable, View } from 'react-native';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useClubData } from '@/context/ClubDataContext';
@@ -23,16 +24,25 @@ export function FilterBar() {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        value={filters.query}
-        onChangeText={(query) => setFilters({ query })}
-        placeholder="Klub, şəhər və ya ünvan axtar"
-        placeholderTextColor={colors.faint}
-        style={styles.input}
-        returnKeyType="search"
-        autoCapitalize="none"
-        accessibilityLabel="Klub axtarışı"
-      />
+      <View style={styles.searchBox}>
+        <Ionicons name="search-outline" size={20} color={colors.muted} />
+        <TextInput
+          value={filters.query}
+          onChangeText={(query) => setFilters({ query })}
+          placeholder="Klub, şəhər və ya ünvan axtar"
+          placeholderTextColor={colors.faint}
+          style={styles.input}
+          returnKeyType="search"
+          autoCapitalize="none"
+          autoCorrect={false}
+          accessibilityLabel="Klub axtarışı"
+        />
+        {filters.query ? (
+          <Pressable onPress={() => setFilters({ query: '' })} hitSlop={10} accessibilityRole="button" accessibilityLabel="Axtarışı təmizlə">
+            <Ionicons name="close-circle" size={20} color={colors.muted} />
+          </Pressable>
+        ) : null}
+      </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         <Chip label="Hamısı" selected={!filters.type} onPress={() => setFilters({ type: null })} />
         {types.map((type) => (
@@ -53,7 +63,8 @@ export function FilterBar() {
 
 const styles = StyleSheet.create({
   container: { gap: spacing.sm, paddingBottom: spacing.md },
-  input: { minHeight: 50, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, color: colors.ink, paddingHorizontal: spacing.lg, fontSize: 15 },
+  searchBox: { minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, paddingHorizontal: spacing.md },
+  input: { flex: 1, minHeight: 48, color: colors.ink, fontSize: 15 },
   row: { gap: spacing.sm, paddingRight: spacing.lg },
   chip: { minHeight: 42, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: spacing.lg },
   chipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryTint },

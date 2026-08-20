@@ -2,6 +2,8 @@ export const colors = {
   primary: '#7C5CFC',
   primaryDark: '#6545E8',
   primaryTint: '#F0ECFF',
+  playstation: '#06AED4',
+  playstationTint: '#E6F8FC',
   background: '#F7F8FC',
   surface: '#FFFFFF',
   surfaceAlt: '#F1F3F8',
