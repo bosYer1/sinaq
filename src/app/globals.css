@@ -111,10 +111,11 @@ body {
 }
 
 @media (max-width: 1023px) and (pointer: coarse) {
-  /* Mobil siyahı görünüşündə şaquli birbarmaq jestini səhifə scroll-u kimi saxla.
-     Xəritə görünüşünə keçəndə Leaflet-in standart pan davranışı dəyişmir. */
-  [data-explore-view='list'] .leaflet-container.leaflet-touch-drag {
-    touch-action: pan-y pinch-zoom;
+  /* Siyahı görünüşündə xəritə preview-dur: bütün birbarmaq jestlərini səhifəyə burax.
+     Tam xəritə görünüşündə Leaflet interaktiv qalır. */
+  [data-explore-view='list'] .leaflet-container {
+    pointer-events: none;
+    touch-action: pan-y;
   }
 }
 
