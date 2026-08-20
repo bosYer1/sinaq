@@ -39,6 +39,7 @@ npm start
 `npm run build` Android və iOS JavaScript bundle export-u yaradır. App Store/Play Store native binary signing və Android Google Maps production credential-ı ayrıca release mərhələsidir; bu repo heç bir paid map xidmətini avtomatik aktivləşdirmir.
 
 Real cihaz release yoxlamaları üçün [DEVICE_QA.md](./DEVICE_QA.md) checklist-inə baxın.
+Founder üçün qısa QR/LAN başlatma addımları [DEVICE_START.md](./DEVICE_START.md) faylındadır.
 
 ## Production təhlükəsizliyi
 

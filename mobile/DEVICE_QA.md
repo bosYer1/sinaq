@@ -2,6 +2,43 @@
 
 Bu checklist real Android və iOS cihazında release candidate yoxlaması üçündür. Aşağıdakı maddələr desktop bundle export ilə təsdiqlənmiş sayılmır.
 
+## İlk 15–20 dəqiqə
+
+Heç bir maddəni əvvəlcədən keçmiş kimi işarələməyin. Bu ardıcıllıqla yoxlayın:
+
+1. Təmiz launch.
+2. Klubların yüklənməsi.
+3. Uzun siyahıda sürətli scroll.
+4. `ə, ı, ö, ü, ş, ç, ğ` ilə axtarış.
+5. Tip, rayon və təsdiqlənmiş filtrləri.
+6. Xəritənin açılması.
+7. Xəritədə pan və pinch zoom.
+8. Marker və cluster-lərə sürətli toxunuşlar.
+9. Siyahı → detail → geri keçidini sürətlə təkrarlamaq.
+10. Telefon, Instagram və Marşrut action-ları.
+11. Wi-Fi/mobil datanı söndürmək.
+12. Timeout, error və retry davranışı.
+13. Şəbəkəni bərpa edib app-ın yenidən məlumat alması.
+
+## Bug hesabatı
+
+```text
+Severity: P0 / P1 / P2 / P3
+Device:
+OS:
+Screen:
+Steps:
+Expected:
+Actual:
+Reproducible:
+Screenshot/video:
+```
+
+- P0 — crash, data/security problemi və ya test blocker-i
+- P1 — əsas UX ciddi şəkildə işləmir
+- P2 — nəzərəçarpan problemdir, amma istifadə mümkündür
+- P3 — polish problemi
+
 ## Release-blocking ilk 10 ssenari
 
 Hər testi ən azı bir real Android və bir real iPhone-da aparın. Crash, ağ ekran, 15 saniyədən uzun spinner, yanlış klub detalı və ya təkrarlanan detail screen release blocker-dir.
