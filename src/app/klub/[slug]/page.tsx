@@ -101,6 +101,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
   const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
   const primaryImage = club.profile_image_url || coverImage;
+  const allBusinessImages = Array.from(new Set([club.profile_image_url, ...sortedImages.map((image) => image.url)].filter((url): url is string => Boolean(url))));
   const openingHoursSpecification = openingHours
     .filter((hours) => !hours.is_closed && hours.open_time && hours.close_time && hours.day_of_week >= 0 && hours.day_of_week <= 6)
     .map((hours) => ({ '@type': 'OpeningHoursSpecification', dayOfWeek: SCHEMA_DAY_NAMES[hours.day_of_week], opens: hours.open_time!.slice(0, 5), closes: hours.close_time!.slice(0, 5) }));
@@ -117,6 +118,18 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const hasMap = club.latitude != null && club.longitude != null
     ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}`
     : undefined;
+  const offerCatalog = pricing.length > 0 ? {
+    '@type': 'OfferCatalog',
+    name: `${club.name} saatlıq oyun qiymətləri`,
+    itemListElement: pricing.filter((item) => item.price_from > 0).map((item) => ({
+      '@type': 'Offer',
+      priceCurrency: 'AZN',
+      price: item.price_from,
+      category: item.club_type?.name || 'Gaming',
+      description: `${item.club_type?.name || 'Gaming'} — ${item.price_from} AZN-dən / ${item.unit}`,
+      url: clubUrl,
+    })),
+  } : undefined;
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -128,7 +141,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
         url: clubUrl,
         mainEntityOfPage: clubUrl,
         description: club.description || undefined,
-        image: primaryImage || undefined,
+        image: allBusinessImages.length > 0 ? allBusinessImages : primaryImage || undefined,
         logo: club.profile_image_url || undefined,
         telephone: club.phone || undefined,
         priceRange,
@@ -145,6 +158,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
         openingHoursSpecification: openingHoursSpecification.length > 0 ? openingHoursSpecification : undefined,
         sameAs: club.instagram_url ? [club.instagram_url] : undefined,
         keywords: typeNames.length > 0 ? typeNames.join(', ') : undefined,
+        hasOfferCatalog: offerCatalog,
       },
       {
         '@type': 'BreadcrumbList',
