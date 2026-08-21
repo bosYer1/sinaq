@@ -48,6 +48,11 @@ export default async function BakuPlayStationClubsPage() {
     <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda PlayStation və PS klubları</h1>
     <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakıda PlayStation klub və PS klub axtaranlar üçün aktiv məkanları bir yerdə müqayisə et. Hazırda {clubs.length} PlayStation klubu göstərilir. Ünvan, xəritə, iş saatları və mövcud olduqda saatlıq qiymət məlumatları klub səhifələrindədir.</p>
 
+    <div className="mt-4 flex flex-wrap gap-2">
+      <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Ucuz PlayStation klubları — 3 AZN-dək</Link>
+      <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">24 saat PlayStation klubları</Link>
+    </div>
+
     {strongDistricts.length > 0 ? (
       <section className="mt-6" aria-labelledby="ps-districts-heading">
         <h2 id="ps-districts-heading" className="font-display text-base font-bold text-ink">Rayon üzrə PlayStation klubları</h2>
@@ -66,7 +71,7 @@ export default async function BakuPlayStationClubsPage() {
     <section className="mt-10 rounded-card border border-border bg-surface p-5">
       <h2 className="font-display text-lg font-bold">Yaxın PlayStation klubunu tap</h2>
       <p className="mt-2 text-sm leading-6 text-muted">Rayon, qiymət, iş saatı və lokasiyaya görə müqayisə et. Xəritə görünüşü yaxın PS klublarını tapmağı, 24 saat səhifəsi gecə-gündüz açıq məkanları, rayon səhifələri isə konkret ərazidə seçim etməyi asanlaşdırır.</p>
-      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=playstation&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PS klubları xəritədə</Link><Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">24 saat gaming klubları</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
+      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=playstation&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PS klubları xəritədə</Link><Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Ucuz PlayStation klubları</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
     </section>
   </div>;
 }
