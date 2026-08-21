@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import type { ClubWithDistance } from '@/types/database';
 import type { UserLocation } from '@/hooks/useUserLocation';
 import { inferClubTypeSlugs } from '@/lib/clubType';
