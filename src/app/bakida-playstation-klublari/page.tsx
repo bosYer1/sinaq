@@ -4,12 +4,19 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
-export const metadata: Metadata = {
-  title: 'Bakıda PlayStation klubları — PS klub qiymətləri və ünvanlar',
-  description: 'Bakıda PlayStation və PS klub axtarırsan? PlayStation klublarını qiymət, ünvan, rayon, iş saatı və xəritə məlumatları ilə GameYer-də müqayisə et.',
-  alternates: { canonical: '/bakida-playstation-klublari' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-playstation-klublari', title: 'Bakıda PlayStation klubları | GameYer', description: 'Bakıdakı PlayStation və PS klublarını qiymət, ünvan və xəritə məlumatları ilə müqayisə et.' },
-};
+const title = 'Bakıda PlayStation klubları — PS klub qiymətləri və ünvanlar';
+const description = 'Bakıda PlayStation və PS klub axtarırsan? PlayStation klublarını qiymət, ünvan, rayon, iş saatı və xəritə məlumatları ilə GameYer-də müqayisə et.';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const clubs = await getClubs({ type: 'playstation' });
+  return {
+    title,
+    description,
+    alternates: { canonical: '/bakida-playstation-klublari' },
+    robots: clubs.length > 0 ? { index: true, follow: true } : { index: false, follow: true },
+    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-playstation-klublari', title: 'Bakıda PlayStation klubları | GameYer', description: 'Bakıdakı PlayStation və PS klublarını qiymət, ünvan və xəritə məlumatları ilə müqayisə et.' },
+  };
+}
 
 export default async function BakuPlayStationClubsPage() {
   const clubs = await getClubs({ type: 'playstation' });
