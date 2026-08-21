@@ -8,9 +8,20 @@ import { requireAdmin } from '@/lib/admin/requireAdmin';
 const IMAGE_BUCKET = 'club-images';
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_IMAGES_PER_CLUB = 8;
+const MAX_PRICING_ROWS = 100;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const INSTAGRAM_PATTERN = /^https:\/\/(?:www\.)?instagram\.com\//i;
+
+type PricingFormRow = {
+  club_type_id: string;
+  price_from: number | null;
+  price_to: number | null;
+  unit: string;
+  tariff_name: string | null;
+  schedule_label: string | null;
+  position: number;
+};
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -109,6 +120,57 @@ function validateImageUrl(url: string) {
   }
 }
 
+function parsePricingRows(formData: FormData): PricingFormRow[] {
+  const raw = text(formData, 'pricing_json');
+  if (!raw) return [];
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('Qiymət məlumatı düzgün formatda deyil.');
+  }
+
+  if (!Array.isArray(parsed) || parsed.length > MAX_PRICING_ROWS) {
+    throw new Error(`Bir klubda maksimum ${MAX_PRICING_ROWS} tarif saxlamaq olar.`);
+  }
+
+  return parsed.map((value, index) => {
+    if (!value || typeof value !== 'object') throw new Error(`${index + 1}-ci tarif düzgün deyil.`);
+    const item = value as Record<string, unknown>;
+    const clubTypeId = typeof item.club_type_id === 'string' ? item.club_type_id.trim() : '';
+    const tariffName = typeof item.tariff_name === 'string' ? item.tariff_name.trim() : '';
+    const scheduleLabel = typeof item.schedule_label === 'string' ? item.schedule_label.trim() : '';
+    const unit = typeof item.unit === 'string' ? item.unit.trim() : 'saat';
+    const priceFrom = item.price_from == null || item.price_from === '' ? null : Number(item.price_from);
+    const priceTo = item.price_to == null || item.price_to === '' ? null : Number(item.price_to);
+    const position = Number.isInteger(item.position) && Number(item.position) >= 0 ? Number(item.position) : index;
+
+    if (!clubTypeId || clubTypeId.length > 64) throw new Error(`${index + 1}-ci tarifin klub tipi düzgün deyil.`);
+    if (tariffName.length > 80) throw new Error('Tarif adı maksimum 80 simvol ola bilər.');
+    if (scheduleLabel.length > 120) throw new Error('Tarif vaxtı/şərti maksimum 120 simvol ola bilər.');
+    if (!unit || unit.length > 30) throw new Error('Qiymət vahidi 1–30 simvol arasında olmalıdır.');
+    if (priceFrom != null && (!Number.isFinite(priceFrom) || priceFrom < 0)) throw new Error('Qiymət mənfi və ya etibarsız ola bilməz.');
+    if (priceTo != null && (!Number.isFinite(priceTo) || priceTo < 0)) throw new Error('Son qiymət mənfi və ya etibarsız ola bilməz.');
+    if (priceFrom != null && priceFrom > 0 && priceTo != null && priceTo < priceFrom) {
+      throw new Error('Son qiymət başlanğıc qiymətdən aşağı ola bilməz.');
+    }
+    if (priceFrom == null && (priceTo != null || tariffName || scheduleLabel)) {
+      throw new Error('Tarif adı, vaxtı və ya son qiyməti yazılıbsa başlanğıc qiyməti də yazılmalıdır.');
+    }
+
+    return {
+      club_type_id: clubTypeId,
+      price_from: priceFrom,
+      price_to: priceTo,
+      unit,
+      tariff_name: tariffName || null,
+      schedule_label: scheduleLabel || null,
+      position,
+    };
+  });
+}
+
 function validateRelationFormInput(formData: FormData) {
   const enabledTypeIds = Array.from(formData.keys())
     .filter((key) => key.startsWith('type_enabled_') && booleanValue(formData, key))
@@ -118,12 +180,11 @@ function validateRelationFormInput(formData: FormData) {
     throw new Error('Ən azı bir klub tipi (PC və ya PlayStation) seçilməlidir.');
   }
 
-  for (const typeId of enabledTypeIds) {
-    const priceFrom = nullableNumber(formData, `price_from_${typeId}`);
-    const priceTo = nullableNumber(formData, `price_to_${typeId}`);
-    if (priceFrom != null && priceFrom < 0) throw new Error('Qiymət mənfi ola bilməz.');
-    if (priceFrom != null && priceFrom > 0 && priceTo != null && priceTo < priceFrom) {
-      throw new Error('Son qiymət başlanğıc qiymətdən aşağı ola bilməz.');
+  const enabledTypeSet = new Set(enabledTypeIds);
+  const pricingRows = parsePricingRows(formData);
+  for (const row of pricingRows) {
+    if (!enabledTypeSet.has(row.club_type_id)) {
+      throw new Error('Deaktiv edilmiş klub tipi üçün qiymət saxlamaq olmaz.');
     }
   }
 
@@ -241,19 +302,19 @@ async function replaceRelations(clubId: string, formData: FormData) {
     throw new Error('Ən azı bir klub tipi (PC və ya PlayStation) seçilməlidir.');
   }
 
+  const enabledTypeIds = new Set(enabledTypes.map((type) => type.id));
   const assignments = enabledTypes.map((type) => ({ club_type_id: type.id }));
-  const pricing = enabledTypes
-    .map((type) => {
-      const priceFrom = nullableNumber(formData, `price_from_${type.id}`);
-      if (priceFrom == null || priceFrom <= 0) return null;
-      return {
-        club_type_id: type.id,
-        price_from: priceFrom,
-        price_to: nullableNumber(formData, `price_to_${type.id}`),
-        unit: text(formData, `unit_${type.id}`) || 'saat',
-      };
-    })
-    .filter(Boolean);
+  const pricing = parsePricingRows(formData)
+    .filter((row) => enabledTypeIds.has(row.club_type_id) && row.price_from != null && row.price_from > 0)
+    .map((row, position) => ({
+      club_type_id: row.club_type_id,
+      price_from: row.price_from,
+      price_to: row.price_to,
+      unit: row.unit,
+      tariff_name: row.tariff_name,
+      schedule_label: row.schedule_label,
+      position,
+    }));
 
   const hours = booleanValue(formData, 'hours_enabled')
     ? Array.from({ length: 7 }, (_, day) => {
