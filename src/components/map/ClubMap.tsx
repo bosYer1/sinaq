@@ -277,16 +277,6 @@ export function ClubMap({
       return;
     }
 
-    const activeClub = clubsWithCoords.find((club) => club.id === activeClubId);
-    if (activeClub?.latitude != null && activeClub.longitude != null) {
-      map.flyTo(
-        [activeClub.latitude, activeClub.longitude],
-        Math.max(map.getZoom(), 14),
-        { duration: 0.45 }
-      );
-      return;
-    }
-
     if (clubsWithCoords.length === 1) {
       const club = clubsWithCoords[0];
       map.setView([club.latitude!, club.longitude!], 14);
@@ -301,7 +291,7 @@ export function ClubMap({
       maxZoom: 14,
       animate: false,
     });
-  }, [clubs, activeClubId, userLocation, locationFocusRequest]);
+  }, [clubs, userLocation, locationFocusRequest]);
 
   return <div ref={containerRef} className="h-full w-full" aria-label="GameYer klub xəritəsi" />;
 }
