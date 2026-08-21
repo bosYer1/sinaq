@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { getClubLogo, getClubMonogram } from '@/lib/clubLogos';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 type ClubLogoProps = {
@@ -13,17 +14,61 @@ type ClubLogoProps = {
   priority?: boolean;
 };
 
+const profileImageCache = new Map<string, string | null>();
+const profileImageRequests = new Map<string, Promise<string | null>>();
+
+async function loadProfileImage(slug: string) {
+  if (profileImageCache.has(slug)) return profileImageCache.get(slug) ?? null;
+
+  const existingRequest = profileImageRequests.get(slug);
+  if (existingRequest) return existingRequest;
+
+  const request = (async () => {
+    const supabase = createClient();
+    const { data, error } = await (supabase as any)
+      .from('clubs')
+      .select('profile_image_url')
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    const url = error || typeof data?.profile_image_url !== 'string' ? null : data.profile_image_url;
+    profileImageCache.set(slug, url);
+    profileImageRequests.delete(slug);
+    return url;
+  })();
+
+  profileImageRequests.set(slug, request);
+  return request;
+}
+
 export function ClubLogo({ slug, name, className, imageClassName, priority = false }: ClubLogoProps) {
-  const logo = getClubLogo(slug);
-  const isBase64Asset = logo?.imageUrl.endsWith('.b64') === true;
+  const staticLogo = getClubLogo(slug);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(() => profileImageCache.get(slug) ?? null);
+  const sourceUrl = profileImageUrl || staticLogo?.imageUrl || null;
+  const isBase64Asset = sourceUrl?.endsWith('.b64') === true;
   const [failed, setFailed] = useState(false);
   const [base64DataUrl, setBase64DataUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!logo || !isBase64Asset) return;
+    let cancelled = false;
+    void loadProfileImage(slug).then((url) => {
+      if (!cancelled) {
+        setProfileImageUrl(url);
+        setFailed(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  useEffect(() => {
+    setBase64DataUrl(null);
+    if (!sourceUrl || !isBase64Asset) return;
 
     let cancelled = false;
-    fetch(logo.imageUrl)
+    fetch(sourceUrl)
       .then((response) => {
         if (!response.ok) throw new Error('Logo asset could not be loaded');
         return response.text();
@@ -38,9 +83,9 @@ export function ClubLogo({ slug, name, className, imageClassName, priority = fal
     return () => {
       cancelled = true;
     };
-  }, [isBase64Asset, logo]);
+  }, [isBase64Asset, sourceUrl]);
 
-  const resolvedUrl = isBase64Asset ? base64DataUrl : logo?.imageUrl ?? null;
+  const resolvedUrl = isBase64Asset ? base64DataUrl : sourceUrl;
 
   return (
     <div
@@ -48,12 +93,12 @@ export function ClubLogo({ slug, name, className, imageClassName, priority = fal
         'relative flex shrink-0 items-center justify-center overflow-hidden bg-white text-primary',
         className
       )}
-      title={logo ? `${name} rəsmi loqosu` : `${name} monoqramı`}
+      title={resolvedUrl ? `${name} profil şəkli` : `${name} monoqramı`}
     >
-      {logo && resolvedUrl && !failed ? (
+      {resolvedUrl && !failed ? (
         <Image
           src={resolvedUrl}
-          alt={`${name} loqosu`}
+          alt={`${name} profil şəkli`}
           fill
           sizes="96px"
           className={cn('object-contain p-1.5', imageClassName)}
