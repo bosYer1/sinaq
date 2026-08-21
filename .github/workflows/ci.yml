@@ -119,7 +119,7 @@ jobs:
           node <<'NODE'
           const base = 'http://127.0.0.1:3000';
           (async () => {
-            for (const path of ['/', '/rayon', '/tip', '/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/elaqe', '/mexfilik', '/klub-sahibi']) {
+            for (const path of ['/', '/rayon', '/tip', '/yaxinliqda-gaming-klublari', '/bakida-pc-klublari', '/bakida-internet-klublari', '/bakida-playstation-klublari', '/bakida-gaming-klub-qiymetleri', '/bakida-ucuz-pc-klublari', '/bakida-ucuz-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/elaqe', '/mexfilik', '/klub-sahibi']) {
               const response = await fetch(`${base}${path}`, { redirect: 'manual' });
               if (response.status < 200 || response.status >= 300) throw new Error(`${path}: ${response.status}`);
             }
