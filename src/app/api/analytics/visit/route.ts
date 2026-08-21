@@ -14,7 +14,6 @@ type PageViewInsertClient = {
       session_id: string;
       path: string;
       referrer_host: string | null;
-      ip_address: string | null;
       user_agent: string | null;
     }) => PromiseLike<{ error: { message: string } | null }>;
   };
@@ -23,22 +22,6 @@ type PageViewInsertClient = {
 type AdminRpcClient = {
   rpc: (fn: 'is_admin') => PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
 };
-
-function privacySafeClientIp(request: Request) {
-  const value = request.headers.get('x-vercel-forwarded-for') ?? request.headers.get('x-forwarded-for');
-  if (!value) return null;
-
-  const ip = value.split(',')[0]?.trim();
-  if (!ip || ip.length > 45) return null;
-
-  // Keep only a coarse IPv4 /24-equivalent value. Do not persist raw IPv6 addresses.
-  const octets = ip.split('.');
-  if (octets.length !== 4) return null;
-  const numbers = octets.map((octet) => Number(octet));
-  if (numbers.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) return null;
-
-  return `${numbers[0]}.${numbers[1]}.${numbers[2]}.0`;
-}
 
 function userAgent(request: Request) {
   const value = request.headers.get('user-agent')?.trim();
@@ -114,7 +97,6 @@ export async function POST(request: Request) {
     session_id: sessionId,
     path,
     referrer_host: cleanReferrer,
-    ip_address: privacySafeClientIp(request),
     user_agent: userAgent(request),
   });
 
