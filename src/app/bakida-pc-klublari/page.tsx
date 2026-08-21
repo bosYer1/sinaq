@@ -4,18 +4,25 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
-export const metadata: Metadata = {
-  title: 'Bakıda PC və kompüter klubları — qiymətlər və ünvanlar',
-  description: 'Bakıda PC klub, kompüter klubu və internet klub axtarırsan? Gaming məkanlarını qiymət, ünvan, rayon, iş saatları və xəritə ilə GameYer-də müqayisə et.',
-  alternates: { canonical: '/bakida-pc-klublari' },
-  openGraph: {
-    type: 'website',
-    locale: 'az_AZ',
-    url: '/bakida-pc-klublari',
-    title: 'Bakıda PC və kompüter klubları | GameYer',
-    description: 'Bakıdakı PC, kompüter və internet klublarını qiymət, ünvan və xəritə məlumatları ilə müqayisə et.',
-  },
-};
+const title = 'Bakıda PC və kompüter klubları — qiymətlər və ünvanlar';
+const description = 'Bakıda PC klub, kompüter klubu və internet klub axtarırsan? Gaming məkanlarını qiymət, ünvan, rayon, iş saatları və xəritə ilə GameYer-də müqayisə et.';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const clubs = await getClubs({ type: 'pc' });
+  return {
+    title,
+    description,
+    alternates: { canonical: '/bakida-pc-klublari' },
+    robots: clubs.length > 0 ? { index: true, follow: true } : { index: false, follow: true },
+    openGraph: {
+      type: 'website',
+      locale: 'az_AZ',
+      url: '/bakida-pc-klublari',
+      title: 'Bakıda PC və kompüter klubları | GameYer',
+      description: 'Bakıdakı PC, kompüter və internet klublarını qiymət, ünvan və xəritə məlumatları ilə müqayisə et.',
+    },
+  };
+}
 
 export default async function BakuPcClubsPage() {
   const clubs = await getClubs({ type: 'pc' });
