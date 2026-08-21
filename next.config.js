@@ -18,6 +18,11 @@ const contentSecurityPolicy = [
   'upgrade-insecure-requests',
 ].join('; ');
 
+const legacyProductionHosts = [
+  'gameyerr-gameyer.vercel.app',
+  'bosyer-web.vercel.app',
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -38,12 +43,12 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      {
+      ...legacyProductionHosts.map((host) => ({
         source: '/:path*',
-        has: [{ type: 'host', value: 'gameyerr-gameyer.vercel.app' }],
+        has: [{ type: 'host', value: host }],
         destination: 'https://gameyer.az/:path*',
         permanent: true,
-      },
+      })),
       {
         source: '/:path*',
         has: [{ type: 'host', value: 'www.gameyer.az' }],
