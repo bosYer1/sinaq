@@ -90,6 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   applyLatest(baseUrl, overallLatest);
   applyLatest(`${baseUrl}/rayon`, overallLatest);
   applyLatest(`${baseUrl}/tip`, overallLatest);
+  applyLatest(`${baseUrl}/bakida-24-saat-gaming-klublari`, overallLatest);
   applyLatest(`${baseUrl}/bakida-pc-klublari`, typeLatest.get('pc') ?? null);
   applyLatest(`${baseUrl}/bakida-playstation-klublari`, typeLatest.get('playstation') ?? null);
   applyLatest(`${baseUrl}/bakida-ucuz-pc-klublari`, typeLatest.get('pc') ?? null);
