@@ -27,6 +27,13 @@ function affordableLanding(type: string) {
   return type === 'pc' ? '/bakida-ucuz-pc-klublari' : '/bakida-ucuz-playstation-klublari';
 }
 
+function minHourlyPrice(clubs: Awaited<ReturnType<typeof getClubs>>, type: string) {
+  const prices = clubs.flatMap((club) => club.pricing
+    .filter((item) => item.club_type?.slug === type && item.unit === 'saat' && item.price_from > 0)
+    .map((item) => item.price_from));
+  return prices.length > 0 ? Math.min(...prices) : null;
+}
+
 export async function generateMetadata({ params }: DistrictTypePageProps): Promise<Metadata> {
   const { slug, type } = await params;
   const label = typeLabel(type);
@@ -35,9 +42,10 @@ export async function generateMetadata({ params }: DistrictTypePageProps): Promi
   if (!district || !label) return { title: 'Səhifə tapılmadı', robots: { index: false, follow: false } };
 
   const clubs = await getComboClubs(slug, type);
+  const minPrice = minHourlyPrice(clubs, type);
   const canonical = `/rayon/${slug}/${type}`;
-  const title = `${district.name} rayonunda ${label} klubları`;
-  const description = `${district.name} rayonunda ${label} klub axtarırsan? ${clubs.length} aktiv klubu ünvan, qiymət, iş saatları və xəritə məlumatları ilə GameYer-də müqayisə et.`;
+  const title = `${district.name} rayonunda ${label} klubları — qiymətlər və ünvanlar`;
+  const description = `${district.name} rayonunda ${label} klub axtarırsan? ${clubs.length} aktiv klubu müqayisə et.${minPrice != null ? ` Saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : ''} Ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
 
   return {
     title,
@@ -56,6 +64,8 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
   const district = districts.find((item) => item.slug === slug);
   if (!district || !label) notFound();
 
+  const minPrice = minHourlyPrice(clubs, type);
+  const pricedClubCount = clubs.filter((club) => club.pricing.some((item) => item.club_type?.slug === type && item.unit === 'saat' && item.price_from > 0)).length;
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/rayon/${slug}/${type}`;
   const structuredData = {
@@ -73,12 +83,7 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
         '@type': 'ItemList',
         name: `${district.name} rayonunda ${label} klubları`,
         numberOfItems: clubs.length,
-        itemListElement: clubs.map((club, index) => ({
-          '@type': 'ListItem',
-          position: index + 1,
-          name: club.name,
-          url: `${siteUrl}/klub/${club.slug}`,
-        })),
+        itemListElement: clubs.map((club, index) => ({ '@type': 'ListItem', position: index + 1, name: club.name, url: `${siteUrl}/klub/${club.slug}` })),
       },
     ],
   };
@@ -86,15 +91,12 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
-      <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb">
-        <Link href="/" className="hover:text-ink">GameYer</Link> <span aria-hidden="true">/</span>{' '}
-        <Link href={`/rayon/${slug}`} className="hover:text-ink">{district.name}</Link> <span aria-hidden="true">/</span>{' '}
-        <span>{label}</span>
-      </nav>
+      <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb"><Link href="/" className="hover:text-ink">GameYer</Link> <span aria-hidden="true">/</span>{' '}<Link href={`/rayon/${slug}`} className="hover:text-ink">{district.name}</Link> <span aria-hidden="true">/</span>{' '}<span>{label}</span></nav>
       <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">{district.name} rayonunda {label} klubları</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-        {district.name} rayonunda {label} klub axtaranlar üçün aktiv məkanları müqayisə et. Hazırda {clubs.length} klub göstərilir. Klub səhifələrində ünvan, xəritə, iş saatları və mövcud olduqda qiymət məlumatı var.
-      </p>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{district.name} rayonunda {label} klub axtaranlar üçün aktiv məkanları müqayisə et. Hazırda {clubs.length} klub göstərilir.{minPrice != null ? ` Məlum saatlıq tariflər ${minPrice} AZN-dən başlayır.` : ''} Klub səhifələrində ünvan, xəritə, iş saatları və qiymət məlumatları var.</p>
+
+      {(minPrice != null || pricedClubCount > 0) ? <section className="mt-5 rounded-card border border-border bg-surface p-4"><h2 className="font-display text-base font-bold text-ink">{district.name} {label} klub qiymətləri</h2><p className="mt-1 text-sm leading-6 text-muted">{pricedClubCount > 0 ? `${pricedClubCount} klub üçün saatlıq qiymət məlumatı mövcuddur` : 'Qiymət məlumatları yenilənir'}{minPrice != null ? ` və ən aşağı məlum tarif ${minPrice} AZN-dir.` : '.'}</p><Link href="/bakida-gaming-klub-qiymetleri" className="mt-3 inline-flex text-sm font-semibold text-primary">Bakı üzrə bütün klub qiymətlərini müqayisə et →</Link></section> : null}
+
       <div className="mt-7"><SeoClubList clubs={clubs} /></div>
       <section className="mt-8 rounded-card border border-border bg-surface p-4" aria-label="Əlaqəli axtarışlar">
         <h2 className="font-display text-base font-bold text-ink">{label} klubunu daha rahat tap</h2>
@@ -104,6 +106,7 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
           <Link href={`/rayon/${slug}`} className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">{district.name} üzrə bütün klublar</Link>
           <Link href={typeLanding(type)} className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Bakı üzrə {label} klubları</Link>
           <Link href={affordableLanding(type)} className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Ucuz {label} klubları</Link>
+          <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Klub qiymətləri</Link>
           <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">24 saat gaming klubları</Link>
         </div>
       </section>
