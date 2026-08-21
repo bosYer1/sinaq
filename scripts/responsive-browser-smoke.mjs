@@ -177,6 +177,17 @@ async function assertCommonLayout(client, viewport, path) {
 
 async function assertHomepage(client, viewport) {
   await navigate(client, '/');
+  if (viewport.mobile) {
+    await waitForPage(client, '[aria-label="Xəritəni aktiv et"]');
+    const deferredMap = await evaluate(client, `(() => ({
+      mapLoaded: Boolean(document.querySelector('[aria-label="GameYer klub xəritəsi"]')),
+      activationVisible: Boolean(document.querySelector('[aria-label="Xəritəni aktiv et"]')),
+    }))()`);
+    assert(!deferredMap.mapLoaded, `${viewport.name}: mobile map loaded before user activation`, deferredMap);
+    assert(deferredMap.activationVisible, `${viewport.name}: mobile map activation control is missing`, deferredMap);
+    await capture(client, `${viewport.name}-home-map-deferred`);
+    await evaluate(client, `document.querySelector('[aria-label="Xəritəni aktiv et"]')?.click()`);
+  }
   await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
   await sleep(900);
 
