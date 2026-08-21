@@ -23,13 +23,16 @@ const getTwentyFourHourClubs = cache(async () => (await getClubs()).filter(isOpe
 export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getTwentyFourHourClubs();
   const title = 'Bakıda 24 saat PC, kompüter və PlayStation klubları';
-  const description = 'Bakıda gecə açıq və 24 saat işləyən PC, kompüter, internet və PlayStation klublarını tap. Gecə gaming üçün ünvan, qiymət, iş saatı və xəritəni müqayisə et.';
+  const description = clubs.length > 0
+    ? `Bakıda 24 saat və gecə-gündüz işlədiyi qeyd olunan ${clubs.length} gaming klubunu tap. PC, kompüter və PlayStation məkanlarını ünvan, qiymət, iş saatı və xəritə ilə müqayisə et.`
+    : 'Bakıda gecə açıq və 24 saat işləyən PC, kompüter və PlayStation klublarını GameYer-də yoxla.';
   return {
     title,
     description,
     alternates: { canonical: '/bakida-24-saat-gaming-klublari' },
     robots: clubs.length > 0 ? { index: true, follow: true } : { index: false, follow: true },
-    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-24-saat-gaming-klublari', title: 'Bakıda 24 saat gaming klubları | GameYer', description: 'Bakıdakı gecə-gündüz açıq PC, kompüter və PlayStation klublarını bir yerdə müqayisə et.' },
+    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-24-saat-gaming-klublari', title: 'Bakıda 24 saat gaming klubları | GameYer', description },
+    twitter: { card: 'summary', title: 'Bakıda 24 saat gaming klubları | GameYer', description },
   };
 }
 
@@ -44,6 +47,11 @@ export default async function TwentyFourHourClubsPage() {
     districtCounts.set(club.district.slug, { name: club.district.name, slug: club.district.slug, count: (current?.count ?? 0) + 1 });
   }
   const districts = [...districtCounts.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'az'));
+  const faq = [
+    { question: 'Bakıda 24 saat gaming klub varmı?', answer: clubs.length > 0 ? `GameYer-də hazırda həftənin 7 günü 24 saat işlədiyi qeyd olunan ${clubs.length} aktiv gaming klubu göstərilir. İş qrafiki dəyişə bildiyi üçün getməzdən əvvəl klubla dəqiqləşdirmək məsləhətdir.` : 'Hazırda GameYer-də həftənin 7 günü 24 saat işlədiyi təsdiqlənmiş aktiv klub göstərilmir. Məlumatlar yeniləndikcə siyahı avtomatik dəyişir.' },
+    { question: 'Gecə açıq PC klubunu necə tapa bilərəm?', answer: '24 saat siyahısından PC seçimi olan klublara baxa, xəritədə məsafəni və klub profilində iş saatlarını yoxlaya bilərsən.' },
+    { question: '24 saat PlayStation klubları gecə də eyni tariflə işləyir?', answer: 'Həmişə yox. Bəzi klublarda gecə, paket və VIP tarifləri gündüz saatlıq qiymətlərindən fərqlənə bilər. Dəqiq qiyməti klub profilində yoxla.' },
+  ];
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/bakida-24-saat-gaming-klublari`;
   const structuredData = {
@@ -51,6 +59,7 @@ export default async function TwentyFourHourClubsPage() {
     '@graph': [
       { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'GameYer', item: siteUrl }, { '@type': 'ListItem', position: 2, name: 'Bakıda 24 saat gaming klubları', item: pageUrl }] },
       ...(clubs.length > 0 ? [{ '@type': 'ItemList', name: 'Bakıda 24 saat açıq gaming klubları', numberOfItems: clubs.length, itemListElement: clubs.map((club, index) => ({ '@type': 'ListItem', position: index + 1, name: club.name, url: `${siteUrl}/klub/${club.slug}` })) }] : []),
+      { '@type': 'FAQPage', mainEntity: faq.map((item) => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })) },
     ],
   };
 
@@ -71,6 +80,7 @@ export default async function TwentyFourHourClubsPage() {
         <p className="mt-2 text-sm leading-6 text-muted">24 saat və gecə açıq klub seçərkən ünvanı, xəritədə məsafəni, saatlıq tarifi və iş qrafikini birlikdə yoxla. İş saatları dəyişə bildiyi üçün klub profilində telefon və ya Instagram varsa, gecə getməzdən əvvəl məlumatı dəqiqləşdirmək faydalıdır.</p>
         <div className="mt-4 flex flex-wrap gap-2"><Link href="/bakida-pc-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Bütün PC klubları</Link><Link href="/bakida-playstation-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Bütün PlayStation klubları</Link><Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Ucuz PC klubları</Link><Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Ucuz PlayStation klubları</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Rayon üzrə axtar</Link></div>
       </section>
+      <section className="mt-6 rounded-card border border-border bg-surface p-5" aria-labelledby="night-faq-heading"><h2 id="night-faq-heading" className="font-display text-lg font-bold text-ink">24 saat gaming klubları haqqında suallar</h2><div className="mt-4 space-y-4">{faq.map((item) => <div key={item.question}><h3 className="text-sm font-bold text-ink">{item.question}</h3><p className="mt-1 text-sm leading-6 text-muted">{item.answer}</p></div>)}</div></section>
     </div>
   );
 }
