@@ -16,9 +16,10 @@ interface ClubCardProps {
   club: ClubWithDistance;
   active?: boolean;
   onMouseEnter?: () => void;
+  imagePriority?: boolean;
 }
 
-export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, active, onMouseEnter }, ref) {
+export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, active, onMouseEnter, imagePriority = false }, ref) {
   const isVerified = club.is_verified;
   const cover = club.images.find((image) => image.is_cover) ?? club.images[0];
   const useOfficialLogoAsCardImage = club.slug === 'milli-gaming-arena';
@@ -55,9 +56,9 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     >
       <div className="relative h-[88px] w-[104px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#F0ECFF] to-[#EEF6FF] ring-1 ring-border sm:w-[112px]">
         {useOfficialLogoAsCardImage ? (
-          <ClubLogo slug={club.slug} name={club.name} className="h-full w-full rounded-lg border-0 bg-transparent text-3xl" imageClassName="p-0 object-cover" />
+          <ClubLogo slug={club.slug} name={club.name} className="h-full w-full rounded-lg border-0 bg-transparent text-3xl" imageClassName="p-0 object-cover" priority={imagePriority} />
         ) : cover ? (
-          <Image src={cover.url} alt={club.name} fill sizes="112px" className="object-cover transition-transform duration-200 group-hover:scale-[1.03]" />
+          <Image src={cover.url} alt={club.name} fill sizes="112px" priority={imagePriority} className="object-cover transition-transform duration-200 group-hover:scale-[1.03]" />
         ) : (
           <ClubLogo slug={club.slug} name={club.name} className="h-full w-full rounded-lg border-0 bg-transparent text-3xl" />
         )}

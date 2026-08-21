@@ -1,13 +1,21 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ClubWithRelations } from '@/types/database';
 import { ClubList } from '@/components/clubs/ClubList';
-import { MapWrapper } from '@/components/map/MapWrapper';
 import { MapErrorBoundary } from '@/components/map/MapErrorBoundary';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useFilters } from '@/hooks/useFilters';
 import { formatDistance, haversineDistanceKm } from '@/lib/geo';
+
+const MapWrapper = dynamic(
+  () => import('@/components/map/MapWrapper').then((module) => module.MapWrapper),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full animate-pulse bg-surface-alt" aria-hidden="true" />,
+  },
+);
 
 interface ExploreViewProps {
   clubs: ClubWithRelations[];
@@ -122,27 +130,35 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
         : null;
 
-  function renderMapPanel() {
+  function renderMapPanel({ enabled = true }: { enabled?: boolean } = {}) {
     return (
       <div className="relative h-full min-h-0 overflow-hidden rounded-[18px] border border-border bg-surface-alt shadow-[0_8px_24px_rgba(31,35,48,0.05)]">
-        <MapErrorBoundary>
-          <MapWrapper
-            clubs={clubsWithDistance}
-            activeClubId={activeClubId}
-            onSelectClub={handleSelectMarker}
-            userLocation={location}
-            locationFocusRequest={locationFocusRequest}
-          />
-        </MapErrorBoundary>
+        {enabled ? (
+          <MapErrorBoundary>
+            <MapWrapper
+              clubs={clubsWithDistance}
+              activeClubId={activeClubId}
+              onSelectClub={handleSelectMarker}
+              userLocation={location}
+              locationFocusRequest={locationFocusRequest}
+            />
+          </MapErrorBoundary>
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-[#F4F1FF] via-white to-[#EAF8FC] px-6 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-xl text-white shadow-[0_8px_24px_rgba(124,92,252,0.24)]" aria-hidden="true">⌖</span>
+            <p className="mt-3 text-sm font-bold text-ink">Klubları xəritədə göstər</p>
+            <p className="mt-1 max-w-[260px] text-xs leading-5 text-muted">Xəritə yalnız istədiyin zaman yüklənir və mobil internetə qənaət edir.</p>
+          </div>
+        )}
 
-        <div className="pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-2">
+        {enabled ? <div className="pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-2">
           <div className="pointer-events-auto rounded-xl border border-border bg-white/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
             <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-live" aria-hidden="true" />
             Xəritədə {clubsWithDistance.length} klub
           </div>
-        </div>
+        </div> : null}
 
-        <div className="absolute right-3 top-3 z-[500]">
+        {enabled ? <div className="absolute right-3 top-3 z-[500]">
           <button
             type="button"
             onClick={() => void handleMapLocation()}
@@ -152,7 +168,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <span aria-hidden="true">⌖</span>
             <span className="hidden xl:inline">{mapLocationLabel}</span>
           </button>
-        </div>
+        </div> : null}
 
         {location && nearestClub?.distanceKm != null ? (
           <div className="absolute bottom-3 right-3 z-[500] max-w-[240px] rounded-xl border border-border bg-white/95 px-3 py-2 text-right shadow-card backdrop-blur">
@@ -215,7 +231,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         {view === 'list' ? (
           <section>
             <div className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]">
-              {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
+              {isDesktop === false ? renderMapPanel({ enabled: mobileListMapActive }) : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
               {!mobileMapActive && isDesktop === false ? (
                 <button
                   type="button"
