@@ -88,6 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="border-t border-border bg-surface pb-[68px] md:pb-0">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6 lg:px-8">
             <span className="font-semibold text-ink">© 2026 GameYer</span>
+            <Link href="/yaxinliqda-gaming-klublari" className="hover:text-ink">Yaxın klublar</Link>
             <Link href="/bakida-gaming-klub-qiymetleri" className="hover:text-ink">Klub qiymətləri</Link>
             <Link href="/bakida-pc-klublari" className="hover:text-ink">PC klubları</Link>
             <Link href="/bakida-internet-klublari" className="hover:text-ink">Internet klubları</Link>
