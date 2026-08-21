@@ -8,6 +8,7 @@ interface PageProps {
     q?: string;
     status?: string;
     missing?: string;
+    visibility?: string;
     freshness?: string;
     sort?: string;
   }>;
@@ -114,6 +115,9 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   const freshnessFilter = resolvedSearchParams.freshness && freshnessDays[resolvedSearchParams.freshness]
     ? resolvedSearchParams.freshness
     : '';
+  const visibilityFilter = resolvedSearchParams.visibility === 'public'
+    ? 'public'
+    : '';
   const sort = resolvedSearchParams.sort === 'seo-low' || resolvedSearchParams.sort === 'seo-high' || resolvedSearchParams.sort === 'oldest'
     ? resolvedSearchParams.sort
     : 'updated';
@@ -151,6 +155,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       if (missingFilter === 'images' && idsWithImages.has(club.id)) return false;
       if (missingFilter === 'types' && idsWithTypes.has(club.id)) return false;
       if (missingFilter === 'coordinates' && club.latitude != null && club.longitude != null) return false;
+      if (visibilityFilter === 'public' && (club.latitude == null || club.longitude == null)) return false;
 
       if (freshnessFilter) {
         const threshold = freshnessDays[freshnessFilter];
