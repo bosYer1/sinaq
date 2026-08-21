@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
+import Image from 'next/image';
 import Link from 'next/link';
 import { getSiteUrl } from '@/lib/site-url';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
@@ -11,7 +12,7 @@ const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', d
 const siteUrl = getSiteUrl();
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
 const socialImage = `${siteUrl}/opengraph-image`;
-const brandLogo = `${siteUrl}/apple-icon`;
+const brandLogo = `${siteUrl}/gameyer-logo.jpeg`;
 const organizationId = `${siteUrl}/#organization`;
 const websiteId = `${siteUrl}/#website`;
 
@@ -46,6 +47,10 @@ export const metadata: Metadata = {
   description: 'Bakıda PC klub, kompüter klubu, internet klub və PlayStation klub tap. Qiymət, ünvan, rayon, iş saatları və xəritəyə görə gaming klublarını GameYer-də müqayisə et.',
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [{ url: '/gameyer-logo.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
+    apple: [{ url: '/gameyer-logo.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
+  },
   ...(googleVerification ? { verification: { google: googleVerification } } : {}),
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   appleWebApp: { capable: true, title: 'GameYer', statusBarStyle: 'default' },
@@ -64,7 +69,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-30 border-b border-border/80 bg-surface/95 backdrop-blur">
           <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link href="/" className="flex items-center gap-2.5" aria-label="GameYer ana səhifə">
-              <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#4D8DFF] text-sm font-black text-white shadow-sm">G</span>
+              <Image
+                src="/gameyer-logo.jpeg"
+                alt="GameYer loqosu"
+                width={36}
+                height={36}
+                priority
+                className="h-9 w-9 rounded-xl object-cover shadow-sm"
+              />
               <span className="font-display text-xl font-bold tracking-[-0.04em] text-ink">Game<span className="text-primary">Yer</span></span>
             </Link>
 
