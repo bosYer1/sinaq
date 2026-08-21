@@ -68,6 +68,24 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
   const pricedClubCount = clubs.filter((club) => club.pricing.some((item) => item.club_type?.slug === type && item.unit === 'saat' && item.price_from > 0)).length;
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/rayon/${slug}/${type}`;
+  const faq = [
+    {
+      question: `${district.name} rayonunda ${label} klubun saatlıq qiyməti nə qədərdir?`,
+      answer: minPrice != null
+        ? `GameYer-də ${district.name} rayonunda qiyməti məlum ${label} klublarında saatlıq tariflər ${minPrice} AZN-dən başlayır. Son qiymət zona, konsol və kampaniyaya görə dəyişə bilər.`
+        : `${district.name} rayonunda ${label} klub qiymətləri məkan və tarifə görə dəyişir. Mövcud qiymətlər klub profillərində göstərilir.`,
+    },
+    {
+      question: `${district.name} rayonunda yaxın ${label} klubunu necə tapa bilərəm?`,
+      answer: `Siyahıdakı klubları müqayisə et və xəritə görünüşünə keç. Klub profilində ünvanı, xəritə nöqtəsini, iş saatlarını və mövcud qiymətləri yoxlaya bilərsən.`,
+    },
+    {
+      question: `${district.name} rayonunda ${label} klub seçərkən nəyə baxmaq lazımdır?`,
+      answer: type === 'pc'
+        ? 'Saatlıq qiymətlə yanaşı kompüter zonasına, monitor və avadanlıq səviyyəsinə, iş saatlarına və lokasiyaya baxmaq faydalıdır.'
+        : 'Saatlıq qiymətlə yanaşı konsol modelinə, standart və VIP otaq fərqinə, iş saatlarına və lokasiyaya baxmaq faydalıdır.',
+    },
+  ];
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -85,6 +103,14 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
         numberOfItems: clubs.length,
         itemListElement: clubs.map((club, index) => ({ '@type': 'ListItem', position: index + 1, name: club.name, url: `${siteUrl}/klub/${club.slug}` })),
       },
+      {
+        '@type': 'FAQPage',
+        mainEntity: faq.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      },
     ],
   };
 
@@ -98,6 +124,19 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
       {(minPrice != null || pricedClubCount > 0) ? <section className="mt-5 rounded-card border border-border bg-surface p-4"><h2 className="font-display text-base font-bold text-ink">{district.name} {label} klub qiymətləri</h2><p className="mt-1 text-sm leading-6 text-muted">{pricedClubCount > 0 ? `${pricedClubCount} klub üçün saatlıq qiymət məlumatı mövcuddur` : 'Qiymət məlumatları yenilənir'}{minPrice != null ? ` və ən aşağı məlum tarif ${minPrice} AZN-dir.` : '.'}</p><Link href="/bakida-gaming-klub-qiymetleri" className="mt-3 inline-flex text-sm font-semibold text-primary">Bakı üzrə bütün klub qiymətlərini müqayisə et →</Link></section> : null}
 
       <div className="mt-7"><SeoClubList clubs={clubs} /></div>
+
+      <section className="mt-8" aria-labelledby="district-type-faq-heading">
+        <h2 id="district-type-faq-heading" className="font-display text-lg font-bold text-ink">{district.name} {label} klubları haqqında suallar</h2>
+        <div className="mt-4 space-y-3">
+          {faq.map((item) => (
+            <article key={item.question} className="rounded-card border border-border bg-surface p-4">
+              <h3 className="font-semibold text-ink">{item.question}</h3>
+              <p className="mt-2 text-sm leading-6 text-muted">{item.answer}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="mt-8 rounded-card border border-border bg-surface p-4" aria-label="Əlaqəli axtarışlar">
         <h2 className="font-display text-base font-bold text-ink">{label} klubunu daha rahat tap</h2>
         <p className="mt-1 text-xs leading-5 text-muted">Xəritəyə keç, rayon üzrə bütün klubları gör və ya Bakı üzrə qiyməti daha münasib {label} seçimlərini müqayisə et.</p>
