@@ -82,7 +82,7 @@ async function main() {
     assert(url.protocol === 'https:' && url.origin === CANONICAL_ORIGIN, 'Every sitemap URL must use https://gameyer.az', { value });
   }
 
-  const representativePaths = ['/', '/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/bakida-internet-klublari', '/bakida-gaming-klub-qiymetleri', '/rayon', '/tip', '/haqqimizda', '/elaqe', '/klub-sahibi'];
+  const representativePaths = ['/', '/yaxinliqda-gaming-klublari', '/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/bakida-internet-klublari', '/bakida-gaming-klub-qiymetleri', '/rayon', '/tip', '/haqqimizda', '/elaqe', '/klub-sahibi'];
   const firstClub = urls.map((value) => new URL(value).pathname).find((path) => path.startsWith('/klub/'));
   const firstDistrict = urls.map((value) => new URL(value).pathname).find((path) => /^\/rayon\/[^/]+$/.test(path));
   if (firstClub) representativePaths.push(firstClub);
