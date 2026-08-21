@@ -125,10 +125,12 @@ export default async function HomePage({ searchParams }: PageProps) {
 
           <section className="mt-6 rounded-2xl border border-border bg-surface px-4 py-5 sm:px-6 lg:mt-7" aria-labelledby="discover-heading">
             <h2 id="discover-heading" className="font-display text-base font-bold text-ink">Gaming klublarını daha konkret tap</h2>
-            <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">PC, PlayStation, 24 saat işləyən klublar və Bakı rayonları üzrə ayrıca siyahılara keç.</p>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">PC, PlayStation, ucuz saatlıq seçimlər, 24 saat işləyən klublar və Bakı rayonları üzrə ayrıca siyahılara keç.</p>
             <nav className="mt-3 flex flex-wrap gap-2" aria-label="Gaming klub kateqoriyaları">
               <Link href="/bakida-pc-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">PC klubları</Link>
               <Link href="/bakida-playstation-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">PlayStation klubları</Link>
+              <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Ucuz PC klubları</Link>
+              <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Ucuz PlayStation klubları</Link>
               <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">24 saat klublar</Link>
               {activeDistricts.map((district) => <Link key={district.slug} href={`/rayon/${district.slug}`} className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-medium text-muted hover:border-primary hover:text-ink">{district.name}</Link>)}
             </nav>
