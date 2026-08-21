@@ -23,12 +23,17 @@ async function fetchManual(url, options = {}) {
 
 function extractCanonical(html) {
   const direct = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
-  const reverse = html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i);
+  const reverse = html.match(/<link[^>]+href=["']([^"']+)[^>]+rel=["']canonical["']/i);
   return direct?.[1] || reverse?.[1] || null;
 }
 
 function extractSitemapUrls(xml) {
   return [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1].trim());
+}
+
+function hasNoindex(html) {
+  return /<meta[^>]+content=["'][^"']*noindex[^"']*["'][^>]*>/i.test(html)
+    || /<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html);
 }
 
 async function expectPermanentRedirect(origin, path) {
@@ -84,13 +89,23 @@ async function main() {
     assert(url.protocol === 'https:' && url.origin === CANONICAL_ORIGIN, 'Every sitemap URL must use https://gameyer.az', { value });
   }
 
+  const sitemapPaths = urls.map((value) => new URL(value).pathname);
   const representativePaths = ['/', '/yaxinliqda-gaming-klublari', '/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/bakida-internet-klublari', '/bakida-gaming-klub-qiymetleri', '/rayon', '/tip', '/haqqimizda', '/elaqe', '/klub-sahibi'];
-  const firstClub = urls.map((value) => new URL(value).pathname).find((path) => path.startsWith('/klub/'));
-  const firstDistrict = urls.map((value) => new URL(value).pathname).find((path) => /^\/rayon\/[^/]+$/.test(path));
+  const firstClub = sitemapPaths.find((path) => path.startsWith('/klub/'));
+  const firstDistrict = sitemapPaths.find((path) => /^\/rayon\/[^/]+$/.test(path));
+  const firstDistrictType = sitemapPaths.find((path) => /^\/rayon\/[^/]+\/(pc|playstation)$/.test(path));
   if (firstClub) representativePaths.push(firstClub);
   if (firstDistrict) representativePaths.push(firstDistrict);
+  if (firstDistrictType) representativePaths.push(firstDistrictType);
 
   for (const path of representativePaths) await checkHtml(path);
+
+  const filteredHomeResponse = await fetchManual(`${CANONICAL_ORIGIN}/?type=pc&view=map`);
+  assert(filteredHomeResponse.status === 200, 'Filtered homepage must remain reachable', { status: filteredHomeResponse.status });
+  const filteredHomeHtml = await filteredHomeResponse.text();
+  assert(hasNoindex(filteredHomeHtml), 'Filter/query homepage variants must be noindex', { path: '/?type=pc&view=map' });
+  const filteredCanonical = extractCanonical(filteredHomeHtml);
+  assert(filteredCanonical && new URL(filteredCanonical, CANONICAL_ORIGIN).pathname === '/', 'Filtered homepage must canonicalize to root', { filteredCanonical });
 
   for (const origin of [WWW_ORIGIN, ...LEGACY_ORIGINS]) {
     await expectPermanentRedirect(origin, '/');
@@ -100,7 +115,7 @@ async function main() {
   const admin = await fetchManual(`${CANONICAL_ORIGIN}/admin/login`);
   assert(admin.status === 200, 'Admin login must remain reachable', { status: admin.status });
   const adminHtml = await admin.text();
-  assert(/<meta[^>]+content=["'][^"']*noindex[^"']*["'][^>]*>/i.test(adminHtml) || /<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(adminHtml), 'Admin login must remain noindex');
+  assert(hasNoindex(adminHtml), 'Admin login must remain noindex');
 
   const homepage = await fetchManual(`${CANONICAL_ORIGIN}/`);
   const requiredHeaders = {
@@ -112,7 +127,7 @@ async function main() {
   }
   assert(homepage.headers.get('strict-transport-security')?.includes('max-age=31536000'), 'HSTS must remain enabled', { value: homepage.headers.get('strict-transport-security') });
 
-  console.log(`gameyer.az cutover smoke passed: ${urls.length} sitemap URLs; ${representativePaths.length} representative pages; apex/www/${LEGACY_ORIGINS.length} legacy host routes verified.`);
+  console.log(`gameyer.az cutover smoke passed: ${urls.length} sitemap URLs; ${representativePaths.length} representative pages; filter noindex/canonical verified; apex/www/${LEGACY_ORIGINS.length} legacy host routes verified.`);
 }
 
 main().catch((error) => {
