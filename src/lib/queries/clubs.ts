@@ -74,6 +74,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
 
   if (hasPriceFilter) {
     query = query
+      .eq('pricing.unit', 'saat')
       .gt('pricing.price_from', 0)
       .lte('pricing.price_from', filters.priceMax!);
   }
@@ -107,6 +108,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
       club.pricing.some(
         (pricing) =>
           pricing.club_type?.slug === requestedType &&
+          pricing.unit === 'saat' &&
           pricing.price_from > 0 &&
           pricing.price_from <= filters.priceMax!
       )
