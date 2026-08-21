@@ -9,14 +9,16 @@ type DetailedPricing = ClubPricing & {
   club_type: Pick<ClubType, 'id' | 'name' | 'slug'>;
 };
 
+function sortPricing(a: DetailedPricing, b: DetailedPricing) {
+  const typeCompare = a.club_type.name.localeCompare(b.club_type.name, 'az');
+  if (typeCompare !== 0) return typeCompare;
+  return (a.position ?? 0) - (b.position ?? 0);
+}
+
 export function ClubPricingDisplay({ pricing }: { pricing: DetailedPricing[] }) {
   const realPricing = pricing
     .filter((item) => item.price_from > 0 && item.club_type)
-    .sort((a, b) => {
-      const typeCompare = a.club_type.name.localeCompare(b.club_type.name, 'az');
-      if (typeCompare !== 0) return typeCompare;
-      return (a.position ?? 0) - (b.position ?? 0);
-    });
+    .sort(sortPricing);
 
   if (realPricing.length === 0) {
     return (
@@ -26,33 +28,54 @@ export function ClubPricingDisplay({ pricing }: { pricing: DetailedPricing[] }) 
     );
   }
 
-  const groups = new Map<string, DetailedPricing[]>();
+  const platformGroups = new Map<string, DetailedPricing[]>();
   for (const item of realPricing) {
-    const current = groups.get(item.club_type.id) ?? [];
+    const current = platformGroups.get(item.club_type.id) ?? [];
     current.push(item);
-    groups.set(item.club_type.id, current);
+    platformGroups.set(item.club_type.id, current);
   }
 
   return (
-    <div className="space-y-4">
-      {Array.from(groups.values()).map((items) => {
-        const type = items[0].club_type;
+    <div className="space-y-5">
+      {Array.from(platformGroups.values()).map((platformItems) => {
+        const type = platformItems[0].club_type;
+        const scheduleGroups = new Map<string, DetailedPricing[]>();
+
+        for (const item of platformItems) {
+          const scheduleKey = item.schedule_label?.trim() || '';
+          const current = scheduleGroups.get(scheduleKey) ?? [];
+          current.push(item);
+          scheduleGroups.set(scheduleKey, current);
+        }
+
         return (
           <div key={type.id} className="overflow-hidden rounded-xl border border-border bg-surface">
             <div className="flex items-center justify-between gap-3 border-b border-border bg-surface-alt px-4 py-3">
               <Badge tone={type.slug === 'pc' ? 'pc' : 'ps'}>{type.name}</Badge>
-              <span className="text-xs text-muted">{items.length > 1 ? `${items.length} tarif` : '1 tarif'}</span>
+              <span className="text-xs text-muted">
+                {platformItems.length > 1 ? `${platformItems.length} tarif` : '1 tarif'}
+              </span>
             </div>
+
             <div className="divide-y divide-border">
-              {items.map((item) => (
-                <div key={item.id} className="grid gap-2 px-4 py-3.5 sm:grid-cols-[1fr_auto] sm:items-center">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-ink">{item.tariff_name || type.name}</p>
-                    {item.schedule_label ? <p className="mt-0.5 text-xs leading-5 text-muted">{item.schedule_label}</p> : null}
+              {Array.from(scheduleGroups.entries()).map(([schedule, items], scheduleIndex) => (
+                <div key={`${type.id}-${schedule || 'default'}-${scheduleIndex}`} className="px-4 py-3.5">
+                  {schedule ? (
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{schedule}</p>
+                  ) : null}
+
+                  <div className="space-y-2.5">
+                    {items.map((item) => (
+                      <div key={item.id} className="grid gap-1.5 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-4">
+                        <p className="min-w-0 text-sm font-semibold text-ink">
+                          {item.tariff_name || type.name}
+                        </p>
+                        <span className="font-mono text-sm font-semibold text-ink">
+                          {formatPriceRange(item.price_from, item.price_to, item.unit)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                  <span className="font-mono text-sm font-semibold text-ink">
-                    {formatPriceRange(item.price_from, item.price_to, item.unit)}
-                  </span>
                 </div>
               ))}
             </div>
