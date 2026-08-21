@@ -19,6 +19,14 @@ function typeLabel(type: string) {
   return null;
 }
 
+function typeLanding(type: string) {
+  return type === 'pc' ? '/bakida-pc-klublari' : '/bakida-playstation-klublari';
+}
+
+function affordableLanding(type: string) {
+  return type === 'pc' ? '/bakida-ucuz-pc-klublari' : '/bakida-ucuz-playstation-klublari';
+}
+
 export async function generateMetadata({ params }: DistrictTypePageProps): Promise<Metadata> {
   const { slug, type } = await params;
   const label = typeLabel(type);
@@ -88,11 +96,17 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
         {district.name} rayonunda {label} klub axtaranlar üçün aktiv məkanları müqayisə et. Hazırda {clubs.length} klub göstərilir. Klub səhifələrində ünvan, xəritə, iş saatları və mövcud olduqda qiymət məlumatı var.
       </p>
       <div className="mt-7"><SeoClubList clubs={clubs} /></div>
-      <div className="mt-8 flex flex-wrap gap-2">
-        <Link href={`/?district=${encodeURIComponent(slug)}&type=${encodeURIComponent(type)}&view=map`} className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Xəritədə göstər</Link>
-        <Link href={`/rayon/${slug}`} className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">{district.name} üzrə bütün klublar</Link>
-        <Link href={type === 'pc' ? '/bakida-pc-klublari' : '/bakida-playstation-klublari'} className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Bakı üzrə {label} klubları</Link>
-      </div>
+      <section className="mt-8 rounded-card border border-border bg-surface p-4" aria-label="Əlaqəli axtarışlar">
+        <h2 className="font-display text-base font-bold text-ink">{label} klubunu daha rahat tap</h2>
+        <p className="mt-1 text-xs leading-5 text-muted">Xəritəyə keç, rayon üzrə bütün klubları gör və ya Bakı üzrə qiyməti daha münasib {label} seçimlərini müqayisə et.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link href={`/?district=${encodeURIComponent(slug)}&type=${encodeURIComponent(type)}&view=map`} className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Xəritədə göstər</Link>
+          <Link href={`/rayon/${slug}`} className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">{district.name} üzrə bütün klublar</Link>
+          <Link href={typeLanding(type)} className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Bakı üzrə {label} klubları</Link>
+          <Link href={affordableLanding(type)} className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Ucuz {label} klubları</Link>
+          <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">24 saat gaming klubları</Link>
+        </div>
+      </section>
     </div>
   );
 }
