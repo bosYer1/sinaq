@@ -94,6 +94,9 @@ export default async function AdminPage() {
     if (!Number.isFinite(updatedMs) || nowMs - updatedMs >= stale90Ms) stale90 += 1;
   }
 
+  const visibleClubs = Math.max(0, activeClubs - missingCoordinates);
+  const inactiveClubs = Math.max(0, totalClubs - activeClubs);
+
   const completenessItems = [
     { label: 'Telefon çatmır', value: missingPhone, key: 'phone' },
     { label: 'Təsvir çatmır', value: missingDescription, key: 'description' },
@@ -132,6 +135,39 @@ export default async function AdminPage() {
           <div className="mt-2 flex items-end justify-between gap-3"><p className="text-4xl font-bold">{pendingSubmissions}</p><span className="text-sm font-semibold text-[#6A47F0]">Bax →</span></div>
         </Link>
       </div>
+
+      <section className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold">Klub görünürlüğü</h2>
+            <p className="mt-1 text-sm text-gray-500">Aktiv klubların saytda görünmə vəziyyəti koordinat məlumatına əsasən ayrıca göstərilir.</p>
+          </div>
+          <Link href="/admin/klublar" className="text-sm font-semibold text-[#6A47F0] hover:underline">Klubları idarə et</Link>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Link href="/admin/klublar?status=active&visibility=public" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 transition hover:border-emerald-400">
+            <p className="text-sm text-emerald-700">Saytda görünən</p>
+            <p className="mt-1 text-3xl font-bold text-emerald-950">{visibleClubs}</p>
+            <p className="mt-1 text-xs text-emerald-700">Aktiv və koordinatı tam</p>
+          </Link>
+          <Link href="/admin/klublar?status=active&missing=coordinates" className="rounded-lg border border-amber-200 bg-amber-50 p-4 transition hover:border-amber-400">
+            <p className="text-sm text-amber-700">Koordinatsız gizli</p>
+            <p className="mt-1 text-3xl font-bold text-amber-950">{missingCoordinates}</p>
+            <p className="mt-1 text-xs text-amber-700">Aktivdir, public siyahıda görünmür</p>
+          </Link>
+          <Link href="/admin/klublar?status=active" className="rounded-lg border border-blue-200 bg-blue-50 p-4 transition hover:border-blue-400">
+            <p className="text-sm text-blue-700">Ümumi aktiv</p>
+            <p className="mt-1 text-3xl font-bold text-blue-950">{activeClubs}</p>
+            <p className="mt-1 text-xs text-blue-700">Görünən və koordinatsız birlikdə</p>
+          </Link>
+          <Link href="/admin/klublar?status=inactive" className="rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-gray-400">
+            <p className="text-sm text-gray-600">Deaktiv / gizlədilmiş</p>
+            <p className="mt-1 text-3xl font-bold text-gray-950">{inactiveClubs}</p>
+            <p className="mt-1 text-xs text-gray-600">Public saytda göstərilmir</p>
+          </Link>
+        </div>
+      </section>
 
       <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
