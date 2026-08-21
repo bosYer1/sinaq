@@ -39,6 +39,13 @@ export default async function GamingClubPricesPage() {
   }
   const districtPrices = [...districtMap.values()].filter((row) => row.pc.length || row.ps.length).sort((a, b) => a.name.localeCompare(b.name, 'az'));
 
+  const faq = [
+    { question: 'Bakıda PC klubun saatlıq qiyməti nə qədərdir?', answer: pcMin != null && pcMax != null ? `GameYer-də hazırda qiyməti məlum PC klublarında saatlıq tariflər ${pcMin}–${pcMax} AZN aralığındadır. Tarif klub, zona və saat aralığına görə dəyişə bilər.` : 'Qiymətlər klub və kompüter zonasına görə dəyişir. GameYer yalnız məlum və daxil edilmiş tarifləri göstərir.' },
+    { question: 'Bakıda PlayStation klubun saatlıq qiyməti nə qədərdir?', answer: psMin != null && psMax != null ? `GameYer-də hazırda qiyməti məlum PlayStation klublarında saatlıq tariflər ${psMin}–${psMax} AZN aralığındadır. PS4, PS5 və VIP otaq qiymətləri fərqli ola bilər.` : 'PlayStation qiymətləri konsol modeli və otaq tipinə görə dəyişir. Mövcud tariflər klub profilində göstərilir.' },
+    { question: 'Ən ucuz gaming klubu necə tapa bilərəm?', answer: 'Ucuz PC və ucuz PlayStation siyahılarından başlaya, sonra rayon, xəritə, iş saatı və klub profilindəki tarif məlumatlarını müqayisə edə bilərsən.' },
+    { question: 'GameYer-də göstərilən qiymətlər son qiymətdir?', answer: 'Qiymətlər klubun təqdim etdiyi və ya GameYer-də mövcud olan məlum tariflərdir. Kampaniya, gecə paketi və zona qiymətləri dəyişə bildiyi üçün getməzdən əvvəl klub profilindəki əlaqə məlumatı ilə dəqiqləşdirmək faydalıdır.' },
+  ];
+
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/bakida-gaming-klub-qiymetleri`;
   const uniquePricedClubs = Array.from(new Map([...pricedPc, ...pricedPs].map((club) => [club.id, club])).values());
@@ -47,6 +54,7 @@ export default async function GamingClubPricesPage() {
     '@graph': [
       { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'GameYer', item: siteUrl }, { '@type': 'ListItem', position: 2, name: 'Gaming klub qiymətləri', item: pageUrl }] },
       { '@type': 'ItemList', name: 'Bakıda qiyməti məlum gaming klubları', numberOfItems: uniquePricedClubs.length, itemListElement: uniquePricedClubs.map((club, index) => ({ '@type': 'ListItem', position: index + 1, name: club.name, url: `${siteUrl}/klub/${club.slug}` })) },
+      { '@type': 'FAQPage', mainEntity: faq.map((item) => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })) },
     ],
   };
 
@@ -70,6 +78,11 @@ export default async function GamingClubPricesPage() {
       {pricedPs.length > 0 ? <section className="mt-9"><h2 className="mb-4 font-display text-xl font-bold text-ink">Qiyməti məlum PlayStation klubları</h2><SeoClubList clubs={pricedPs} /></section> : null}
 
       <section className="mt-10 rounded-card border border-border bg-surface p-5"><h2 className="font-display text-lg font-bold text-ink">Gaming klub qiyməti nədən asılıdır?</h2><p className="mt-2 text-sm leading-6 text-muted">PC klublarında kompüter zonası, monitor və avadanlıq səviyyəsi, PlayStation məkanlarında isə konsol modeli və VIP otaq qiymətə təsir edə bilər. Gecə paketləri və uzunmüddətli tariflər də standart saatlıq qiymətdən fərqli ola bilər.</p></section>
+
+      <section className="mt-6 rounded-card border border-border bg-surface p-5" aria-labelledby="price-faq-heading">
+        <h2 id="price-faq-heading" className="font-display text-lg font-bold text-ink">Gaming klub qiymətləri haqqında suallar</h2>
+        <div className="mt-4 space-y-4">{faq.map((item) => <div key={item.question}><h3 className="text-sm font-bold text-ink">{item.question}</h3><p className="mt-1 text-sm leading-6 text-muted">{item.answer}</p></div>)}</div>
+      </section>
     </div>
   );
 }
