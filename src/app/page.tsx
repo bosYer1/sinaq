@@ -52,16 +52,54 @@ export default async function HomePage({ searchParams }: PageProps) {
   const activeDistrictSlugs = new Set(discoveryClubs.map((club) => club.district?.slug).filter((slug): slug is string => Boolean(slug)));
   const activeDistricts = districts.filter((district) => activeDistrictSlugs.has(district.slug));
   const siteUrl = getSiteUrl();
-  const itemListJsonLd = {
+  const faq = [
+    {
+      question: 'Bakıda mənə yaxın gaming klubunu necə tapa bilərəm?',
+      answer: 'Xəritə görünüşünü aç, brauzerdə lokasiya icazəsi ver və yaxınlıqdakı PC və PlayStation klublarını müqayisə et. Klub profilində ünvan, iş saatı və mövcud qiymətlər göstərilir.',
+    },
+    {
+      question: 'PC və PlayStation klub qiymətlərini haradan görə bilərəm?',
+      answer: 'GameYer-də qiyməti məlum klubların saatlıq və zona tarifləri klub profilində göstərilir. Qiymətlər səhifəsindən Bakı üzrə mövcud tarifləri bir siyahıda müqayisə edə bilərsən.',
+    },
+    {
+      question: 'Internet klub və kompüter klubu PC klub sayılır?',
+      answer: 'Azərbaycanda internet klub, internet kafe, kompüter klubu və PC klub ifadələri çox vaxt eyni tip gaming məkanı üçün işlədilir. GameYer bu məkanları PC kateqoriyasında birləşdirir.',
+    },
+  ];
+  const homeStructuredData = {
     '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: 'Bakıda PC və PlayStation klubları',
-    numberOfItems: discoveryClubs.length,
-    itemListElement: discoveryClubs.map((club, index) => ({ '@type': 'ListItem', position: index + 1, name: club.name, url: `${siteUrl}/klub/${club.slug}` })),
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        '@id': `${siteUrl}/#home`,
+        url: siteUrl,
+        name: 'Bakıda PC və PlayStation klubları',
+        description: 'Bakıda gaming klublarını qiymət, rayon, iş saatı və xəritəyə görə tap və müqayisə et.',
+        isPartOf: { '@id': `${siteUrl}/#website` },
+        mainEntity: { '@id': `${siteUrl}/#club-list` },
+        inLanguage: 'az-AZ',
+      },
+      {
+        '@type': 'ItemList',
+        '@id': `${siteUrl}/#club-list`,
+        name: 'Bakıda PC və PlayStation klubları',
+        numberOfItems: discoveryClubs.length,
+        itemListElement: discoveryClubs.map((club, index) => ({ '@type': 'ListItem', position: index + 1, name: club.name, url: `${siteUrl}/klub/${club.slug}` })),
+      },
+      {
+        '@type': 'FAQPage',
+        '@id': `${siteUrl}/#faq`,
+        mainEntity: faq.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      },
+    ],
   };
 
   return <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd).replace(/</g, '\\u003c') }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeStructuredData).replace(/</g, '\\u003c') }} />
     <div className="min-h-[calc(100dvh-64px)] bg-[#F8F9FC]">
       {!isSupabaseConfigured() ? <div className="border-b border-warn/30 bg-warn-tint px-4 py-1.5 text-center text-xs font-medium text-warn sm:px-6">Supabase hələ qoşulmayıb — heç bir klub göstərilmir.</div> : null}
       <div className="mx-auto max-w-[1440px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-8">
@@ -99,6 +137,18 @@ export default async function HomePage({ searchParams }: PageProps) {
         <section className="mt-4 rounded-2xl border border-border bg-white px-4 py-5 sm:px-6" aria-labelledby="seo-help-heading">
           <h2 id="seo-help-heading" className="font-display text-base font-bold text-ink">GameYer-də hansı məlumatları müqayisə edə bilərsən?</h2>
           <p className="mt-2 max-w-4xl text-xs leading-5 text-muted">Klub profilində mövcud olduqda PC və PlayStation saatlıq qiymətləri, ünvan, rayon, iş saatları, telefon, Instagram, şəkillər və xəritə koordinatları göstərilir. Azərbaycanda internet klub və kompüter klubu kimi axtarılan məkanlar da PC kateqoriyasında toplanır. Yaxın klub axtarışı üçün xəritə və rayon səhifələrindən istifadə edə bilərsən.</p>
+        </section>
+
+        <section className="mt-4 rounded-2xl border border-border bg-white px-4 py-5 sm:px-6" aria-labelledby="home-faq-heading">
+          <h2 id="home-faq-heading" className="font-display text-base font-bold text-ink">Gaming klubu tapmaq haqqında suallar</h2>
+          <div className="mt-3 grid gap-3 lg:grid-cols-3">
+            {faq.map((item) => (
+              <article key={item.question} className="rounded-xl border border-border/80 bg-bg p-4">
+                <h3 className="text-sm font-bold text-ink">{item.question}</h3>
+                <p className="mt-2 text-xs leading-5 text-muted">{item.answer}</p>
+              </article>
+            ))}
+          </div>
         </section>
       </div>
     </div>
