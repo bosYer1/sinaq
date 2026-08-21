@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ClubAdminForm } from '@/components/admin/ClubAdminForm';
+import { ClubProfileImageUploader } from '@/components/admin/ClubProfileImageUploader';
 import { saveClub, toggleClubActive } from '../../actions';
 import { revokeClubVerification } from './verification-actions';
 
@@ -29,6 +30,7 @@ export default async function AdminEditClubPage({ params, searchParams }: PagePr
   ]);
 
   const club = clubResult.data;
+  const profileImageUrl = (club as typeof club & { profile_image_url?: string | null }).profile_image_url ?? null;
   const districts = districtsResult.data ?? [];
   const types = typesResult.data ?? [];
   const pricing = pricingResult.data ?? [];
@@ -89,6 +91,8 @@ export default async function AdminEditClubPage({ params, searchParams }: PagePr
       {(resolvedSearchParams.saved === '1' || resolvedSearchParams.created === '1') && (
         <div className="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">Dəyişikliklər yadda saxlanıldı.</div>
       )}
+
+      <ClubProfileImageUploader clubId={club.id} clubName={club.name} initialUrl={profileImageUrl} />
 
       <ClubAdminForm
         club={fullClub}
