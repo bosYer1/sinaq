@@ -125,6 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   };
 
+  if (clubs.length > 0) addLanding('/yaxinliqda-gaming-klublari', 0.94, overallLatest);
   if (pcCount > 0) {
     addLanding('/bakida-pc-klublari', 0.9, typeLatest.get('pc') ?? null);
     addLanding('/bakida-internet-klublari', 0.88, typeLatest.get('pc') ?? null);
