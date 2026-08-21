@@ -90,6 +90,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="font-semibold text-ink">© 2026 GameYer</span>
             <Link href="/bakida-pc-klublari" className="hover:text-ink">PC klubları</Link>
             <Link href="/bakida-playstation-klublari" className="hover:text-ink">PlayStation</Link>
+            <Link href="/bakida-ucuz-pc-klublari" className="hover:text-ink">Ucuz PC</Link>
+            <Link href="/bakida-ucuz-playstation-klublari" className="hover:text-ink">Ucuz PlayStation</Link>
             <Link href="/bakida-24-saat-gaming-klublari" className="hover:text-ink">24/7</Link>
             <Link href="/haqqimizda" className="hover:text-ink">Haqqımızda</Link>
             <Link href="/melumat-metodologiyasi" className="hover:text-ink">Metodologiya</Link>
