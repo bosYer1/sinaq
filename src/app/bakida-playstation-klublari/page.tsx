@@ -20,16 +20,10 @@ export default async function BakuPlayStationClubsPage() {
   for (const club of clubs) {
     if (!club.district?.slug) continue;
     const current = districtCounts.get(club.district.slug);
-    districtCounts.set(club.district.slug, {
-      slug: club.district.slug,
-      name: club.district.name,
-      count: (current?.count ?? 0) + 1,
-    });
+    districtCounts.set(club.district.slug, { slug: club.district.slug, name: club.district.name, count: (current?.count ?? 0) + 1 });
   }
 
-  const strongDistricts = [...districtCounts.values()]
-    .filter((district) => district.count >= 2)
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'az'));
+  const strongDistricts = [...districtCounts.values()].filter((district) => district.count >= 2).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'az'));
 
   const data = {
     '@context': 'https://schema.org',
@@ -49,6 +43,7 @@ export default async function BakuPlayStationClubsPage() {
     <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakıda PlayStation klub və PS klub axtaranlar üçün aktiv məkanları bir yerdə müqayisə et. Hazırda {clubs.length} PlayStation klubu göstərilir. Ünvan, xəritə, iş saatları və mövcud olduqda saatlıq qiymət məlumatları klub səhifələrindədir.</p>
 
     <div className="mt-4 flex flex-wrap gap-2">
+      <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">PlayStation qiymətlərini müqayisə et</Link>
       <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Ucuz PlayStation klubları — 3 AZN-dək</Link>
       <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">24 saat PlayStation klubları</Link>
     </div>
@@ -71,7 +66,7 @@ export default async function BakuPlayStationClubsPage() {
     <section className="mt-10 rounded-card border border-border bg-surface p-5">
       <h2 className="font-display text-lg font-bold">Yaxın PlayStation klubunu tap</h2>
       <p className="mt-2 text-sm leading-6 text-muted">Rayon, qiymət, iş saatı və lokasiyaya görə müqayisə et. Xəritə görünüşü yaxın PS klublarını tapmağı, 24 saat səhifəsi gecə-gündüz açıq məkanları, rayon səhifələri isə konkret ərazidə seçim etməyi asanlaşdırır.</p>
-      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=playstation&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PS klubları xəritədə</Link><Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Ucuz PlayStation klubları</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
+      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=playstation&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PS klubları xəritədə</Link><Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">PlayStation qiymətləri</Link><Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Ucuz PlayStation klubları</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
     </section>
   </div>;
 }
