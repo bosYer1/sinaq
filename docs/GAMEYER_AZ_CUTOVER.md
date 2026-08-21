@@ -58,6 +58,8 @@ Optional origin overrides are available through `CUTOVER_CANONICAL_ORIGIN`, `CUT
 - Analytics continues recording public traffic while excluding authenticated admin traffic.
 - `www` and both legacy Vercel URLs preserve their path and redirect permanently to the canonical domain.
 
+The acceptance run should be repeated after any routing, canonical, sitemap or high-intent landing change before production cutover.
+
 ## Google Search Console
 
 After DNS/TLS and application cutover are confirmed:
