@@ -13,7 +13,7 @@ const CLUB_SELECT = `
     club_type:club_types ( id, name, slug )
   ),
   pricing:club_pricing (
-    id, club_id, club_type_id, price_from, price_to, unit,
+    id, club_id, club_type_id, price_from, price_to, unit, tariff_name, schedule_label, position,
     club_type:club_types ( id, name, slug )
   ),
   images:club_images ( id, url, is_cover, position ),
