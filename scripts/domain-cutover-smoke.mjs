@@ -70,6 +70,8 @@ async function main() {
   assert(robotsResponse.status === 200, 'robots.txt must return HTTP 200', { status: robotsResponse.status });
   const robots = await robotsResponse.text();
   assert(robots.includes(`Sitemap: ${CANONICAL_ORIGIN}/sitemap.xml`), 'robots.txt must advertise canonical sitemap', robots);
+  assert(robots.includes('Disallow: /api/'), 'robots.txt must keep API routes out of crawl', robots);
+  assert(!/Disallow:\s*\/admin\/?/i.test(robots), 'Admin routes must stay crawlable so bots can observe noindex metadata', robots);
   assert(!/gameyerr-gameyer\.vercel\.app|bosyer-web\.vercel\.app|bosyer/i.test(robots), 'Legacy host leaked into robots.txt', robots);
 
   const sitemapResponse = await fetchManual(`${CANONICAL_ORIGIN}/sitemap.xml`);
