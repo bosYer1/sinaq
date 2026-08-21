@@ -77,8 +77,10 @@ export default async function TypeIndexPage() {
 
       <section className="mt-8 rounded-card border border-border bg-surface p-5" aria-labelledby="popular-searches-heading">
         <h2 id="popular-searches-heading" className="font-display text-lg font-bold text-ink">Populyar gaming klub axtarışları</h2>
-        <p className="mt-2 text-sm leading-6 text-muted">Qiymət və iş saatına görə daha konkret seçim etmək üçün aşağıdakı siyahılara keç.</p>
+        <p className="mt-2 text-sm leading-6 text-muted">Yaxınlıq, qiymət və iş saatına görə daha konkret seçim etmək üçün aşağıdakı siyahılara keç.</p>
         <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Yaxınlıqdakı gaming klubları</Link>
+          <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Gaming klub qiymətləri</Link>
           <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Ucuz PC klubları</Link>
           <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Ucuz PlayStation klubları</Link>
           <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">24 saat gaming klubları</Link>
