@@ -54,6 +54,11 @@ export default async function BakuPcClubsPage() {
     <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda PC və kompüter klubları</h1>
     <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakıda PC klub, kompüter klubu, internet klub və internet-kafe kimi axtarılan gaming məkanlarını bir yerdə müqayisə et. Hazırda {clubs.length} PC klubu göstərilir. Klub səhifəsindən ünvanı, xəritəni, iş saatlarını və mövcud olduqda saatlıq qiymətləri yoxlaya bilərsən.</p>
 
+    <div className="mt-4 flex flex-wrap gap-2">
+      <Link href="/bakida-ucuz-pc-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Ucuz PC klubları — 2 AZN-dək</Link>
+      <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">24 saat PC klubları</Link>
+    </div>
+
     {strongDistricts.length > 0 ? (
       <section className="mt-6" aria-labelledby="pc-districts-heading">
         <h2 id="pc-districts-heading" className="font-display text-base font-bold text-ink">Rayon üzrə PC klubları</h2>
@@ -72,7 +77,7 @@ export default async function BakuPcClubsPage() {
     <section className="mt-10 rounded-card border border-border bg-surface p-5">
       <h2 className="font-display text-lg font-bold">PC klubunu necə seçmək olar?</h2>
       <p className="mt-2 text-sm leading-6 text-muted">Rayonuna yaxınlığı, saatlıq qiyməti, iş saatlarını və klubun xəritədə yerini müqayisə et. Daha konkret nəticə üçün rayon səhifələrindən istifadə edə, 24 saat işləyən məkanlara baxa və ya bütün klubları xəritədə görə bilərsən.</p>
-      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=pc&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PC klubları xəritədə</Link><Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">24 saat PC klubları</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
+      <div className="mt-4 flex flex-wrap gap-2"><Link href="/?type=pc&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PC klubları xəritədə</Link><Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Ucuz PC klubları</Link><Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold">Rayon üzrə axtar</Link></div>
     </section>
   </div>;
 }
