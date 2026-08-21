@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
 import { MapPinIcon } from '@/components/ui/Icon';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { getPlatformStartingPrices } from '@/lib/pricing';
 import { cn, formatPriceRange, isClubOpenNow, isPremiumActive } from '@/lib/utils';
 import { formatDistance } from '@/lib/geo';
 
@@ -36,8 +37,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
 
   const statusLabel = !hasHours ? 'Saat məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
-  const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0);
-  const cheapestPricing = [...realPricing].sort((a, b) => a.price_from - b.price_from)[0];
+  const startingPrices = getPlatformStartingPrices(club.pricing);
 
   return (
     <Link
@@ -84,12 +84,16 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
         ) : null}
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-1.5">
-          <div className="min-w-0">
-            {cheapestPricing ? (
-              <div className="truncate text-xs font-bold text-[#0F9F5D]">{formatPriceRange(cheapestPricing.price_from, cheapestPricing.price_to, cheapestPricing.unit)}</div>
-            ) : (
+          <div className="min-w-0 space-y-0.5">
+            {startingPrices.pc ? (
+              <div className="truncate text-[11px] font-bold text-[#0F9F5D]">PC: {formatPriceRange(startingPrices.pc.price_from, null, startingPrices.pc.unit)}</div>
+            ) : null}
+            {startingPrices.playstation ? (
+              <div className="truncate text-[11px] font-bold text-[#0F9F5D]">PS: {formatPriceRange(startingPrices.playstation.price_from, null, startingPrices.playstation.unit)}</div>
+            ) : null}
+            {!startingPrices.pc && !startingPrices.playstation ? (
               <div className="text-[10px] text-muted">Qiymət məlum deyil</div>
-            )}
+            ) : null}
           </div>
           <div className="shrink-0 text-right">
             {club.distanceKm != null ? <div className="text-[10px] font-medium text-primary">{formatDistance(club.distanceKm)}</div> : null}

@@ -13,7 +13,7 @@ const CLUB_SELECT = `
     club_type:club_types ( id, name, slug )
   ),
   pricing:club_pricing (
-    id, club_id, club_type_id, price_from, price_to, unit,
+    id, club_id, club_type_id, price_from, price_to, unit, tariff_name, schedule_label, position,
     club_type:club_types ( id, name, slug )
   ),
   images:club_images ( id, url, is_cover, position ),
@@ -74,6 +74,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
 
   if (hasPriceFilter) {
     query = query
+      .eq('pricing.unit', 'saat')
       .gt('pricing.price_from', 0)
       .lte('pricing.price_from', filters.priceMax!);
   }
@@ -107,6 +108,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
       club.pricing.some(
         (pricing) =>
           pricing.club_type?.slug === requestedType &&
+          pricing.unit === 'saat' &&
           pricing.price_from > 0 &&
           pricing.price_from <= filters.priceMax!
       )

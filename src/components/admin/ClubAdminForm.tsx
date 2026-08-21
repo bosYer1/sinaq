@@ -1,4 +1,5 @@
 import { ClubImageUploader } from '@/components/admin/ClubImageUploader';
+import { ClubPricingEditor } from '@/components/admin/ClubPricingEditor';
 import type {
   ClubOpeningHours,
   ClubType,
@@ -11,6 +12,9 @@ type PricingItem = {
   price_from: number;
   price_to: number | null;
   unit: string;
+  tariff_name?: string | null;
+  schedule_label?: string | null;
+  position?: number;
 };
 
 type TypeAssignment = {
@@ -79,10 +83,6 @@ function dateTimeLocal(value?: string | null) {
 }
 
 export function ClubAdminForm({ club, districts, types, action, submitLabel }: ClubAdminFormProps) {
-  const pricingByType = new Map(
-    (club?.pricing ?? []).map((item) => [item.club_type_id, item])
-  );
-
   const enabledTypeIds = new Set([
     ...(club?.type_assignments ?? []).map((item) => item.club_type_id),
     ...(club?.pricing ?? []).map((item) => item.club_type_id),
@@ -151,20 +151,12 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-semibold">PC / PlayStation və qiymətlər</h2>
-        <p className="mt-1 text-xs text-gray-500">Tipi seçmək üçün qiymət yazmaq məcburi deyil. Qiymət boşdursa saytda “Qiymət məlum deyil” görünəcək.</p>
-        <div className="mt-4 space-y-3">
-          {types.map((type) => {
-            const pricing = pricingByType.get(type.id);
-            return (
-              <div key={type.id} className="grid gap-3 rounded-lg border border-gray-200 p-4 md:grid-cols-[150px_1fr_1fr_120px]">
-                <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" name={`type_enabled_${type.id}`} defaultChecked={enabledTypeIds.has(type.id)} />{type.name}</label>
-                <label className="text-xs font-medium text-gray-600">Qiymət — dan<input name={`price_from_${type.id}`} type="number" step="0.01" min="0" defaultValue={pricing?.price_from ?? ''} className={inputClass} /></label>
-                <label className="text-xs font-medium text-gray-600">Qiymət — dək<input name={`price_to_${type.id}`} type="number" step="0.01" min="0" defaultValue={pricing?.price_to ?? ''} className={inputClass} /></label>
-                <label className="text-xs font-medium text-gray-600">Vahid<input name={`unit_${type.id}`} defaultValue={pricing?.unit ?? 'saat'} className={inputClass} /></label>
-              </div>
-            );
-          })}
-        </div>
+        <p className="mt-1 text-xs text-gray-500">Hər platforma üçün bir neçə tarif, zona, vaxt aralığı və paket saxlamaq olar. Qiymət məlum deyilsə tipi aktiv saxlayıb tarif əlavə etməyə bilərsən.</p>
+        <ClubPricingEditor
+          types={types}
+          enabledTypeIds={Array.from(enabledTypeIds)}
+          pricing={club?.pricing ?? []}
+        />
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
