@@ -82,9 +82,10 @@ export default async function HomePage({ searchParams }: PageProps) {
 
         <section className="mt-6 rounded-2xl border border-border bg-surface px-4 py-5 sm:px-6 lg:mt-7" aria-labelledby="discover-heading">
           <h2 id="discover-heading" className="font-display text-base font-bold text-ink">Bakıda gaming klubunu daha konkret tap</h2>
-          <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">PC klubu, internet klub, kompüter klubu, PlayStation klubu, ucuz saatlıq tarif, 24 saat açıq məkan və Bakı rayonları üzrə ayrıca siyahılara keç.</p>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">Yaxınlıqdakı gaming klubu, PC klubu, internet klub, kompüter klubu, PlayStation klubu, ucuz saatlıq tarif, 24 saat açıq məkan və Bakı rayonları üzrə ayrıca siyahılara keç.</p>
           <nav className="mt-3 flex flex-wrap gap-2" aria-label="Gaming klub kateqoriyaları">
-            <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control bg-primary px-3 py-2 text-xs font-semibold text-white">Gaming klub qiymətləri</Link>
+            <Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-3 py-2 text-xs font-semibold text-white">Yaxınlıqdakı gaming klubları</Link>
+            <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Gaming klub qiymətləri</Link>
             <Link href="/bakida-pc-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">PC klubları</Link>
             <Link href="/bakida-internet-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Internet klubları</Link>
             <Link href="/bakida-playstation-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">PlayStation klubları</Link>
@@ -97,7 +98,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
         <section className="mt-4 rounded-2xl border border-border bg-white px-4 py-5 sm:px-6" aria-labelledby="seo-help-heading">
           <h2 id="seo-help-heading" className="font-display text-base font-bold text-ink">GameYer-də hansı məlumatları müqayisə edə bilərsən?</h2>
-          <p className="mt-2 max-w-4xl text-xs leading-5 text-muted">Klub profilində mövcud olduqda PC və PlayStation saatlıq qiymətləri, ünvan, rayon, iş saatları, telefon, Instagram, şəkillər və xəritə koordinatları göstərilir. Azərbaycanda internet klub və kompüter klubu kimi axtarılan məkanlar da PC kateqoriyasında toplanır.</p>
+          <p className="mt-2 max-w-4xl text-xs leading-5 text-muted">Klub profilində mövcud olduqda PC və PlayStation saatlıq qiymətləri, ünvan, rayon, iş saatları, telefon, Instagram, şəkillər və xəritə koordinatları göstərilir. Azərbaycanda internet klub və kompüter klubu kimi axtarılan məkanlar da PC kateqoriyasında toplanır. Yaxın klub axtarışı üçün xəritə və rayon səhifələrindən istifadə edə bilərsən.</p>
         </section>
       </div>
     </div>
