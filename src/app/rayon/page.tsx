@@ -84,6 +84,8 @@ export default async function DistrictIndexPage() {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2 border-t border-border/70 pt-5">
+            <Link href="/yaxinliqda-gaming-klublari" className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white">Yaxınlıqdakı klubları tap</Link>
+            <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">Qiymətləri müqayisə et</Link>
             <Link href="/bakida-pc-klublari" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">Bakıda PC klubları</Link>
             <Link href="/bakida-playstation-klublari" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">Bakıda PlayStation klubları</Link>
             <Link href="/bakida-24-saat-gaming-klublari" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">24 saat klublar</Link>
