@@ -53,14 +53,10 @@ export async function generateMetadata({ params }: ClubPageProps): Promise<Metad
   if (!club) return { title: 'Klub tapılmadı', robots: { index: false, follow: false } };
 
   const districtName = club.district?.name;
-  const typeSlugs = (club.type_assignments ?? [])
-    .map((item) => item?.club_type?.slug)
-    .filter((value): value is string => Boolean(value));
+  const typeSlugs = (club.type_assignments ?? []).map((item) => item?.club_type?.slug).filter((value): value is string => Boolean(value));
   const category = clubCategory(typeSlugs);
   const pricing = Array.isArray(club.pricing) ? club.pricing : [];
-  const validPrices = pricing
-    .flatMap((item) => [item.price_from, item.price_to])
-    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0);
+  const validPrices = pricing.flatMap((item) => [item.price_from, item.price_to]).filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0);
   const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
   const priceText = minPrice != null ? ` Saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : '';
   const title = `${club.name} — ${districtName ? `${districtName}, ` : ''}${category} qiymətləri və ünvan`;
@@ -97,14 +93,13 @@ export default async function ClubPage({ params }: ClubPageProps) {
     return type?.slug ? [{ slug: type.slug, name: type.name }] : [];
   });
   const typeSlugs = typeLinks.map((type) => type.slug);
+  const hasPc = typeSlugs.includes('pc');
   const businessType = schemaBusinessType(typeSlugs);
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
   const coverImage = sortedImages.find((image) => image.is_cover)?.url ?? sortedImages[0]?.url;
   const primaryImage = club.profile_image_url || coverImage;
   const allBusinessImages = Array.from(new Set([club.profile_image_url, ...sortedImages.map((image) => image.url)].filter((url): url is string => Boolean(url))));
-  const openingHoursSpecification = openingHours
-    .filter((hours) => !hours.is_closed && hours.open_time && hours.close_time && hours.day_of_week >= 0 && hours.day_of_week <= 6)
-    .map((hours) => ({ '@type': 'OpeningHoursSpecification', dayOfWeek: SCHEMA_DAY_NAMES[hours.day_of_week], opens: hours.open_time!.slice(0, 5), closes: hours.close_time!.slice(0, 5) }));
+  const openingHoursSpecification = openingHours.filter((hours) => !hours.is_closed && hours.open_time && hours.close_time && hours.day_of_week >= 0 && hours.day_of_week <= 6).map((hours) => ({ '@type': 'OpeningHoursSpecification', dayOfWeek: SCHEMA_DAY_NAMES[hours.day_of_week], opens: hours.open_time!.slice(0, 5), closes: hours.close_time!.slice(0, 5) }));
 
   const validPrices = pricing.flatMap((item) => [item.price_from, item.price_to].filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0));
   const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
@@ -115,20 +110,11 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const minPcPrice = pcPrices.length > 0 ? Math.min(...pcPrices) : null;
   const minPlayStationPrice = playStationPrices.length > 0 ? Math.min(...playStationPrices) : null;
   const open24Hours = isOpen24HoursEveryDay(openingHours);
-  const hasMap = club.latitude != null && club.longitude != null
-    ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}`
-    : undefined;
+  const hasMap = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}` : undefined;
   const offerCatalog = pricing.length > 0 ? {
     '@type': 'OfferCatalog',
     name: `${club.name} saatlıq oyun qiymətləri`,
-    itemListElement: pricing.filter((item) => item.price_from > 0).map((item) => ({
-      '@type': 'Offer',
-      priceCurrency: 'AZN',
-      price: item.price_from,
-      category: item.club_type?.name || 'Gaming',
-      description: `${item.club_type?.name || 'Gaming'} — ${item.price_from} AZN-dən / ${item.unit}`,
-      url: clubUrl,
-    })),
+    itemListElement: pricing.filter((item) => item.price_from > 0).map((item) => ({ '@type': 'Offer', priceCurrency: 'AZN', price: item.price_from, category: item.club_type?.name || 'Gaming', description: `${item.club_type?.name || 'Gaming'} — ${item.price_from} AZN-dən / ${item.unit}`, url: clubUrl })),
   } : undefined;
 
   const structuredData = {
@@ -146,27 +132,19 @@ export default async function ClubPage({ params }: ClubPageProps) {
         telephone: club.phone || undefined,
         priceRange,
         currenciesAccepted: 'AZN',
-        address: {
-          '@type': 'PostalAddress',
-          streetAddress: club.address,
-          addressLocality: 'Bakı',
-          addressRegion: club.district?.name || 'Bakı',
-          addressCountry: 'AZ',
-        },
+        address: { '@type': 'PostalAddress', streetAddress: club.address, addressLocality: 'Bakı', addressRegion: club.district?.name || 'Bakı', addressCountry: 'AZ' },
         geo: club.latitude != null && club.longitude != null ? { '@type': 'GeoCoordinates', latitude: club.latitude, longitude: club.longitude } : undefined,
         hasMap,
         openingHoursSpecification: openingHoursSpecification.length > 0 ? openingHoursSpecification : undefined,
         sameAs: club.instagram_url ? [club.instagram_url] : undefined,
-        keywords: typeNames.length > 0 ? typeNames.join(', ') : undefined,
+        keywords: hasPc ? [...typeNames, 'kompüter klubu', 'internet klub', 'internet kafe'].join(', ') : typeNames.length > 0 ? typeNames.join(', ') : undefined,
         hasOfferCatalog: offerCatalog,
       },
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'GameYer', item: siteUrl },
-          ...(club.district?.slug
-            ? [{ '@type': 'ListItem', position: 2, name: `${club.district.name} klubları`, item: `${siteUrl}/rayon/${club.district.slug}` }]
-            : []),
+          ...(club.district?.slug ? [{ '@type': 'ListItem', position: 2, name: `${club.district.name} klubları`, item: `${siteUrl}/rayon/${club.district.slug}` }] : []),
           { '@type': 'ListItem', position: club.district?.slug ? 3 : 2, name: club.name, item: clubUrl },
         ],
       },
@@ -180,6 +158,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
       <ShareClubButton name={club.name} url={clubUrl} />
       {club.district?.slug ? <Link href={`/rayon/${club.district.slug}`} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">{club.district.name} rayonundakı digər klublar</Link> : null}
       {typeLinks.map((type) => <Link key={type.slug} href={typeLandingHref(type.slug)} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">{type.slug === 'pc' ? 'Digər PC klubları' : type.slug === 'playstation' ? 'Digər PlayStation klubları' : `${type.name} klubları`}</Link>)}
+      {hasPc ? <Link href="/bakida-internet-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Internet və kompüter klubları</Link> : null}
       {minPcPrice != null && minPcPrice <= 2 ? <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Ucuz PC klubları</Link> : null}
       {minPlayStationPrice != null && minPlayStationPrice <= 3 ? <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Ucuz PlayStation klubları</Link> : null}
       {open24Hours ? <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">24 saat gaming klubları</Link> : null}
