@@ -4,16 +4,24 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
-export const metadata: Metadata = {
-  title: 'Bakıda gaming klub qiymətləri — PC və PlayStation saatlıq tariflər',
-  description: 'Bakıda PC, kompüter və PlayStation klub qiymətlərini müqayisə et. Saatlıq tariflər, rayon, ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.',
-  alternates: { canonical: '/bakida-gaming-klub-qiymetleri' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-gaming-klub-qiymetleri', title: 'Bakıda gaming klub qiymətləri | GameYer', description: 'PC və PlayStation klublarının saatlıq qiymətlərini və məkan məlumatlarını müqayisə et.' },
-};
+const title = 'Bakıda gaming klub qiymətləri — PC və PlayStation saatlıq tariflər';
+const description = 'Bakıda PC, kompüter və PlayStation klub qiymətlərini müqayisə et. Saatlıq tariflər, rayon, ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.';
 
 function minPriceForType(club: Awaited<ReturnType<typeof getClubs>>[number], type: 'pc' | 'playstation') {
   const prices = club.pricing.filter((item) => item.club_type?.slug === type && item.unit === 'saat' && item.price_from > 0).map((item) => item.price_from);
   return prices.length ? Math.min(...prices) : Number.POSITIVE_INFINITY;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const clubs = await getClubs();
+  const hasPricing = clubs.some((club) => Number.isFinite(minPriceForType(club, 'pc')) || Number.isFinite(minPriceForType(club, 'playstation')));
+  return {
+    title,
+    description,
+    alternates: { canonical: '/bakida-gaming-klub-qiymetleri' },
+    robots: hasPricing ? { index: true, follow: true } : { index: false, follow: true },
+    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-gaming-klub-qiymetleri', title: 'Bakıda gaming klub qiymətləri | GameYer', description: 'PC və PlayStation klublarının saatlıq qiymətlərini və məkan məlumatlarını müqayisə et.' },
+  };
 }
 
 export default async function GamingClubPricesPage() {
