@@ -36,7 +36,7 @@ export function ClubPricingDisplay({ pricing }: { pricing: DetailedPricing[] }) 
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 font-body">
       {Array.from(platformGroups.values()).map((platformItems) => {
         const type = platformItems[0].club_type;
         const scheduleGroups = new Map<string, DetailedPricing[]>();
@@ -52,7 +52,7 @@ export function ClubPricingDisplay({ pricing }: { pricing: DetailedPricing[] }) 
           <div key={type.id} className="overflow-hidden rounded-xl border border-border bg-surface">
             <div className="flex items-center justify-between gap-3 border-b border-border bg-surface-alt px-4 py-3">
               <Badge tone={type.slug === 'pc' ? 'pc' : 'ps'}>{type.name}</Badge>
-              <span className="text-xs text-muted">
+              <span className="text-xs font-medium text-muted">
                 {platformItems.length > 1 ? `${platformItems.length} tarif` : '1 tarif'}
               </span>
             </div>
@@ -70,7 +70,7 @@ export function ClubPricingDisplay({ pricing }: { pricing: DetailedPricing[] }) 
                         <p className="min-w-0 text-sm font-semibold text-ink">
                           {item.tariff_name || type.name}
                         </p>
-                        <span className="font-mono text-sm font-semibold text-ink">
+                        <span className="font-body text-sm font-semibold tabular-nums text-ink">
                           {formatPriceRange(item.price_from, item.price_to, item.unit)}
                         </span>
                       </div>
