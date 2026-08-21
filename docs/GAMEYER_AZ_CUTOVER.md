@@ -29,7 +29,7 @@ This runbook is intentionally prepared before domain activation. Do not merge th
 7. Confirm the nearby-intent landing `/yaxinliqda-gaming-klublari` is canonical, indexable only when active clubs exist, and present in sitemap when eligible.
 8. Confirm Organization/WebSite/ItemList/FAQ structured data use `gameyer.az` URLs.
 9. Confirm Open Graph and Twitter image URLs use the canonical domain.
-10. Confirm admin routes remain noindex and API routes remain disallowed in robots.
+10. Confirm admin routes remain crawlable but emit `noindex`; do not block `/admin/` in robots because crawlers need to see that directive. API/auth routes remain disallowed where appropriate.
 11. Do not reuse a stale URL-prefix Search Console verification token. The planned `gameyer.az` Domain Property is verified with Google's DNS TXT record; a meta verification tag is emitted only if `GOOGLE_SITE_VERIFICATION` is explicitly configured.
 
 ## Automated production acceptance
@@ -40,7 +40,7 @@ After DNS, TLS and the production cutover are live, run:
 node scripts/domain-cutover-smoke.mjs
 ```
 
-The script fails the cutover if it detects a broken apex route, an unhealthy `/api/health`, a non-canonical sitemap/robots URL, a wrong/missing canonical, a legacy host leak, a missing permanent redirect from `www` or either known Vercel production alias, an indexable admin login, or missing baseline security headers.
+The script fails the cutover if it detects a broken apex route, an unhealthy `/api/health`, a non-canonical sitemap/robots URL, a wrong/missing canonical, a legacy host leak, a missing permanent redirect from `www` or either known Vercel production alias, an admin page without `noindex`, an `/admin/` robots block that prevents crawlers seeing `noindex`, or missing baseline security headers.
 
 Optional origin overrides are available through `CUTOVER_CANONICAL_ORIGIN`, `CUTOVER_WWW_ORIGIN`, `CUTOVER_LEGACY_ORIGIN`, and comma-separated `CUTOVER_LEGACY_ORIGINS` for controlled testing.
 
@@ -48,11 +48,12 @@ Optional origin overrides are available through `CUTOVER_CANONICAL_ORIGIN`, `CUT
 
 - `/` returns 200.
 - `/api/health` returns healthy without exposing internal diagnostics.
-- `/robots.txt` returns 200 and the canonical sitemap URL.
+- `/robots.txt` returns 200, advertises the canonical sitemap, keeps `/api/` disallowed, and does not disallow `/admin/`.
 - `/sitemap.xml` returns 200 and contains only public, active, mapped clubs and eligible SEO landings.
 - Representative `/klub/<slug>` pages return 200.
 - Representative `/rayon/<slug>` pages return 200.
 - `/yaxinliqda-gaming-klublari`, PC, PlayStation, internet, price and 24-hour category pages return 200 when eligible.
+- `/admin/login` remains reachable for verification and emits `noindex` metadata.
 - Mobile and desktop smoke tests pass.
 - No new Vercel runtime error clusters appear after cutover.
 - Analytics continues recording public traffic while excluding authenticated admin traffic.
