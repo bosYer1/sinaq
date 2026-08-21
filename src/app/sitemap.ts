@@ -21,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, changeFrequency: 'daily', priority: 1 },
     { url: `${baseUrl}/bakida-pc-klublari`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/bakida-playstation-klublari`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${baseUrl}/bakida-gaming-klub-qiymetleri`, changeFrequency: 'weekly', priority: 0.92 },
     { url: `${baseUrl}/bakida-ucuz-pc-klublari`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/bakida-ucuz-playstation-klublari`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/bakida-24-saat-gaming-klublari`, changeFrequency: 'weekly', priority: 0.88 },
@@ -90,6 +91,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   applyLatest(baseUrl, overallLatest);
   applyLatest(`${baseUrl}/rayon`, overallLatest);
   applyLatest(`${baseUrl}/tip`, overallLatest);
+  applyLatest(`${baseUrl}/bakida-gaming-klub-qiymetleri`, overallLatest);
   applyLatest(`${baseUrl}/bakida-24-saat-gaming-klublari`, overallLatest);
   applyLatest(`${baseUrl}/bakida-pc-klublari`, typeLatest.get('pc') ?? null);
   applyLatest(`${baseUrl}/bakida-playstation-klublari`, typeLatest.get('playstation') ?? null);
