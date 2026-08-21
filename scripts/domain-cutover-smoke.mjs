@@ -2,7 +2,14 @@ import process from 'node:process';
 
 const CANONICAL_ORIGIN = (process.env.CUTOVER_CANONICAL_ORIGIN || 'https://gameyer.az').replace(/\/$/, '');
 const WWW_ORIGIN = (process.env.CUTOVER_WWW_ORIGIN || 'https://www.gameyer.az').replace(/\/$/, '');
-const LEGACY_ORIGIN = (process.env.CUTOVER_LEGACY_ORIGIN || 'https://gameyerr-gameyer.vercel.app').replace(/\/$/, '');
+const LEGACY_ORIGINS = (process.env.CUTOVER_LEGACY_ORIGINS
+  ? process.env.CUTOVER_LEGACY_ORIGINS.split(',')
+  : [
+      process.env.CUTOVER_LEGACY_ORIGIN || 'https://gameyerr-gameyer.vercel.app',
+      'https://bosyer-web.vercel.app',
+    ])
+  .map((value) => value.trim().replace(/\/$/, ''))
+  .filter(Boolean);
 
 function assert(condition, message, context = undefined) {
   if (condition) return;
@@ -49,7 +56,7 @@ async function checkHtml(path) {
   assert(canonicalUrl.protocol === 'https:', 'Canonical must use HTTPS', { path, canonical });
   assert(canonicalUrl.origin === CANONICAL_ORIGIN, 'Canonical must use gameyer.az apex host', { path, canonical });
   assert(canonicalUrl.pathname === new URL(`${CANONICAL_ORIGIN}${path}`).pathname, 'Canonical path must match current page', { path, canonical });
-  assert(!/gameyerr-gameyer\.vercel\.app|bosyer/i.test(html), 'Legacy host/brand leaked into canonical HTML', { path });
+  assert(!/gameyerr-gameyer\.vercel\.app|bosyer-web\.vercel\.app|bosyer/i.test(html), 'Legacy host/brand leaked into canonical HTML', { path });
   return html;
 }
 
@@ -63,7 +70,7 @@ async function main() {
   assert(robotsResponse.status === 200, 'robots.txt must return HTTP 200', { status: robotsResponse.status });
   const robots = await robotsResponse.text();
   assert(robots.includes(`Sitemap: ${CANONICAL_ORIGIN}/sitemap.xml`), 'robots.txt must advertise canonical sitemap', robots);
-  assert(!/gameyerr-gameyer\.vercel\.app|bosyer/i.test(robots), 'Legacy host leaked into robots.txt', robots);
+  assert(!/gameyerr-gameyer\.vercel\.app|bosyer-web\.vercel\.app|bosyer/i.test(robots), 'Legacy host leaked into robots.txt', robots);
 
   const sitemapResponse = await fetchManual(`${CANONICAL_ORIGIN}/sitemap.xml`);
   assert(sitemapResponse.status === 200, 'sitemap.xml must return HTTP 200', { status: sitemapResponse.status });
@@ -75,7 +82,7 @@ async function main() {
     assert(url.protocol === 'https:' && url.origin === CANONICAL_ORIGIN, 'Every sitemap URL must use https://gameyer.az', { value });
   }
 
-  const representativePaths = ['/', '/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/rayon', '/tip', '/haqqimizda', '/elaqe', '/klub-sahibi'];
+  const representativePaths = ['/', '/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/bakida-internet-klublari', '/bakida-gaming-klub-qiymetleri', '/rayon', '/tip', '/haqqimizda', '/elaqe', '/klub-sahibi'];
   const firstClub = urls.map((value) => new URL(value).pathname).find((path) => path.startsWith('/klub/'));
   const firstDistrict = urls.map((value) => new URL(value).pathname).find((path) => /^\/rayon\/[^/]+$/.test(path));
   if (firstClub) representativePaths.push(firstClub);
@@ -83,7 +90,7 @@ async function main() {
 
   for (const path of representativePaths) await checkHtml(path);
 
-  for (const origin of [WWW_ORIGIN, LEGACY_ORIGIN]) {
+  for (const origin of [WWW_ORIGIN, ...LEGACY_ORIGINS]) {
     await expectPermanentRedirect(origin, '/');
     if (firstClub) await expectPermanentRedirect(origin, `${firstClub}?cutover=1`);
   }
@@ -103,7 +110,7 @@ async function main() {
   }
   assert(homepage.headers.get('strict-transport-security')?.includes('max-age=31536000'), 'HSTS must remain enabled', { value: homepage.headers.get('strict-transport-security') });
 
-  console.log(`gameyer.az cutover smoke passed: ${urls.length} sitemap URLs; ${representativePaths.length} representative pages; apex/www/legacy routing verified.`);
+  console.log(`gameyer.az cutover smoke passed: ${urls.length} sitemap URLs; ${representativePaths.length} representative pages; apex/www/${LEGACY_ORIGINS.length} legacy host routes verified.`);
 }
 
 main().catch((error) => {
