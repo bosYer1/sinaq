@@ -6,11 +6,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** AZN qiymət aralığını formatlayır: "10 AZN" və ya "10–15 AZN". */
+function formatPriceValue(value: number): string {
+  return new Intl.NumberFormat('az-AZ', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+/** AZN qiymət aralığını qəpiklik dəqiqliyi itirmədən formatlayır. */
 export function formatPriceRange(priceFrom: number, priceTo: number | null, unit: string): string {
-  const from = Math.round(priceFrom);
-  if (priceTo && priceTo !== priceFrom) {
-    return `${from}–${Math.round(priceTo)} AZN / ${unit}`;
+  const from = formatPriceValue(priceFrom);
+  if (priceTo != null && priceTo !== priceFrom) {
+    return `${from}–${formatPriceValue(priceTo)} AZN / ${unit}`;
   }
   return `${from} AZN / ${unit}`;
 }
@@ -86,74 +93,43 @@ const WEEKDAY_TO_SCHEMA_DAY: Record<string, number> = {
   Sun: 6,
 };
 
-type OpeningHour = {
-  day_of_week: number;
-  open_time: string | null;
-  close_time: string | null;
-  is_closed: boolean;
-};
+export function isClubOpenNow(
+  openingHours: Array<{
+    day_of_week: number;
+    open_time: string | null;
+    close_time: string | null;
+    is_closed: boolean;
+  }>,
+  now = new Date()
+): boolean {
+  if (!openingHours.length) return false;
 
-function timeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
-}
+  const parts = BAKU_DATE_TIME_FORMATTER.formatToParts(now);
+  const weekday = parts.find((part) => part.type === 'weekday')?.value;
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
+  const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0');
+  const dayOfWeek = weekday ? WEEKDAY_TO_SCHEMA_DAY[weekday] : undefined;
+  if (dayOfWeek == null) return false;
 
-function getBakuDayAndMinutes(date = new Date()) {
-  const parts = BAKU_DATE_TIME_FORMATTER.formatToParts(date);
-  const weekday = parts.find((part) => part.type === 'weekday')?.value ?? 'Mon';
-  const hours = Number(parts.find((part) => part.type === 'hour')?.value ?? 0);
-  const minutes = Number(parts.find((part) => part.type === 'minute')?.value ?? 0);
+  const today = openingHours.find((hours) => hours.day_of_week === dayOfWeek);
+  if (!today || today.is_closed || !today.open_time || !today.close_time) return false;
 
-  return {
-    dayOfWeek: WEEKDAY_TO_SCHEMA_DAY[weekday] ?? 0,
-    nowMinutes: hours * 60 + minutes,
+  const toMinutes = (value: string) => {
+    const [hours, minutes] = value.split(':').map(Number);
+    return hours * 60 + minutes;
   };
-}
 
-/**
- * Bakı vaxtına görə klubun hazırda açıq olub-olmadığını hesablayır.
- * `openingHours` — həmin klubun bütün həftə sətirləri (club_opening_hours).
- *
- * Eyni açılış və bağlanış saatı (məs. 00:00–00:00) 24 saat açıq qrafik
- * kimi qəbul edilir. Gecə yarısını keçən qrafikdə (məs. Cümə 18:00–02:00)
- * şənbə 01:00 hələ cümə növbəsinin davamıdır.
- */
-export function isClubOpenNow(openingHours: OpeningHour[]): boolean {
-  if (!openingHours || openingHours.length === 0) return false;
+  const currentMinutes = hour * 60 + minute;
+  const openMinutes = toMinutes(today.open_time);
+  const closeMinutes = toMinutes(today.close_time);
 
-  const { dayOfWeek, nowMinutes } = getBakuDayAndMinutes();
-  const previousDay = (dayOfWeek + 6) % 7;
-
-  const today = openingHours.find((h) => h.day_of_week === dayOfWeek);
-  if (today && !today.is_closed && today.open_time && today.close_time) {
-    const openMinutes = timeToMinutes(today.open_time);
-    const closeMinutes = timeToMinutes(today.close_time);
-
-    // Admin panelində 00:00–00:00 kimi saxlanılan qrafik 24/7 deməkdir.
-    if (closeMinutes === openMinutes) return true;
-
-    if (closeMinutes > openMinutes) {
-      if (nowMinutes >= openMinutes && nowMinutes < closeMinutes) return true;
-    } else if (nowMinutes >= openMinutes) {
-      return true;
-    }
+  if (closeMinutes > openMinutes) {
+    return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
   }
 
-  const previous = openingHours.find((h) => h.day_of_week === previousDay);
-  if (previous && !previous.is_closed && previous.open_time && previous.close_time) {
-    const previousOpen = timeToMinutes(previous.open_time);
-    const previousClose = timeToMinutes(previous.close_time);
-
-    if (previousClose < previousOpen && nowMinutes < previousClose) {
-      return true;
-    }
-  }
-
-  return false;
+  return currentMinutes >= openMinutes || currentMinutes < closeMinutes;
 }
 
-/** "10:00" formatındakı vaxtı "10:00"-a saxlayır, saniyə hissəsi varsa təmizləyir. */
-export function formatTime(time: string | null): string {
-  if (!time) return '—';
-  return time.slice(0, 5);
+export function formatTime(value: string | null): string {
+  return value ? value.slice(0, 5) : '—';
 }
