@@ -46,11 +46,11 @@ function emptyRow(typeId: string, position: number): PricingDraft {
 export function ClubPricingEditor({ types, enabledTypeIds, pricing }: Props) {
   const [enabled, setEnabled] = useState(() => new Set(enabledTypeIds));
   const [rows, setRows] = useState<PricingDraft[]>(() => {
-    const initial = pricing.map((item, index) => ({
+    const initial: PricingDraft[] = pricing.map((item, index) => ({
       id: item.id,
       club_type_id: item.club_type_id,
       price_from: item.price_from,
-      price_to: item.price_to ?? '',
+      price_to: item.price_to == null ? '' : item.price_to,
       unit: item.unit || 'saat',
       tariff_name: item.tariff_name ?? '',
       schedule_label: item.schedule_label ?? '',
