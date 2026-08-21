@@ -73,9 +73,9 @@ export function ClubProfileImageUploader({
       if (uploadError) throw new Error(uploadError.message);
 
       uploadedUrl = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl;
-      const { error: updateError } = await (supabase as any)
+      const { error: updateError } = await supabase
         .from('clubs')
-        .update({ profile_image_url: uploadedUrl, updated_at: new Date().toISOString() })
+        .update({ profile_image_url: uploadedUrl, updated_at: new Date().toISOString() } as never)
         .eq('id', clubId);
       if (updateError) throw new Error(updateError.message);
 
@@ -113,9 +113,9 @@ export function ClubProfileImageUploader({
     const previousUrl = url;
 
     try {
-      const { error: updateError } = await (supabase as any)
+      const { error: updateError } = await supabase
         .from('clubs')
-        .update({ profile_image_url: null, updated_at: new Date().toISOString() })
+        .update({ profile_image_url: null, updated_at: new Date().toISOString() } as never)
         .eq('id', clubId);
       if (updateError) throw new Error(updateError.message);
 
