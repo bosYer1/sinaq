@@ -43,15 +43,15 @@ export const viewport: Viewport = { themeColor: '#7C5CFC', colorScheme: 'light' 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: 'GameYer — Bakıda PC və PlayStation klubları', template: '%s | GameYer' },
-  description: 'Bakıda PC klub, kompüter klubu və PlayStation klub tap. Qiymət, ünvan, rayon, iş saatları və xəritəyə görə gaming klublarını GameYer-də müqayisə et.',
+  description: 'Bakıda PC klub, kompüter klubu, internet klub və PlayStation klub tap. Qiymət, ünvan, rayon, iş saatları və xəritəyə görə gaming klublarını GameYer-də müqayisə et.',
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
   ...(googleVerification ? { verification: { google: googleVerification } } : {}),
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   appleWebApp: { capable: true, title: 'GameYer', statusBarStyle: 'default' },
   alternates: { canonical: '/' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/', siteName: 'GameYer', title: 'GameYer — Bakıda PC və PlayStation klubları', description: 'Bakıda PC, kompüter və PlayStation klublarını qiymət, ünvan və xəritə məlumatları ilə tap.', images: [{ url: socialImage, width: 1200, height: 630, alt: 'GameYer — Bakıda gaming klubu tap' }] },
-  twitter: { card: 'summary_large_image', title: 'GameYer — Bakıda gaming klubu tap', description: 'PC və PlayStation klublarını xəritə, rayon və qiymətə görə tap.', images: [socialImage] },
+  openGraph: { type: 'website', locale: 'az_AZ', url: '/', siteName: 'GameYer', title: 'GameYer — Bakıda PC və PlayStation klubları', description: 'Bakıda PC, kompüter, internet və PlayStation klublarını qiymət, ünvan və xəritə məlumatları ilə tap.', images: [{ url: socialImage, width: 1200, height: 630, alt: 'GameYer — Bakıda gaming klubu tap' }] },
+  twitter: { card: 'summary_large_image', title: 'GameYer — Bakıda gaming klubu tap', description: 'PC, internet və PlayStation klublarını xəritə, rayon və qiymətə görə tap.', images: [socialImage] },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -90,6 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="font-semibold text-ink">© 2026 GameYer</span>
             <Link href="/bakida-gaming-klub-qiymetleri" className="hover:text-ink">Klub qiymətləri</Link>
             <Link href="/bakida-pc-klublari" className="hover:text-ink">PC klubları</Link>
+            <Link href="/bakida-internet-klublari" className="hover:text-ink">Internet klubları</Link>
             <Link href="/bakida-playstation-klublari" className="hover:text-ink">PlayStation</Link>
             <Link href="/bakida-ucuz-pc-klublari" className="hover:text-ink">Ucuz PC</Link>
             <Link href="/bakida-ucuz-playstation-klublari" className="hover:text-ink">Ucuz PlayStation</Link>
