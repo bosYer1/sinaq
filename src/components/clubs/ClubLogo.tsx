@@ -15,35 +15,21 @@ type ClubLogoProps = {
 
 export function ClubLogo({ slug, name, className, imageClassName, priority = false }: ClubLogoProps) {
   const logo = getClubLogo(slug);
+  const isBase64Asset = logo?.imageUrl.endsWith('.b64') === true;
   const [failed, setFailed] = useState(false);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(logo?.imageUrl ?? null);
+  const [base64DataUrl, setBase64DataUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!logo || !isBase64Asset) return;
+
     let cancelled = false;
-    setFailed(false);
-
-    if (!logo) {
-      setResolvedUrl(null);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (!logo.imageUrl.endsWith('.b64')) {
-      setResolvedUrl(logo.imageUrl);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    setResolvedUrl(null);
     fetch(logo.imageUrl)
       .then((response) => {
         if (!response.ok) throw new Error('Logo asset could not be loaded');
         return response.text();
       })
       .then((content) => {
-        if (!cancelled) setResolvedUrl(`data:image/jpeg;base64,${content.trim()}`);
+        if (!cancelled) setBase64DataUrl(`data:image/jpeg;base64,${content.trim()}`);
       })
       .catch(() => {
         if (!cancelled) setFailed(true);
@@ -52,7 +38,9 @@ export function ClubLogo({ slug, name, className, imageClassName, priority = fal
     return () => {
       cancelled = true;
     };
-  }, [logo]);
+  }, [isBase64Asset, logo]);
+
+  const resolvedUrl = isBase64Asset ? base64DataUrl : logo?.imageUrl ?? null;
 
   return (
     <div
@@ -70,7 +58,7 @@ export function ClubLogo({ slug, name, className, imageClassName, priority = fal
           sizes="96px"
           className={cn('object-contain p-1.5', imageClassName)}
           priority={priority}
-          unoptimized={resolvedUrl.startsWith('data:')}
+          unoptimized={isBase64Asset}
           onError={() => setFailed(true)}
         />
       ) : (
