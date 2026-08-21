@@ -14,6 +14,10 @@ type ClubLogoProps = {
   priority?: boolean;
 };
 
+type ProfileImageRow = {
+  profile_image_url?: string | null;
+};
+
 const profileImageCache = new Map<string, string | null>();
 const profileImageRequests = new Map<string, Promise<string | null>>();
 
@@ -25,14 +29,15 @@ async function loadProfileImage(slug: string) {
 
   const request = (async () => {
     const supabase = createClient();
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('clubs')
-      .select('profile_image_url')
+      .select('*')
       .eq('slug', slug)
       .eq('is_active', true)
       .maybeSingle();
 
-    const url = error || typeof data?.profile_image_url !== 'string' ? null : data.profile_image_url;
+    const row = data as ProfileImageRow | null;
+    const url = error || typeof row?.profile_image_url !== 'string' ? null : row.profile_image_url;
     profileImageCache.set(slug, url);
     profileImageRequests.delete(slug);
     return url;
@@ -64,7 +69,6 @@ export function ClubLogo({ slug, name, className, imageClassName, priority = fal
   }, [slug]);
 
   useEffect(() => {
-    setBase64DataUrl(null);
     if (!sourceUrl || !isBase64Asset) return;
 
     let cancelled = false;
