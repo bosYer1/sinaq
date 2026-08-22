@@ -178,14 +178,17 @@ async function assertCommonLayout(client, viewport, path) {
 async function assertHomepage(client, viewport) {
   await navigate(client, '/');
   if (viewport.mobile) {
+    await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
     const listView = await evaluate(client, `(() => ({
       mapLoaded: Boolean(document.querySelector('[aria-label="GameYer klub xəritəsi"]')),
       activationVisible: Boolean(document.querySelector('[aria-label="Xəritəni aktiv et"]')),
       clubsVisible: document.body.innerText.includes('Klublar ('),
+      mapHeight: document.querySelector('[aria-label="GameYer klub xəritəsi"]')?.getBoundingClientRect().height ?? 0,
     }))()`);
-    assert(!listView.mapLoaded, `${viewport.name}: mobile map loaded in list view`, listView);
+    assert(listView.mapLoaded, `${viewport.name}: mobile map is missing from list view`, listView);
     assert(!listView.activationVisible, `${viewport.name}: obsolete map activation placeholder is visible`, listView);
     assert(listView.clubsVisible, `${viewport.name}: club list heading is missing`, listView);
+    assert(listView.mapHeight >= 330 && listView.mapHeight <= 400, `${viewport.name}: list-view map height regressed`, listView);
     await capture(client, `${viewport.name}-home-list`);
     await evaluate(client, `Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Xəritə')?.click()`);
   }
