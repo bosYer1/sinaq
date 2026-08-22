@@ -109,7 +109,8 @@ body {
 }
 
 @media (max-width: 1023px) and (pointer: coarse) {
-  /* Xəritə ayrıca görünüşdə açıldığı üçün birbaşa interaktivdir. */
+  /* Siyahı və ayrıca xəritə görünüşlərində xəritə birbaşa interaktivdir. */
+  [data-explore-view='list'] .leaflet-container,
   [data-explore-view='map'] .leaflet-container {
     pointer-events: auto;
     overscroll-behavior: contain;
