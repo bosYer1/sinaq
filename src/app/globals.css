@@ -1,3 +1,5 @@
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -109,8 +111,13 @@ body {
 }
 
 @media (max-width: 1023px) and (pointer: coarse) {
-  /* Siyahı və ayrıca xəritə görünüşlərində xəritə birbaşa interaktivdir. */
-  [data-explore-view='list'] .leaflet-container,
+  /* Siyahıda ilk toxunuş səhifəni scroll edir; istifadəçi xəritəni ayrıca aktivləşdirir. */
+  [data-explore-view='list'][data-mobile-map-active='false'] .leaflet-container {
+    pointer-events: none;
+    touch-action: pan-y;
+  }
+
+  [data-explore-view='list'][data-mobile-map-active='true'] .leaflet-container,
   [data-explore-view='map'] .leaflet-container {
     pointer-events: auto;
     overscroll-behavior: contain;
