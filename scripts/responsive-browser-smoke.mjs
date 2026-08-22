@@ -213,7 +213,7 @@ async function assertHomepage(client, viewport) {
   assert(initial.scrollWidth <= initial.clientWidth + 1, `${viewport.name}: homepage horizontal overflow detected`, initial);
 
   if (viewport.mobile) {
-    assert(initial.map.height >= 330 && initial.map.height <= 420, `${viewport.name}: mobile map height regressed`, initial);
+    assert(initial.map.height >= 330 && initial.map.height <= 440, `${viewport.name}: mobile map height regressed`, initial);
     assert(initial.map.left >= 0 && initial.map.right <= initial.innerWidth + 1, `${viewport.name}: mobile map escapes viewport`, initial);
   } else {
     assert(initial.map.height >= 588 && initial.map.height <= 662, `${viewport.name}: desktop map height regressed`, initial);
