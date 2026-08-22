@@ -1,0 +1,66 @@
+name: Vercel Direct Deploy
+
+on:
+  push:
+    branches: [ops/vercel-direct-deploy]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Package deploy source
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameyer-deploy-source
+          path: |
+            package.json
+            package-lock.json
+            next.config.js
+            postcss.config.js
+            tailwind.config.*
+            tsconfig.json
+            next-env.d.ts
+            public/**
+            src/**
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
+
+      - name: Require Vercel token
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN secret is not configured" >&2
+            exit 2
+          fi
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Link project
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          mkdir -p .vercel
+          printf '%s\n' '{"orgId":"team_5MyuJNqjY4UtWueAwaIJye85","projectId":"prj_bPaV6aAUZlwnk8juJulYUbg8sh28"}' > .vercel/project.json
+          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
