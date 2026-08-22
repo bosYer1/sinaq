@@ -422,6 +422,10 @@ export async function saveClub(formData: FormData) {
     updated_at: new Date().toISOString(),
   };
 
+  if (!previousClub.is_active && payload.is_active && !booleanValue(formData, 'confirm_reactivate')) {
+    throw new Error('Deaktiv klubu yenidən aktivləşdirmək üçün təsdiq tələb olunur.');
+  }
+
   const { error: updateError } = await supabase.from('clubs').update(payload as never).eq('id', id);
   if (updateError) throw new Error(updateError.message);
 
@@ -506,6 +510,9 @@ export async function toggleClubActive(formData: FormData) {
   if (!id) throw new Error('Klub ID tapılmadı.');
 
   const nextValue = text(formData, 'next_value') === 'true';
+  if (nextValue && !booleanValue(formData, 'confirm_reactivate')) {
+    throw new Error('Deaktiv klubu yenidən aktivləşdirmək üçün təsdiq tələb olunur.');
+  }
   const { error } = await supabase
     .from('clubs')
     .update({ is_active: nextValue, updated_at: new Date().toISOString() } as never)
