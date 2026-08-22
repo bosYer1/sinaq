@@ -178,15 +178,16 @@ async function assertCommonLayout(client, viewport, path) {
 async function assertHomepage(client, viewport) {
   await navigate(client, '/');
   if (viewport.mobile) {
-    await waitForPage(client, '[aria-label="Xəritəni aktiv et"]');
-    const deferredMap = await evaluate(client, `(() => ({
+    const listView = await evaluate(client, `(() => ({
       mapLoaded: Boolean(document.querySelector('[aria-label="GameYer klub xəritəsi"]')),
       activationVisible: Boolean(document.querySelector('[aria-label="Xəritəni aktiv et"]')),
+      clubsVisible: document.body.innerText.includes('Klublar ('),
     }))()`);
-    assert(!deferredMap.mapLoaded, `${viewport.name}: mobile map loaded before user activation`, deferredMap);
-    assert(deferredMap.activationVisible, `${viewport.name}: mobile map activation control is missing`, deferredMap);
-    await capture(client, `${viewport.name}-home-map-deferred`);
-    await evaluate(client, `document.querySelector('[aria-label="Xəritəni aktiv et"]')?.click()`);
+    assert(!listView.mapLoaded, `${viewport.name}: mobile map loaded in list view`, listView);
+    assert(!listView.activationVisible, `${viewport.name}: obsolete map activation placeholder is visible`, listView);
+    assert(listView.clubsVisible, `${viewport.name}: club list heading is missing`, listView);
+    await capture(client, `${viewport.name}-home-list`);
+    await evaluate(client, `Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Xəritə')?.click()`);
   }
   await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
   await sleep(900);
