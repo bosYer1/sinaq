@@ -71,6 +71,16 @@ function jsonLdBlocks(html) {
     .map((match) => match[1].trim());
 }
 
+function homepageClubCounts(html) {
+  const normalized = html.replace(/<!--[\s\S]*?-->/g, '');
+  const summaryCount = normalized.match(/🎮<\/span>\s*(\d+)\s*klub/i)?.[1];
+  const listCounts = [...normalized.matchAll(/Klublar\s*\(\s*(\d+)\s*\)/gi)].map((match) => Number(match[1]));
+  return {
+    summary: summaryCount ? Number(summaryCount) : null,
+    lists: listCounts,
+  };
+}
+
 async function checkHealth() {
   const { response, text } = await fetchText('/api/health');
   assert(response.status === 200, 'Health endpoint must return HTTP 200', { status: response.status, text });
@@ -159,6 +169,15 @@ async function checkInternalLinks(homeHtml) {
   assert(failures.length === 0, 'Homepage contains broken internal links', failures);
 }
 
+function checkHomepageClubCount(homeHtml, sitemapUrls) {
+  const expected = sitemapUrls.filter((url) => new URL(url).pathname.startsWith('/klub/')).length;
+  const rendered = homepageClubCounts(homeHtml);
+  assert(expected > 0, 'Sitemap must expose public club detail URLs before count consistency can be checked');
+  assert(rendered.summary === expected, 'Homepage summary club count must match public sitemap clubs', { expected, rendered });
+  assert(rendered.lists.length > 0, 'Homepage must render at least one club list count', { expected, rendered });
+  assert(rendered.lists.every((count) => count === expected), 'Every homepage club list count must match public sitemap clubs', { expected, rendered });
+}
+
 await checkHealth();
 const sitemapUrls = await checkRobotsAndSitemap();
 
@@ -169,6 +188,7 @@ for (const url of sitemapUrls) {
 }
 
 if (!homeHtml) homeHtml = await checkHtmlPage(absolute('/'));
+checkHomepageClubCount(homeHtml, sitemapUrls);
 await checkInternalLinks(homeHtml);
 await checkParameterizedHomeIsNotIndexable();
 
