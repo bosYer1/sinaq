@@ -76,6 +76,12 @@ export default async function AdminEditClubPage({ params, searchParams }: PagePr
           <form action={toggleClubActive}>
             <input type="hidden" name="id" value={club.id} />
             <input type="hidden" name="next_value" value={club.is_active ? 'false' : 'true'} />
+            {!club.is_active ? (
+              <label className="mr-2 inline-flex max-w-64 items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-800">
+                <input type="checkbox" name="confirm_reactivate" required className="mt-0.5" />
+                <span>Fəaliyyəti yoxladım, yenidən aktivləşdir.</span>
+              </label>
+            ) : null}
             <button
               type="submit"
               className={club.is_active
