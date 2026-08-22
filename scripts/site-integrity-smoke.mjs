@@ -71,8 +71,25 @@ function jsonLdBlocks(html) {
     .map((match) => match[1].trim());
 }
 
+function stripHtmlComments(html) {
+  let output = '';
+  let cursor = 0;
+
+  while (cursor < html.length) {
+    const start = html.indexOf('<!--', cursor);
+    if (start === -1) return output + html.slice(cursor);
+
+    output += html.slice(cursor, start);
+    const end = html.indexOf('-->', start + 4);
+    if (end === -1) return output;
+    cursor = end + 3;
+  }
+
+  return output;
+}
+
 function homepageClubCounts(html) {
-  const normalized = html.replace(/<!--[\s\S]*?-->/g, '');
+  const normalized = stripHtmlComments(html);
   const summaryCount = normalized.match(/🎮<\/span>\s*(\d+)\s*klub/i)?.[1];
   const listCounts = [...normalized.matchAll(/Klublar\s*\(\s*(\d+)\s*\)/gi)].map((match) => Number(match[1]));
   return {
