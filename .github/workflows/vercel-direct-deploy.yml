@@ -17,6 +17,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Package deploy source
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameyer-deploy-source
+          path: |
+            package.json
+            package-lock.json
+            next.config.js
+            postcss.config.js
+            tailwind.config.*
+            tsconfig.json
+            next-env.d.ts
+            public/**
+            src/**
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
+
       - name: Require Vercel token
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
