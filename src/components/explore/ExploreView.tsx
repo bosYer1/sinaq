@@ -30,10 +30,8 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState(false);
-  const [mobileListMapActive, setMobileListMapActive] = useState(false);
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
-  const mobileMapActive = view === 'map' || mobileListMapActive;
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');
@@ -130,35 +128,27 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         ? 'Bu brauzer cihaz lokasiyasını dəstəkləmir.'
         : null;
 
-  function renderMapPanel({ enabled = true }: { enabled?: boolean } = {}) {
+  function renderMapPanel() {
     return (
       <div className="relative h-full min-h-0 overflow-hidden rounded-[18px] border border-border bg-surface-alt shadow-[0_8px_24px_rgba(31,35,48,0.05)]">
-        {enabled ? (
-          <MapErrorBoundary>
-            <MapWrapper
-              clubs={clubsWithDistance}
-              activeClubId={activeClubId}
-              onSelectClub={handleSelectMarker}
-              userLocation={location}
-              locationFocusRequest={locationFocusRequest}
-            />
-          </MapErrorBoundary>
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-[#F4F1FF] via-white to-[#EAF8FC] px-6 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-xl text-white shadow-[0_8px_24px_rgba(124,92,252,0.24)]" aria-hidden="true">⌖</span>
-            <p className="mt-3 text-sm font-bold text-ink">Klubları xəritədə göstər</p>
-            <p className="mt-1 max-w-[260px] text-xs leading-5 text-muted">Xəritə yalnız istədiyin zaman yüklənir və mobil internetə qənaət edir.</p>
-          </div>
-        )}
+        <MapErrorBoundary>
+          <MapWrapper
+            clubs={clubsWithDistance}
+            activeClubId={activeClubId}
+            onSelectClub={handleSelectMarker}
+            userLocation={location}
+            locationFocusRequest={locationFocusRequest}
+          />
+        </MapErrorBoundary>
 
-        {enabled ? <div className="pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-2">
+        <div className="pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-2">
           <div className="pointer-events-auto rounded-xl border border-border bg-white/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
             <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-live" aria-hidden="true" />
             Xəritədə {clubsWithDistance.length} klub
           </div>
-        </div> : null}
+        </div>
 
-        {enabled ? <div className="absolute right-3 top-3 z-[500]">
+        <div className="absolute right-3 top-3 z-[500]">
           <button
             type="button"
             onClick={() => void handleMapLocation()}
@@ -168,7 +158,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <span aria-hidden="true">⌖</span>
             <span className="hidden xl:inline">{mapLocationLabel}</span>
           </button>
-        </div> : null}
+        </div>
 
         {location && nearestClub?.distanceKm != null ? (
           <div className="absolute bottom-3 right-3 z-[500] max-w-[240px] rounded-xl border border-border bg-white/95 px-3 py-2 text-right shadow-card backdrop-blur">
@@ -182,11 +172,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   }
 
   return (
-    <div
-      className="bg-surface"
-      data-explore-view={view}
-      data-mobile-map-active={mobileMapActive ? 'true' : 'false'}
-    >
+    <div className="bg-surface" data-explore-view={view}>
       <div className="hidden h-[clamp(590px,68vh,660px)] min-h-0 grid-cols-[360px_minmax(0,1fr)] gap-3 lg:grid xl:grid-cols-[420px_minmax(0,1fr)] xl:gap-4 2xl:grid-cols-[450px_minmax(0,1fr)]">
         <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-border bg-[#FBFCFE]">
           <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-white px-3.5 py-3 xl:gap-3 xl:px-4">
@@ -230,21 +216,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
         {view === 'list' ? (
           <section>
-            <div className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]">
-              {isDesktop === false ? renderMapPanel({ enabled: mobileListMapActive }) : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
-              {!mobileMapActive && isDesktop === false ? (
-                <button
-                  type="button"
-                  onClick={() => setMobileListMapActive(true)}
-                  className="absolute inset-0 z-[20] flex touch-pan-y items-center justify-center bg-transparent"
-                  aria-label="Xəritəni aktiv et"
-                >
-                  <span className="rounded-xl border border-border bg-white/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
-                    Xəritəni hərəkət etdirmək üçün toxun
-                  </span>
-                </button>
-              ) : null}
-            </div>
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
