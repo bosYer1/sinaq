@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { isVagueClubAddress } from '@/lib/clubDataQuality';
 
 export const dynamic = 'force-dynamic';
 
 type ActiveClubRow = {
   id: string;
+  address: string | null;
   description: string | null;
   instagram_url: string | null;
   latitude: number | null;
@@ -29,6 +31,7 @@ export default async function AdminPage() {
   let missingImages = 0;
   let missingTypes = 0;
   let missingCoordinates = 0;
+  let vagueAddress = 0;
   let stale90 = 0;
 
   const nowIso = new Date().toISOString();
@@ -57,7 +60,7 @@ export default async function AdminPage() {
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_verified', true),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
-    supabase.from('clubs').select('id,description,instagram_url,latitude,longitude,updated_at').eq('is_active', true),
+    supabase.from('clubs').select('id,address,description,instagram_url,latitude,longitude,updated_at').eq('is_active', true),
     supabase.from('club_opening_hours').select('club_id'),
     supabase.from('club_pricing').select('club_id'),
     supabase.from('club_images').select('club_id'),
@@ -90,6 +93,7 @@ export default async function AdminPage() {
     if (!idsWithImages.has(club.id)) missingImages += 1;
     if (!idsWithTypes.has(club.id)) missingTypes += 1;
     if (club.latitude == null || club.longitude == null) missingCoordinates += 1;
+    if (isVagueClubAddress(club.address)) vagueAddress += 1;
     const updatedMs = Date.parse(club.updated_at);
     if (!Number.isFinite(updatedMs) || nowMs - updatedMs >= stale90Ms) stale90 += 1;
   }
@@ -106,6 +110,7 @@ export default async function AdminPage() {
     { label: 'Şəkil çatmır', value: missingImages, key: 'images' },
     { label: 'Klub tipi çatmır', value: missingTypes, key: 'types' },
     { label: 'Koordinat çatmır', value: missingCoordinates, key: 'coordinates' },
+    { label: 'Ünvan qeyri-dəqiqdir', value: vagueAddress, key: 'address' },
   ];
 
   return (

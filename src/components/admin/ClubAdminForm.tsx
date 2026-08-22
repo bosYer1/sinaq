@@ -191,6 +191,15 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-semibold">Status və reytinq</h2>
+        {club?.id && club.is_active === false ? (
+          <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <p className="font-semibold">Bu klub əvvəl deaktiv edilib və public saytda görünmür.</p>
+            <label className="mt-2 flex items-start gap-2">
+              <input type="checkbox" name="confirm_reactivate" className="mt-0.5" />
+              <span>Klubun fəaliyyətini yenidən yoxladım və aktivləşdirməni təsdiqləyirəm.</span>
+            </label>
+          </div>
+        ) : null}
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="is_active" defaultChecked={club?.is_active ?? true} />Saytda aktivdir</label>
           <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="is_premium" defaultChecked={club?.is_premium ?? false} />Premium</label>

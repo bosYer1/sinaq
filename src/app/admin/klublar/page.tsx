@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { isVagueClubAddress } from '@/lib/clubDataQuality';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +33,7 @@ const missingLabels: Record<string, string> = {
   images: 'Şəkil çatmır',
   types: 'Klub tipi çatmır',
   coordinates: 'Koordinat çatmır',
+  address: 'Ünvan qeyri-dəqiqdir',
 };
 
 const freshnessDays: Record<string, number> = {
@@ -132,11 +134,12 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       !idsWithImages.has(club.id) ? 'Şəkil' : null,
       !idsWithTypes.has(club.id) ? 'Tip' : null,
       club.latitude == null || club.longitude == null ? 'Koordinat' : null,
+      isVagueClubAddress(club.address) ? 'Ünvan' : null,
     ].filter((value): value is string => Boolean(value));
   }
 
   function seoScoreForClub(club: (typeof clubs)[number]) {
-    return Math.round(((8 - missingForClub(club).length) / 8) * 100);
+    return Math.round(((9 - missingForClub(club).length) / 9) * 100);
   }
 
   const seoReadyCount = clubs.filter((club) => missingForClub(club).length === 0).length;
@@ -155,6 +158,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       if (missingFilter === 'images' && idsWithImages.has(club.id)) return false;
       if (missingFilter === 'types' && idsWithTypes.has(club.id)) return false;
       if (missingFilter === 'coordinates' && club.latitude != null && club.longitude != null) return false;
+      if (missingFilter === 'address' && !isVagueClubAddress(club.address)) return false;
       if (visibilityFilter === 'public' && (club.latitude == null || club.longitude == null)) return false;
 
       if (freshnessFilter) {
@@ -244,6 +248,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           <option value="images">Şəkil çatmır</option>
           <option value="types">Klub tipi çatmır</option>
           <option value="coordinates">Koordinat çatmır</option>
+          <option value="address">Ünvan qeyri-dəqiqdir</option>
         </select>
 
         <select name="freshness" defaultValue={freshnessFilter} className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm">
