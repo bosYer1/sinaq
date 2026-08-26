@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 type ClubLogoProps = {
   slug: string;
   name: string;
+  profileImageUrl?: string | null;
   className?: string;
   imageClassName?: string;
   priority?: boolean;
@@ -31,7 +32,7 @@ async function loadProfileImage(slug: string) {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('clubs')
-      .select('*')
+      .select('profile_image_url')
       .eq('slug', slug)
       .eq('is_active', true)
       .maybeSingle();
@@ -47,26 +48,30 @@ async function loadProfileImage(slug: string) {
   return request;
 }
 
-export function ClubLogo({ slug, name, className, imageClassName, priority = false }: ClubLogoProps) {
+export function ClubLogo({ slug, name, profileImageUrl, className, imageClassName, priority = false }: ClubLogoProps) {
   const staticLogo = getClubLogo(slug);
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(() => profileImageCache.get(slug) ?? null);
-  const sourceUrl = profileImageUrl || staticLogo?.imageUrl || null;
+  const profileImageProvided = profileImageUrl !== undefined;
+  const [loadedProfileImageUrl, setLoadedProfileImageUrl] = useState<string | null>(() => profileImageCache.get(slug) ?? null);
+  const resolvedProfileImageUrl = profileImageProvided ? profileImageUrl : loadedProfileImageUrl;
+  const sourceUrl = resolvedProfileImageUrl || staticLogo?.imageUrl || null;
   const isBase64Asset = sourceUrl?.endsWith('.b64') === true;
   const [failed, setFailed] = useState(false);
   const [base64DataUrl, setBase64DataUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    if (profileImageProvided) return;
+
     let cancelled = false;
     void loadProfileImage(slug).then((url) => {
       if (!cancelled) {
-        setProfileImageUrl(url);
+        setLoadedProfileImageUrl(url);
         setFailed(false);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [profileImageProvided, slug]);
 
   useEffect(() => {
     if (!sourceUrl || !isBase64Asset) return;
