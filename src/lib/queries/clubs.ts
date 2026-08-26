@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
+import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { isPremiumActive } from '@/lib/utils';
 import type { ClubFilters, ClubWithRelations } from '@/types/database';
@@ -32,8 +33,8 @@ function normalizeClubRelations(club: ClubWithRelations): ClubWithRelations {
   };
 }
 
-export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
-  const supabase = await createClient();
+async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
+  const supabase = createPublicClient();
   let districtId: string | null = null;
 
   if (filters.district) {
@@ -121,8 +122,18 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
   return clubs;
 }
 
-export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
-  const supabase = await createClient();
+const getCachedClubs = unstable_cache(
+  async (filters: ClubFilters) => queryClubs(filters),
+  ['gameyer-public-clubs-v1'],
+  { revalidate: 60, tags: ['public-clubs'] },
+);
+
+export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
+  return getCachedClubs(filters);
+}
+
+async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> {
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from('clubs')
@@ -140,4 +151,14 @@ export async function getClubBySlug(slug: string): Promise<ClubWithRelations | n
   }
 
   return data ? normalizeClubRelations(data) : null;
+}
+
+const getCachedClubBySlug = unstable_cache(
+  async (slug: string) => queryClubBySlug(slug),
+  ['gameyer-public-club-by-slug-v1'],
+  { revalidate: 60, tags: ['public-clubs'] },
+);
+
+export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
+  return getCachedClubBySlug(slug);
 }
