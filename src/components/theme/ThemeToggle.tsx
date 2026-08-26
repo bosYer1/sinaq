@@ -18,6 +18,10 @@ function getPreference(): ThemePreference {
   return isThemePreference(stored) ? stored : 'system';
 }
 
+function getServerPreference(): ThemePreference {
+  return 'system';
+}
+
 function resolveTheme(preference: ThemePreference): 'light' | 'dark' {
   if (preference !== 'system') return preference;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -46,7 +50,7 @@ function subscribe(callback: () => void) {
 }
 
 export function ThemeToggle() {
-  const preference = useSyncExternalStore(subscribe, getPreference, () => 'system');
+  const preference = useSyncExternalStore<ThemePreference>(subscribe, getPreference, getServerPreference);
   const nextPreference = ORDER[(ORDER.indexOf(preference) + 1) % ORDER.length];
   const label = preference === 'system' ? 'Sistem' : preference === 'dark' ? 'Tünd' : 'Açıq';
   const nextLabel = nextPreference === 'system' ? 'sistem' : nextPreference === 'dark' ? 'tünd' : 'açıq';
