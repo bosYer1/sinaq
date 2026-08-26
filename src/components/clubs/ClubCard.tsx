@@ -56,11 +56,11 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     >
       <div className="relative h-[88px] w-[104px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pc-tint to-ps-tint ring-1 ring-border sm:w-[112px]">
         {useOfficialLogoAsCardImage ? (
-          <ClubLogo slug={club.slug} name={club.name} className="h-full w-full rounded-lg border-0 bg-transparent text-3xl" imageClassName="p-0 object-cover" priority={imagePriority} />
+          <ClubLogo slug={club.slug} name={club.name} profileImageUrl={club.profile_image_url} className="h-full w-full rounded-lg border-0 bg-transparent text-3xl" imageClassName="p-0 object-cover" priority={imagePriority} />
         ) : cover ? (
           <Image src={cover.url} alt={club.name} fill sizes="112px" priority={imagePriority} className="object-cover transition-transform duration-200 group-hover:scale-[1.03]" />
         ) : (
-          <ClubLogo slug={club.slug} name={club.name} className="h-full w-full rounded-lg border-0 bg-transparent text-3xl" />
+          <ClubLogo slug={club.slug} name={club.name} profileImageUrl={club.profile_image_url} className="h-full w-full rounded-lg border-0 bg-transparent text-3xl" />
         )}
         {hasHours ? (
           <span className={cn('absolute left-2 top-2 h-2.5 w-2.5 rounded-full ring-2 ring-white', openNow ? 'bg-live' : 'bg-red-500')} title={statusLabel} />
