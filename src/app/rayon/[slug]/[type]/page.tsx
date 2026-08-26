@@ -5,10 +5,29 @@ import { notFound } from 'next/navigation';
 import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts } from '@/lib/queries/districts';
 import { getSiteUrl } from '@/lib/site-url';
+import { inferClubTypeSlugs } from '@/lib/clubType';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
 interface DistrictTypePageProps {
   params: Promise<{ slug: string; type: string }>;
+}
+
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  const clubs = await getClubs();
+  const params = new Map<string, { slug: string; type: string }>();
+
+  for (const club of clubs) {
+    const districtSlug = club.district?.slug;
+    if (!districtSlug) continue;
+    for (const type of inferClubTypeSlugs(club)) {
+      if (type !== 'pc' && type !== 'playstation') continue;
+      params.set(`${districtSlug}:${type}`, { slug: districtSlug, type });
+    }
+  }
+
+  return [...params.values()];
 }
 
 const getComboClubs = cache((district: string, type: string) => getClubs({ district, type }));
