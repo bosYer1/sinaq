@@ -5,13 +5,14 @@ import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicReque
 export const dynamic = 'force-dynamic';
 
 const MAX_BODY_BYTES = 1024;
-const SESSION_RE = /^[A-Za-z0-9_-]{8,64}$/;
+const ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const HOST_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?::\d{1,5})?$/i;
 
 type PageViewInsertClient = {
   from: (table: 'page_views') => {
     insert: (row: {
       session_id: string;
+      visit_id: string | null;
       path: string;
       referrer_host: string | null;
       user_agent: string | null;
@@ -53,15 +54,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  const { sessionId, path, referrerHost } = parsed.data as {
+  const { sessionId, visitId, path, referrerHost } = parsed.data as {
     sessionId?: unknown;
+    visitId?: unknown;
     path?: unknown;
     referrerHost?: unknown;
   };
 
   if (
     typeof sessionId !== 'string' ||
-    !SESSION_RE.test(sessionId) ||
+    !ID_RE.test(sessionId) ||
+    (visitId != null && (typeof visitId !== 'string' || !ID_RE.test(visitId))) ||
     typeof path !== 'string' ||
     path.length < 1 ||
     path.length > 300 ||
@@ -95,6 +98,7 @@ export async function POST(request: Request) {
   const analytics = supabase as unknown as PageViewInsertClient;
   const { error } = await analytics.from('page_views').insert({
     session_id: sessionId,
+    visit_id: typeof visitId === 'string' ? visitId : null,
     path,
     referrer_host: cleanReferrer,
     user_agent: userAgent(request),
