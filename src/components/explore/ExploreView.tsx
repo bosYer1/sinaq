@@ -222,7 +222,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         {view === 'list' ? (
           <section>
             <div className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]">
-              {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
+              {mobileListMapActive && isDesktop === false ? renderMapPanel() : <div className="h-full rounded-[18px] bg-surface-alt" aria-hidden="true" />}
               {!mobileListMapActive ? (
                 <button
                   type="button"
