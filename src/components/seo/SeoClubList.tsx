@@ -21,6 +21,15 @@ export function SeoClubList({ clubs }: { clubs: ClubWithRelations[] }) {
         const minPrice = club.pricing
           .filter((item) => item.price_from > 0)
           .sort((a, b) => a.price_from - b.price_from)[0]?.price_from;
+        const hasHours = club.opening_hours.some((item) => !item.is_closed && Boolean(item.open_time) && Boolean(item.close_time));
+        const knownDetails = [
+          minPrice != null ? `qiymət ${minPrice} AZN-dən` : null,
+          hasHours ? 'iş saatları mövcuddur' : null,
+          club.phone ? 'telefon mövcuddur' : null,
+        ].filter((value): value is string => Boolean(value));
+        const fallbackDescription = knownDetails.length > 0
+          ? `${club.district?.name ?? 'Bakı'} üzrə ${typeLabel || 'gaming'} klubu — ${knownDetails.join(' · ')}.`
+          : `${club.district?.name ?? 'Bakı'} üzrə ${typeLabel || 'gaming'} klubu. Ünvan və xəritə məlumatlarına bax.`;
 
         return (
           <Link
@@ -42,7 +51,7 @@ export function SeoClubList({ clubs }: { clubs: ClubWithRelations[] }) {
               ) : null}
             </div>
             <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted">
-              <span>{club.description || 'Gaming klubu haqqında məlumat və xəritə.'}</span>
+              <span>{club.description || fallbackDescription}</span>
               <span className="shrink-0 font-mono font-semibold text-ink">
                 {minPrice != null ? `${minPrice} AZN-dən` : 'Qiymət məlum deyil'}
               </span>
