@@ -30,7 +30,7 @@ export function FilterBar({ districts, types }: FilterBarProps) {
           <DistrictFilter districts={districts} />
           <PriceFilter />
           {hasActiveFilters ? (
-            <button type="button" onClick={clearAll} className="h-10 shrink-0 rounded-xl border border-border bg-white px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary xl:hidden">
+            <button type="button" onClick={clearAll} className="h-10 shrink-0 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary xl:hidden">
               Təmizlə
             </button>
           ) : null}
@@ -41,7 +41,7 @@ export function FilterBar({ districts, types }: FilterBarProps) {
             Filtrləri təmizlə
           </button>
         ) : (
-          <div className="hidden h-11 min-w-[126px] items-center justify-center rounded-xl border border-border bg-[#FAFBFD] px-4 text-xs font-medium text-faint xl:flex">
+          <div className="hidden h-11 min-w-[126px] items-center justify-center rounded-xl border border-border bg-bg-elevated px-4 text-xs font-medium text-faint xl:flex">
             Filtrlər hazırdır
           </div>
         )}
