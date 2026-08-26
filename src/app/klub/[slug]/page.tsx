@@ -1,14 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getClubBySlug } from '@/lib/queries/clubs';
+import { getClubBySlug, getClubs } from '@/lib/queries/clubs';
 import { ClubDetail } from '@/components/clubs/ClubDetail';
 import { ShareClubButton } from '@/components/clubs/ShareClubButton';
 import { getSiteUrl } from '@/lib/site-url';
 
 interface ClubPageProps { params: Promise<{ slug: string }> }
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  const clubs = await getClubs();
+  return clubs.map((club) => ({ slug: club.slug }));
+}
 
 const SCHEMA_DAY_NAMES = [
   'https://schema.org/Monday','https://schema.org/Tuesday','https://schema.org/Wednesday','https://schema.org/Thursday','https://schema.org/Friday','https://schema.org/Saturday','https://schema.org/Sunday',
