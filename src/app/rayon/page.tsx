@@ -57,14 +57,14 @@ export default async function DistrictIndexPage() {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-64px)] bg-[#F8F9FC]">
+    <div className="min-h-[calc(100dvh-64px)] bg-bg-elevated">
       <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 sm:py-10 lg:px-8">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
         <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-ink">GameYer</Link> <span aria-hidden="true">/</span> <span>Rayonlar</span>
         </nav>
 
-        <section className="overflow-hidden rounded-[22px] border border-border bg-white px-5 py-6 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:px-7 sm:py-7">
+        <section className="overflow-hidden rounded-[22px] border border-border bg-surface px-5 py-6 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:px-7 sm:py-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Bakı üzrə kəşf et</p>
@@ -72,11 +72,11 @@ export default async function DistrictIndexPage() {
               <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakının rayonlarında PC, kompüter, internet və PlayStation klublarını bir yerdə tap. Aktiv klub olan rayona keçib qiymət, ünvan, iş saatları və xəritə məlumatlarını müqayisə et.</p>
             </div>
             <div className="flex shrink-0 gap-2">
-              <div className="rounded-xl border border-border bg-[#FAFBFD] px-3 py-2 text-center">
+              <div className="rounded-xl border border-border bg-bg-elevated px-3 py-2 text-center">
                 <div className="text-lg font-bold text-ink">{districtCards.length}</div>
                 <div className="text-[10px] text-muted">rayon</div>
               </div>
-              <div className="rounded-xl border border-border bg-[#F0ECFF] px-3 py-2 text-center">
+              <div className="rounded-xl border border-border bg-pc-tint px-3 py-2 text-center">
                 <div className="text-lg font-bold text-primary">{coveredDistrictCount}</div>
                 <div className="text-[10px] text-muted">aktiv məlumat</div>
               </div>
@@ -85,17 +85,17 @@ export default async function DistrictIndexPage() {
 
           <div className="mt-5 flex flex-wrap gap-2 border-t border-border/70 pt-5">
             <Link href="/yaxinliqda-gaming-klublari" className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white">Yaxınlıqdakı klubları tap</Link>
-            <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">Qiymətləri müqayisə et</Link>
-            <Link href="/bakida-pc-klublari" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">Bakıda PC klubları</Link>
-            <Link href="/bakida-playstation-klublari" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">Bakıda PlayStation klubları</Link>
-            <Link href="/bakida-24-saat-gaming-klublari" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">24 saat klublar</Link>
+            <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">Qiymətləri müqayisə et</Link>
+            <Link href="/bakida-pc-klublari" className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">Bakıda PC klubları</Link>
+            <Link href="/bakida-playstation-klublari" className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">Bakıda PlayStation klubları</Link>
+            <Link href="/bakida-24-saat-gaming-klublari" className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-ink hover:border-primary">24 saat klublar</Link>
           </div>
         </section>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {districtCards.map((district) => {
             const hasClubs = district.count > 0;
-            const cardClass = `group rounded-[18px] border bg-white p-4 transition ${hasClubs ? 'border-border shadow-[0_5px_18px_rgba(31,35,48,0.04)] hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_26px_rgba(31,35,48,0.08)]' : 'border-border/80 opacity-75'}`;
+            const cardClass = `group rounded-[18px] border bg-surface p-4 transition ${hasClubs ? 'border-border shadow-[0_5px_18px_rgba(31,35,48,0.04)] hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_26px_rgba(31,35,48,0.08)]' : 'border-border/80 opacity-75'}`;
 
             if (!hasClubs) {
               return (
@@ -105,7 +105,7 @@ export default async function DistrictIndexPage() {
                       <h2 className="font-display text-base font-bold text-ink">{district.name}</h2>
                       <p className="mt-1 text-xs text-muted">Klub məlumatı hazırlanır</p>
                     </div>
-                    <span className="rounded-full bg-[#F4F5F8] px-2.5 py-1 text-[10px] font-semibold text-muted">Tezliklə</span>
+                    <span className="rounded-full bg-surface-alt px-2.5 py-1 text-[10px] font-semibold text-muted">Tezliklə</span>
                   </div>
                   <p className="mt-4 text-xs leading-5 text-muted">Bu rayon siyahıdan gizlədilmir. Təsdiqlənmiş klub əlavə olunan kimi burada görünəcək.</p>
                 </div>
@@ -119,7 +119,7 @@ export default async function DistrictIndexPage() {
                     <h2 className="font-display text-base font-bold text-ink transition group-hover:text-primary">{district.name}</h2>
                     <p className="mt-1 text-xs text-muted">{district.count} aktiv gaming klubu</p>
                   </div>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F0ECFF] text-sm font-bold text-primary transition group-hover:bg-primary group-hover:text-white">→</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-pc-tint text-sm font-bold text-primary transition group-hover:bg-primary group-hover:text-white">→</span>
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-border/70 pt-3 text-[11px]">
                   <span className="font-medium text-muted">PC və PlayStation</span>
