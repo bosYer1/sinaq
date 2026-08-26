@@ -16,6 +16,9 @@ interface ClubMapProps {
   locationFocusRequest?: number;
 }
 
+const LIGHT_TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const DARK_TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
 function createClubIcon(club: ClubWithDistance, isActive: boolean) {
   const typeSlugs = inferClubTypeSlugs(club);
   const hasPC = typeSlugs.includes('pc');
@@ -103,7 +106,7 @@ function createPopupContent(club: ClubWithDistance) {
   appendText(
     meta,
     'span',
-    cheapest ? 'text-xs font-bold text-[#0F9F5D]' : 'text-xs text-muted',
+    cheapest ? 'text-xs font-bold text-live' : 'text-xs text-muted',
     cheapest ? formatPriceRange(cheapest.price_from, cheapest.price_to, cheapest.unit) : 'Qiymət məlum deyil'
   );
   appendText(
@@ -147,6 +150,7 @@ export function ClubMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerLayerRef = useRef<L.LayerGroup | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markerRefs = useRef<Map<string, L.Marker>>(new Map());
   const clubRefs = useRef<Map<string, ClubWithDistance>>(new Map());
   const activeClubIdRef = useRef<string | null>(activeClubId ?? null);
@@ -176,14 +180,23 @@ export function ClubMap({
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    const currentTileUrl = document.documentElement.dataset.theme === 'dark' ? DARK_TILE_URL : LIGHT_TILE_URL;
+    const tileLayer = L.tileLayer(currentTileUrl, {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
       maxZoom: 20,
     }).addTo(map);
 
+    const syncTilesToTheme = () => {
+      const nextUrl = document.documentElement.dataset.theme === 'dark' ? DARK_TILE_URL : LIGHT_TILE_URL;
+      tileLayer.setUrl(nextUrl);
+    };
+    const themeObserver = new MutationObserver(syncTilesToTheme);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
     const markerLayer = L.layerGroup().addTo(map);
     mapRef.current = map;
     markerLayerRef.current = markerLayer;
+    tileLayerRef.current = tileLayer;
 
     const invalidate = () => window.requestAnimationFrame(() => map.invalidateSize(false));
     const timer = window.setTimeout(invalidate, 100);
@@ -193,11 +206,13 @@ export function ClubMap({
     return () => {
       window.clearTimeout(timer);
       observer?.disconnect();
+      themeObserver.disconnect();
       map.remove();
       markerRegistry.clear();
       clubRegistry.clear();
       mapRef.current = null;
       markerLayerRef.current = null;
+      tileLayerRef.current = null;
       userMarkerRef.current = null;
     };
   }, []);

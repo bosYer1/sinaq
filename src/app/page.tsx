@@ -100,12 +100,12 @@ export default async function HomePage({ searchParams }: PageProps) {
 
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeStructuredData).replace(/</g, '\\u003c') }} />
-    <div className="min-h-[calc(100dvh-64px)] bg-[#F8F9FC]">
+    <div className="min-h-[calc(100dvh-64px)] bg-bg-elevated">
       {!isSupabaseConfigured() ? <div className="border-b border-warn/30 bg-warn-tint px-4 py-1.5 text-center text-xs font-medium text-warn sm:px-6">Supabase hələ qoşulmayıb — heç bir klub göstərilmir.</div> : null}
       <div className="mx-auto max-w-[1440px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-8">
         <section className="mb-4 flex items-end justify-between gap-3 sm:mb-5" aria-labelledby="home-title">
           <div className="min-w-0"><h1 id="home-title" className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-ink sm:text-3xl">Bakıda PC və PlayStation klubları</h1><p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">Qiymət, rayon, iş saatı və xəritəyə görə gaming klubu tap.</p></div>
-          <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#F0ECFF] px-3 py-1.5 text-xs font-semibold text-primary sm:gap-2 sm:px-3.5 sm:py-2 sm:text-sm"><span aria-hidden="true">🎮</span>{discoveryClubs.length} klub</div>
+          <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-pc-tint px-3 py-1.5 text-xs font-semibold text-primary sm:gap-2 sm:px-3.5 sm:py-2 sm:text-sm"><span aria-hidden="true">🎮</span>{discoveryClubs.length} klub</div>
         </section>
 
         <Suspense fallback={<div className="mb-3 rounded-2xl border border-border bg-surface p-3 sm:mb-4 sm:p-4"><Skeleton className="h-11 w-full rounded-control" /></div>}><FilterBar districts={activeDistricts} types={types} /></Suspense>
@@ -134,12 +134,12 @@ export default async function HomePage({ searchParams }: PageProps) {
           </nav>
         </section>
 
-        <section className="mt-4 rounded-2xl border border-border bg-white px-4 py-5 sm:px-6" aria-labelledby="seo-help-heading">
+        <section className="mt-4 rounded-2xl border border-border bg-surface px-4 py-5 sm:px-6" aria-labelledby="seo-help-heading">
           <h2 id="seo-help-heading" className="font-display text-base font-bold text-ink">GameYer-də hansı məlumatları müqayisə edə bilərsən?</h2>
           <p className="mt-2 max-w-4xl text-xs leading-5 text-muted">Klub profilində mövcud olduqda PC və PlayStation saatlıq qiymətləri, ünvan, rayon, iş saatları, telefon, Instagram, şəkillər və xəritə koordinatları göstərilir. Azərbaycanda internet klub və kompüter klubu kimi axtarılan məkanlar da PC kateqoriyasında toplanır. Yaxın klub axtarışı üçün xəritə və rayon səhifələrindən istifadə edə bilərsən.</p>
         </section>
 
-        <section className="mt-4 rounded-2xl border border-border bg-white px-4 py-5 sm:px-6" aria-labelledby="home-faq-heading">
+        <section className="mt-4 rounded-2xl border border-border bg-surface px-4 py-5 sm:px-6" aria-labelledby="home-faq-heading">
           <h2 id="home-faq-heading" className="font-display text-base font-bold text-ink">Gaming klubu tapmaq haqqında suallar</h2>
           <div className="mt-3 grid gap-3 lg:grid-cols-3">
             {faq.map((item) => (

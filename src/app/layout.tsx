@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getSiteUrl } from '@/lib/site-url';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import './globals.css';
 
 const bodyFont = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
@@ -15,6 +16,22 @@ const socialImage = `${siteUrl}/opengraph-image`;
 const brandLogo = `${siteUrl}/gameyer-logo.jpeg`;
 const organizationId = `${siteUrl}/#organization`;
 const websiteId = `${siteUrl}/#website`;
+
+const themeInitScript = `(() => {
+  try {
+    const key = 'gameyer-theme';
+    const stored = localStorage.getItem(key);
+    const preference = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+    const resolved = preference === 'system'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : preference;
+    document.documentElement.dataset.themePreference = preference;
+    document.documentElement.dataset.theme = resolved;
+  } catch {
+    document.documentElement.dataset.themePreference = 'system';
+    document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+})();`;
 
 const siteStructuredData = {
   '@context': 'https://schema.org',
@@ -40,7 +57,14 @@ const siteStructuredData = {
   ],
 };
 
-export const viewport: Viewport = { themeColor: '#7C5CFC', colorScheme: 'light' };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#7C5CFC' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B0D12' },
+  ],
+  colorScheme: 'light dark',
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: 'GameYer — Bakıda PC və PlayStation klubları', template: '%s | GameYer' },
@@ -61,7 +85,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="az" className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable}`}>
+    <html lang="az" className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="bg-bg font-body text-ink antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, '\\u003c') }} />
         <PageViewTracker />
@@ -89,6 +116,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </nav>
 
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <Link href="/klub-sahibi" className="hidden rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark sm:inline-flex">+ Klubunu əlavə et</Link>
               <Link href="/elaqe" className="inline-flex h-10 items-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary sm:hidden">Əlaqə</Link>
             </div>
@@ -116,7 +144,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </footer>
 
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-white/96 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] backdrop-blur md:hidden" aria-label="Mobil naviqasiya">
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-surface/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] backdrop-blur md:hidden" aria-label="Mobil naviqasiya">
           <Link href="/" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary"><span className="text-lg leading-none">⌖</span><span>Klublar</span></Link>
           <Link href="/rayon" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">▦</span><span>Rayonlar</span></Link>
           <Link href="/#club-search" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xl text-white shadow-[0_5px_16px_rgba(124,92,252,0.3)]">⌕</span><span>Axtar</span></Link>
