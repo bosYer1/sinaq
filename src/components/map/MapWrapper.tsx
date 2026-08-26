@@ -1,15 +1,8 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
 import type { ClubWithDistance } from '@/types/database';
 import type { UserLocation } from '@/hooks/useUserLocation';
-import { Skeleton } from '@/components/ui/Skeleton';
-
-const ClubMap = dynamic(() => import('./ClubMap').then((mod) => mod.ClubMap), {
-  ssr: false,
-  loading: () => <Skeleton className="h-full w-full rounded-none" />,
-});
+import { ClubMap } from './ClubMap';
 
 interface MapWrapperProps {
   clubs: ClubWithDistance[];
@@ -26,26 +19,15 @@ export function MapWrapper({
   userLocation,
   locationFocusRequest = 0,
 }: MapWrapperProps) {
-  const [mapReady, setMapReady] = useState(false);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setMapReady(true), 120);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   return (
     <div className="relative h-full w-full">
-      {mapReady ? (
-        <ClubMap
-          clubs={clubs}
-          activeClubId={activeClubId}
-          onSelectClub={onSelectClub}
-          userLocation={userLocation}
-          locationFocusRequest={locationFocusRequest}
-        />
-      ) : (
-        <Skeleton className="h-full w-full rounded-none" />
-      )}
+      <ClubMap
+        clubs={clubs}
+        activeClubId={activeClubId}
+        onSelectClub={onSelectClub}
+        userLocation={userLocation}
+        locationFocusRequest={locationFocusRequest}
+      />
     </div>
   );
 }
