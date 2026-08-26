@@ -1,14 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 type ThemePreference = 'system' | 'light' | 'dark';
 
 const STORAGE_KEY = 'gameyer-theme';
+const CHANGE_EVENT = 'gameyer-theme-change';
 const ORDER: ThemePreference[] = ['system', 'light', 'dark'];
 
 function isThemePreference(value: string | null): value is ThemePreference {
   return value === 'system' || value === 'light' || value === 'dark';
+}
+
+function getPreference(): ThemePreference {
+  if (typeof window === 'undefined') return 'system';
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  return isThemePreference(stored) ? stored : 'system';
 }
 
 function resolveTheme(preference: ThemePreference): 'light' | 'dark' {
@@ -22,33 +29,32 @@ function applyTheme(preference: ThemePreference) {
   root.dataset.theme = resolveTheme(preference);
 }
 
+function subscribe(callback: () => void) {
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const onPreferenceChange = () => callback();
+  const onSystemThemeChange = () => {
+    if (getPreference() === 'system') applyTheme('system');
+    callback();
+  };
+
+  window.addEventListener(CHANGE_EVENT, onPreferenceChange);
+  media.addEventListener('change', onSystemThemeChange);
+  return () => {
+    window.removeEventListener(CHANGE_EVENT, onPreferenceChange);
+    media.removeEventListener('change', onSystemThemeChange);
+  };
+}
+
 export function ThemeToggle() {
-  const [preference, setPreference] = useState<ThemePreference>('system');
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    const initialPreference = isThemePreference(stored) ? stored : 'system';
-    setPreference(initialPreference);
-    applyTheme(initialPreference);
-
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const onSystemThemeChange = () => {
-      const current = window.localStorage.getItem(STORAGE_KEY);
-      if (!isThemePreference(current) || current === 'system') applyTheme('system');
-    };
-
-    media.addEventListener('change', onSystemThemeChange);
-    return () => media.removeEventListener('change', onSystemThemeChange);
-  }, []);
-
+  const preference = useSyncExternalStore(subscribe, getPreference, () => 'system');
   const nextPreference = ORDER[(ORDER.indexOf(preference) + 1) % ORDER.length];
   const label = preference === 'system' ? 'Sistem' : preference === 'dark' ? 'Tünd' : 'Açıq';
   const nextLabel = nextPreference === 'system' ? 'sistem' : nextPreference === 'dark' ? 'tünd' : 'açıq';
 
   const cycleTheme = () => {
     window.localStorage.setItem(STORAGE_KEY, nextPreference);
-    setPreference(nextPreference);
     applyTheme(nextPreference);
+    window.dispatchEvent(new Event(CHANGE_EVENT));
   };
 
   return (
