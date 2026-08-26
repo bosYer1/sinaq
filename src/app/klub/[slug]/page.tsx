@@ -58,12 +58,21 @@ export async function generateMetadata({ params }: ClubPageProps): Promise<Metad
   const typeSlugs = (club.type_assignments ?? []).map((item) => item?.club_type?.slug).filter((value): value is string => Boolean(value));
   const category = clubCategory(typeSlugs);
   const pricing = Array.isArray(club.pricing) ? club.pricing : [];
+  const openingHours = Array.isArray(club.opening_hours) ? club.opening_hours : [];
   const validPrices = pricing.flatMap((item) => [item.price_from, item.price_to]).filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0);
   const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
-  const priceText = minPrice != null ? ` Saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : '';
-  const title = `${club.name} — ${districtName ? `${districtName}, ` : ''}${category} qiymətləri və ünvan`;
+  const hasOpeningHours = openingHours.some((item) => !item.is_closed && Boolean(item.open_time) && Boolean(item.close_time));
   const locationText = districtName ? `${districtName} rayonunda` : 'Bakıda';
-  const description = `${club.name} ${locationText} ${category.toLowerCase()}.${priceText} Ünvan: ${club.address}. İş saatları, telefon və xəritə məlumatlarına GameYer-də bax.`;
+  const titleDetail = minPrice != null ? `qiymətlər ${minPrice} AZN-dən və ünvan` : 'ünvan və xəritə';
+  const title = `${club.name} — ${districtName ? `${districtName}, ` : ''}${category} ${titleDetail}`;
+  const detailParts = [
+    minPrice != null ? `Saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : null,
+    club.address ? `Ünvan: ${club.address}.` : null,
+    hasOpeningHours ? 'İş saatlarına bax.' : null,
+    club.phone ? 'Telefon məlumatı mövcuddur.' : null,
+    club.latitude != null && club.longitude != null ? 'Xəritədə yerini gör.' : null,
+  ].filter((value): value is string => Boolean(value));
+  const description = `${club.name} ${locationText} ${category.toLowerCase()}. ${detailParts.join(' ')}`.trim();
   const canonical = `/klub/${club.slug}`;
   const images = Array.isArray(club.images) ? club.images : [];
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
