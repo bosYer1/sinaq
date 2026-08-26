@@ -48,13 +48,13 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
       className={cn(
-        'group flex min-h-[112px] gap-3 rounded-xl border bg-white p-3 transition-all duration-150',
+        'group flex min-h-[112px] gap-3 rounded-xl border bg-surface p-3 transition-all duration-150',
         active
           ? 'border-primary shadow-[0_8px_22px_rgba(124,92,252,0.12)] ring-1 ring-primary/10'
           : 'border-border shadow-[0_4px_14px_rgba(31,35,48,0.04)] hover:border-primary/35 hover:shadow-[0_8px_22px_rgba(31,35,48,0.08)]',
       )}
     >
-      <div className="relative h-[88px] w-[104px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#F0ECFF] to-[#EEF6FF] ring-1 ring-border sm:w-[112px]">
+      <div className="relative h-[88px] w-[104px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pc-tint to-ps-tint ring-1 ring-border sm:w-[112px]">
         {useOfficialLogoAsCardImage ? (
           <ClubLogo slug={club.slug} name={club.name} className="h-full w-full rounded-lg border-0 bg-transparent text-3xl" imageClassName="p-0 object-cover" priority={imagePriority} />
         ) : cover ? (
@@ -90,10 +90,10 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
         <div className="mt-auto flex items-end justify-between gap-2 pt-1.5">
           <div className="min-w-0 space-y-0.5">
             {startingPrices.pc ? (
-              <div className="truncate text-[11px] font-bold text-[#0F9F5D]">PC: {formatPriceRange(startingPrices.pc.price_from, null, startingPrices.pc.unit)}</div>
+              <div className="truncate text-[11px] font-bold text-live">PC: {formatPriceRange(startingPrices.pc.price_from, null, startingPrices.pc.unit)}</div>
             ) : null}
             {startingPrices.playstation ? (
-              <div className="truncate text-[11px] font-bold text-[#0F9F5D]">PS: {formatPriceRange(startingPrices.playstation.price_from, null, startingPrices.playstation.unit)}</div>
+              <div className="truncate text-[11px] font-bold text-live">PS: {formatPriceRange(startingPrices.playstation.price_from, null, startingPrices.playstation.unit)}</div>
             ) : null}
             {!startingPrices.pc && !startingPrices.playstation ? (
               <div className="text-[10px] text-muted">Qiymət məlum deyil</div>
