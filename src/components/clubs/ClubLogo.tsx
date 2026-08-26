@@ -94,7 +94,7 @@ export function ClubLogo({ slug, name, className, imageClassName, priority = fal
   return (
     <div
       className={cn(
-        'relative flex shrink-0 items-center justify-center overflow-hidden bg-white text-primary',
+        'relative flex shrink-0 items-center justify-center overflow-hidden bg-surface text-primary',
         className
       )}
       title={resolvedUrl ? `${name} profil şəkli` : `${name} monoqramı`}
