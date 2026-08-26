@@ -2,52 +2,79 @@ type MapPreviewProps = {
   clubCount: number;
 };
 
-const markerPositions = [
-  ['22%', '29%'],
-  ['37%', '61%'],
-  ['51%', '38%'],
-  ['64%', '70%'],
-  ['76%', '45%'],
-  ['84%', '63%'],
+const tiles = [
+  [1306, 771], [1307, 771], [1308, 771],
+  [1306, 772], [1307, 772], [1308, 772],
+  [1306, 773], [1307, 773], [1308, 773],
 ] as const;
 
-export function MapPreview({ clubCount }: MapPreviewProps) {
-  const visibleMarkers = Math.min(markerPositions.length, Math.max(3, Math.ceil(clubCount / 8)));
+const markers = [
+  ['42%', '20%', '#7C5CFC', true],
+  ['46%', '24%', '#7C5CFC', true],
+  ['49%', '28%', '#06AED4', true],
+  ['52%', '31%', '#7C5CFC', false],
+  ['45%', '34%', '#06AED4', true],
+  ['55%', '36%', '#7C5CFC', true],
+  ['48%', '39%', '#7C5CFC', true],
+  ['59%', '41%', '#06AED4', true],
+  ['52%', '44%', '#7C5CFC', true],
+  ['43%', '47%', '#7C5CFC', true],
+  ['57%', '49%', '#06AED4', true],
+  ['51%', '53%', '#7C5CFC', true],
+  ['46%', '56%', '#7C5CFC', true],
+  ['40%', '60%', '#06AED4', true],
+  ['37%', '64%', '#7C5CFC', true],
+  ['52%', '66%', '#7C5CFC', false],
+  ['63%', '69%', '#06AED4', true],
+  ['70%', '72%', '#7C5CFC', true],
+  ['30%', '76%', '#2F80ED', false],
+  ['38%', '82%', '#06AED4', true],
+  ['49%', '84%', '#7C5CFC', false],
+  ['58%', '87%', '#7C5CFC', false],
+  ['67%', '89%', '#06AED4', false],
+  ['75%', '91%', '#6B7280', false],
+] as const;
 
+function PreviewMarker({ top, left, color, open }: { top: string; left: string; color: string; open: boolean }) {
+  return (
+    <span
+      className="absolute -translate-x-1/2 -translate-y-full drop-shadow-[0_2px_3px_rgba(0,0,0,0.18)]"
+      style={{ top, left }}
+      aria-hidden="true"
+    >
+      <span className="relative block h-7 w-6">
+        <svg viewBox="0 0 40 40" className="h-7 w-7 overflow-visible">
+          <path d="M20 4C13.4 4 8 9.4 8 16c0 8.6 12 20 12 20s12-11.4 12-20C32 9.4 26.6 4 20 4Z" fill={color} stroke="#fff" strokeWidth="2.2" />
+          <circle cx="20" cy="16" r="4" fill="#fff" />
+          {open ? <circle cx="30.5" cy="8.5" r="4.5" fill="#16A34A" stroke="#fff" strokeWidth="2" /> : null}
+        </svg>
+      </span>
+    </span>
+  );
+}
+
+export function MapPreview({ clubCount }: MapPreviewProps) {
   return (
     <div
       aria-label="Xəritə önizləməsi"
-      className="relative h-full w-full overflow-hidden rounded-[18px] border border-border bg-surface-alt"
+      className="relative h-full w-full overflow-hidden rounded-[18px] border border-border bg-[#eef2f2]"
     >
-      <div
-        className="absolute inset-0 opacity-90"
-        aria-hidden="true"
-        style={{
-          backgroundImage: [
-            'linear-gradient(28deg, transparent 0 45%, rgba(148,163,184,.22) 46% 49%, transparent 50% 100%)',
-            'linear-gradient(102deg, transparent 0 38%, rgba(148,163,184,.18) 39% 42%, transparent 43% 100%)',
-            'repeating-linear-gradient(0deg, transparent 0 38px, rgba(148,163,184,.10) 39px 40px)',
-            'repeating-linear-gradient(90deg, transparent 0 52px, rgba(148,163,184,.10) 53px 54px)',
-          ].join(', '),
-        }}
-      />
+      <div className="absolute inset-0 grid grid-cols-3 grid-rows-3" aria-hidden="true">
+        {tiles.map(([x, y]) => (
+          <div
+            key={`${x}-${y}`}
+            className="h-full w-full bg-cover bg-center"
+            style={{
+              backgroundImage: `url(https://a.basemaps.cartocdn.com/rastertiles/voyager/11/${x}/${y}.png)`,
+            }}
+          />
+        ))}
+      </div>
 
-      <div className="absolute left-[8%] top-[11%] h-20 w-24 rounded-2xl bg-primary/5" aria-hidden="true" />
-      <div className="absolute bottom-[13%] right-[9%] h-24 w-28 rounded-3xl bg-pc-tint/70" aria-hidden="true" />
-      <div className="absolute left-[11%] top-[16%] text-[10px] font-semibold tracking-wide text-muted/75" aria-hidden="true">Bakı</div>
-      <div className="absolute right-[12%] top-[21%] text-[9px] text-muted/60" aria-hidden="true">Nərimanov</div>
-      <div className="absolute bottom-[19%] left-[15%] text-[9px] text-muted/60" aria-hidden="true">Yasamal</div>
+      <div className="absolute inset-0 bg-white/5" aria-hidden="true" />
 
-      {markerPositions.slice(0, visibleMarkers).map(([top, left], index) => (
-        <span
-          key={`${top}-${left}`}
-          className="absolute -translate-x-1/2 -translate-y-1/2"
-          style={{ top, left }}
-          aria-hidden="true"
-        >
-          <span className="block h-4 w-4 rounded-full border-[3px] border-surface bg-primary shadow-card" />
-          {index === 0 ? <span className="mx-auto mt-0.5 block h-1.5 w-1.5 rotate-45 bg-primary" /> : null}
-        </span>
+      {markers.map(([top, left, color, open], index) => (
+        <PreviewMarker key={`${top}-${left}-${index}`} top={top} left={left} color={color} open={open} />
       ))}
 
       <div className="absolute left-3 top-3 rounded-xl border border-border bg-surface/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
@@ -59,7 +86,9 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
         ⌖
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface-alt/55 to-transparent" aria-hidden="true" />
+      <div className="absolute bottom-1 right-2 rounded bg-white/85 px-1.5 py-0.5 text-[9px] text-slate-600 shadow-sm" aria-hidden="true">
+        © OpenStreetMap · CARTO
+      </div>
     </div>
   );
 }
