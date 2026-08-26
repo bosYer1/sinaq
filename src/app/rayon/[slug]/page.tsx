@@ -10,6 +10,13 @@ import { SeoClubList } from '@/components/seo/SeoClubList';
 
 interface DistrictPageProps { params: Promise<{ slug: string }> }
 
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  const districts = await getDistricts();
+  return districts.map((district) => ({ slug: district.slug }));
+}
+
 const getDistrictPageData = cache(async (slug: string) => {
   const [districts, clubs] = await Promise.all([getDistricts(), getClubs({ district: slug })]);
   const district = districts.find((item) => item.slug === slug);
