@@ -65,6 +65,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       district_id,
       phone,
       instagram_url,
+      profile_image_url,
       latitude,
       longitude,
       is_active,
@@ -124,6 +125,10 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
     ? resolvedSearchParams.sort
     : 'updated';
 
+  function hasImageForClub(club: (typeof clubs)[number]) {
+    return Boolean(club.profile_image_url?.trim()) || idsWithImages.has(club.id);
+  }
+
   function missingForClub(club: (typeof clubs)[number]) {
     return [
       !club.phone ? 'Telefon' : null,
@@ -131,7 +136,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       !club.instagram_url ? 'Instagram' : null,
       !idsWithHours.has(club.id) ? 'Saat' : null,
       !idsWithPricing.has(club.id) ? 'Qiymət' : null,
-      !idsWithImages.has(club.id) ? 'Şəkil' : null,
+      !hasImageForClub(club) ? 'Şəkil' : null,
       !idsWithTypes.has(club.id) ? 'Tip' : null,
       club.latitude == null || club.longitude == null ? 'Koordinat' : null,
       isVagueClubAddress(club.address) ? 'Ünvan' : null,
@@ -155,7 +160,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       if (missingFilter === 'instagram' && club.instagram_url) return false;
       if (missingFilter === 'hours' && idsWithHours.has(club.id)) return false;
       if (missingFilter === 'pricing' && idsWithPricing.has(club.id)) return false;
-      if (missingFilter === 'images' && idsWithImages.has(club.id)) return false;
+      if (missingFilter === 'images' && hasImageForClub(club)) return false;
       if (missingFilter === 'types' && idsWithTypes.has(club.id)) return false;
       if (missingFilter === 'coordinates' && club.latitude != null && club.longitude != null) return false;
       if (missingFilter === 'address' && !isVagueClubAddress(club.address)) return false;
