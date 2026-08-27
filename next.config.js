@@ -23,6 +23,16 @@ const legacyProductionHosts = [
   'bosyer-web.vercel.app',
 ];
 
+const utilityQueryNoindexPaths = ['/klub-sahibi', '/elaqe'];
+const utilityQueryStateKeys = ['club', 'slug', 'sent', 'error', 'rate'];
+const utilityQueryNoindexHeaders = utilityQueryNoindexPaths.flatMap((source) =>
+  utilityQueryStateKeys.map((key) => ({
+    source,
+    has: [{ type: 'query', key }],
+    headers: [{ key: 'X-Robots-Tag', value: 'noindex, follow' }],
+  }))
+);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -69,6 +79,7 @@ const nextConfig = {
   },
   async headers() {
     return [
+      ...utilityQueryNoindexHeaders,
       {
         source: '/:path*',
         headers: [
