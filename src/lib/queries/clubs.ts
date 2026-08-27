@@ -63,6 +63,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
     .from('clubs')
     .select(selectString)
     .eq('is_active', true)
+    .not('instagram_url', 'is', null)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
     .order('is_premium', { ascending: false })
@@ -124,7 +125,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v1'],
+  ['gameyer-public-clubs-v2'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
@@ -140,6 +141,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
     .select(CLUB_SELECT)
     .eq('slug', slug)
     .eq('is_active', true)
+    .not('instagram_url', 'is', null)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
     .maybeSingle()
@@ -155,7 +157,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
 
 const getCachedClubBySlug = unstable_cache(
   async (slug: string) => queryClubBySlug(slug),
-  ['gameyer-public-club-by-slug-v1'],
+  ['gameyer-public-club-by-slug-v2'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 

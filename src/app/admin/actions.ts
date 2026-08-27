@@ -11,7 +11,7 @@ const MAX_IMAGES_PER_CLUB = 8;
 const MAX_PRICING_ROWS = 100;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const INSTAGRAM_PATTERN = /^https:\/\/(?:www\.)?instagram\.com\//i;
+const INSTAGRAM_PATTERN = /^https:\/\/(?:www\.)?instagram\.com\/[a-z0-9._]{1,30}\/?(?:\?.*)?$/i;
 
 type PricingFormRow = {
   club_type_id: string;
@@ -80,7 +80,10 @@ function validateCoreFormInput(formData: FormData) {
 
   const instagramUrl = nullableText(formData, 'instagram_url');
   if (instagramUrl && !INSTAGRAM_PATTERN.test(instagramUrl)) {
-    throw new Error('Instagram üçün tam https://instagram.com/... linki yazılmalıdır.');
+    throw new Error('Instagram üçün klubun tam profil linkini yazın: https://instagram.com/username');
+  }
+  if (booleanValue(formData, 'is_active') && !instagramUrl) {
+    throw new Error('Instagramı təsdiqlənməyən klub aktiv edilə bilməz. Klubu deaktiv saxlayın.');
   }
 
   if (booleanValue(formData, 'is_premium')) {
@@ -89,11 +92,20 @@ function validateCoreFormInput(formData: FormData) {
 }
 
 function validateCoordinates(formData: FormData) {
-  const latitude = nullableNumber(formData, 'latitude');
-  const longitude = nullableNumber(formData, 'longitude');
+  const latitudeRaw = text(formData, 'latitude');
+  const longitudeRaw = text(formData, 'longitude');
 
-  if (latitude == null || longitude == null) {
-    throw new Error('Xəritə üçün latitude və longitude mütləq yazılmalıdır.');
+  if (!latitudeRaw && !longitudeRaw) {
+    return { latitude: null, longitude: null };
+  }
+  if (!latitudeRaw || !longitudeRaw) {
+    throw new Error('Koordinat yazılırsa latitude və longitude birlikdə doldurulmalıdır.');
+  }
+
+  const latitude = Number(latitudeRaw);
+  const longitude = Number(longitudeRaw);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new Error('Latitude və longitude rəqəm olmalıdır.');
   }
   if (latitude < -90 || latitude > 90) throw new Error('Latitude -90 ilə 90 arasında olmalıdır.');
   if (longitude < -180 || longitude > 180) throw new Error('Longitude -180 ilə 180 arasında olmalıdır.');
@@ -176,8 +188,8 @@ function validateRelationFormInput(formData: FormData) {
     .filter((key) => key.startsWith('type_enabled_') && booleanValue(formData, key))
     .map((key) => key.replace('type_enabled_', ''));
 
-  if (enabledTypeIds.length === 0) {
-    throw new Error('Ən azı bir klub tipi (PC və ya PlayStation) seçilməlidir.');
+  if (enabledTypeIds.length === 0 && booleanValue(formData, 'is_active')) {
+    throw new Error('Aktiv klub üçün ən azı bir təsdiqlənmiş klub tipi (PC və ya PlayStation) seçilməlidir.');
   }
 
   const enabledTypeSet = new Set(enabledTypeIds);
@@ -298,8 +310,8 @@ async function replaceRelations(clubId: string, formData: FormData) {
 
   const types = (typesData ?? []) as Array<{ id: string; name: string; slug: string }>;
   const enabledTypes = types.filter((type) => booleanValue(formData, `type_enabled_${type.id}`));
-  if (enabledTypes.length === 0) {
-    throw new Error('Ən azı bir klub tipi (PC və ya PlayStation) seçilməlidir.');
+  if (enabledTypes.length === 0 && booleanValue(formData, 'is_active')) {
+    throw new Error('Aktiv klub üçün ən azı bir təsdiqlənmiş klub tipi seçilməlidir.');
   }
 
   const enabledTypeIds = new Set(enabledTypes.map((type) => type.id));
@@ -445,6 +457,7 @@ export async function saveClub(formData: FormData) {
   revalidatePath('/admin/klublar');
   revalidatePath(`/admin/klublar/${id}`);
   revalidatePath(`/klub/${slug}`);
+  if (previousClub.slug !== slug) revalidatePath(`/klub/${previousClub.slug}`);
   redirect(`/admin/klublar/${id}?saved=1`);
 }
 
@@ -513,6 +526,27 @@ export async function toggleClubActive(formData: FormData) {
   if (nextValue && !booleanValue(formData, 'confirm_reactivate')) {
     throw new Error('Deaktiv klubu yenidən aktivləşdirmək üçün təsdiq tələb olunur.');
   }
+
+  const { data: club, error: clubError } = await supabase
+    .from('clubs')
+    .select('slug,instagram_url')
+    .eq('id', id)
+    .maybeSingle();
+  if (clubError) throw new Error(clubError.message);
+  if (!club) throw new Error('Klub tapılmadı.');
+  if (nextValue && !club.instagram_url) {
+    throw new Error('Instagramı təsdiqlənməyən klub yenidən aktiv edilə bilməz.');
+  }
+
+  if (nextValue) {
+    const { count, error: typeError } = await supabase
+      .from('club_type_assignments')
+      .select('club_type_id', { count: 'exact', head: true })
+      .eq('club_id', id);
+    if (typeError) throw new Error(typeError.message);
+    if (!count) throw new Error('Tipi təsdiqlənməyən klub yenidən aktiv edilə bilməz.');
+  }
+
   const { error } = await supabase
     .from('clubs')
     .update({ is_active: nextValue, updated_at: new Date().toISOString() } as never)
@@ -523,4 +557,5 @@ export async function toggleClubActive(formData: FormData) {
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
   revalidatePath(`/admin/klublar/${id}`);
+  revalidatePath(`/klub/${club.slug}`);
 }
