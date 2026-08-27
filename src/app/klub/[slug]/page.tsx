@@ -132,6 +132,17 @@ export default async function ClubPage({ params }: ClubPageProps) {
     name: `${club.name} saatlıq oyun qiymətləri`,
     itemListElement: pricing.filter((item) => item.price_from > 0).map((item) => ({ '@type': 'Offer', priceCurrency: 'AZN', price: item.price_from, category: item.club_type?.name || 'Gaming', description: `${item.club_type?.name || 'Gaming'} — ${item.price_from} AZN-dən / ${item.unit}`, url: clubUrl })),
   } : undefined;
+  const category = clubCategory(typeSlugs);
+  const hasOpeningHours = openingHoursSpecification.length > 0;
+  const locationText = club.district?.name ? `${club.district.name} rayonunda` : 'Bakıda';
+  const factualDescriptionParts = [
+    minPrice != null ? `Saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : null,
+    club.address ? `Ünvan: ${club.address}.` : null,
+    hasOpeningHours ? 'İş saatları mövcuddur.' : null,
+    club.phone ? 'Telefon məlumatı mövcuddur.' : null,
+    hasMap ? 'Xəritə məlumatı mövcuddur.' : null,
+  ].filter((value): value is string => Boolean(value));
+  const factualDescription = `${club.name} ${locationText} ${category.toLowerCase()}. ${factualDescriptionParts.join(' ')}`.trim();
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -142,7 +153,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
         name: club.name,
         url: clubUrl,
         mainEntityOfPage: clubUrl,
-        description: club.description || undefined,
+        description: club.description?.trim() || factualDescription,
         image: allBusinessImages.length > 0 ? allBusinessImages : primaryImage || undefined,
         logo: club.profile_image_url || undefined,
         telephone: club.phone || undefined,
