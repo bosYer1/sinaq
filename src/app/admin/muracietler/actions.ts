@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import {
@@ -42,7 +42,8 @@ async function linkedOwnerClaim(id: string) {
   return { supabase, submission: data, claim };
 }
 
-function revalidateSubmission(clubId?: string | null) {
+function revalidateSubmission(clubId?: string | null, publicClubChanged = false) {
+  if (publicClubChanged) revalidateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/muracietler');
@@ -174,7 +175,7 @@ export async function applyOwnerClaimFields(formData: FormData) {
   if (error) throw new Error(error.message);
   if (!clubId || clubId !== submission.club_id) throw new Error('Məlumatların tətbiq olunduğu klub təsdiqlənmədi.');
 
-  revalidateSubmission(clubId);
+  revalidateSubmission(clubId, true);
 }
 
 export async function verifyOwnerClaim(formData: FormData) {
@@ -190,7 +191,7 @@ export async function verifyOwnerClaim(formData: FormData) {
   if (error) throw new Error(error.message);
   if (!clubId) throw new Error('Təsdiqlənən klub tapılmadı.');
 
-  revalidateSubmission(clubId);
+  revalidateSubmission(clubId, true);
 }
 
 export async function deleteCompletedSubmission(formData: FormData) {
