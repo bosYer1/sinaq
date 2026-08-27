@@ -11,6 +11,7 @@ const MAX_IMAGES_PER_CLUB = 8;
 const MAX_PRICING_ROWS = 100;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INSTAGRAM_PATTERN = /^https:\/\/(?:www\.)?instagram\.com\/[a-z0-9._]{1,30}\/?(?:\?.*)?$/i;
 
 type PricingFormRow = {
@@ -278,6 +279,19 @@ async function removeUploadedFiles(urls: string[]) {
   if (paths.length > 0) await supabase.storage.from(IMAGE_BUCKET).remove(paths);
 }
 
+async function rollbackCreatedClub(clubId: string) {
+  const supabase = await createClient();
+  const { data: imageRows, error: imageError } = await supabase
+    .from('club_images')
+    .select('url')
+    .eq('club_id', clubId);
+  if (imageError) console.error('Yeni klub rollback şəkilləri oxunmadı:', imageError.message);
+  const urls = ((imageRows ?? []) as Array<{ url: string }>).map((item) => item.url);
+  await removeUploadedFiles(urls);
+  const { error: deleteError } = await supabase.from('clubs').delete().eq('id', clubId);
+  if (deleteError) console.error('Yeni klub rollback silinməsi uğursuz oldu:', deleteError.message);
+}
+
 async function uploadImages(clubId: string, files: File[]) {
   const supabase = await createClient();
   const uploadedUrls: string[] = [];
@@ -462,10 +476,25 @@ export async function saveClub(formData: FormData) {
   redirect(`/admin/klublar/${id}?saved=1`);
 }
 
-export async function createClub(formData: FormData) {
+export async function createClub(sourceSubmissionId: string | null, formData: FormData) {
   const { supabase } = await requireAdmin();
   validateCoreFormInput(formData);
   validateRelationFormInput(formData);
+
+  const submissionId = sourceSubmissionId?.trim() || null;
+  if (submissionId) {
+    if (!UUID_PATTERN.test(submissionId)) throw new Error('Müraciət ID düzgün deyil.');
+    const { data: submission, error: submissionError } = await supabase
+      .from('club_submissions')
+      .select('id,club_id,status')
+      .eq('id', submissionId)
+      .eq('kind', 'new_club')
+      .is('club_id', null)
+      .in('status', ['pending', 'reviewing'])
+      .maybeSingle();
+    if (submissionError) throw new Error(submissionError.message);
+    if (!submission) throw new Error('Yeni-klub müraciəti artıq istifadə olunub və ya etibarlı deyil.');
+  }
 
   const name = text(formData, 'name');
   if (!name) throw new Error('Klub adı boş ola bilməz.');
@@ -508,14 +537,36 @@ export async function createClub(formData: FormData) {
   try {
     await replaceRelations(club.id, formData);
   } catch (relationError) {
-    await supabase.from('clubs').delete().eq('id', club.id);
+    await rollbackCreatedClub(club.id);
     throw relationError;
+  }
+
+  if (submissionId) {
+    const { data: linkedSubmission, error: linkError } = await supabase
+      .from('club_submissions')
+      .update({
+        club_id: club.id,
+        status: 'resolved',
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', submissionId)
+      .eq('kind', 'new_club')
+      .is('club_id', null)
+      .in('status', ['pending', 'reviewing'])
+      .select('id')
+      .maybeSingle();
+
+    if (linkError || !linkedSubmission) {
+      await rollbackCreatedClub(club.id);
+      throw new Error(linkError?.message ?? 'Müraciət artıq başqa klub üçün istifadə olunub. Yeni klub geri qaytarıldı.');
+    }
   }
 
   updateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
+  if (submissionId) revalidatePath('/admin/muracietler');
   redirect(`/admin/klublar/${club.id}?created=1`);
 }
 
