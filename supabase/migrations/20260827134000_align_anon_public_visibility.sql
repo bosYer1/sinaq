@@ -1,4 +1,4 @@
--- Keep hidden-but-retained club data private from anonymous Supabase clients.
+-- Keep hidden-but-retained club data private from public/non-admin clients.
 -- Public eligibility must match the website/sitemap contract:
 -- active + Instagram + complete coordinates + confirmed PC/PlayStation type.
 
@@ -38,12 +38,26 @@ for select
 to anon
 using (public.is_public_club(id));
 
+drop policy if exists authenticated_read_clubs on public.clubs;
+create policy authenticated_read_visible_or_admin_clubs
+on public.clubs
+for select
+to authenticated
+using (public.is_admin() or public.is_public_club(id));
+
 drop policy if exists anon_read_active_club_images on public.club_images;
 create policy anon_read_visible_club_images
 on public.club_images
 for select
 to anon
 using (public.is_public_club(club_id));
+
+drop policy if exists authenticated_read_club_images on public.club_images;
+create policy authenticated_read_visible_or_admin_club_images
+on public.club_images
+for select
+to authenticated
+using (public.is_admin() or public.is_public_club(club_id));
 
 drop policy if exists anon_read_active_club_opening_hours on public.club_opening_hours;
 create policy anon_read_visible_club_opening_hours
@@ -52,6 +66,13 @@ for select
 to anon
 using (public.is_public_club(club_id));
 
+drop policy if exists authenticated_read_club_opening_hours on public.club_opening_hours;
+create policy authenticated_read_visible_or_admin_club_opening_hours
+on public.club_opening_hours
+for select
+to authenticated
+using (public.is_admin() or public.is_public_club(club_id));
+
 drop policy if exists anon_read_active_club_pricing on public.club_pricing;
 create policy anon_read_visible_club_pricing
 on public.club_pricing
@@ -59,9 +80,23 @@ for select
 to anon
 using (public.is_public_club(club_id));
 
+drop policy if exists authenticated_read_club_pricing on public.club_pricing;
+create policy authenticated_read_visible_or_admin_club_pricing
+on public.club_pricing
+for select
+to authenticated
+using (public.is_admin() or public.is_public_club(club_id));
+
 drop policy if exists anon_read_active_club_type_assignments on public.club_type_assignments;
 create policy anon_read_visible_club_type_assignments
 on public.club_type_assignments
 for select
 to anon
 using (public.is_public_club(club_id));
+
+drop policy if exists authenticated_read_club_type_assignments on public.club_type_assignments;
+create policy authenticated_read_visible_or_admin_club_type_assignments
+on public.club_type_assignments
+for select
+to authenticated
+using (public.is_admin() or public.is_public_club(club_id));
