@@ -10,6 +10,7 @@ type ClubRow = {
   description: string | null;
   phone: string | null;
   instagram_url: string | null;
+  profile_image_url: string | null;
   latitude: number | null;
   longitude: number | null;
   is_active: boolean;
@@ -33,7 +34,7 @@ export default async function SeoPriorityPage() {
   const [clubsResult, pageViewsResult, hoursResult, pricingResult, imagesResult, typesResult] = await Promise.all([
     supabase
       .from('clubs')
-      .select('id,name,slug,description,phone,instagram_url,latitude,longitude,is_active')
+      .select('id,name,slug,description,phone,instagram_url,profile_image_url,latitude,longitude,is_active')
       .eq('is_active', true)
       .not('latitude', 'is', null)
       .not('longitude', 'is', null),
@@ -74,13 +75,14 @@ export default async function SeoPriorityPage() {
   }
 
   function missingForClub(club: ClubRow) {
+    const hasImage = Boolean(club.profile_image_url?.trim()) || idsWithImages.has(club.id);
     return [
       !club.phone ? 'Telefon' : null,
       !club.description?.trim() ? 'Təsvir' : null,
       !club.instagram_url ? 'Instagram' : null,
       !idsWithHours.has(club.id) ? 'İş saatı' : null,
       !idsWithPricing.has(club.id) ? 'Qiymət' : null,
-      !idsWithImages.has(club.id) ? 'Şəkil' : null,
+      !hasImage ? 'Şəkil' : null,
       !idsWithTypes.has(club.id) ? 'Tip' : null,
     ].filter((value): value is string => Boolean(value));
   }
