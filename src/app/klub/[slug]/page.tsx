@@ -143,6 +143,17 @@ export default async function ClubPage({ params }: ClubPageProps) {
     hasMap ? 'Xəritə məlumatı mövcuddur.' : null,
   ].filter((value): value is string => Boolean(value));
   const factualDescription = `${club.name} ${locationText} ${category.toLowerCase()}. ${factualDescriptionParts.join(' ')}`.trim();
+  const districtSlug = club.district?.slug;
+  const localTypeCandidates = districtSlug
+    ? typeLinks.filter((type) => type.slug === 'pc' || type.slug === 'playstation')
+    : [];
+  const localTypeResults = districtSlug
+    ? await Promise.all(localTypeCandidates.map(async (type) => ({
+        ...type,
+        count: (await getClubs({ district: districtSlug, type: type.slug })).length,
+      })))
+    : [];
+  const localTypeLinks = localTypeResults.filter((type) => type.count >= 2);
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -184,6 +195,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
     <nav className="mx-auto flex max-w-5xl flex-wrap gap-2 px-4 pb-8 pt-2 text-xs sm:px-6" aria-label="Əlaqəli klub kateqoriyaları və paylaşım">
       <ShareClubButton name={club.name} url={clubUrl} />
       {club.district?.slug ? <Link href={`/rayon/${club.district.slug}`} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">{club.district.name} rayonundakı digər klublar</Link> : null}
+      {localTypeLinks.map((type) => <Link key={`local-${type.slug}`} href={`/rayon/${districtSlug}/${type.slug}`} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">{club.district?.name} {type.slug === 'pc' ? 'PC' : 'PlayStation'} klubları</Link>)}
       {typeLinks.map((type) => <Link key={type.slug} href={typeLandingHref(type.slug)} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">{type.slug === 'pc' ? 'Digər PC klubları' : type.slug === 'playstation' ? 'Digər PlayStation klubları' : `${type.name} klubları`}</Link>)}
       {hasPc ? <Link href="/bakida-internet-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Internet və kompüter klubları</Link> : null}
       {minPcPrice != null && minPcPrice <= 2 ? <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Ucuz PC klubları</Link> : null}
