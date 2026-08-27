@@ -70,18 +70,17 @@ export function PageViewTracker() {
     const visitorId = getVisitorId();
     const visitId = getVisitId();
     const referrerHost = getEntryReferrerHost();
-    const controller = new AbortController();
 
+    // keepalive allows the browser to finish sending the analytics event even if
+    // the component unmounts or the user navigates away. Do not abort this
+    // request in the effect cleanup, otherwise valid page views can be dropped.
     void fetch('/api/analytics/visit', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ sessionId: visitorId, visitId, path: pathname, referrerHost }),
       credentials: 'same-origin',
       keepalive: true,
-      signal: controller.signal,
     }).catch(() => undefined);
-
-    return () => controller.abort();
   }, [pathname]);
 
   return null;
