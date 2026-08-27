@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 
 const IMAGE_BUCKET = 'club-images';
@@ -40,7 +40,7 @@ async function persistProfileImage(clubId: string, profileImageUrl: string | nul
     .eq('id', clubId);
   if (error) throw new Error(error.message);
 
-  revalidateTag('public-clubs');
+  updateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin/klublar');
   revalidatePath(`/admin/klublar/${clubId}`);
