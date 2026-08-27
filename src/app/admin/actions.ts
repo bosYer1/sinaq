@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
@@ -452,6 +452,7 @@ export async function saveClub(formData: FormData) {
     throw relationError;
   }
 
+  updateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
@@ -511,6 +512,7 @@ export async function createClub(formData: FormData) {
     throw relationError;
   }
 
+  updateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
@@ -553,6 +555,7 @@ export async function toggleClubActive(formData: FormData) {
     .eq('id', id);
   if (error) throw new Error(error.message);
 
+  updateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
