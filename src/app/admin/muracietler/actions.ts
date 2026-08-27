@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import {
@@ -43,7 +43,7 @@ async function linkedOwnerClaim(id: string) {
 }
 
 function revalidateSubmission(clubId?: string | null, publicClubChanged = false) {
-  if (publicClubChanged) revalidateTag('public-clubs');
+  if (publicClubChanged) updateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/muracietler');
