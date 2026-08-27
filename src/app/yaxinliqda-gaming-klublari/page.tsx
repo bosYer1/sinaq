@@ -5,11 +5,18 @@ import { getSiteUrl } from '@/lib/site-url';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
-const title = 'Yaxınlıqdakı gaming klubları — PC və PlayStation xəritədə';
-const description = 'Yaxınlıqdakı PC, kompüter və PlayStation klublarını tap. Bakı üzrə gaming klublarını rayon, qiymət, iş saatları və xəritədə yerləşməyə görə müqayisə et.';
-
 export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs();
+  const hasPricing = clubs.some((club) => club.pricing.some((item) => item.price_from > 0));
+  const hasHours = clubs.some((club) => club.opening_hours.length > 0);
+  const title = hasPricing
+    ? 'Yaxınlıqdakı gaming klubları — qiymətlər və xəritə'
+    : 'Yaxınlıqdakı gaming klubları — PC və PlayStation xəritədə';
+  const availability = [hasPricing ? 'mövcud qiymətlər' : null, hasHours ? 'iş saatları' : null]
+    .filter((value): value is string => Boolean(value))
+    .join(', ');
+  const description = `Yaxınlıqdakı PC, kompüter və PlayStation klublarını tap. Bakı üzrə gaming klublarını rayon və xəritədə yerləşməyə görə müqayisə et${availability ? `; ${availability} olan profillərdə həmin məlumatlara da bax` : ''}.`;
+
   return {
     title,
     description,
@@ -19,8 +26,8 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       locale: 'az_AZ',
       url: '/yaxinliqda-gaming-klublari',
-      title: 'Yaxınlıqdakı gaming klubları | GameYer',
-      description: 'Yaxın PC və PlayStation klublarını xəritə, rayon, qiymət və iş saatlarına görə müqayisə et.',
+      title: `${title} | GameYer`,
+      description,
     },
   };
 }
@@ -50,7 +57,7 @@ export default async function NearbyGamingClubsPage() {
   const faq = [
     {
       question: 'Mənə ən yaxın gaming klubunu necə tapa bilərəm?',
-      answer: 'GameYer-in xəritə görünüşünü aç və brauzerdə lokasiya icazəsi ver. Xəritədə yaxınlıqdakı PC və PlayStation klublarını, sonra isə klub profilində ünvan, iş saatı və qiyməti yoxlaya bilərsən.',
+      answer: 'GameYer-in xəritə görünüşünü aç və brauzerdə lokasiya icazəsi ver. Xəritədə yaxınlıqdakı PC və PlayStation klublarını müqayisə et; klub profilində məlum olduqda iş saatı və qiymət də göstərilir.',
     },
     {
       question: 'Yaxın PC və PlayStation klublarını ayrı görə bilərəm?',
@@ -58,7 +65,7 @@ export default async function NearbyGamingClubsPage() {
     },
     {
       question: 'Ən yaxın klub həmişə ən yaxşı seçimdir?',
-      answer: 'Mütləq deyil. Məsafə ilə yanaşı saatlıq qiymət, iş saatları və klubun təqdim etdiyi PC və ya PlayStation imkanlarını da müqayisə etmək daha faydalıdır.',
+      answer: 'Mütləq deyil. Məsafə ilə yanaşı mövcud saatlıq qiymət, iş saatları və klubun təqdim etdiyi PC və ya PlayStation imkanlarını da müqayisə etmək daha faydalıdır.',
     },
   ];
 
@@ -103,7 +110,7 @@ export default async function NearbyGamingClubsPage() {
 
       <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Yaxınlıqdakı PC və PlayStation klubları</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-        Yaxınlıqda gaming klub, kompüter klubu və ya PlayStation klub axtarırsansa, Bakı üzrə aktiv məkanları burada müqayisə et. Hazırda {clubs.length} klub göstərilir; {pcCount}-i PC, {playStationCount}-ü PlayStation seçimi təqdim edir.
+        Yaxınlıqda gaming klub, kompüter klubu və ya PlayStation klub axtarırsansa, Bakı üzrə aktiv məkanları burada müqayisə et. Hazırda {clubs.length} klub göstərilir; {pcCount}-i PC, {playStationCount}-ü PlayStation seçimi təqdim edir. Qiymət və iş saatları yalnız təsdiqlənmiş məlumat olduqda göstərilir.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2">
@@ -131,7 +138,7 @@ export default async function NearbyGamingClubsPage() {
 
       <section className="mt-10 rounded-card border border-border bg-surface p-5">
         <h2 className="font-display text-lg font-bold text-ink">Yaxın klub seçəndə nəyə baxmaq lazımdır?</h2>
-        <p className="mt-2 text-sm leading-6 text-muted">Məsafə vacibdir, amma tək meyar deyil. Xəritədə yaxınlığı yoxladıqdan sonra klub profilində saatlıq qiyməti, iş saatlarını, ünvanı və təqdim etdiyi PC və ya PlayStation imkanlarını müqayisə et.</p>
+        <p className="mt-2 text-sm leading-6 text-muted">Məsafə vacibdir, amma tək meyar deyil. Xəritədə yaxınlığı yoxladıqdan sonra klub profilində məlum olan saatlıq qiyməti, iş saatlarını, ünvanı və təqdim etdiyi PC və ya PlayStation imkanlarını müqayisə et.</p>
       </section>
 
       <section className="mt-8" aria-labelledby="nearby-faq-heading">
