@@ -33,6 +33,11 @@ function normalizeClubRelations(club: ClubWithRelations): ClubWithRelations {
   };
 }
 
+function hasConfirmedPublicType(club: ClubWithRelations) {
+  const types = inferClubTypeSlugs(club);
+  return types.includes('pc') || types.includes('playstation');
+}
+
 async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
   const supabase = createPublicClient();
   let districtId: string | null = null;
@@ -94,7 +99,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
     return [];
   }
 
-  let clubs = (data ?? []).map(normalizeClubRelations);
+  let clubs = (data ?? []).map(normalizeClubRelations).filter(hasConfirmedPublicType);
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
   const hasTypeFilter = requestedType === 'pc' || requestedType === 'playstation';
 
@@ -125,7 +130,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v2'],
+  ['gameyer-public-clubs-v3'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
@@ -152,12 +157,14 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
     return null;
   }
 
-  return data ? normalizeClubRelations(data) : null;
+  if (!data) return null;
+  const club = normalizeClubRelations(data);
+  return hasConfirmedPublicType(club) ? club : null;
 }
 
 const getCachedClubBySlug = unstable_cache(
   async (slug: string) => queryClubBySlug(slug),
-  ['gameyer-public-club-by-slug-v2'],
+  ['gameyer-public-club-by-slug-v3'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
