@@ -25,7 +25,9 @@ type Traffic = { views: number; visitors: Set<string> };
 
 export default async function SeoPriorityPage() {
   const supabase = await createClient();
-  const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const sinceDate = new Date();
+  sinceDate.setUTCDate(sinceDate.getUTCDate() - 7);
+  const since = sinceDate.toISOString();
 
   const [clubsResult, pageViewsResult, hoursResult, pricingResult, imagesResult, typesResult] = await Promise.all([
     supabase
