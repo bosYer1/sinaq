@@ -99,7 +99,12 @@ export default async function AdminPage() {
     if (!Number.isFinite(updatedMs) || nowMs - updatedMs >= stale90Ms) stale90 += 1;
   }
 
-  const visibleClubs = Math.max(0, activeClubs - missingCoordinates);
+  const visibleClubs = activeRows.filter((club) =>
+    Boolean(club.instagram_url) &&
+    club.latitude != null &&
+    club.longitude != null &&
+    idsWithTypes.has(club.id)
+  ).length;
   const inactiveClubs = Math.max(0, totalClubs - activeClubs);
 
   const completenessItems = [
@@ -146,7 +151,7 @@ export default async function AdminPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold">Klub görünürlüğü</h2>
-            <p className="mt-1 text-sm text-gray-500">Aktiv klubların saytda görünmə vəziyyəti koordinat məlumatına əsasən ayrıca göstərilir.</p>
+            <p className="mt-1 text-sm text-gray-500">Aktiv klubların saytda görünmə vəziyyəti public eligibility qaydasına əsasən ayrıca göstərilir.</p>
           </div>
           <Link href="/admin/klublar" className="text-sm font-semibold text-[#6A47F0] hover:underline">Klubları idarə et</Link>
         </div>
@@ -155,7 +160,7 @@ export default async function AdminPage() {
           <Link href="/admin/klublar?status=active&visibility=public" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 transition hover:border-emerald-400">
             <p className="text-sm text-emerald-700">Saytda görünən</p>
             <p className="mt-1 text-3xl font-bold text-emerald-950">{visibleClubs}</p>
-            <p className="mt-1 text-xs text-emerald-700">Aktiv və koordinatı tam</p>
+            <p className="mt-1 text-xs text-emerald-700">Aktiv + Instagram + koordinat + təsdiqlənmiş tip</p>
           </Link>
           <Link href="/admin/klublar?status=active&missing=coordinates" className="rounded-lg border border-amber-200 bg-amber-50 p-4 transition hover:border-amber-400">
             <p className="text-sm text-amber-700">Koordinatsız gizli</p>
