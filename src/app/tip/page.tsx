@@ -6,10 +6,10 @@ import { inferClubTypeSlugs } from '@/lib/clubType';
 import { getSiteUrl } from '@/lib/site-url';
 
 export const metadata: Metadata = {
-  title: 'Bakıda PC və PlayStation klubları — qiymət və ünvan',
-  description: 'Bakıda PC, kompüter, internet və PlayStation klublarını kateqoriyaya görə tap. Qiymət, ünvan, rayon, iş saatı və xəritə məlumatlarını GameYer-də müqayisə et.',
+  title: 'Bakıda PC və PlayStation klubları — kateqoriya və ünvan',
+  description: 'Bakıda PC, kompüter, internet və PlayStation klublarını kateqoriyaya görə tap. Rayon, ünvan və xəritəni müqayisə et; qiymət və iş saatları məlum olduqda klub profilində göstərilir.',
   alternates: { canonical: '/tip' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/tip', title: 'Bakıda PC və PlayStation klubları | GameYer', description: 'Bakıdakı PC və PlayStation gaming klublarını kateqoriyaya, qiymətə və rayona görə tap.' },
+  openGraph: { type: 'website', locale: 'az_AZ', url: '/tip', title: 'Bakıda PC və PlayStation klubları | GameYer', description: 'Bakıdakı PC və PlayStation gaming klublarını kateqoriyaya və rayona görə tap; mövcud qiymət və iş saatlarına klub profillərində bax.' },
 };
 
 function displayType(slug: string, name: string) {
@@ -66,7 +66,7 @@ export default async function TypeIndexPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
       <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb"><Link href="/" className="hover:text-ink">GameYer</Link> <span aria-hidden="true">/</span> <span>Klub tipləri</span></nav>
       <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda PC və PlayStation klubları</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Oynamaq istədiyin platformanı seç və Bakıdakı uyğun gaming klublarını qiymət, rayon, iş saatları və xəritə məlumatları ilə müqayisə et.</p>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Oynamaq istədiyin platformanı seç və Bakıdakı uyğun gaming klublarını rayon, ünvan və xəritə məlumatları ilə müqayisə et. Qiymət və iş saatları yalnız məlum və təsdiqlənmiş məlumat olduqda göstərilir.</p>
       <div className="mt-7 grid gap-3 sm:grid-cols-2">
         {activeTypes.map((type) => {
           const label = displayType(type.slug, type.name);
@@ -77,7 +77,7 @@ export default async function TypeIndexPage() {
 
       <section className="mt-8 rounded-card border border-border bg-surface p-5" aria-labelledby="popular-searches-heading">
         <h2 id="popular-searches-heading" className="font-display text-lg font-bold text-ink">Populyar gaming klub axtarışları</h2>
-        <p className="mt-2 text-sm leading-6 text-muted">Yaxınlıq, qiymət və iş saatına görə daha konkret seçim etmək üçün aşağıdakı siyahılara keç.</p>
+        <p className="mt-2 text-sm leading-6 text-muted">Yaxınlıq, mövcud qiymət və məlum iş saatına görə daha konkret seçim etmək üçün aşağıdakı siyahılara keç.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Yaxınlıqdakı gaming klubları</Link>
           <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Gaming klub qiymətləri</Link>
