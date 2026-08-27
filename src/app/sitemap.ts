@@ -26,6 +26,13 @@ function isOpen24HoursEveryDay(hours: SitemapClub['opening_hours']) {
   });
 }
 
+function hasConfirmedPublicType(club: SitemapClub) {
+  return (club.type_assignments ?? []).some((assignment) => {
+    const slug = assignment.club_type?.slug;
+    return slug === 'pc' || slug === 'playstation';
+  });
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
   const entries: MetadataRoute.Sitemap = [
@@ -62,11 +69,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       )
     `)
     .eq('is_active', true)
+    .not('instagram_url', 'is', null)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null);
   if (error) return entries;
 
-  const clubs = (data ?? []) as unknown as SitemapClub[];
+  const clubs = ((data ?? []) as unknown as SitemapClub[]).filter(hasConfirmedPublicType);
   const activeDistricts = new Set<string>();
   const comboCounts = new Map<string, number>();
   const districtLatest = new Map<string, string | null>();
