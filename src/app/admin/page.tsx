@@ -9,6 +9,7 @@ type ActiveClubRow = {
   address: string | null;
   description: string | null;
   instagram_url: string | null;
+  profile_image_url: string | null;
   latitude: number | null;
   longitude: number | null;
   updated_at: string;
@@ -60,7 +61,7 @@ export default async function AdminPage() {
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_verified', true),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
-    supabase.from('clubs').select('id,address,description,instagram_url,latitude,longitude,updated_at').eq('is_active', true),
+    supabase.from('clubs').select('id,address,description,instagram_url,profile_image_url,latitude,longitude,updated_at').eq('is_active', true),
     supabase.from('club_opening_hours').select('club_id'),
     supabase.from('club_pricing').select('club_id'),
     supabase.from('club_images').select('club_id'),
@@ -90,7 +91,7 @@ export default async function AdminPage() {
     if (!club.instagram_url) missingInstagram += 1;
     if (!idsWithHours.has(club.id)) missingHours += 1;
     if (!idsWithPricing.has(club.id)) missingPricing += 1;
-    if (!idsWithImages.has(club.id)) missingImages += 1;
+    if (!club.profile_image_url && !idsWithImages.has(club.id)) missingImages += 1;
     if (!idsWithTypes.has(club.id)) missingTypes += 1;
     if (club.latitude == null || club.longitude == null) missingCoordinates += 1;
     if (isVagueClubAddress(club.address)) vagueAddress += 1;
