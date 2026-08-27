@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+const STRONG_DESCRIPTION_MIN_LENGTH = 80;
+
 type ClubRow = {
   id: string;
   name: string;
@@ -24,6 +26,13 @@ type PageViewRow = {
 };
 
 type Traffic = { views: number; visits: Set<string>; visitors: Set<string> };
+
+function descriptionIssue(description: string | null) {
+  const value = description?.trim() ?? '';
+  if (!value) return 'Təsvir yoxdur';
+  if (value.length < STRONG_DESCRIPTION_MIN_LENGTH) return 'Təsvir zəifdir';
+  return null;
+}
 
 export default async function SeoPriorityPage() {
   const supabase = await createClient();
@@ -74,11 +83,11 @@ export default async function SeoPriorityPage() {
     trafficBySlug.set(slug, current);
   }
 
-  function missingForClub(club: ClubRow) {
+  function issuesForClub(club: ClubRow) {
     const hasImage = Boolean(club.profile_image_url?.trim()) || idsWithImages.has(club.id);
     return [
       !club.phone ? 'Telefon' : null,
-      !club.description?.trim() ? 'Təsvir' : null,
+      descriptionIssue(club.description),
       !club.instagram_url ? 'Instagram' : null,
       !idsWithHours.has(club.id) ? 'İş saatı' : null,
       !idsWithPricing.has(club.id) ? 'Qiymət' : null,
@@ -90,30 +99,30 @@ export default async function SeoPriorityPage() {
   const rows = clubs
     .map((club) => {
       const traffic = trafficBySlug.get(club.slug);
-      const missing = missingForClub(club);
+      const issues = issuesForClub(club);
       return {
         club,
-        missing,
+        issues,
         views: traffic?.views ?? 0,
         visits: traffic?.visits.size ?? 0,
         visitors: traffic?.visitors.size ?? 0,
       };
     })
     .filter((row) => row.views > 0)
-    .sort((a, b) => b.visits - a.visits || b.visitors - a.visitors || b.missing.length - a.missing.length || b.views - a.views || a.club.name.localeCompare(b.club.name, 'az'));
+    .sort((a, b) => b.visits - a.visits || b.visitors - a.visitors || b.issues.length - a.issues.length || b.views - a.views || a.club.name.localeCompare(b.club.name, 'az'));
 
   const totalViews = rows.reduce((sum, row) => sum + row.views, 0);
   const uniqueVisitIds = new Set(trafficRows.flatMap((row) => row.visit_id ? [row.visit_id] : []));
   const uniqueVisitorIds = new Set(trafficRows.map((row) => row.session_id));
   const trackedVisitViews = trafficRows.filter((row) => row.visit_id).length;
-  const incomplete = rows.filter((row) => row.missing.length > 0).length;
+  const needsWork = rows.filter((row) => row.issues.length > 0).length;
 
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Google SEO prioriteti</h1>
-          <p className="mt-1 max-w-3xl text-sm text-gray-500">Son 7 gündə Google-dan real trafik alan public klub profillərini göstərir. Məqsəd artıq trafik gələn, amma məlumatı natamam profilləri birinci tamamlamaqdır.</p>
+          <p className="mt-1 max-w-3xl text-sm text-gray-500">Son 7 gündə Google-dan real trafik alan public klub profillərini göstərir. Məqsəd artıq trafik gələn, amma məlumatı natamam və ya SEO təsviri zəif profilləri birinci tamamlamaqdır.</p>
         </div>
         <Link href="/admin/klublar?status=active&visibility=public&sort=seo-low" className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50">Bütün SEO zəif klublar</Link>
       </div>
@@ -124,7 +133,7 @@ export default async function SeoPriorityPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-5"><p className="text-sm text-gray-500">Google klub pageview · 7 gün</p><p className="mt-2 text-4xl font-bold">{totalViews}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-5"><p className="text-sm text-gray-500">Real Google ziyarəti · 7 gün</p><p className="mt-2 text-4xl font-bold">{uniqueVisitIds.size}</p><p className="mt-1 text-xs text-gray-500">visit_id ilə ölçülür</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-5"><p className="text-sm text-gray-500">Unikal Google visitor · 7 gün</p><p className="mt-2 text-4xl font-bold">{uniqueVisitorIds.size}</p><p className="mt-1 text-xs text-gray-500">qalıcı anonim browser ID</p></div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5"><p className="text-sm text-amber-700">Trafik alır, məlumat natamamdır</p><p className="mt-2 text-4xl font-bold text-amber-950">{incomplete}</p></div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5"><p className="text-sm text-amber-700">Trafik alır, təkmilləşdirmə lazımdır</p><p className="mt-2 text-4xl font-bold text-amber-950">{needsWork}</p></div>
       </div>
 
       {trackedVisitViews < trafficRows.length ? (
@@ -134,16 +143,16 @@ export default async function SeoPriorityPage() {
       ) : null}
 
       <section className="mt-7 overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-100 px-5 py-4"><h2 className="font-bold">Prioritet profil siyahısı</h2><p className="mt-1 text-xs text-gray-500">Əvvəl real Google ziyarəti, sonra unikal visitor və çatışmayan məlumat sayı nəzərə alınır.</p></div>
+        <div className="border-b border-gray-100 px-5 py-4"><h2 className="font-bold">Prioritet profil siyahısı</h2><p className="mt-1 text-xs text-gray-500">Əvvəl real Google ziyarəti, sonra unikal visitor və keyfiyyət problemi sayı nəzərə alınır. 80 simvoldan qısa təsvir ayrıca “Təsvir zəifdir” kimi işarələnir.</p></div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-100 text-left text-sm">
-            <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500"><tr><th className="px-5 py-3">Klub</th><th className="px-5 py-3">Google</th><th className="px-5 py-3">Çatışmayan</th><th className="px-5 py-3 text-right">İdarə et</th></tr></thead>
+            <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500"><tr><th className="px-5 py-3">Klub</th><th className="px-5 py-3">Google</th><th className="px-5 py-3">Təkmilləşdir</th><th className="px-5 py-3 text-right">İdarə et</th></tr></thead>
             <tbody className="divide-y divide-gray-100">
               {rows.length === 0 ? <tr><td colSpan={4} className="px-5 py-8 text-gray-500">Son 7 gündə Google-dan klub profilinə trafik qeydə alınmayıb.</td></tr> : rows.map((row) => (
                 <tr key={row.club.id} className="align-top">
                   <td className="px-5 py-4"><Link href={`/klub/${row.club.slug}`} className="font-semibold text-gray-900 hover:text-[#6A47F0]">{row.club.name}</Link><p className="mt-1 font-mono text-[11px] text-gray-400">/klub/{row.club.slug}</p></td>
                   <td className="whitespace-nowrap px-5 py-4"><p className="font-bold">{row.visits} ziyarət</p><p className="mt-1 text-xs text-gray-500">{row.visitors} visitor · {row.views} baxış</p></td>
-                  <td className="px-5 py-4">{row.missing.length === 0 ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Tamdır</span> : <div className="flex max-w-xl flex-wrap gap-1.5">{row.missing.map((item) => <span key={item} className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">{item}</span>)}</div>}</td>
+                  <td className="px-5 py-4">{row.issues.length === 0 ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Tamdır</span> : <div className="flex max-w-xl flex-wrap gap-1.5">{row.issues.map((item) => <span key={item} className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">{item}</span>)}</div>}</td>
                   <td className="whitespace-nowrap px-5 py-4 text-right"><Link href={`/admin/klublar/${row.club.id}`} className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold hover:border-[#7C5CFC]">Redaktə et</Link></td>
                 </tr>
               ))}
@@ -152,7 +161,7 @@ export default async function SeoPriorityPage() {
         </div>
       </section>
 
-      <p className="mt-4 text-xs leading-5 text-gray-500">Ziyarət real visit_id ilə, visitor isə qalıcı anonim browser ID-si ilə ölçülür. Köhnə visit_id-siz pageview-lər ziyarət kimi təxmin edilmir. Səhifə məlumat yaratmır və klub datasını dəyişmir; məlumat yenə rəsmi/təsdiqlənmiş mənbədən əlavə edilməlidir.</p>
+      <p className="mt-4 text-xs leading-5 text-gray-500">Ziyarət real visit_id ilə, visitor isə qalıcı anonim browser ID-si ilə ölçülür. Təsvir keyfiyyəti yalnız prioritet siqnalıdır; sistem avtomatik mətn yaratmır və klub datasını dəyişmir. Məlumat yenə rəsmi/təsdiqlənmiş mənbədən əlavə edilməlidir.</p>
     </div>
   );
 }
