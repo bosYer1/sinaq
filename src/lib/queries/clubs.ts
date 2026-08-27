@@ -125,7 +125,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v1'],
+  ['gameyer-public-clubs-v2'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
@@ -157,7 +157,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
 
 const getCachedClubBySlug = unstable_cache(
   async (slug: string) => queryClubBySlug(slug),
-  ['gameyer-public-club-by-slug-v1'],
+  ['gameyer-public-club-by-slug-v2'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
