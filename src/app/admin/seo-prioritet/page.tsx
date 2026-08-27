@@ -18,11 +18,10 @@ type ClubRow = {
 type ClubIdRow = { club_id: string };
 type PageViewRow = {
   path: string;
-  visit_id: string | null;
   session_id: string;
 };
 
-type Traffic = { views: number; visits: Set<string> };
+type Traffic = { views: number; visitors: Set<string> };
 
 export default async function SeoPriorityPage() {
   const supabase = await createClient();
@@ -37,7 +36,7 @@ export default async function SeoPriorityPage() {
       .not('longitude', 'is', null),
     supabase
       .from('page_views')
-      .select('path,visit_id,session_id')
+      .select('path,session_id')
       .eq('referrer_host', 'www.google.com')
       .gte('created_at', since)
       .like('path', '/klub/%')
@@ -64,9 +63,9 @@ export default async function SeoPriorityPage() {
     const match = row.path.match(/^\/klub\/([^/?#]+)/);
     if (!match) continue;
     const slug = match[1];
-    const current = trafficBySlug.get(slug) ?? { views: 0, visits: new Set<string>() };
+    const current = trafficBySlug.get(slug) ?? { views: 0, visitors: new Set<string>() };
     current.views += 1;
-    current.visits.add(row.visit_id ?? `legacy:${row.session_id}`);
+    current.visitors.add(row.session_id);
     trafficBySlug.set(slug, current);
   }
 
@@ -90,14 +89,14 @@ export default async function SeoPriorityPage() {
         club,
         missing,
         views: traffic?.views ?? 0,
-        visits: traffic?.visits.size ?? 0,
+        visitors: traffic?.visitors.size ?? 0,
       };
     })
     .filter((row) => row.views > 0)
-    .sort((a, b) => b.visits - a.visits || b.missing.length - a.missing.length || b.views - a.views || a.club.name.localeCompare(b.club.name, 'az'));
+    .sort((a, b) => b.visitors - a.visitors || b.missing.length - a.missing.length || b.views - a.views || a.club.name.localeCompare(b.club.name, 'az'));
 
   const totalViews = rows.reduce((sum, row) => sum + row.views, 0);
-  const totalVisits = rows.reduce((sum, row) => sum + row.visits, 0);
+  const uniqueVisitorIds = new Set(trafficRows.map((row) => row.session_id));
   const incomplete = rows.filter((row) => row.missing.length > 0).length;
 
   return (
@@ -114,12 +113,12 @@ export default async function SeoPriorityPage() {
 
       <div className="mt-7 grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-gray-200 bg-white p-5"><p className="text-sm text-gray-500">Google klub pageview · 7 gün</p><p className="mt-2 text-4xl font-bold">{totalViews}</p></div>
-        <div className="rounded-xl border border-gray-200 bg-white p-5"><p className="text-sm text-gray-500">Google klub ziyarəti · 7 gün</p><p className="mt-2 text-4xl font-bold">{totalVisits}</p></div>
+        <div className="rounded-xl border border-gray-200 bg-white p-5"><p className="text-sm text-gray-500">Unikal Google visitor · 7 gün</p><p className="mt-2 text-4xl font-bold">{uniqueVisitorIds.size}</p></div>
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-5"><p className="text-sm text-amber-700">Trafik alır, məlumat natamamdır</p><p className="mt-2 text-4xl font-bold text-amber-950">{incomplete}</p></div>
       </div>
 
       <section className="mt-7 overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-100 px-5 py-4"><h2 className="font-bold">Prioritet profil siyahısı</h2><p className="mt-1 text-xs text-gray-500">Əvvəl Google ziyarəti, sonra çatışmayan məlumat sayı nəzərə alınır.</p></div>
+        <div className="border-b border-gray-100 px-5 py-4"><h2 className="font-bold">Prioritet profil siyahısı</h2><p className="mt-1 text-xs text-gray-500">Əvvəl unikal Google visitor sayı, sonra çatışmayan məlumat sayı nəzərə alınır.</p></div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-100 text-left text-sm">
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500"><tr><th className="px-5 py-3">Klub</th><th className="px-5 py-3">Google</th><th className="px-5 py-3">Çatışmayan</th><th className="px-5 py-3 text-right">İdarə et</th></tr></thead>
@@ -127,7 +126,7 @@ export default async function SeoPriorityPage() {
               {rows.length === 0 ? <tr><td colSpan={4} className="px-5 py-8 text-gray-500">Son 7 gündə Google-dan klub profilinə trafik qeydə alınmayıb.</td></tr> : rows.map((row) => (
                 <tr key={row.club.id} className="align-top">
                   <td className="px-5 py-4"><Link href={`/klub/${row.club.slug}`} className="font-semibold text-gray-900 hover:text-[#6A47F0]">{row.club.name}</Link><p className="mt-1 font-mono text-[11px] text-gray-400">/klub/{row.club.slug}</p></td>
-                  <td className="whitespace-nowrap px-5 py-4"><p className="font-bold">{row.visits} ziyarət</p><p className="mt-1 text-xs text-gray-500">{row.views} baxış</p></td>
+                  <td className="whitespace-nowrap px-5 py-4"><p className="font-bold">{row.visitors} visitor</p><p className="mt-1 text-xs text-gray-500">{row.views} baxış</p></td>
                   <td className="px-5 py-4">{row.missing.length === 0 ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Tamdır</span> : <div className="flex max-w-xl flex-wrap gap-1.5">{row.missing.map((item) => <span key={item} className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">{item}</span>)}</div>}</td>
                   <td className="whitespace-nowrap px-5 py-4 text-right"><Link href={`/admin/klublar/${row.club.id}`} className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold hover:border-[#7C5CFC]">Redaktə et</Link></td>
                 </tr>
@@ -137,7 +136,7 @@ export default async function SeoPriorityPage() {
         </div>
       </section>
 
-      <p className="mt-4 text-xs leading-5 text-gray-500">Bu səhifə məlumat yaratmır və klub datasını dəyişmir. Trafik yalnız prioritet sıralaması üçün istifadə olunur; məlumat yenə rəsmi/təsdiqlənmiş mənbədən əlavə edilməlidir.</p>
+      <p className="mt-4 text-xs leading-5 text-gray-500">Visitor qalıcı anonim browser ID-si ilə ölçülür; bu rəqəm browser session/ziyarət sayı kimi təqdim edilmir. Səhifə məlumat yaratmır və klub datasını dəyişmir. Məlumat yenə rəsmi/təsdiqlənmiş mənbədən əlavə edilməlidir.</p>
     </div>
   );
 }
