@@ -6,9 +6,9 @@ import { getSiteUrl } from '@/lib/site-url';
 
 export const metadata: Metadata = {
   title: 'Bakı rayonları üzrə gaming klubları — PC və PlayStation',
-  description: 'Nərimanov, Nəsimi, Yasamal və Bakının digər rayonlarında PC, kompüter və PlayStation klublarını tap. Qiymət, ünvan, iş saatı və xəritəyə görə müqayisə et.',
+  description: 'Nərimanov, Nəsimi, Yasamal və Bakının digər rayonlarında PC, kompüter və PlayStation klublarını tap. Rayon, ünvan və xəritəni müqayisə et; qiymət və iş saatları məlum olduqda göstərilir.',
   alternates: { canonical: '/rayon' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/rayon', title: 'Bakı rayonları üzrə gaming klubları | GameYer', description: 'Bakının rayonları üzrə aktiv PC və PlayStation klublarını tap və müqayisə et.' },
+  openGraph: { type: 'website', locale: 'az_AZ', url: '/rayon', title: 'Bakı rayonları üzrə gaming klubları | GameYer', description: 'Bakının rayonları üzrə aktiv PC və PlayStation klublarını tap; mövcud qiymət və iş saatlarına klub profillərində bax.' },
 };
 
 export default async function DistrictIndexPage() {
@@ -69,7 +69,7 @@ export default async function DistrictIndexPage() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Bakı üzrə kəşf et</p>
               <h1 className="mt-2 font-display text-2xl font-bold tracking-[-0.035em] text-ink sm:text-3xl">Rayonlar üzrə gaming klubları</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakının rayonlarında PC, kompüter, internet və PlayStation klublarını bir yerdə tap. Aktiv klub olan rayona keçib qiymət, ünvan, iş saatları və xəritə məlumatlarını müqayisə et.</p>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakının rayonlarında PC, kompüter, internet və PlayStation klublarını bir yerdə tap. Aktiv klub olan rayona keçib ünvan və xəritə məlumatlarını müqayisə et; qiymət və iş saatları yalnız məlum və təsdiqlənmiş olduqda göstərilir.</p>
             </div>
             <div className="flex shrink-0 gap-2">
               <div className="rounded-xl border border-border bg-bg-elevated px-3 py-2 text-center">
