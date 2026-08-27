@@ -164,7 +164,10 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       if (missingFilter === 'types' && idsWithTypes.has(club.id)) return false;
       if (missingFilter === 'coordinates' && club.latitude != null && club.longitude != null) return false;
       if (missingFilter === 'address' && !isVagueClubAddress(club.address)) return false;
-      if (visibilityFilter === 'public' && (club.latitude == null || club.longitude == null)) return false;
+      if (
+        visibilityFilter === 'public' &&
+        (!club.is_active || !club.instagram_url || club.latitude == null || club.longitude == null || !idsWithTypes.has(club.id))
+      ) return false;
 
       if (freshnessFilter) {
         const threshold = freshnessDays[freshnessFilter];
@@ -218,9 +221,10 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      {missingFilter || freshnessFilter ? (
+      {missingFilter || freshnessFilter || visibilityFilter ? (
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <span className="font-semibold">Aktiv keyfiyyət filtri:</span>
+          <span className="font-semibold">Aktiv filtr:</span>
+          {visibilityFilter ? <span>Saytda görünən klublar</span> : null}
           {missingFilter ? <span>{missingLabels[missingFilter]}</span> : null}
           {freshnessFilter ? <span>{freshnessDays[freshnessFilter]}+ gündür yenilənməyib</span> : null}
           <Link href="/admin/klublar" className="ml-auto font-semibold text-[#6A47F0] hover:underline">Filtri sil</Link>
@@ -228,6 +232,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       ) : null}
 
       <form className="mt-6 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:flex-wrap">
+        {visibilityFilter ? <input type="hidden" name="visibility" value={visibilityFilter} /> : null}
         <input
           name="q"
           defaultValue={resolvedSearchParams.q ?? ''}
@@ -272,7 +277,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
 
         <button type="submit" className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white">Axtar</button>
 
-        {(resolvedSearchParams.q || resolvedSearchParams.status || missingFilter || freshnessFilter || sort !== 'updated') ? (
+        {(resolvedSearchParams.q || resolvedSearchParams.status || missingFilter || freshnessFilter || visibilityFilter || sort !== 'updated') ? (
           <Link href="/admin/klublar" className="flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium">
             Təmizlə
           </Link>
