@@ -234,22 +234,31 @@ export interface Database {
         Row: {
           id: number;
           session_id: string;
+          visit_id: string | null;
           path: string;
           referrer_host: string | null;
+          user_agent: string | null;
+          ip_address: string | null;
           created_at: string;
         };
         Insert: {
           id?: number;
           session_id: string;
+          visit_id?: string | null;
           path: string;
           referrer_host?: string | null;
+          user_agent?: string | null;
+          ip_address?: string | null;
           created_at?: string;
         };
         Update: {
           id?: number;
           session_id?: string;
+          visit_id?: string | null;
           path?: string;
           referrer_host?: string | null;
+          user_agent?: string | null;
+          ip_address?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -340,6 +349,10 @@ export interface Database {
         Returns: string;
       };
       get_admin_analytics: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_admin_analytics_24h: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
