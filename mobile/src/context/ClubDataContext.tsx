@@ -58,8 +58,8 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
     try {
       const nextClubs = await fetchClubs();
       if (mounted.current) acceptClubs(nextClubs);
-    } catch (reason) {
-      if (mounted.current) setError(reason instanceof Error ? reason.message : 'Klub məlumatları alınmadı.');
+    } catch {
+      if (mounted.current) setError('Klub məlumatları alınmadı. İnternet bağlantısını yoxlayıb yenidən cəhd edin.');
     } finally {
       if (mounted.current) {
         setLoading(false);
@@ -76,8 +76,8 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
       .then((nextClubs) => {
         if (active) acceptClubs(nextClubs);
       })
-      .catch((reason: unknown) => {
-        if (active) setError(reason instanceof Error ? reason.message : 'Klub məlumatları alınmadı.');
+      .catch(() => {
+        if (active) setError('Klub məlumatları alınmadı. İnternet bağlantısını yoxlayıb yenidən cəhd edin.');
       })
       .finally(() => {
         if (active) setLoading(false);

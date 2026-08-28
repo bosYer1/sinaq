@@ -14,7 +14,7 @@ const renderSeparator = () => <View style={{ height: spacing.md }} />;
 export default function DiscoveryScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
-  const { filteredClubs, clubs, loading, refreshing, error, reload } = useClubData();
+  const { filteredClubs, clubs, loading, refreshing, error, reload, clearFilters } = useClubData();
 
   if (loading) return <DiscoverySkeleton />;
   if (error && clubs.length === 0) return <ScreenState title="Məlumat alınmadı" message={error} actionLabel="Yenidən yoxla" onAction={() => void reload()} />;
@@ -39,7 +39,7 @@ export default function DiscoveryScreen() {
           <Text style={styles.result}>{filteredClubs.length} nəticə</Text>
         </View>
       }
-      ListEmptyComponent={<ScreenState title="Uyğun klub tapılmadı" message="Filtrləri dəyişərək yenidən yoxlayın." />}
+      ListEmptyComponent={<ScreenState title="Uyğun klub tapılmadı" message="Filtrləri dəyişərək yenidən yoxlayın." actionLabel="Filtrləri sıfırla" onAction={clearFilters} />}
       initialNumToRender={8}
       maxToRenderPerBatch={8}
       updateCellsBatchingPeriod={40}

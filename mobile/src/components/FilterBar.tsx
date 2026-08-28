@@ -60,8 +60,8 @@ export function FilterBar() {
         {districts.map((district) => (
           <Chip key={district.id} label={district.name} selected={filters.district === district.slug} onPress={() => setFilters({ district: district.slug })} />
         ))}
-        {active ? <Chip label="Təmizlə" selected={false} onPress={clearFilters} /> : null}
       </ScrollView>
+      {active ? <Chip label="Aktiv filtrləri sıfırla" selected={false} onPress={clearFilters} /> : null}
     </View>
   );
 }

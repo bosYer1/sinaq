@@ -1,15 +1,17 @@
 import { memo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { radius, spacing, type ColorPalette } from '@/constants/theme';
 import { useThemedStyles } from '@/context/ThemeContext';
 import { ClubImage } from '@/components/ClubImage';
-import { cheapestPrice, clubTypeLabels, coverImage } from '@/lib/clubs';
+import { cheapestPrice, clubTypeLabels, coverImage, isPremiumActive } from '@/lib/clubs';
 import { formatPrice } from '@/lib/format';
 import type { Club } from '@/types/club';
 import { openClub } from '@/lib/navigation';
 
 export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
   const styles = useThemedStyles(createStyles);
+  const { width, fontScale } = useWindowDimensions();
+  const compact = width < 360 || fontScale > 1.3;
   const image = coverImage(club);
   const types = clubTypeLabels(club);
   const firstPrice = cheapestPrice(club);
@@ -18,16 +20,16 @@ export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
   return (
     <Pressable
       onPress={() => openClub(club.slug)}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.card, compact && styles.compact, pressed && styles.pressed]}
       accessibilityRole="button"
-      accessibilityLabel={`${club.name} klub detalına bax`}
+      accessibilityLabel={`${club.name}. ${meta}. ${club.is_verified ? 'Təsdiqlənib. ' : ''}${firstPrice ? formatPrice(firstPrice) : 'Qiymət göstərilməyib'}. Klub detalına bax`}
     >
-      <ClubImage key={image ?? 'fallback'} uri={image} name={club.name} style={styles.image} priority="low" />
+      <ClubImage key={image ?? 'fallback'} uri={image} name={club.name} style={[styles.image, compact && styles.compactImage]} priority="low" />
       <View style={styles.content}>
         <View style={styles.titleRow}>
-          <Text style={styles.title} numberOfLines={1}>{club.name}</Text>
+          <Text style={styles.title} numberOfLines={2}>{club.name}</Text>
           {club.is_verified ? <Text style={styles.verified}>✓</Text> : null}
-          {club.is_premium ? <Text style={styles.premium}>VIP</Text> : null}
+          {isPremiumActive(club) ? <Text style={styles.premium}>Premium</Text> : null}
         </View>
         <Text style={meta ? styles.meta : styles.missing} numberOfLines={1}>{meta || 'Klub tipi göstərilməyib'}</Text>
         <Text style={club.address ? styles.address : styles.missing} numberOfLines={2}>{club.address || 'Ünvan göstərilməyib'}</Text>
@@ -39,6 +41,7 @@ export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
 
 const createStyles = (colors: ColorPalette) => StyleSheet.create({
   card: { flexDirection: 'row', minHeight: 138, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface, overflow: 'hidden' },
+  compact: { flexDirection: 'column' }, compactImage: { width: '100%', height: 150 },
   pressed: { opacity: 0.78 },
   image: { width: 122, minHeight: 138, backgroundColor: colors.surfaceAlt },
   content: { flex: 1, padding: spacing.md, gap: spacing.xs },

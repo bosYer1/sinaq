@@ -2,6 +2,26 @@
 
 Bu checklist real Android və iOS cihazında release candidate yoxlaması üçündür. Aşağıdakı maddələr desktop bundle export ilə təsdiqlənmiş sayılmır.
 
+## Map-dan müstəqil beta sprint — 2026-08-29
+
+**KNOWN BLOCKER — Android physical device map rendering unresolved.** Map bu sprintdə dəyişdirilməyib və təkrar PASS verilməyib.
+
+Founder əvvəlki build-də Android launch, public data, Discovery/list, theme və bottom tabs üçün PASS bildirib. Aşağıdakı yeni build ssenariləri **PENDING real-device QA**:
+
+- [ ] Təmiz launch: heç bir location prompt yoxdur; Kəşf et, Xəritə, Yaxınlıq, Daha çox tabları görünür.
+- [ ] Kəşf et: uzun scroll, Azerbaijani search, PC/PlayStation/rayon/verified, görünən reset və no-results reset.
+- [ ] Detail: original profile şəkli birincidir, qalan gallery swipe işləyir; qiymət/tariff/saatlar realdır; unknown data uydurulmur; expired Premium görünmür.
+- [ ] Telefon/Instagram/İstiqamət al cihaz tətbiqini açır; geri qayıtmaq mümkündür; dəstəklənməyən link alert göstərir.
+- [ ] Yaxınlığa girmək prompt göstərmir. Yalnız “Mövqeyimi istifadə et” soruşur. Deny və “bir daha soruşma” hallarında izahlı UI, settings/retry və Kəşf et işləyir.
+- [ ] Android approximate və precise permission: məsafələr artan sıra ilə, km formatında görünür; koordinatsız klub yoxdur. Bu, düz xətt məsafəsidir, yol məsafəsi deyil.
+- [ ] GPS sönülü, indoor timeout, permission sorğusu zamanı geri/tab dəyişmə: stuck spinner və crash yoxdur. Yenidən cəhd işləyir.
+- [ ] Yaxınlıqdan çıxmaq/background-a keçmək mövqeyi təmizləyir; geri gələndə istifadəçi yenidən düyməyə basır. Background izləmə yoxdur.
+- [ ] Daha çox → Görünüş → Light/Dark/System → geri: tema saxlanır; Görünüş top-level tab deyil. Əlaqə/Haqqımızda/Məxfilik keçidləri işləyir. Klub sahibi səhifəsi yalnız məlumatdır.
+- [ ] Offline startup/refresh: generic error/retry; uğurlu list refresh-dən əvvəlki nəticələr itmir; şəbəkə bərpa olunduqda recovery.
+- [ ] Kiçik ekran, maksimum font, TalkBack: kart mətnləri, action və filter düymələri istifadə edilə bilir; Android hardware back düzgün işləyir.
+
+İstifadəçi koordinatlarını screenshot/log hesabatına daxil etməyin. Custom native build-lərdə yeni foreground permission config üçün rebuild lazımdır; Expo Go daxilində paket hazırdır. Heç bir paid service/signing/production write aktivləşdirilməyib.
+
 ## Android native map təkrar QA — 2026-08-29
 
 Founder-in əvvəlki cihaz nəticəsi: Expo Go launch, GameYer bundle, public klub datası və Kəşf et/list PASS; Xəritə tabı FAIL. Aşağıdakı yeni yoxlamalar **PENDING**, map release blocker-i açıqdır. iOS cihaz QA-sı BLOCKED/POSTPONED qalır.
@@ -93,11 +113,11 @@ Hər testi ən azı bir real Android və bir real iPhone-da aparın. Crash, ağ 
 - Hardware/system back və predictive back ilə detail-dən geri qayıtmağı yoxla.
 - Google Maps native tiles, marker/cluster rendering və gesture-ləri ən azı bir real Play Services cihazında yoxla.
 - Telefon/Instagram/directions üçün app chooser və dəstəklənməyən action alert-ini yoxla.
-- Location icazəsinin istənmədiyini təsdiqlə.
+- Kəşf et/Xəritə açılarkən location icazəsi istənmədiyini, yalnız Yaxınlıq düyməsinin foreground icazə istədiyini təsdiqlə.
 
 ## iOS
 
 - Navigation back swipe, scroll-to-top və gallery horizontal swipe konfliktini yoxla.
 - Apple Maps əsaslı map tile, marker/cluster rendering və gesture-ləri yoxla.
 - Telefon/Instagram/directions action-larını və Safari/Maps-dən app-a qayıdışı yoxla.
-- Location permission prompt-un görünmədiyini təsdiqlə.
+- Location prompt yalnız Yaxınlıq düyməsi ilə göstərilməlidir; Always/background icazə istənməməlidir.
