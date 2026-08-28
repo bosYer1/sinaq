@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 type ThemePreference = 'system' | 'light' | 'dark';
 type ResolvedTheme = 'light' | 'dark';
@@ -33,8 +33,10 @@ function resolveTheme(preference: ThemePreference): ResolvedTheme {
 }
 
 function syncBrowserThemeColor(theme: ResolvedTheme) {
-  const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  if (meta) meta.content = THEME_COLORS[theme];
+  const color = THEME_COLORS[theme];
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+    meta.content = color;
+  });
 }
 
 function applyTheme(preference: ThemePreference) {
@@ -66,6 +68,10 @@ export function ThemeToggle() {
   const nextPreference = ORDER[(ORDER.indexOf(preference) + 1) % ORDER.length];
   const label = preference === 'system' ? 'Sistem' : preference === 'dark' ? 'Tünd' : 'Açıq';
   const nextLabel = nextPreference === 'system' ? 'sistem' : nextPreference === 'dark' ? 'tünd' : 'açıq';
+
+  useEffect(() => {
+    syncBrowserThemeColor(resolveTheme(preference));
+  }, [preference]);
 
   const cycleTheme = () => {
     window.localStorage.setItem(STORAGE_KEY, nextPreference);
