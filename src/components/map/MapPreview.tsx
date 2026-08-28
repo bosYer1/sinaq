@@ -59,38 +59,35 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
       aria-label="Xəritə önizləməsi"
       className="relative h-full w-full overflow-hidden rounded-[18px] border border-border bg-[#eef2f2]"
     >
-      <div
-        className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30 grayscale saturate-[0.18] brightness-[1.14] contrast-[0.58]"
-        aria-hidden="true"
-      >
+      <div className="absolute inset-0 grid grid-cols-3 grid-rows-3" aria-hidden="true">
         {tiles.map(([x, y]) => (
           <div
             key={`${x}-${y}`}
             className="h-full w-full bg-cover bg-center"
             style={{
-              backgroundImage: `url(https://tile.openstreetmap.org/11/${x}/${y}.png)`,
+              backgroundImage: `url(https://a.basemaps.cartocdn.com/rastertiles/voyager/11/${x}/${y}.png)`,
             }}
           />
         ))}
       </div>
 
-      <div className="absolute inset-0 bg-[#f5f8f8]/40" aria-hidden="true" />
+      <div className="absolute inset-0 bg-white/5" aria-hidden="true" />
 
       {markers.map(([top, left, color, open], index) => (
         <PreviewMarker key={`${top}-${left}-${index}`} top={top} left={left} color={color} open={open} />
       ))}
 
-      <div className="absolute left-3 top-3 rounded-2xl border border-border bg-surface/95 px-4 py-2.5 text-sm font-semibold text-ink shadow-card backdrop-blur">
+      <div className="absolute left-3 top-3 rounded-xl border border-border bg-surface/95 px-3 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">
         <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-live" aria-hidden="true" />
         Xəritədə {clubCount} klub
       </div>
 
-      <div className="absolute right-3 top-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-surface/95 text-base font-semibold text-muted shadow-card backdrop-blur" aria-hidden="true">
+      <div className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface/95 text-sm font-semibold text-muted shadow-card backdrop-blur" aria-hidden="true">
         ⌖
       </div>
 
       <div className="absolute bottom-1 right-2 rounded bg-white/85 px-1.5 py-0.5 text-[9px] text-slate-600 shadow-sm" aria-hidden="true">
-        © OpenStreetMap contributors
+        © OpenStreetMap · CARTO
       </div>
     </div>
   );
