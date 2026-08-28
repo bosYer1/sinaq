@@ -88,6 +88,17 @@ body {
   max-width: none !important;
 }
 
+/* Keep the same OpenStreetMap renderer in both themes. In dark mode only the
+   presentation changes, so local OSM labels/streets and map geometry stay the
+   same instead of switching to a different provider/style. */
+.leaflet-tile-pane {
+  transition: filter 160ms ease;
+}
+
+html[data-theme='dark'] .leaflet-tile-pane {
+  filter: brightness(0.64) contrast(1.08) saturate(0.78);
+}
+
 .gameyer-marker {
   border: 0;
   background: transparent;
