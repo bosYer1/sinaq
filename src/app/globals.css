@@ -93,7 +93,7 @@ html[data-theme='dark'] .leaflet-container {
    so the live map matches the clean GameYer preview instead of jumping to a
    visually different map after activation. */
 .leaflet-tile-pane {
-  filter: grayscale(0.62) saturate(0.42) brightness(1.1) contrast(0.72) opacity(0.5);
+  filter: grayscale(0.9) saturate(0.18) brightness(1.14) contrast(0.58) opacity(0.3);
   transition: filter 160ms ease;
 }
 
@@ -101,7 +101,7 @@ html[data-theme='dark'] .leaflet-container {
   position: absolute;
   inset: 0;
   z-index: 250;
-  background: rgba(245, 248, 248, 0.3);
+  background: rgba(245, 248, 248, 0.38);
   content: '';
   pointer-events: none;
 }
