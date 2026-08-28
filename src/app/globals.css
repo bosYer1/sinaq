@@ -99,6 +99,41 @@ html[data-theme='dark'] .leaflet-tile-pane {
   filter: brightness(0.64) contrast(1.08) saturate(0.78);
 }
 
+.gameyer-map-preview {
+  background: #eef2f2;
+}
+
+.gameyer-map-preview-tiles {
+  transition: filter 160ms ease;
+}
+
+.gameyer-map-preview-wash {
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.gameyer-map-preview-attribution {
+  background: rgba(255, 255, 255, 0.85);
+  color: #475569;
+}
+
+html[data-theme='dark'] .gameyer-map-preview {
+  background: var(--color-surface-alt);
+}
+
+html[data-theme='dark'] .gameyer-map-preview-tiles {
+  filter: brightness(0.64) contrast(1.08) saturate(0.78);
+}
+
+html[data-theme='dark'] .gameyer-map-preview-wash {
+  background: transparent;
+}
+
+html[data-theme='dark'] .gameyer-map-preview-attribution {
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  color: var(--color-text-muted);
+}
+
 .gameyer-marker {
   border: 0;
   background: transparent;
