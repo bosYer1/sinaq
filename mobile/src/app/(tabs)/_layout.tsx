@@ -34,12 +34,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="appearance"
+        name="nearby"
         options={{
-          title: 'Görünüş',
-          tabBarIcon: ({ color, size }) => <Ionicons name="contrast-outline" color={color} size={size} />,
+          title: 'Yaxınlıq',
+          tabBarIcon: ({ color, size }) => <Ionicons name="locate-outline" color={color} size={size} />,
         }}
       />
+      <Tabs.Screen name="more" options={{ title: 'Daha çox', tabBarIcon: ({ color, size }) => <Ionicons name="ellipsis-horizontal" color={color} size={size} /> }} />
     </Tabs>
   );
 }

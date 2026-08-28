@@ -1,5 +1,19 @@
 const PHONE_PATTERN = /^\+?\d{7,15}$/;
 
+export function allowedExternalUrl(value: string) {
+  if (value.startsWith('tel:')) return phoneUrl(value.slice(4)) === value;
+  if (instagramUrl(value)) return true;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password || url.port) return false;
+    if (url.hostname === 'gameyer.az') return ['/haqqimizda', '/mexfilik'].includes(url.pathname) && !url.search && !url.hash;
+    if (url.hostname !== 'www.google.com' || url.pathname !== '/maps/dir/' || url.hash) return false;
+    const destination = url.searchParams.get('destination')?.split(',');
+    if (!destination || destination.length !== 2 || destination.some((part) => !part.trim())) return false;
+    return value === directionsUrl(Number(destination[0]), Number(destination[1]));
+  } catch { return false; }
+}
+
 export function phoneUrl(phone: string | null) {
   if (!phone) return null;
   const firstNumber = phone.split(/\s*[\/,;]\s*/).find(Boolean) ?? '';

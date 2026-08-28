@@ -31,6 +31,8 @@ function RootNavigator() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="club/[slug]" options={{ title: 'Klub məlumatı', headerBackTitle: 'Geri' }} />
+        <Stack.Screen name="appearance" options={{ title: 'Görünüş', headerBackTitle: 'Daha çox' }} />
+        <Stack.Screen name="info/[page]" options={{ title: 'GameYer', headerBackTitle: 'Daha çox' }} />
       </Stack>
     </>
   );
