@@ -9,7 +9,7 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline'",
   "script-src-attr 'none'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://uxcedpbumulpheglhlvs.supabase.co https://tile.openstreetmap.org https://marsol.az",
+  "img-src 'self' data: blob: https://uxcedpbumulpheglhlvs.supabase.co https://*.basemaps.cartocdn.com https://marsol.az",
   "font-src 'self' data:",
   "connect-src 'self' https://uxcedpbumulpheglhlvs.supabase.co wss://uxcedpbumulpheglhlvs.supabase.co",
   "media-src 'self'",
