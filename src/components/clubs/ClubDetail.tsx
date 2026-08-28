@@ -4,8 +4,9 @@ import type { ClubWithRelations } from '@/types/database';
 import { TrackedClubLink } from '@/components/analytics/TrackedClubLink';
 import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
+import { ClubPricingDisplay } from '@/components/clubs/ClubPricingDisplay';
 import { inferClubTypeSlugs } from '@/lib/clubType';
-import { cn, DAY_NAMES_AZ, formatPriceRange, formatTime, isClubOpenNow, isPremiumActive } from '@/lib/utils';
+import { cn, DAY_NAMES_AZ, formatTime, isClubOpenNow, isPremiumActive } from '@/lib/utils';
 
 const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -19,7 +20,6 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
   const premiumActive = isPremiumActive(club);
   const statusLabel = !hasHours ? 'İş saatları məlum deyil' : openNow ? 'Hazırda açıqdır' : 'Hazırda bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
-  const realPricing = club.pricing.filter((pricing) => pricing.price_from > 0 && pricing.club_type);
   const phoneNumbers = (club.phone ?? '').split(/\s*\/\s*|\s*,\s*|\s*;\s*/).map((phone) => phone.trim()).filter(Boolean);
   const updatedAt = new Date(club.updated_at);
   const updatedLabel = Number.isNaN(updatedAt.getTime()) ? null : BAKU_DATE_FORMATTER.format(updatedAt);
@@ -82,11 +82,11 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           {club.description ? <section className="mb-7"><h2 className="mb-2 font-display text-base font-semibold text-ink">Klub haqqında</h2><p className="text-sm leading-6 text-muted">{club.description}</p></section> : null}
           <section className="mb-7">
             <h2 className="mb-3 font-display text-base font-semibold text-ink">Qiymətlər</h2>
-            {realPricing.length > 0 ? <div className="overflow-hidden rounded-xl border border-border bg-surface">{realPricing.map((pricing) => <div key={pricing.id} className="flex items-center justify-between gap-4 border-b border-border px-4 py-3.5 last:border-b-0"><Badge tone={pricing.club_type.slug === 'pc' ? 'pc' : 'ps'}>{pricing.club_type.name}</Badge><span className="font-mono text-sm font-semibold text-ink">{formatPriceRange(pricing.price_from, pricing.price_to, pricing.unit)}</span></div>)}</div> : <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">Qiymət məlumatı hələ təsdiqlənməyib.</div>}
+            <ClubPricingDisplay pricing={club.pricing} />
           </section>
           <section>
             <h2 className="mb-3 font-display text-base font-semibold text-ink">İş saatları</h2>
-            {sortedHours.length > 0 ? <div className="overflow-hidden rounded-xl border border-border bg-surface">{sortedHours.map((hours) => <div key={hours.id} className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 text-sm last:border-b-0"><span className="text-ink">{DAY_NAMES_AZ[hours.day_of_week]}</span><span className={hours.is_closed ? 'font-mono text-muted' : 'font-mono text-ink'}>{hours.is_closed ? 'Bağlıdır' : `${formatTime(hours.open_time)} – ${formatTime(hours.close_time)}`}</span></div>)}</div> : <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">İş saatları hələ təsdiqlənməyib.</div>}
+            {sortedHours.length > 0 ? <div className="overflow-hidden rounded-xl border border-border bg-surface">{sortedHours.map((hours) => <div key={hours.id} className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 text-sm last:border-b-0"><span className="font-display font-semibold tracking-tight text-ink">{DAY_NAMES_AZ[hours.day_of_week]}</span><span className={hours.is_closed ? 'font-display font-semibold tracking-tight tabular-nums text-muted' : 'font-display font-semibold tracking-tight tabular-nums text-ink'}>{hours.is_closed ? 'Bağlıdır' : `${formatTime(hours.open_time)} – ${formatTime(hours.close_time)}`}</span></div>)}</div> : <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">İş saatları hələ təsdiqlənməyib.</div>}
           </section>
           <p className="mt-4 text-xs leading-5 text-muted">Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl mümkün olduqda klubun rəsmi əlaqə kanalından məlumatı dəqiqləşdirin.</p>
         </div>

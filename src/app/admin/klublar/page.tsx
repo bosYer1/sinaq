@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { isVagueClubAddress } from '@/lib/clubDataQuality';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +9,7 @@ interface PageProps {
     q?: string;
     status?: string;
     missing?: string;
+    visibility?: string;
     freshness?: string;
     sort?: string;
   }>;
@@ -31,6 +33,7 @@ const missingLabels: Record<string, string> = {
   images: 'Şəkil çatmır',
   types: 'Klub tipi çatmır',
   coordinates: 'Koordinat çatmır',
+  address: 'Ünvan qeyri-dəqiqdir',
 };
 
 const freshnessDays: Record<string, number> = {
@@ -62,6 +65,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       district_id,
       phone,
       instagram_url,
+      profile_image_url,
       latitude,
       longitude,
       is_active,
@@ -114,9 +118,16 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
   const freshnessFilter = resolvedSearchParams.freshness && freshnessDays[resolvedSearchParams.freshness]
     ? resolvedSearchParams.freshness
     : '';
+  const visibilityFilter = resolvedSearchParams.visibility === 'public'
+    ? 'public'
+    : '';
   const sort = resolvedSearchParams.sort === 'seo-low' || resolvedSearchParams.sort === 'seo-high' || resolvedSearchParams.sort === 'oldest'
     ? resolvedSearchParams.sort
     : 'updated';
+
+  function hasImageForClub(club: (typeof clubs)[number]) {
+    return Boolean(club.profile_image_url?.trim()) || idsWithImages.has(club.id);
+  }
 
   function missingForClub(club: (typeof clubs)[number]) {
     return [
@@ -125,14 +136,15 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       !club.instagram_url ? 'Instagram' : null,
       !idsWithHours.has(club.id) ? 'Saat' : null,
       !idsWithPricing.has(club.id) ? 'Qiymət' : null,
-      !idsWithImages.has(club.id) ? 'Şəkil' : null,
+      !hasImageForClub(club) ? 'Şəkil' : null,
       !idsWithTypes.has(club.id) ? 'Tip' : null,
       club.latitude == null || club.longitude == null ? 'Koordinat' : null,
+      isVagueClubAddress(club.address) ? 'Ünvan' : null,
     ].filter((value): value is string => Boolean(value));
   }
 
   function seoScoreForClub(club: (typeof clubs)[number]) {
-    return Math.round(((8 - missingForClub(club).length) / 8) * 100);
+    return Math.round(((9 - missingForClub(club).length) / 9) * 100);
   }
 
   const seoReadyCount = clubs.filter((club) => missingForClub(club).length === 0).length;
@@ -148,9 +160,14 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       if (missingFilter === 'instagram' && club.instagram_url) return false;
       if (missingFilter === 'hours' && idsWithHours.has(club.id)) return false;
       if (missingFilter === 'pricing' && idsWithPricing.has(club.id)) return false;
-      if (missingFilter === 'images' && idsWithImages.has(club.id)) return false;
+      if (missingFilter === 'images' && hasImageForClub(club)) return false;
       if (missingFilter === 'types' && idsWithTypes.has(club.id)) return false;
       if (missingFilter === 'coordinates' && club.latitude != null && club.longitude != null) return false;
+      if (missingFilter === 'address' && !isVagueClubAddress(club.address)) return false;
+      if (
+        visibilityFilter === 'public' &&
+        (!club.is_active || !club.instagram_url || club.latitude == null || club.longitude == null || !idsWithTypes.has(club.id))
+      ) return false;
 
       if (freshnessFilter) {
         const threshold = freshnessDays[freshnessFilter];
@@ -204,9 +221,10 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      {missingFilter || freshnessFilter ? (
+      {missingFilter || freshnessFilter || visibilityFilter ? (
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <span className="font-semibold">Aktiv keyfiyyət filtri:</span>
+          <span className="font-semibold">Aktiv filtr:</span>
+          {visibilityFilter ? <span>Saytda görünən klublar</span> : null}
           {missingFilter ? <span>{missingLabels[missingFilter]}</span> : null}
           {freshnessFilter ? <span>{freshnessDays[freshnessFilter]}+ gündür yenilənməyib</span> : null}
           <Link href="/admin/klublar" className="ml-auto font-semibold text-[#6A47F0] hover:underline">Filtri sil</Link>
@@ -214,6 +232,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       ) : null}
 
       <form className="mt-6 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:flex-wrap">
+        {visibilityFilter ? <input type="hidden" name="visibility" value={visibilityFilter} /> : null}
         <input
           name="q"
           defaultValue={resolvedSearchParams.q ?? ''}
@@ -239,6 +258,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
           <option value="images">Şəkil çatmır</option>
           <option value="types">Klub tipi çatmır</option>
           <option value="coordinates">Koordinat çatmır</option>
+          <option value="address">Ünvan qeyri-dəqiqdir</option>
         </select>
 
         <select name="freshness" defaultValue={freshnessFilter} className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm">
@@ -257,7 +277,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
 
         <button type="submit" className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white">Axtar</button>
 
-        {(resolvedSearchParams.q || resolvedSearchParams.status || missingFilter || freshnessFilter || sort !== 'updated') ? (
+        {(resolvedSearchParams.q || resolvedSearchParams.status || missingFilter || freshnessFilter || visibilityFilter || sort !== 'updated') ? (
           <Link href="/admin/klublar" className="flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium">
             Təmizlə
           </Link>

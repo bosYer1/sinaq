@@ -3,12 +3,13 @@ import Link from 'next/link';
 import { getClubs } from '@/lib/queries/clubs';
 import { getClubTypes } from '@/lib/queries/districts';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { getSiteUrl } from '@/lib/site-url';
 
 export const metadata: Metadata = {
-  title: 'PC və PlayStation klubları',
-  description: 'Bakıda PC və PlayStation gaming klublarını kateqoriyaya görə tap və müqayisə et. Ünvan, qiymət, iş saatları və xəritəyə bax.',
+  title: 'Bakıda PC və PlayStation klubları — kateqoriya və ünvan',
+  description: 'Bakıda PC, kompüter, internet və PlayStation klublarını kateqoriyaya görə tap. Rayon, ünvan və xəritəni müqayisə et; qiymət və iş saatları məlum olduqda klub profilində göstərilir.',
   alternates: { canonical: '/tip' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/tip', title: 'PC və PlayStation klubları | GameYer', description: 'Bakıda gaming klublarını PC və PlayStation kateqoriyalarına görə tap.' },
+  openGraph: { type: 'website', locale: 'az_AZ', url: '/tip', title: 'Bakıda PC və PlayStation klubları | GameYer', description: 'Bakıdakı PC və PlayStation gaming klublarını kateqoriyaya və rayona görə tap; mövcud qiymət və iş saatlarına klub profillərində bax.' },
 };
 
 function displayType(slug: string, name: string) {
@@ -34,12 +35,38 @@ export default async function TypeIndexPage() {
   }
 
   const activeTypes = types.filter((type) => (typeCounts.get(type.slug) ?? 0) > 0);
+  const siteUrl = getSiteUrl();
+  const pageUrl = `${siteUrl}/tip`;
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'GameYer', item: siteUrl },
+          { '@type': 'ListItem', position: 2, name: 'PC və PlayStation klubları', item: pageUrl },
+        ],
+      },
+      {
+        '@type': 'ItemList',
+        name: 'Bakıda gaming klub kateqoriyaları',
+        numberOfItems: activeTypes.length,
+        itemListElement: activeTypes.map((type, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: `${displayType(type.slug, type.name)} klubları`,
+          url: `${siteUrl}${typeHref(type.slug)}`,
+        })),
+      },
+    ],
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
       <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb"><Link href="/" className="hover:text-ink">GameYer</Link> <span aria-hidden="true">/</span> <span>Klub tipləri</span></nav>
-      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">PC və PlayStation klubları</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Oynamaq istədiyin platformanı seç və Bakıdakı uyğun gaming klublarını müqayisə et.</p>
+      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda PC və PlayStation klubları</h1>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Oynamaq istədiyin platformanı seç və Bakıdakı uyğun gaming klublarını rayon, ünvan və xəritə məlumatları ilə müqayisə et. Qiymət və iş saatları yalnız məlum və təsdiqlənmiş məlumat olduqda göstərilir.</p>
       <div className="mt-7 grid gap-3 sm:grid-cols-2">
         {activeTypes.map((type) => {
           const label = displayType(type.slug, type.name);
@@ -47,6 +74,19 @@ export default async function TypeIndexPage() {
           return <Link key={type.id} href={typeHref(type.slug)} className="rounded-card border border-border bg-surface p-5 shadow-card transition hover:border-border-strong hover:shadow-card-hover"><span className="font-display text-lg font-semibold text-ink">{label} klubları</span><span className="mt-1 block text-xs text-muted">{count} aktiv klub · müqayisə et →</span></Link>;
         })}
       </div>
+
+      <section className="mt-8 rounded-card border border-border bg-surface p-5" aria-labelledby="popular-searches-heading">
+        <h2 id="popular-searches-heading" className="font-display text-lg font-bold text-ink">Populyar gaming klub axtarışları</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">Yaxınlıq, mövcud qiymət və məlum iş saatına görə daha konkret seçim etmək üçün aşağıdakı siyahılara keç.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Yaxınlıqdakı gaming klubları</Link>
+          <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Gaming klub qiymətləri</Link>
+          <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Ucuz PC klubları</Link>
+          <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Ucuz PlayStation klubları</Link>
+          <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">24 saat gaming klubları</Link>
+          <Link href="/rayon" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Rayon üzrə klublar</Link>
+        </div>
+      </section>
     </div>
   );
 }

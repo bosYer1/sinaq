@@ -88,7 +88,6 @@ function ownerClaimMessage(formData: FormData, freeMessage: string) {
 export async function submitClubSubmission(formData: FormData) {
   const successUrl = resultUrl(formData, 'sent');
 
-  // Honeypot: bots often fill hidden fields. Return a fake success without writing data.
   if (text(formData, 'website', 200)) redirect(successUrl);
 
   const kind = text(formData, 'kind', 30);
@@ -98,12 +97,7 @@ export async function submitClubSubmission(formData: FormData) {
   const contactType = text(formData, 'contact_type', 30);
   const contactValue = text(formData, 'contact_value', 200);
 
-  if (
-    !KINDS.has(kind) ||
-    !CONTACT_TYPES.has(contactType) ||
-    clubName.length < 2 ||
-    !validContact(contactType, contactValue)
-  ) {
+  if (!KINDS.has(kind) || !CONTACT_TYPES.has(contactType) || clubName.length < 2 || !validContact(contactType, contactValue)) {
     redirect(resultUrl(formData, 'error'));
   }
 
@@ -116,15 +110,13 @@ export async function submitClubSubmission(formData: FormData) {
   let clubId: string | null = null;
 
   if (clubSlug) {
-    const { data } = await supabase
-      .from('clubs')
-      .select('id')
-      .eq('slug', clubSlug)
-      .eq('is_active', true)
-      .maybeSingle();
+    const { data } = await supabase.from('clubs').select('id').eq('slug', clubSlug).eq('is_active', true).maybeSingle();
     clubId = data?.id ?? null;
   }
 
+  // Public roles intentionally have INSERT permission only on user-controlled
+  // submission columns. status/reviewed_at are database-owned defaults; sending
+  // them here causes Postgres to reject otherwise valid anonymous submissions.
   const { error } = await supabase.from('club_submissions').insert({
     kind: kind as 'correction' | 'new_club' | 'owner_claim',
     club_id: clubId,
@@ -132,8 +124,6 @@ export async function submitClubSubmission(formData: FormData) {
     message,
     contact_type: contactType as 'instagram' | 'phone' | 'email',
     contact_value: contactValue,
-    status: 'pending',
-    reviewed_at: null,
   });
 
   if (error) {

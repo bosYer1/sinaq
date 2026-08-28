@@ -3,7 +3,7 @@
 import { useFilters } from '@/hooks/useFilters';
 import { cn } from '@/lib/utils';
 
-const PRICE_OPTIONS = [5, 10, 15, 20, 30];
+const PRICE_OPTIONS = [2, 3, 4, 5, 10, 15];
 
 export function PriceFilter() {
   const { filters, setPriceMax } = useFilters();
@@ -18,12 +18,12 @@ export function PriceFilter() {
           'focus:border-primary focus:outline-none',
           filters.priceMax && 'border-primary/50 bg-primary-light text-primary-dark',
         )}
-        aria-label="Maksimum qiymətə görə filtr"
+        aria-label="Maksimum saatlıq qiymətə görə filtr"
       >
         <option value="">İstənilən qiymət</option>
         {PRICE_OPTIONS.map((p) => (
           <option key={p} value={p}>
-            {p} AZN-ə qədər
+            Saatlıq {p} AZN-ə qədər
           </option>
         ))}
       </select>

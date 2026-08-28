@@ -57,6 +57,9 @@ export default async function AdminNewClubPage({ searchParams }: AdminNewClubPag
     );
   }
 
+  const sourceSubmissionId = validSubmission && submission ? submission.id : null;
+  const createAction = createClub.bind(null, sourceSubmissionId);
+
   return (
     <div>
       <Link href={validSubmission ? '/admin/muracietler' : '/admin/klublar'} className="text-sm text-gray-500 hover:text-gray-900">
@@ -77,7 +80,7 @@ export default async function AdminNewClubPage({ searchParams }: AdminNewClubPag
           <p className="mt-2 font-semibold text-gray-900">{submission.club_name}</p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-700">{submission.message}</p>
           <p className="mt-3 text-xs text-gray-500">Əlaqə: {submission.contact_type} — {submission.contact_value}</p>
-          <p className="mt-3 text-xs leading-5 text-amber-700">Müraciətdəki məlumat fakt kimi qəbul edilmir. Ünvan, koordinat, klub tipi, qiymət və iş saatlarını ayrıca yoxladıqdan sonra formaya yaz. Klub yaradıldıqdan sonra müraciəti “Həll olunub” et.</p>
+          <p className="mt-3 text-xs leading-5 text-amber-700">Müraciətdəki məlumat fakt kimi qəbul edilmir. Ünvan, koordinat, klub tipi, qiymət və iş saatlarını ayrıca yoxladıqdan sonra formaya yaz. Klub uğurla yaradıldıqda müraciət avtomatik həmin kluba bağlanıb “Həll olunub” statusuna keçiriləcək.</p>
         </div>
       ) : null}
 
@@ -85,7 +88,7 @@ export default async function AdminNewClubPage({ searchParams }: AdminNewClubPag
         club={validSubmission && submission ? { name: submission.club_name } : undefined}
         districts={districts}
         types={types}
-        action={createClub}
+        action={createAction}
         submitLabel="Klubu yarat"
       />
     </div>

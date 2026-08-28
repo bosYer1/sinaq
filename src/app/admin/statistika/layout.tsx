@@ -8,6 +8,7 @@ type HourPoint = {
   label: string;
   views: number;
   sessions: number;
+  visitors: number;
 };
 
 type RankedItem = {
@@ -15,15 +16,19 @@ type RankedItem = {
   source?: string;
   views: number;
   sessions: number;
+  visitors: number;
 };
 
 type Rolling24Data = {
   views_24h: number;
   sessions_24h: number;
+  visitors_24h: number;
   prev_views_24h: number;
   prev_sessions_24h: number;
+  prev_visitors_24h: number;
   today_views: number;
   today_sessions: number;
+  today_visitors: number;
   hourly: HourPoint[];
   top_pages_24h: RankedItem[];
   top_sources_24h: RankedItem[];
@@ -34,10 +39,13 @@ type Rolling24Data = {
 const EMPTY: Rolling24Data = {
   views_24h: 0,
   sessions_24h: 0,
+  visitors_24h: 0,
   prev_views_24h: 0,
   prev_sessions_24h: 0,
+  prev_visitors_24h: 0,
   today_views: 0,
   today_sessions: 0,
+  today_visitors: 0,
   hourly: [],
   top_pages_24h: [],
   top_sources_24h: [],
@@ -56,7 +64,12 @@ function rows(value: Json | undefined, key: 'path' | 'source'): RankedItem[] {
     const row = item as Record<string, Json | undefined>;
     const name = row[key];
     if (typeof name !== 'string') return [];
-    return [{ [key]: name, views: asNumber(row.views), sessions: asNumber(row.sessions) } as RankedItem];
+    return [{
+      [key]: name,
+      views: asNumber(row.views),
+      sessions: asNumber(row.sessions),
+      visitors: asNumber(row.visitors),
+    } as RankedItem];
   });
 }
 
@@ -74,6 +87,7 @@ function parseRolling24(value: Json | null): Rolling24Data {
           label: row.label,
           views: asNumber(row.views),
           sessions: asNumber(row.sessions),
+          visitors: asNumber(row.visitors),
         }];
       })
     : [];
@@ -81,10 +95,13 @@ function parseRolling24(value: Json | null): Rolling24Data {
   return {
     views_24h: asNumber(raw.views_24h),
     sessions_24h: asNumber(raw.sessions_24h),
+    visitors_24h: asNumber(raw.visitors_24h),
     prev_views_24h: asNumber(raw.prev_views_24h),
     prev_sessions_24h: asNumber(raw.prev_sessions_24h),
+    prev_visitors_24h: asNumber(raw.prev_visitors_24h),
     today_views: asNumber(raw.today_views),
     today_sessions: asNumber(raw.today_sessions),
+    today_visitors: asNumber(raw.today_visitors),
     hourly,
     top_pages_24h: rows(raw.top_pages_24h, 'path'),
     top_sources_24h: rows(raw.top_sources_24h, 'source'),
@@ -124,7 +141,7 @@ export default async function StatisticsLayout({ children }: { children: ReactNo
               <h2 className="text-xl font-bold tracking-tight">Son 24 saat</h2>
               <span className="rounded-full bg-[#F1EEFF] px-2.5 py-1 text-[11px] font-bold text-[#6547D7]">ROLLING</span>
             </div>
-            <p className="mt-1 text-sm text-gray-500">Cari andan geriyə doğru real 24 saat. Saat bölgüsü Asia/Baku vaxtı ilə göstərilir.</p>
+            <p className="mt-1 text-sm text-gray-500">Cari andan geriyə doğru real 24 saat. Ziyarət browser session-u, visitor isə qalıcı anonim browser ID-si ilə ölçülür.</p>
           </div>
           <p className="text-xs text-gray-400">Timezone: {stats.timezone}</p>
         </div>
@@ -140,33 +157,33 @@ export default async function StatisticsLayout({ children }: { children: ReactNo
             <p className="mt-2 text-xs text-gray-500">Əvvəlki 24 saat: {stats.prev_views_24h}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Unikal session · 24 saat</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Ziyarət · 24 saat</p>
             <div className="mt-2 flex items-end justify-between gap-3"><p className="text-3xl font-bold sm:text-4xl">{stats.sessions_24h}</p><span className="text-xs font-bold text-gray-500">{growth(stats.sessions_24h, stats.prev_sessions_24h)}</span></div>
             <p className="mt-2 text-xs text-gray-500">Əvvəlki 24 saat: {stats.prev_sessions_24h}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Bu gün · Bakı</p>
-            <p className="mt-2 text-3xl font-bold sm:text-4xl">{stats.today_views}</p>
-            <p className="mt-2 text-xs text-gray-500">{stats.today_sessions} unikal session</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Unikal visitor · 24 saat</p>
+            <div className="mt-2 flex items-end justify-between gap-3"><p className="text-3xl font-bold sm:text-4xl">{stats.visitors_24h}</p><span className="text-xs font-bold text-gray-500">{growth(stats.visitors_24h, stats.prev_visitors_24h)}</span></div>
+            <p className="mt-2 text-xs text-gray-500">Əvvəlki 24 saat: {stats.prev_visitors_24h}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Visitor ölçümü</p>
-            <p className="mt-2 text-base font-bold">Session əsaslı</p>
-            <p className="mt-2 text-xs leading-5 text-gray-500">Ayrıca persistent visitor ID olmadığı üçün saxta “unikal visitor” rəqəmi göstərilmir.</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Bu gün · Bakı</p>
+            <p className="mt-2 text-3xl font-bold sm:text-4xl">{stats.today_views}</p>
+            <p className="mt-2 text-xs text-gray-500">{stats.today_sessions} ziyarət · {stats.today_visitors} visitor</p>
           </div>
         </div>
 
         <div className="mt-6 rounded-xl border border-gray-200 p-4 sm:p-5">
           <div className="flex items-end justify-between gap-3">
             <div><h3 className="font-bold">Saat-saat trafik</h3><p className="mt-1 text-xs text-gray-500">24 bərabər bir saatlıq interval; ilk interval düz 24 saat əvvəl başlayır.</p></div>
-            <span className="text-xs text-gray-400">baxış / session</span>
+            <span className="text-xs text-gray-400">baxış / ziyarət / visitor</span>
           </div>
           <div className="mt-5 overflow-x-auto pb-2">
             <div className="flex h-52 min-w-[720px] items-end gap-1.5">
               {stats.hourly.map((item, index) => {
                 const height = Math.max(4, Math.round((item.views / maxHourlyViews) * 150));
                 return (
-                  <div key={item.start} className="flex w-7 shrink-0 flex-col items-center justify-end gap-1" title={`${item.label} · ${item.views} baxış · ${item.sessions} session`}>
+                  <div key={item.start} className="flex w-7 shrink-0 flex-col items-center justify-end gap-1" title={`${item.label} · ${item.views} baxış · ${item.sessions} ziyarət · ${item.visitors} visitor`}>
                     <span className="text-[10px] font-semibold text-gray-500">{item.views}</span>
                     <div className="w-full rounded-t bg-[#7C5CFC]" style={{ height }} />
                     <span className="h-4 text-[9px] text-gray-400">{index % 3 === 0 ? item.label : ''}</span>
@@ -184,7 +201,7 @@ export default async function StatisticsLayout({ children }: { children: ReactNo
               {stats.top_pages_24h.length === 0 ? <p className="py-3 text-sm text-gray-500">Hələ məlumat yoxdur.</p> : stats.top_pages_24h.map((item, index) => (
                 <div key={item.path} className="flex items-center gap-3 py-3">
                   <span className="w-5 text-xs font-bold text-gray-400">{index + 1}</span>
-                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{item.path}</p><p className="mt-0.5 text-xs text-gray-500">{item.sessions} session</p></div>
+                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{item.path}</p><p className="mt-0.5 text-xs text-gray-500">{item.sessions} ziyarət · {item.visitors} visitor</p></div>
                   <span className="text-sm font-bold">{item.views}</span>
                 </div>
               ))}
@@ -197,7 +214,7 @@ export default async function StatisticsLayout({ children }: { children: ReactNo
               {stats.top_sources_24h.length === 0 ? <p className="py-3 text-sm text-gray-500">Hələ mənbə məlumatı yoxdur.</p> : stats.top_sources_24h.map((item, index) => (
                 <div key={item.source} className="flex items-center gap-3 py-3">
                   <span className="w-5 text-xs font-bold text-gray-400">{index + 1}</span>
-                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{sourceLabel(item.source ?? 'direct')}</p><p className="mt-0.5 truncate text-xs text-gray-500">{item.sessions} session</p></div>
+                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{sourceLabel(item.source ?? 'direct')}</p><p className="mt-0.5 truncate text-xs text-gray-500">{item.sessions} ziyarət · {item.visitors} visitor</p></div>
                   <span className="text-sm font-bold">{item.views}</span>
                 </div>
               ))}

@@ -5,6 +5,7 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   --color-bg: #ffffff;
   --color-bg-elevated: #fafafb;
   --color-surface: #ffffff;
@@ -25,9 +26,39 @@
   --color-live-tint: #e9f9ef;
   --color-warn: #b8860b;
   --color-warn-tint: #fbf3df;
+  --color-shadow: rgba(16, 24, 40, 0.14);
+  --color-scrollbar: #d1d5db;
+  --color-scrollbar-hover: #9ca3af;
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #0b0d12;
+  --color-bg-elevated: #10131a;
+  --color-surface: #141820;
+  --color-surface-hover: #1a1f29;
+  --color-surface-alt: #1c222d;
+  --color-border: #29313d;
+  --color-border-strong: #394554;
+  --color-text: #f3f5f7;
+  --color-text-muted: #a5adba;
+  --color-text-faint: #747f8d;
+  --color-primary: #9a82ff;
+  --color-primary-dark: #8468ff;
+  --color-pc: var(--color-primary);
+  --color-pc-tint: #26213d;
+  --color-ps: #35c5e5;
+  --color-ps-tint: #102e36;
+  --color-live: #4ade80;
+  --color-live-tint: #123322;
+  --color-warn: #e6b94a;
+  --color-warn-tint: #352b13;
+  --color-shadow: rgba(0, 0, 0, 0.42);
+  --color-scrollbar: #3b4654;
+  --color-scrollbar-hover: #566273;
 }
 
 html,
@@ -57,6 +88,87 @@ body {
   max-width: none !important;
 }
 
+/* Keep the same OpenStreetMap renderer in both themes. In dark mode only the
+   presentation changes, so local OSM labels/streets and map geometry stay the
+   same instead of switching to a different provider/style. */
+.leaflet-tile-pane {
+  transition: filter 160ms ease;
+}
+
+html[data-theme='dark'] .leaflet-tile-pane {
+  filter: brightness(0.64) contrast(1.08) saturate(0.78);
+}
+
+.gameyer-map-preview {
+  background: #eef2f2;
+}
+
+.gameyer-map-preview-tiles {
+  transition: filter 160ms ease;
+}
+
+.gameyer-map-preview-wash {
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.gameyer-map-preview-attribution {
+  background: rgba(255, 255, 255, 0.85);
+  color: #475569;
+}
+
+html[data-theme='dark'] .gameyer-map-preview {
+  background: var(--color-surface-alt);
+}
+
+html[data-theme='dark'] .gameyer-map-preview-tiles {
+  filter: brightness(0.64) contrast(1.08) saturate(0.78);
+}
+
+html[data-theme='dark'] .gameyer-map-preview-wash {
+  background: transparent;
+}
+
+html[data-theme='dark'] .gameyer-map-preview-attribution {
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  color: var(--color-text-muted);
+}
+
+/* Legacy light-only alert utilities still exist on submission/admin status
+   surfaces. Normalize those utilities when GameYer's explicit theme is dark
+   so error/rate-limit feedback cannot flash as a bright light card. */
+html[data-theme='dark'] .bg-amber-50 {
+  background-color: var(--color-warn-tint) !important;
+}
+
+html[data-theme='dark'] .border-amber-200 {
+  border-color: color-mix(in srgb, var(--color-warn) 35%, transparent) !important;
+}
+
+html[data-theme='dark'] .text-amber-800 {
+  color: var(--color-warn) !important;
+}
+
+html[data-theme='dark'] .bg-red-50 {
+  background-color: #35191d !important;
+}
+
+html[data-theme='dark'] .border-red-200 {
+  border-color: rgba(248, 113, 113, 0.35) !important;
+}
+
+html[data-theme='dark'] .text-red-700 {
+  color: #fecaca !important;
+}
+
+/* The fixed mobile nav sits above club cards and images. Keep it opaque so
+   underlying artwork cannot bleed into nav labels through backdrop blur. */
+nav[aria-label='Mobil naviqasiya'] {
+  background-color: var(--color-surface) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 .gameyer-marker {
   border: 0;
   background: transparent;
@@ -68,8 +180,8 @@ body {
   background: var(--color-surface);
   color: var(--color-text);
   box-shadow:
-    0 14px 34px -12px rgba(16, 24, 40, 0.2),
-    0 3px 10px rgba(16, 24, 40, 0.07);
+    0 14px 34px -12px var(--color-shadow),
+    0 3px 10px var(--color-shadow);
 }
 
 .leaflet-popup-content {
@@ -84,7 +196,7 @@ body {
   overflow: hidden;
   border: 1px solid var(--color-border) !important;
   border-radius: 12px !important;
-  box-shadow: 0 5px 18px rgba(31, 35, 48, 0.1) !important;
+  box-shadow: 0 5px 18px var(--color-shadow) !important;
 }
 
 .leaflet-control-zoom a {
@@ -92,7 +204,7 @@ body {
   height: 38px !important;
   line-height: 38px !important;
   border-color: var(--color-border) !important;
-  background: rgba(255, 255, 255, 0.96) !important;
+  background: var(--color-surface) !important;
   color: var(--color-text) !important;
 }
 
@@ -110,14 +222,22 @@ body {
   opacity: 0.72;
 }
 
+html[data-theme='dark'] .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent) !important;
+  color: var(--color-text-muted) !important;
+}
+
+html[data-theme='dark'] .leaflet-control-attribution a {
+  color: var(--color-primary) !important;
+}
+
 @media (max-width: 1023px) and (pointer: coarse) {
-  /* Siyahı görünüşündə xəritə ilk toxunuşa qədər səhifə scroll-una mane olmur. */
+  /* Siyahıda ilk toxunuş səhifəni scroll edir; istifadəçi xəritəni ayrıca aktivləşdirir. */
   [data-explore-view='list'][data-mobile-map-active='false'] .leaflet-container {
     pointer-events: none;
     touch-action: pan-y;
   }
 
-  /* İstifadəçi xəritəni aktiv etdikdən sonra Leaflet tam interaktiv olur. */
   [data-explore-view='list'][data-mobile-map-active='true'] .leaflet-container,
   [data-explore-view='map'] .leaflet-container {
     pointer-events: auto;
@@ -156,11 +276,11 @@ body {
 
 ::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: #d1d5db;
+  background: var(--color-scrollbar);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--color-scrollbar-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {

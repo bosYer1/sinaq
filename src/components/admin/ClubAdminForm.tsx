@@ -1,4 +1,5 @@
 import { ClubImageUploader } from '@/components/admin/ClubImageUploader';
+import { ClubPricingEditor } from '@/components/admin/ClubPricingEditor';
 import type {
   ClubOpeningHours,
   ClubType,
@@ -11,6 +12,9 @@ type PricingItem = {
   price_from: number;
   price_to: number | null;
   unit: string;
+  tariff_name?: string | null;
+  schedule_label?: string | null;
+  position?: number;
 };
 
 type TypeAssignment = {
@@ -79,10 +83,6 @@ function dateTimeLocal(value?: string | null) {
 }
 
 export function ClubAdminForm({ club, districts, types, action, submitLabel }: ClubAdminFormProps) {
-  const pricingByType = new Map(
-    (club?.pricing ?? []).map((item) => [item.club_type_id, item])
-  );
-
   const enabledTypeIds = new Set([
     ...(club?.type_assignments ?? []).map((item) => item.club_type_id),
     ...(club?.pricing ?? []).map((item) => item.club_type_id),
@@ -127,7 +127,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-semibold">Əlaqə və xəritə</h2>
-        <p className="mt-1 text-xs text-gray-500">GameYer xəritəsində görünməsi üçün latitude və longitude məcburidir.</p>
+        <p className="mt-1 text-xs text-gray-500">Koordinatlar təsdiqlənməyibsə hər ikisini boş saxla. Klub bazada qorunacaq, amma latitude və longitude birlikdə təsdiqlənənədək public xəritədə və siyahıda görünməyəcək.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="text-sm font-medium">Telefon<input name="phone" defaultValue={club?.phone ?? ''} placeholder="+994..." className={inputClass} /></label>
           <label className="text-sm font-medium">
@@ -136,35 +136,27 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
               name="instagram_url"
               type="url"
               defaultValue={club?.instagram_url ?? ''}
-              placeholder="https://instagram.com/..."
-              pattern="https://(www\.)?instagram\.com/.+"
-              title="Tam Instagram linki yaz: https://instagram.com/..."
+              placeholder="https://instagram.com/username"
+              pattern="https://(www\.)?instagram\.com/[A-Za-z0-9._]{1,30}/?(\?.*)?"
+              title="Klubun tam Instagram profil linkini yaz: https://instagram.com/username"
               autoCapitalize="none"
               spellCheck={false}
               className={inputClass}
             />
           </label>
-          <label className="text-sm font-medium">Latitude<input required name="latitude" type="number" step="any" min="-90" max="90" defaultValue={club?.latitude ?? ''} className={inputClass} /></label>
-          <label className="text-sm font-medium">Longitude<input required name="longitude" type="number" step="any" min="-180" max="180" defaultValue={club?.longitude ?? ''} className={inputClass} /></label>
+          <label className="text-sm font-medium">Latitude<input name="latitude" type="number" step="any" min="-90" max="90" defaultValue={club?.latitude ?? ''} className={inputClass} /></label>
+          <label className="text-sm font-medium">Longitude<input name="longitude" type="number" step="any" min="-180" max="180" defaultValue={club?.longitude ?? ''} className={inputClass} /></label>
         </div>
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-semibold">PC / PlayStation və qiymətlər</h2>
-        <p className="mt-1 text-xs text-gray-500">Tipi seçmək üçün qiymət yazmaq məcburi deyil. Qiymət boşdursa saytda “Qiymət məlum deyil” görünəcək.</p>
-        <div className="mt-4 space-y-3">
-          {types.map((type) => {
-            const pricing = pricingByType.get(type.id);
-            return (
-              <div key={type.id} className="grid gap-3 rounded-lg border border-gray-200 p-4 md:grid-cols-[150px_1fr_1fr_120px]">
-                <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" name={`type_enabled_${type.id}`} defaultChecked={enabledTypeIds.has(type.id)} />{type.name}</label>
-                <label className="text-xs font-medium text-gray-600">Qiymət — dan<input name={`price_from_${type.id}`} type="number" step="0.01" min="0" defaultValue={pricing?.price_from ?? ''} className={inputClass} /></label>
-                <label className="text-xs font-medium text-gray-600">Qiymət — dək<input name={`price_to_${type.id}`} type="number" step="0.01" min="0" defaultValue={pricing?.price_to ?? ''} className={inputClass} /></label>
-                <label className="text-xs font-medium text-gray-600">Vahid<input name={`unit_${type.id}`} defaultValue={pricing?.unit ?? 'saat'} className={inputClass} /></label>
-              </div>
-            );
-          })}
-        </div>
+        <p className="mt-1 text-xs text-gray-500">Hər platforma üçün bir neçə tarif, zona, vaxt aralığı və paket saxlamaq olar. Klub tipi hələ təsdiqlənməyibsə klubu deaktiv saxlayıb heç bir tip seçmədən məlumatı bazada qorumaq olar.</p>
+        <ClubPricingEditor
+          types={types}
+          enabledTypeIds={Array.from(enabledTypeIds)}
+          pricing={club?.pricing ?? []}
+        />
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
@@ -199,8 +191,17 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-semibold">Status və reytinq</h2>
+        {club?.id && club.is_active === false ? (
+          <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <p className="font-semibold">Bu klub əvvəl deaktiv edilib və public saytda görünmür.</p>
+            <label className="mt-2 flex items-start gap-2">
+              <input type="checkbox" name="confirm_reactivate" className="mt-0.5" />
+              <span>Klubun fəaliyyətini, aktual Instagramını və klub tipini yenidən yoxladım; aktivləşdirməni təsdiqləyirəm.</span>
+            </label>
+          </div>
+        ) : null}
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="is_active" defaultChecked={club?.is_active ?? true} />Saytda aktivdir</label>
+          <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="is_active" defaultChecked={club?.is_active ?? false} />Saytda aktivdir</label>
           <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="is_premium" defaultChecked={club?.is_premium ?? false} />Premium</label>
           <label className="text-sm font-medium">Premium bitmə tarixi — Bakı vaxtı<input name="premium_expires_at" type="datetime-local" defaultValue={dateTimeLocal(club?.premium_expires_at)} className={inputClass} /></label>
           <div className="grid grid-cols-2 gap-3">
@@ -208,7 +209,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
             <label className="text-sm font-medium">Səs sayı<input name="rating_count" type="number" min="0" defaultValue={club?.rating_count ?? 0} className={inputClass} /></label>
           </div>
         </div>
-        <p className="mt-3 text-xs text-gray-500">Premium aktiv edilirsə bitmə tarixini də doldur. Bitmə vaxtı keçən premium public səhifədə avtomatik VIP kimi göstərilməyəcək.</p>
+        <p className="mt-3 text-xs text-gray-500">Aktiv klub üçün aktual Instagram və ən azı bir təsdiqlənmiş klub tipi tələb olunur. Premium aktiv edilirsə bitmə tarixini də doldur.</p>
       </section>
 
       <div className="sticky bottom-4 flex justify-end rounded-xl border border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur">

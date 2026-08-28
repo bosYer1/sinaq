@@ -5,16 +5,16 @@ import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicReque
 export const dynamic = 'force-dynamic';
 
 const MAX_BODY_BYTES = 1024;
-const SESSION_RE = /^[A-Za-z0-9_-]{8,64}$/;
+const ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const HOST_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?::\d{1,5})?$/i;
 
 type PageViewInsertClient = {
   from: (table: 'page_views') => {
     insert: (row: {
       session_id: string;
+      visit_id: string | null;
       path: string;
       referrer_host: string | null;
-      ip_address: string | null;
       user_agent: string | null;
     }) => PromiseLike<{ error: { message: string } | null }>;
   };
@@ -23,22 +23,6 @@ type PageViewInsertClient = {
 type AdminRpcClient = {
   rpc: (fn: 'is_admin') => PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
 };
-
-function privacySafeClientIp(request: Request) {
-  const value = request.headers.get('x-vercel-forwarded-for') ?? request.headers.get('x-forwarded-for');
-  if (!value) return null;
-
-  const ip = value.split(',')[0]?.trim();
-  if (!ip || ip.length > 45) return null;
-
-  // Keep only a coarse IPv4 /24-equivalent value. Do not persist raw IPv6 addresses.
-  const octets = ip.split('.');
-  if (octets.length !== 4) return null;
-  const numbers = octets.map((octet) => Number(octet));
-  if (numbers.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) return null;
-
-  return `${numbers[0]}.${numbers[1]}.${numbers[2]}.0`;
-}
 
 function userAgent(request: Request) {
   const value = request.headers.get('user-agent')?.trim();
@@ -70,15 +54,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  const { sessionId, path, referrerHost } = parsed.data as {
+  const { sessionId, visitId, path, referrerHost } = parsed.data as {
     sessionId?: unknown;
+    visitId?: unknown;
     path?: unknown;
     referrerHost?: unknown;
   };
 
   if (
     typeof sessionId !== 'string' ||
-    !SESSION_RE.test(sessionId) ||
+    !ID_RE.test(sessionId) ||
+    (visitId != null && (typeof visitId !== 'string' || !ID_RE.test(visitId))) ||
     typeof path !== 'string' ||
     path.length < 1 ||
     path.length > 300 ||
@@ -112,9 +98,9 @@ export async function POST(request: Request) {
   const analytics = supabase as unknown as PageViewInsertClient;
   const { error } = await analytics.from('page_views').insert({
     session_id: sessionId,
+    visit_id: typeof visitId === 'string' ? visitId : null,
     path,
     referrer_host: cleanReferrer,
-    ip_address: privacySafeClientIp(request),
     user_agent: userAgent(request),
   });
 

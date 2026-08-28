@@ -41,13 +41,14 @@ export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchAct
 
   return (
     <div className="flex flex-col gap-3">
-      {clubs.map((club) => (
+      {clubs.map((club, index) => (
         <ClubCard
           key={club.id}
           club={club}
           active={club.id === activeClubId}
           onMouseEnter={onHoverClub ? () => onHoverClub(club.id) : undefined}
           ref={cardRefs ? (el) => { cardRefs.current[club.id] = el; } : undefined}
+          imagePriority={index === 0}
         />
       ))}
     </div>

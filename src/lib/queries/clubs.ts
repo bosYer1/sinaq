@@ -1,11 +1,12 @@
-import { createClient } from '@/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
+import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { isPremiumActive } from '@/lib/utils';
 import type { ClubFilters, ClubWithRelations } from '@/types/database';
 
 const CLUB_SELECT = `
   id, name, slug, description, district_id, address, latitude, longitude,
-  phone, instagram_url, is_premium, premium_expires_at, is_active,
+  phone, instagram_url, profile_image_url, is_premium, premium_expires_at, is_active,
   is_verified, verified_at, created_at, updated_at,
   district:districts ( id, name, slug ),
   type_assignments:club_type_assignments (
@@ -13,7 +14,7 @@ const CLUB_SELECT = `
     club_type:club_types ( id, name, slug )
   ),
   pricing:club_pricing (
-    id, club_id, club_type_id, price_from, price_to, unit,
+    id, club_id, club_type_id, price_from, price_to, unit, tariff_name, schedule_label, position,
     club_type:club_types ( id, name, slug )
   ),
   images:club_images ( id, url, is_cover, position ),
@@ -23,9 +24,6 @@ const CLUB_SELECT = `
 function normalizeClubRelations(club: ClubWithRelations): ClubWithRelations {
   return {
     ...club,
-    // External map/business rating snapshots are intentionally not selected by
-    // public queries. These neutral values keep the shared relation type stable
-    // until GameYer has first-party user reviews.
     rating_avg: null,
     rating_count: 0,
     type_assignments: Array.isArray(club.type_assignments) ? club.type_assignments : [],
@@ -35,8 +33,13 @@ function normalizeClubRelations(club: ClubWithRelations): ClubWithRelations {
   };
 }
 
-export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
-  const supabase = await createClient();
+function hasConfirmedPublicType(club: ClubWithRelations) {
+  const types = inferClubTypeSlugs(club);
+  return types.includes('pc') || types.includes('playstation');
+}
+
+async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
+  const supabase = createPublicClient();
   let districtId: string | null = null;
 
   if (filters.district) {
@@ -65,6 +68,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     .from('clubs')
     .select(selectString)
     .eq('is_active', true)
+    .not('instagram_url', 'is', null)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
     .order('is_premium', { ascending: false })
@@ -74,6 +78,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
 
   if (hasPriceFilter) {
     query = query
+      .eq('pricing.unit', 'saat')
       .gt('pricing.price_from', 0)
       .lte('pricing.price_from', filters.priceMax!);
   }
@@ -94,7 +99,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
     return [];
   }
 
-  let clubs = (data ?? []).map(normalizeClubRelations);
+  let clubs = (data ?? []).map(normalizeClubRelations).filter(hasConfirmedPublicType);
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
   const hasTypeFilter = requestedType === 'pc' || requestedType === 'playstation';
 
@@ -107,6 +112,7 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
       club.pricing.some(
         (pricing) =>
           pricing.club_type?.slug === requestedType &&
+          pricing.unit === 'saat' &&
           pricing.price_from > 0 &&
           pricing.price_from <= filters.priceMax!
       )
@@ -122,14 +128,25 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
   return clubs;
 }
 
-export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
-  const supabase = await createClient();
+const getCachedClubs = unstable_cache(
+  async (filters: ClubFilters) => queryClubs(filters),
+  ['gameyer-public-clubs-v3'],
+  { revalidate: 60, tags: ['public-clubs'] },
+);
+
+export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
+  return getCachedClubs(filters);
+}
+
+async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> {
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from('clubs')
     .select(CLUB_SELECT)
     .eq('slug', slug)
     .eq('is_active', true)
+    .not('instagram_url', 'is', null)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
     .maybeSingle()
@@ -140,5 +157,17 @@ export async function getClubBySlug(slug: string): Promise<ClubWithRelations | n
     return null;
   }
 
-  return data ? normalizeClubRelations(data) : null;
+  if (!data) return null;
+  const club = normalizeClubRelations(data);
+  return hasConfirmedPublicType(club) ? club : null;
+}
+
+const getCachedClubBySlug = unstable_cache(
+  async (slug: string) => queryClubBySlug(slug),
+  ['gameyer-public-club-by-slug-v3'],
+  { revalidate: 60, tags: ['public-clubs'] },
+);
+
+export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
+  return getCachedClubBySlug(slug);
 }

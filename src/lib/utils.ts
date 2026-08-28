@@ -6,11 +6,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** AZN qiymət aralığını formatlayır: "10 AZN" və ya "10–15 AZN". */
+function formatPriceValue(value: number): string {
+  return new Intl.NumberFormat('az-AZ', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+/** AZN qiymət aralığını qəpiklik dəqiqliyi itirmədən formatlayır. */
 export function formatPriceRange(priceFrom: number, priceTo: number | null, unit: string): string {
-  const from = Math.round(priceFrom);
-  if (priceTo && priceTo !== priceFrom) {
-    return `${from}–${Math.round(priceTo)} AZN / ${unit}`;
+  const from = formatPriceValue(priceFrom);
+  if (priceTo != null && priceTo !== priceFrom) {
+    return `${from}–${formatPriceValue(priceTo)} AZN / ${unit}`;
   }
   return `${from} AZN / ${unit}`;
 }

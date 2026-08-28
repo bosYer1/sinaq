@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { isVagueClubAddress } from '@/lib/clubDataQuality';
 
 export const dynamic = 'force-dynamic';
 
 type ActiveClubRow = {
   id: string;
+  address: string | null;
   description: string | null;
   instagram_url: string | null;
+  profile_image_url: string | null;
   latitude: number | null;
   longitude: number | null;
   updated_at: string;
@@ -29,6 +32,7 @@ export default async function AdminPage() {
   let missingImages = 0;
   let missingTypes = 0;
   let missingCoordinates = 0;
+  let vagueAddress = 0;
   let stale90 = 0;
 
   const nowIso = new Date().toISOString();
@@ -57,7 +61,7 @@ export default async function AdminPage() {
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_verified', true),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
-    supabase.from('clubs').select('id,description,instagram_url,latitude,longitude,updated_at').eq('is_active', true),
+    supabase.from('clubs').select('id,address,description,instagram_url,profile_image_url,latitude,longitude,updated_at').eq('is_active', true),
     supabase.from('club_opening_hours').select('club_id'),
     supabase.from('club_pricing').select('club_id'),
     supabase.from('club_images').select('club_id'),
@@ -87,12 +91,21 @@ export default async function AdminPage() {
     if (!club.instagram_url) missingInstagram += 1;
     if (!idsWithHours.has(club.id)) missingHours += 1;
     if (!idsWithPricing.has(club.id)) missingPricing += 1;
-    if (!idsWithImages.has(club.id)) missingImages += 1;
+    if (!club.profile_image_url && !idsWithImages.has(club.id)) missingImages += 1;
     if (!idsWithTypes.has(club.id)) missingTypes += 1;
     if (club.latitude == null || club.longitude == null) missingCoordinates += 1;
+    if (isVagueClubAddress(club.address)) vagueAddress += 1;
     const updatedMs = Date.parse(club.updated_at);
     if (!Number.isFinite(updatedMs) || nowMs - updatedMs >= stale90Ms) stale90 += 1;
   }
+
+  const visibleClubs = activeRows.filter((club) =>
+    Boolean(club.instagram_url) &&
+    club.latitude != null &&
+    club.longitude != null &&
+    idsWithTypes.has(club.id)
+  ).length;
+  const inactiveClubs = Math.max(0, totalClubs - activeClubs);
 
   const completenessItems = [
     { label: 'Telefon çatmır', value: missingPhone, key: 'phone' },
@@ -103,6 +116,7 @@ export default async function AdminPage() {
     { label: 'Şəkil çatmır', value: missingImages, key: 'images' },
     { label: 'Klub tipi çatmır', value: missingTypes, key: 'types' },
     { label: 'Koordinat çatmır', value: missingCoordinates, key: 'coordinates' },
+    { label: 'Ünvan qeyri-dəqiqdir', value: vagueAddress, key: 'address' },
   ];
 
   return (
@@ -132,6 +146,39 @@ export default async function AdminPage() {
           <div className="mt-2 flex items-end justify-between gap-3"><p className="text-4xl font-bold">{pendingSubmissions}</p><span className="text-sm font-semibold text-[#6A47F0]">Bax →</span></div>
         </Link>
       </div>
+
+      <section className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold">Klub görünürlüğü</h2>
+            <p className="mt-1 text-sm text-gray-500">Aktiv klubların saytda görünmə vəziyyəti public eligibility qaydasına əsasən ayrıca göstərilir.</p>
+          </div>
+          <Link href="/admin/klublar" className="text-sm font-semibold text-[#6A47F0] hover:underline">Klubları idarə et</Link>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Link href="/admin/klublar?status=active&visibility=public" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 transition hover:border-emerald-400">
+            <p className="text-sm text-emerald-700">Saytda görünən</p>
+            <p className="mt-1 text-3xl font-bold text-emerald-950">{visibleClubs}</p>
+            <p className="mt-1 text-xs text-emerald-700">Aktiv + Instagram + koordinat + təsdiqlənmiş tip</p>
+          </Link>
+          <Link href="/admin/klublar?status=active&missing=coordinates" className="rounded-lg border border-amber-200 bg-amber-50 p-4 transition hover:border-amber-400">
+            <p className="text-sm text-amber-700">Koordinatsız gizli</p>
+            <p className="mt-1 text-3xl font-bold text-amber-950">{missingCoordinates}</p>
+            <p className="mt-1 text-xs text-amber-700">Aktivdir, public siyahıda görünmür</p>
+          </Link>
+          <Link href="/admin/klublar?status=active" className="rounded-lg border border-blue-200 bg-blue-50 p-4 transition hover:border-blue-400">
+            <p className="text-sm text-blue-700">Ümumi aktiv</p>
+            <p className="mt-1 text-3xl font-bold text-blue-950">{activeClubs}</p>
+            <p className="mt-1 text-xs text-blue-700">Görünən və koordinatsız birlikdə</p>
+          </Link>
+          <Link href="/admin/klublar?status=inactive" className="rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-gray-400">
+            <p className="text-sm text-gray-600">Deaktiv / gizlədilmiş</p>
+            <p className="mt-1 text-3xl font-bold text-gray-950">{inactiveClubs}</p>
+            <p className="mt-1 text-xs text-gray-600">Public saytda göstərilmir</p>
+          </Link>
+        </div>
+      </section>
 
       <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">

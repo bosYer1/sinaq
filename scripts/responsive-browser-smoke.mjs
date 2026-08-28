@@ -177,6 +177,38 @@ async function assertCommonLayout(client, viewport, path) {
 
 async function assertHomepage(client, viewport) {
   await navigate(client, '/');
+  if (viewport.mobile) {
+    await waitForPage(client, '[aria-label="Xəritəni aktiv et"]');
+    const listView = await evaluate(client, `(() => {
+      const activation = document.querySelector('[aria-label="Xəritəni aktiv et"]');
+      const map = document.querySelector('[aria-label="GameYer klub xəritəsi"]');
+      const mapContainer = activation?.parentElement;
+      return {
+        mapLoaded: Boolean(map),
+        activationVisible: Boolean(activation),
+        activationText: activation?.textContent?.trim() ?? null,
+        mapActive: document.querySelector('[data-explore-view="list"]')?.getAttribute('data-mobile-map-active'),
+        clubsVisible: document.body.innerText.includes('Klublar ('),
+        mapContainerHeight: mapContainer?.getBoundingClientRect().height ?? 0,
+      };
+    })()`);
+    assert(!listView.mapLoaded, `${viewport.name}: mobile list map loaded before activation`, listView);
+    assert(listView.activationVisible, `${viewport.name}: map activation control is missing`, listView);
+    assert(listView.activationText === 'Xəritəni hərəkət etdirmək üçün toxun', `${viewport.name}: map activation text regressed`, listView);
+    assert(listView.mapActive === 'false', `${viewport.name}: list map is interactive before activation`, listView);
+    assert(listView.clubsVisible, `${viewport.name}: club list heading is missing`, listView);
+    assert(listView.mapContainerHeight >= 330 && listView.mapContainerHeight <= 400, `${viewport.name}: list-view map placeholder height regressed`, listView);
+    await evaluate(client, `document.querySelector('[aria-label="Xəritəni aktiv et"]')?.click()`);
+    await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
+    const activated = await evaluate(client, `(() => ({
+      activationVisible: Boolean(document.querySelector('[aria-label="Xəritəni aktiv et"]')),
+      mapLoaded: Boolean(document.querySelector('[aria-label="GameYer klub xəritəsi"]')),
+      mapActive: document.querySelector('[data-explore-view="list"]')?.getAttribute('data-mobile-map-active'),
+    }))()`);
+    assert(!activated.activationVisible && activated.mapLoaded && activated.mapActive === 'true', `${viewport.name}: map did not lazy-load and activate after touch`, activated);
+    await capture(client, `${viewport.name}-home-list`);
+    await evaluate(client, `Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Xəritə')?.click()`);
+  }
   await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
   await sleep(900);
 
@@ -201,7 +233,7 @@ async function assertHomepage(client, viewport) {
   assert(initial.scrollWidth <= initial.clientWidth + 1, `${viewport.name}: homepage horizontal overflow detected`, initial);
 
   if (viewport.mobile) {
-    assert(initial.map.height >= 330 && initial.map.height <= 420, `${viewport.name}: mobile map height regressed`, initial);
+    assert(initial.map.height >= 330 && initial.map.height <= 440, `${viewport.name}: mobile map height regressed`, initial);
     assert(initial.map.left >= 0 && initial.map.right <= initial.innerWidth + 1, `${viewport.name}: mobile map escapes viewport`, initial);
   } else {
     assert(initial.map.height >= 588 && initial.map.height <= 662, `${viewport.name}: desktop map height regressed`, initial);

@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
@@ -8,9 +8,21 @@ import { requireAdmin } from '@/lib/admin/requireAdmin';
 const IMAGE_BUCKET = 'club-images';
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_IMAGES_PER_CLUB = 8;
+const MAX_PRICING_ROWS = 100;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const INSTAGRAM_PATTERN = /^https:\/\/(?:www\.)?instagram\.com\//i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const INSTAGRAM_PATTERN = /^https:\/\/(?:www\.)?instagram\.com\/[a-z0-9._]{1,30}\/?(?:\?.*)?$/i;
+
+type PricingFormRow = {
+  club_type_id: string;
+  price_from: number | null;
+  price_to: number | null;
+  unit: string;
+  tariff_name: string | null;
+  schedule_label: string | null;
+  position: number;
+};
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -69,7 +81,10 @@ function validateCoreFormInput(formData: FormData) {
 
   const instagramUrl = nullableText(formData, 'instagram_url');
   if (instagramUrl && !INSTAGRAM_PATTERN.test(instagramUrl)) {
-    throw new Error('Instagram üçün tam https://instagram.com/... linki yazılmalıdır.');
+    throw new Error('Instagram üçün klubun tam profil linkini yazın: https://instagram.com/username');
+  }
+  if (booleanValue(formData, 'is_active') && !instagramUrl) {
+    throw new Error('Instagramı təsdiqlənməyən klub aktiv edilə bilməz. Klubu deaktiv saxlayın.');
   }
 
   if (booleanValue(formData, 'is_premium')) {
@@ -78,11 +93,20 @@ function validateCoreFormInput(formData: FormData) {
 }
 
 function validateCoordinates(formData: FormData) {
-  const latitude = nullableNumber(formData, 'latitude');
-  const longitude = nullableNumber(formData, 'longitude');
+  const latitudeRaw = text(formData, 'latitude');
+  const longitudeRaw = text(formData, 'longitude');
 
-  if (latitude == null || longitude == null) {
-    throw new Error('Xəritə üçün latitude və longitude mütləq yazılmalıdır.');
+  if (!latitudeRaw && !longitudeRaw) {
+    return { latitude: null, longitude: null };
+  }
+  if (!latitudeRaw || !longitudeRaw) {
+    throw new Error('Koordinat yazılırsa latitude və longitude birlikdə doldurulmalıdır.');
+  }
+
+  const latitude = Number(latitudeRaw);
+  const longitude = Number(longitudeRaw);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new Error('Latitude və longitude rəqəm olmalıdır.');
   }
   if (latitude < -90 || latitude > 90) throw new Error('Latitude -90 ilə 90 arasında olmalıdır.');
   if (longitude < -180 || longitude > 180) throw new Error('Longitude -180 ilə 180 arasında olmalıdır.');
@@ -109,21 +133,71 @@ function validateImageUrl(url: string) {
   }
 }
 
+function parsePricingRows(formData: FormData): PricingFormRow[] {
+  const raw = text(formData, 'pricing_json');
+  if (!raw) return [];
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('Qiymət məlumatı düzgün formatda deyil.');
+  }
+
+  if (!Array.isArray(parsed) || parsed.length > MAX_PRICING_ROWS) {
+    throw new Error(`Bir klubda maksimum ${MAX_PRICING_ROWS} tarif saxlamaq olar.`);
+  }
+
+  return parsed.map((value, index) => {
+    if (!value || typeof value !== 'object') throw new Error(`${index + 1}-ci tarif düzgün deyil.`);
+    const item = value as Record<string, unknown>;
+    const clubTypeId = typeof item.club_type_id === 'string' ? item.club_type_id.trim() : '';
+    const tariffName = typeof item.tariff_name === 'string' ? item.tariff_name.trim() : '';
+    const scheduleLabel = typeof item.schedule_label === 'string' ? item.schedule_label.trim() : '';
+    const unit = typeof item.unit === 'string' ? item.unit.trim() : 'saat';
+    const priceFrom = item.price_from == null || item.price_from === '' ? null : Number(item.price_from);
+    const priceTo = item.price_to == null || item.price_to === '' ? null : Number(item.price_to);
+    const position = Number.isInteger(item.position) && Number(item.position) >= 0 ? Number(item.position) : index;
+
+    if (!clubTypeId || clubTypeId.length > 64) throw new Error(`${index + 1}-ci tarifin klub tipi düzgün deyil.`);
+    if (tariffName.length > 80) throw new Error('Tarif adı maksimum 80 simvol ola bilər.');
+    if (scheduleLabel.length > 120) throw new Error('Tarif vaxtı/şərti maksimum 120 simvol ola bilər.');
+    if (!unit || unit.length > 30) throw new Error('Qiymət vahidi 1–30 simvol arasında olmalıdır.');
+    if (priceFrom != null && (!Number.isFinite(priceFrom) || priceFrom < 0)) throw new Error('Qiymət mənfi və ya etibarsız ola bilməz.');
+    if (priceTo != null && (!Number.isFinite(priceTo) || priceTo < 0)) throw new Error('Son qiymət mənfi və ya etibarsız ola bilməz.');
+    if (priceFrom != null && priceFrom > 0 && priceTo != null && priceTo < priceFrom) {
+      throw new Error('Son qiymət başlanğıc qiymətdən aşağı ola bilməz.');
+    }
+    if (priceFrom == null && (priceTo != null || tariffName || scheduleLabel)) {
+      throw new Error('Tarif adı, vaxtı və ya son qiyməti yazılıbsa başlanğıc qiyməti də yazılmalıdır.');
+    }
+
+    return {
+      club_type_id: clubTypeId,
+      price_from: priceFrom,
+      price_to: priceTo,
+      unit,
+      tariff_name: tariffName || null,
+      schedule_label: scheduleLabel || null,
+      position,
+    };
+  });
+}
+
 function validateRelationFormInput(formData: FormData) {
   const enabledTypeIds = Array.from(formData.keys())
     .filter((key) => key.startsWith('type_enabled_') && booleanValue(formData, key))
     .map((key) => key.replace('type_enabled_', ''));
 
-  if (enabledTypeIds.length === 0) {
-    throw new Error('Ən azı bir klub tipi (PC və ya PlayStation) seçilməlidir.');
+  if (enabledTypeIds.length === 0 && booleanValue(formData, 'is_active')) {
+    throw new Error('Aktiv klub üçün ən azı bir təsdiqlənmiş klub tipi (PC və ya PlayStation) seçilməlidir.');
   }
 
-  for (const typeId of enabledTypeIds) {
-    const priceFrom = nullableNumber(formData, `price_from_${typeId}`);
-    const priceTo = nullableNumber(formData, `price_to_${typeId}`);
-    if (priceFrom != null && priceFrom < 0) throw new Error('Qiymət mənfi ola bilməz.');
-    if (priceFrom != null && priceFrom > 0 && priceTo != null && priceTo < priceFrom) {
-      throw new Error('Son qiymət başlanğıc qiymətdən aşağı ola bilməz.');
+  const enabledTypeSet = new Set(enabledTypeIds);
+  const pricingRows = parsePricingRows(formData);
+  for (const row of pricingRows) {
+    if (!enabledTypeSet.has(row.club_type_id)) {
+      throw new Error('Deaktiv edilmiş klub tipi üçün qiymət saxlamaq olmaz.');
     }
   }
 
@@ -205,6 +279,19 @@ async function removeUploadedFiles(urls: string[]) {
   if (paths.length > 0) await supabase.storage.from(IMAGE_BUCKET).remove(paths);
 }
 
+async function rollbackCreatedClub(clubId: string) {
+  const supabase = await createClient();
+  const { data: imageRows, error: imageError } = await supabase
+    .from('club_images')
+    .select('url')
+    .eq('club_id', clubId);
+  if (imageError) console.error('Yeni klub rollback şəkilləri oxunmadı:', imageError.message);
+  const urls = ((imageRows ?? []) as Array<{ url: string }>).map((item) => item.url);
+  await removeUploadedFiles(urls);
+  const { error: deleteError } = await supabase.from('clubs').delete().eq('id', clubId);
+  if (deleteError) console.error('Yeni klub rollback silinməsi uğursuz oldu:', deleteError.message);
+}
+
 async function uploadImages(clubId: string, files: File[]) {
   const supabase = await createClient();
   const uploadedUrls: string[] = [];
@@ -237,23 +324,23 @@ async function replaceRelations(clubId: string, formData: FormData) {
 
   const types = (typesData ?? []) as Array<{ id: string; name: string; slug: string }>;
   const enabledTypes = types.filter((type) => booleanValue(formData, `type_enabled_${type.id}`));
-  if (enabledTypes.length === 0) {
-    throw new Error('Ən azı bir klub tipi (PC və ya PlayStation) seçilməlidir.');
+  if (enabledTypes.length === 0 && booleanValue(formData, 'is_active')) {
+    throw new Error('Aktiv klub üçün ən azı bir təsdiqlənmiş klub tipi seçilməlidir.');
   }
 
+  const enabledTypeIds = new Set(enabledTypes.map((type) => type.id));
   const assignments = enabledTypes.map((type) => ({ club_type_id: type.id }));
-  const pricing = enabledTypes
-    .map((type) => {
-      const priceFrom = nullableNumber(formData, `price_from_${type.id}`);
-      if (priceFrom == null || priceFrom <= 0) return null;
-      return {
-        club_type_id: type.id,
-        price_from: priceFrom,
-        price_to: nullableNumber(formData, `price_to_${type.id}`),
-        unit: text(formData, `unit_${type.id}`) || 'saat',
-      };
-    })
-    .filter(Boolean);
+  const pricing = parsePricingRows(formData)
+    .filter((row) => enabledTypeIds.has(row.club_type_id) && row.price_from != null && row.price_from > 0)
+    .map((row, position) => ({
+      club_type_id: row.club_type_id,
+      price_from: row.price_from,
+      price_to: row.price_to,
+      unit: row.unit,
+      tariff_name: row.tariff_name,
+      schedule_label: row.schedule_label,
+      position,
+    }));
 
   const hours = booleanValue(formData, 'hours_enabled')
     ? Array.from({ length: 7 }, (_, day) => {
@@ -361,6 +448,10 @@ export async function saveClub(formData: FormData) {
     updated_at: new Date().toISOString(),
   };
 
+  if (!previousClub.is_active && payload.is_active && !booleanValue(formData, 'confirm_reactivate')) {
+    throw new Error('Deaktiv klubu yenidən aktivləşdirmək üçün təsdiq tələb olunur.');
+  }
+
   const { error: updateError } = await supabase.from('clubs').update(payload as never).eq('id', id);
   if (updateError) throw new Error(updateError.message);
 
@@ -375,18 +466,35 @@ export async function saveClub(formData: FormData) {
     throw relationError;
   }
 
+  updateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
   revalidatePath(`/admin/klublar/${id}`);
   revalidatePath(`/klub/${slug}`);
+  if (previousClub.slug !== slug) revalidatePath(`/klub/${previousClub.slug}`);
   redirect(`/admin/klublar/${id}?saved=1`);
 }
 
-export async function createClub(formData: FormData) {
+export async function createClub(sourceSubmissionId: string | null, formData: FormData) {
   const { supabase } = await requireAdmin();
   validateCoreFormInput(formData);
   validateRelationFormInput(formData);
+
+  const submissionId = sourceSubmissionId?.trim() || null;
+  if (submissionId) {
+    if (!UUID_PATTERN.test(submissionId)) throw new Error('Müraciət ID düzgün deyil.');
+    const { data: submission, error: submissionError } = await supabase
+      .from('club_submissions')
+      .select('id,club_id,status')
+      .eq('id', submissionId)
+      .eq('kind', 'new_club')
+      .is('club_id', null)
+      .in('status', ['pending', 'reviewing'])
+      .maybeSingle();
+    if (submissionError) throw new Error(submissionError.message);
+    if (!submission) throw new Error('Yeni-klub müraciəti artıq istifadə olunub və ya etibarlı deyil.');
+  }
 
   const name = text(formData, 'name');
   if (!name) throw new Error('Klub adı boş ola bilməz.');
@@ -429,13 +537,36 @@ export async function createClub(formData: FormData) {
   try {
     await replaceRelations(club.id, formData);
   } catch (relationError) {
-    await supabase.from('clubs').delete().eq('id', club.id);
+    await rollbackCreatedClub(club.id);
     throw relationError;
   }
 
+  if (submissionId) {
+    const { data: linkedSubmission, error: linkError } = await supabase
+      .from('club_submissions')
+      .update({
+        club_id: club.id,
+        status: 'resolved',
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', submissionId)
+      .eq('kind', 'new_club')
+      .is('club_id', null)
+      .in('status', ['pending', 'reviewing'])
+      .select('id')
+      .maybeSingle();
+
+    if (linkError || !linkedSubmission) {
+      await rollbackCreatedClub(club.id);
+      throw new Error(linkError?.message ?? 'Müraciət artıq başqa klub üçün istifadə olunub. Yeni klub geri qaytarıldı.');
+    }
+  }
+
+  updateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
+  if (submissionId) revalidatePath('/admin/muracietler');
   redirect(`/admin/klublar/${club.id}?created=1`);
 }
 
@@ -445,14 +576,40 @@ export async function toggleClubActive(formData: FormData) {
   if (!id) throw new Error('Klub ID tapılmadı.');
 
   const nextValue = text(formData, 'next_value') === 'true';
+  if (nextValue && !booleanValue(formData, 'confirm_reactivate')) {
+    throw new Error('Deaktiv klubu yenidən aktivləşdirmək üçün təsdiq tələb olunur.');
+  }
+
+  const { data: club, error: clubError } = await supabase
+    .from('clubs')
+    .select('slug,instagram_url')
+    .eq('id', id)
+    .maybeSingle();
+  if (clubError) throw new Error(clubError.message);
+  if (!club) throw new Error('Klub tapılmadı.');
+  if (nextValue && !club.instagram_url) {
+    throw new Error('Instagramı təsdiqlənməyən klub yenidən aktiv edilə bilməz.');
+  }
+
+  if (nextValue) {
+    const { count, error: typeError } = await supabase
+      .from('club_type_assignments')
+      .select('club_type_id', { count: 'exact', head: true })
+      .eq('club_id', id);
+    if (typeError) throw new Error(typeError.message);
+    if (!count) throw new Error('Tipi təsdiqlənməyən klub yenidən aktiv edilə bilməz.');
+  }
+
   const { error } = await supabase
     .from('clubs')
     .update({ is_active: nextValue, updated_at: new Date().toISOString() } as never)
     .eq('id', id);
   if (error) throw new Error(error.message);
 
+  updateTag('public-clubs');
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
   revalidatePath(`/admin/klublar/${id}`);
+  revalidatePath(`/klub/${club.slug}`);
 }

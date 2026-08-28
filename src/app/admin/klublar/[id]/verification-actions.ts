@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 
 export async function revokeClubVerification(formData: FormData) {
@@ -27,6 +27,8 @@ export async function revokeClubVerification(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
+  updateTag('public-clubs');
+  revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/admin/klublar');
   revalidatePath(`/admin/klublar/${id}`);

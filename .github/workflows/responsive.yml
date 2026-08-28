@@ -53,6 +53,12 @@ jobs:
           cat /tmp/gameyer-responsive-next.log
           exit 1
 
+      - name: SEO utility header regression
+        run: node scripts/seo-header-smoke.mjs
+
+      - name: Map theme regression
+        run: node scripts/map-theme-regression.mjs
+
       - name: Locate Chrome
         run: |
           set -euo pipefail

@@ -3,21 +3,40 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
-const STORAGE_KEY = 'gameyer_visitor_id';
+const VISITOR_KEY = 'gameyer_visitor_id';
+const VISIT_KEY = 'gameyer_visit_id';
 const REFERRER_KEY = 'gameyer_entry_referrer';
+
+function randomId(prefix: string) {
+  const id = typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return `${prefix}${id}`.slice(0, 64);
+}
 
 function getVisitorId() {
   try {
-    const existing = window.localStorage.getItem(STORAGE_KEY);
+    const existing = window.localStorage.getItem(VISITOR_KEY);
     if (existing && existing.length >= 8 && existing.length <= 64) return existing;
 
-    const next = typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-    window.localStorage.setItem(STORAGE_KEY, next);
+    const next = randomId('v-');
+    window.localStorage.setItem(VISITOR_KEY, next);
     return next;
   } catch {
-    return `temp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`.slice(0, 64);
+    return randomId('temp-v-');
+  }
+}
+
+function getVisitId() {
+  try {
+    const existing = window.sessionStorage.getItem(VISIT_KEY);
+    if (existing && existing.length >= 8 && existing.length <= 64) return existing;
+
+    const next = randomId('s-');
+    window.sessionStorage.setItem(VISIT_KEY, next);
+    return next;
+  } catch {
+    return randomId('temp-s-');
   }
 }
 
@@ -49,19 +68,19 @@ export function PageViewTracker() {
     lastTrackedPath.current = pathname;
 
     const visitorId = getVisitorId();
+    const visitId = getVisitId();
     const referrerHost = getEntryReferrerHost();
-    const controller = new AbortController();
 
+    // keepalive allows the browser to finish sending the analytics event even if
+    // the component unmounts or the user navigates away. Do not abort this
+    // request in the effect cleanup, otherwise valid page views can be dropped.
     void fetch('/api/analytics/visit', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sessionId: visitorId, path: pathname, referrerHost }),
+      body: JSON.stringify({ sessionId: visitorId, visitId, path: pathname, referrerHost }),
       credentials: 'same-origin',
       keepalive: true,
-      signal: controller.signal,
     }).catch(() => undefined);
-
-    return () => controller.abort();
   }, [pathname]);
 
   return null;

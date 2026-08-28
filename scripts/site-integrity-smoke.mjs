@@ -58,6 +58,46 @@ function metaRobots(html) {
   return reverse?.[1] || '';
 }
 
+function metaContent(html, attribute, value) {
+  const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const direct = html.match(new RegExp(`<meta[^>]+${attribute}=["']${escaped}["'][^>]*content=["']([^"']+)["'][^>]*>`, 'i'));
+  if (direct) return direct[1];
+  const reverse = html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]*${attribute}=["']${escaped}["'][^>]*>`, 'i'));
+  return reverse?.[1] || '';
+}
+
+function jsonLdBlocks(html) {
+  return [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)]
+    .map((match) => match[1].trim());
+}
+
+function stripHtmlComments(html) {
+  let output = '';
+  let cursor = 0;
+
+  while (cursor < html.length) {
+    const start = html.indexOf('<!--', cursor);
+    if (start === -1) return output + html.slice(cursor);
+
+    output += html.slice(cursor, start);
+    const end = html.indexOf('-->', start + 4);
+    if (end === -1) return output;
+    cursor = end + 3;
+  }
+
+  return output;
+}
+
+function homepageClubCounts(html) {
+  const normalized = stripHtmlComments(html);
+  const summaryCount = normalized.match(/🎮<\/span>\s*(\d+)\s*klub/i)?.[1];
+  const listCounts = [...normalized.matchAll(/Klublar\s*\(\s*(\d+)\s*\)/gi)].map((match) => Number(match[1]));
+  return {
+    summary: summaryCount ? Number(summaryCount) : null,
+    lists: listCounts,
+  };
+}
+
 async function checkHealth() {
   const { response, text } = await fetchText('/api/health');
   assert(response.status === 200, 'Health endpoint must return HTTP 200', { status: response.status, text });
@@ -79,6 +119,7 @@ async function checkRobotsAndSitemap() {
   const duplicates = duplicateValues(urls);
   assert(duplicates.length === 0, 'sitemap.xml contains duplicate URLs', duplicates);
   assert(urls.every((url) => new URL(url).origin === EXPECTED_CANONICAL_ORIGIN), 'Every sitemap URL must use gameyer.az canonical origin', urls.filter((url) => new URL(url).origin !== EXPECTED_CANONICAL_ORIGIN));
+  assert(urls.every((url) => !new URL(url).search && !new URL(url).hash), 'Sitemap URLs must not contain query strings or fragments', urls.filter((url) => new URL(url).search || new URL(url).hash));
   assert(urls.some((url) => new URL(url).pathname.startsWith('/klub/')), 'sitemap.xml must contain club detail pages', urls.slice(0, 10));
   return urls;
 }
@@ -100,11 +141,39 @@ async function checkHtmlPage(url) {
   const canonicalUrl = new URL(canonical.href, target.origin);
   assert(canonicalUrl.origin === EXPECTED_CANONICAL_ORIGIN, 'Canonical origin must be gameyer.az', { path, canonical: canonical.href });
   assert(canonicalUrl.pathname === target.pathname, 'Canonical pathname must match sitemap pathname', { path, canonical: canonical.href });
+  assert(!canonicalUrl.search && !canonicalUrl.hash, 'Canonical URL must not contain a query string or fragment', { path, canonical: canonical.href });
+
+  const lang = text.match(/<html[^>]+lang=["']([^"']+)["']/i)?.[1];
+  assert(lang === 'az', 'Public HTML must declare Azerbaijani language', { path, lang });
+  const h1Count = [...text.matchAll(/<h1(?:\s|>)/gi)].length;
+  assert(h1Count === 1, 'Every sitemap page must render exactly one H1', { path, h1Count });
+  assert(Boolean(metaContent(text, 'property', 'og:title')), 'Page must expose an Open Graph title', { path });
+  assert(Boolean(metaContent(text, 'property', 'og:description')), 'Page must expose an Open Graph description', { path });
+
+  const jsonLd = jsonLdBlocks(text);
+  assert(jsonLd.length > 0, 'Every sitemap page must expose JSON-LD', { path });
+  for (const [index, block] of jsonLd.entries()) {
+    try {
+      JSON.parse(block);
+    } catch (error) {
+      throw new Error(`Invalid JSON-LD on ${path} at block ${index + 1}: ${error.message}`);
+    }
+  }
 
   const duplicateIds = duplicateValues(extractIds(text));
   assert(duplicateIds.length === 0, 'Rendered HTML contains duplicate element IDs', { path, duplicateIds });
 
   return text;
+}
+
+async function checkParameterizedHomeIsNotIndexable() {
+  for (const query of ['?district=nesimi', '?type=pc', '?price_max=3', '?q=gaming', '?view=map']) {
+    const { response, text } = await fetchText(`/${query}`);
+    assert(response.status === 200, 'Parameterized homepage must remain usable', { query, status: response.status });
+    assert(metaRobots(text).toLowerCase().includes('noindex'), 'Parameterized homepage must be noindex', { query, robots: metaRobots(text) });
+    const canonical = canonicalHref(text);
+    assert(canonical.count === 1 && new URL(canonical.href, EXPECTED_CANONICAL_ORIGIN).href === `${EXPECTED_CANONICAL_ORIGIN}/`, 'Parameterized homepage must canonicalize to the clean homepage', { query, canonical });
+  }
 }
 
 async function checkInternalLinks(homeHtml) {
@@ -117,6 +186,15 @@ async function checkInternalLinks(homeHtml) {
   assert(failures.length === 0, 'Homepage contains broken internal links', failures);
 }
 
+function checkHomepageClubCount(homeHtml, sitemapUrls) {
+  const expected = sitemapUrls.filter((url) => new URL(url).pathname.startsWith('/klub/')).length;
+  const rendered = homepageClubCounts(homeHtml);
+  assert(expected > 0, 'Sitemap must expose public club detail URLs before count consistency can be checked');
+  assert(rendered.summary === expected, 'Homepage summary club count must match public sitemap clubs', { expected, rendered });
+  assert(rendered.lists.length > 0, 'Homepage must render at least one club list count', { expected, rendered });
+  assert(rendered.lists.every((count) => count === expected), 'Every homepage club list count must match public sitemap clubs', { expected, rendered });
+}
+
 await checkHealth();
 const sitemapUrls = await checkRobotsAndSitemap();
 
@@ -127,6 +205,8 @@ for (const url of sitemapUrls) {
 }
 
 if (!homeHtml) homeHtml = await checkHtmlPage(absolute('/'));
+checkHomepageClubCount(homeHtml, sitemapUrls);
 await checkInternalLinks(homeHtml);
+await checkParameterizedHomeIsNotIndexable();
 
 console.log(`Site integrity smoke passed for ${sitemapUrls.length} sitemap URLs on ${EXPECTED_CANONICAL_ORIGIN}.`);

@@ -9,7 +9,7 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline'",
   "script-src-attr 'none'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://uxcedpbumulpheglhlvs.supabase.co https://*.basemaps.cartocdn.com https://marsol.az",
+  "img-src 'self' data: blob: https://uxcedpbumulpheglhlvs.supabase.co https://tile.openstreetmap.org https://marsol.az",
   "font-src 'self' data:",
   "connect-src 'self' https://uxcedpbumulpheglhlvs.supabase.co wss://uxcedpbumulpheglhlvs.supabase.co",
   "media-src 'self'",
@@ -17,6 +17,21 @@ const contentSecurityPolicy = [
   "manifest-src 'self'",
   'upgrade-insecure-requests',
 ].join('; ');
+
+const legacyProductionHosts = [
+  'gameyerr-gameyer.vercel.app',
+  'bosyer-web.vercel.app',
+];
+
+const utilityQueryNoindexPaths = ['/klub-sahibi', '/elaqe'];
+const utilityQueryStateKeys = ['club', 'slug', 'sent', 'error', 'rate'];
+const utilityQueryNoindexHeaders = utilityQueryNoindexPaths.flatMap((source) =>
+  utilityQueryStateKeys.map((key) => ({
+    source,
+    has: [{ type: 'query', key }],
+    headers: [{ key: 'X-Robots-Tag', value: 'noindex, follow' }],
+  }))
+);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -38,12 +53,12 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      {
+      ...legacyProductionHosts.map((host) => ({
         source: '/:path*',
-        has: [{ type: 'host', value: 'gameyerr-gameyer.vercel.app' }],
+        has: [{ type: 'host', value: host }],
         destination: 'https://gameyer.az/:path*',
         permanent: true,
-      },
+      })),
       {
         source: '/:path*',
         has: [{ type: 'host', value: 'www.gameyer.az' }],
@@ -64,6 +79,7 @@ const nextConfig = {
   },
   async headers() {
     return [
+      ...utilityQueryNoindexHeaders,
       {
         source: '/:path*',
         headers: [

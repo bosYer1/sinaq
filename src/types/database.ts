@@ -39,6 +39,7 @@ export interface Database {
           longitude: number | null;
           phone: string | null;
           instagram_url: string | null;
+          profile_image_url: string | null;
           rating_avg: number | null;
           rating_count: number;
           is_premium: boolean;
@@ -60,6 +61,7 @@ export interface Database {
           longitude?: number | null;
           phone?: string | null;
           instagram_url?: string | null;
+          profile_image_url?: string | null;
           rating_avg?: number | null;
           rating_count?: number;
           is_premium?: boolean;
@@ -81,6 +83,7 @@ export interface Database {
           longitude?: number | null;
           phone?: string | null;
           instagram_url?: string | null;
+          profile_image_url?: string | null;
           rating_avg?: number | null;
           rating_count?: number;
           is_premium?: boolean;
@@ -132,6 +135,9 @@ export interface Database {
           price_from: number;
           price_to: number | null;
           unit: string;
+          tariff_name?: string | null;
+          schedule_label?: string | null;
+          position?: number;
         };
         Insert: {
           id?: string;
@@ -140,6 +146,9 @@ export interface Database {
           price_from: number;
           price_to?: number | null;
           unit?: string;
+          tariff_name?: string | null;
+          schedule_label?: string | null;
+          position?: number;
         };
         Update: {
           id?: string;
@@ -148,6 +157,9 @@ export interface Database {
           price_from?: number;
           price_to?: number | null;
           unit?: string;
+          tariff_name?: string | null;
+          schedule_label?: string | null;
+          position?: number;
         };
         Relationships: [
           {
@@ -222,22 +234,31 @@ export interface Database {
         Row: {
           id: number;
           session_id: string;
+          visit_id: string | null;
           path: string;
           referrer_host: string | null;
+          user_agent: string | null;
+          ip_address: string | null;
           created_at: string;
         };
         Insert: {
           id?: number;
           session_id: string;
+          visit_id?: string | null;
           path: string;
           referrer_host?: string | null;
+          user_agent?: string | null;
+          ip_address?: string | null;
           created_at?: string;
         };
         Update: {
           id?: number;
           session_id?: string;
+          visit_id?: string | null;
           path?: string;
           referrer_host?: string | null;
+          user_agent?: string | null;
+          ip_address?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -328,6 +349,10 @@ export interface Database {
         Returns: string;
       };
       get_admin_analytics: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_admin_analytics_24h: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
