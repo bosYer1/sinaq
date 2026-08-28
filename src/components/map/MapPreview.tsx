@@ -60,7 +60,7 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
       className="relative h-full w-full overflow-hidden rounded-[18px] border border-border bg-[#eef2f2]"
     >
       <div
-        className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-50 grayscale-[0.62] saturate-[0.42] brightness-110 contrast-[0.72]"
+        className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30 grayscale saturate-[0.18] brightness-[1.14] contrast-[0.58]"
         aria-hidden="true"
       >
         {tiles.map(([x, y]) => (
@@ -74,7 +74,7 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
         ))}
       </div>
 
-      <div className="absolute inset-0 bg-[#f5f8f8]/30" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[#f5f8f8]/40" aria-hidden="true" />
 
       {markers.map(([top, left, color, open], index) => (
         <PreviewMarker key={`${top}-${left}-${index}`} top={top} left={left} color={color} open={open} />
