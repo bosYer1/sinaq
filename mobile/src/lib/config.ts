@@ -31,7 +31,10 @@ function validPublishableKey(value: string) {
 
 type PublicEnvironment = Record<string, string | undefined>;
 
-export function readMobileConfig(env: PublicEnvironment = process.env): MobileConfig {
+export function readMobileConfig(env: PublicEnvironment = {
+  EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+  EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+}): MobileConfig {
   const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? '';
   const supabasePublishableKey = env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? '';
 

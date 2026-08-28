@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { fetchClubs, filterClubs } from '@/lib/clubs';
+import { inferClubTypeSlugs } from '@/lib/clubTypes';
 import type { Club, ClubFilters, ClubType, District } from '@/types/club';
 
 const INITIAL_FILTERS: ClubFilters = {
@@ -27,7 +28,7 @@ const ClubDataContext = createContext<ClubDataValue | null>(null);
 
 export function reconcileFilters(filters: ClubFilters, clubs: Club[]) {
   const districtExists = !filters.district || clubs.some((club) => club.district?.slug === filters.district);
-  const typeExists = !filters.type || clubs.some((club) => club.type_assignments.some((assignment) => assignment.club_type?.slug === filters.type));
+  const typeExists = !filters.type || filterClubs(clubs, { query: '', district: null, verifiedOnly: false, type: filters.type }).length > 0;
   if (districtExists && typeExists) return filters;
   return {
     ...filters,
@@ -100,8 +101,11 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
     const unique = new Map<string, ClubType>();
     clubs.forEach((club) => {
       club.type_assignments.forEach(({ club_type: type }) => {
-        if (type) unique.set(type.id, type);
+        if (type) unique.set(type.slug === 'ps' ? 'playstation' : type.slug, { ...type, slug: type.slug === 'ps' ? 'playstation' : type.slug });
       });
+      for (const slug of inferClubTypeSlugs(club)) {
+        if (!unique.has(slug)) unique.set(slug, { id: `filter:${slug}`, slug, name: slug === 'pc' ? 'PC' : 'PlayStation' });
+      }
     });
     return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, 'az'));
   }, [clubs]);

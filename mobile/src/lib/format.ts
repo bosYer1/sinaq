@@ -10,7 +10,8 @@ export function formatPrice(pricing: ClubPricing) {
   const range = pricing.price_to && pricing.price_to !== pricing.price_from
     ? `${pricing.price_from}–${pricing.price_to}`
     : String(pricing.price_from);
-  return `${pricing.club_type?.name ?? 'Qiymət'}: ${range} ₼/${pricing.unit}`;
+  const context = [pricing.club_type?.name, pricing.tariff_name, pricing.schedule_label].filter(Boolean).join(' · ');
+  return `${context || 'Qiymət'}: ${range} ₼/${pricing.unit}`;
 }
 
 export function formatHours(hours: OpeningHours) {

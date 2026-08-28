@@ -1,10 +1,10 @@
-import { cheapestPrice, clubsWithCoordinates, filterClubs, normalizeClub, normalizeClubList, validClubSlug } from '@/lib/clubs';
+import { cheapestPrice, clubsWithCoordinates, coverImage, filterClubs, isPremiumActive, isPublicClub, normalizeClub, normalizeClubList, validClubSlug } from '@/lib/clubs';
 import type { Club } from '@/types/club';
 
 const CLUB: Club = {
   id: '1', name: 'Arena Gaming', slug: 'arena-gaming', description: null,
   address: 'Nizami küçəsi 10', latitude: 40.4, longitude: 49.8,
-  phone: null, instagram_url: null, is_premium: false, premium_expires_at: null,
+  phone: null, instagram_url: 'https://www.instagram.com/arena/', profile_image_url: null, is_active: true, is_premium: false, premium_expires_at: null,
   is_verified: true, verified_at: null, updated_at: '2026-08-20',
   district: { id: 'd1', name: 'Bakı', slug: 'baki' },
   type_assignments: [{ club_type: { id: 't1', name: 'PC', slug: 'pc' } }],
@@ -12,6 +12,43 @@ const CLUB: Club = {
 };
 
 describe('filterClubs', () => {
+  test('public eligibility matches active Instagram coordinate and assigned-type requirements', () => {
+    expect(isPublicClub(CLUB)).toBe(true);
+    for (const changes of [
+      { is_active: false }, { instagram_url: null }, { instagram_url: ' ' },
+      { latitude: null }, { longitude: null }, { type_assignments: [] },
+    ]) {
+      expect(isPublicClub({ ...CLUB, ...changes })).toBe(false);
+      expect(normalizeClubList([{ ...CLUB, ...changes }])).toEqual([]);
+    }
+  });
+
+  test('prefers the real profile image and preserves tariff context', () => {
+    const profile = 'https://example.supabase.co/storage/v1/object/public/club-images/logo.png';
+    const club = normalizeClub({ ...CLUB, profile_image_url: profile, pricing: [
+      { id: 'p', price_from: 2.5, price_to: null, unit: 'saat', tariff_name: 'VIP PC', schedule_label: 'Həftə içi', position: 1, club_type: null },
+    ] });
+    expect(coverImage(club)).toBe(profile);
+    expect(club.pricing[0]).toMatchObject({ price_from: 2.5, tariff_name: 'VIP PC', schedule_label: 'Həftə içi' });
+  });
+  test('matches web premium expiry rules and sorts active premium first', () => {
+    const now = Date.parse('2026-08-28T00:00:00Z');
+    expect(isPremiumActive({ is_premium: true, premium_expires_at: null }, now)).toBe(false);
+    expect(isPremiumActive({ is_premium: true, premium_expires_at: 'invalid' }, now)).toBe(false);
+    expect(isPremiumActive({ is_premium: true, premium_expires_at: '2026-08-27' }, now)).toBe(false);
+    expect(isPremiumActive({ is_premium: true, premium_expires_at: '2026-08-29' }, now)).toBe(true);
+    const premium = { ...CLUB, id: 'premium', name: 'Z Club', is_premium: true, premium_expires_at: '2099-01-01' };
+    expect(normalizeClubList([CLUB, premium]).map((club) => club.id)).toEqual(['premium', CLUB.id]);
+  });
+
+  test('matches web type filters using pricing and conservative text fallback', () => {
+    const filters = { query: '', district: null, type: 'playstation', verifiedOnly: false };
+    const legacy = { ...CLUB, type_assignments: [], pricing: [{ id: 'p', price_from: 5, price_to: null, unit: 'saat', club_type: { id: 'ps', name: 'PS', slug: 'ps' } }] };
+    expect(filterClubs([legacy], filters)).toEqual([legacy]);
+    const described = { ...CLUB, type_assignments: [], description: 'PlayStation klub' };
+    expect(filterClubs([described], filters)).toEqual([described]);
+    expect(filterClubs([{ ...described, description: 'gaming' }], filters)).toEqual([]);
+  });
   test('matches Azerbaijani search across name, district and address', () => {
     expect(filterClubs([CLUB], { query: 'nizami', district: null, type: null, verifiedOnly: false })).toHaveLength(1);
     expect(filterClubs([{ ...CLUB, name: 'İnternet Klub' }], { query: 'internet', district: null, type: null, verifiedOnly: false })).toHaveLength(1);

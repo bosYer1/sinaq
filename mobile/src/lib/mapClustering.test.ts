@@ -3,7 +3,7 @@ import type { MappableClub } from '@/types/club';
 
 const club = (id: string, latitude: number, longitude: number): MappableClub => ({
   id, name: id, slug: id, description: null, address: '', latitude, longitude,
-  phone: null, instagram_url: null, is_premium: false, premium_expires_at: null,
+  phone: null, instagram_url: null, profile_image_url: null, is_active: true, is_premium: false, premium_expires_at: null,
   is_verified: false, verified_at: null, updated_at: '2026-08-20', district: null,
   type_assignments: [], pricing: [], images: [], opening_hours: [],
 });

@@ -15,6 +15,9 @@ export type ClubPricing = {
   price_from: number;
   price_to: number | null;
   unit: string;
+  tariff_name?: string | null;
+  schedule_label?: string | null;
+  position?: number;
   club_type: ClubType | null;
 };
 
@@ -43,6 +46,8 @@ export type Club = {
   longitude: number | null;
   phone: string | null;
   instagram_url: string | null;
+  profile_image_url: string | null;
+  is_active: boolean;
   is_premium: boolean;
   premium_expires_at: string | null;
   is_verified: boolean;

@@ -1,6 +1,7 @@
 import type { Club, ClubFilters, ClubType, MappableClub, OpeningHours } from '@/types/club';
 import { getSupabaseClient } from '@/lib/supabase';
 import { createRequestCoordinator, withRequestTimeout } from '@/lib/request';
+import { inferClubTypeSlugs } from '@/lib/clubTypes';
 
 const REQUEST_TIMEOUT_MS = 15_000;
 const DETAIL_CACHE_MS = 5 * 60_000;
@@ -10,14 +11,14 @@ const searchIndex = new WeakMap<Club, string>();
 const TIME_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 
 const LIST_SELECT = `
-  id, name, slug, address, latitude, longitude,
-  is_premium, premium_expires_at, is_verified, updated_at,
+  id, name, slug, description, address, latitude, longitude,
+  instagram_url, profile_image_url, is_active, is_premium, premium_expires_at, is_verified, updated_at,
   district:districts ( id, name, slug ),
   type_assignments:club_type_assignments (
     club_type:club_types ( id, name, slug )
   ),
   pricing:club_pricing (
-    id, price_from, price_to, unit,
+    id, price_from, price_to, unit, tariff_name, schedule_label, position,
     club_type:club_types ( id, name, slug )
   ),
   images:club_images ( id, url, is_cover, position )
@@ -25,14 +26,14 @@ const LIST_SELECT = `
 
 const DETAIL_SELECT = `
   id, name, slug, description, address, latitude, longitude,
-  phone, instagram_url, is_premium, premium_expires_at,
+  phone, instagram_url, profile_image_url, is_active, is_premium, premium_expires_at,
   is_verified, verified_at, updated_at,
   district:districts ( id, name, slug ),
   type_assignments:club_type_assignments (
     club_type:club_types ( id, name, slug )
   ),
   pricing:club_pricing (
-    id, price_from, price_to, unit,
+    id, price_from, price_to, unit, tariff_name, schedule_label, position,
     club_type:club_types ( id, name, slug )
   ),
   images:club_images ( id, url, is_cover, position ),
@@ -57,8 +58,11 @@ export function normalizeClub(club: Club): Club {
     )), (price) => price.id).map((price) => ({
       ...price,
       unit: cleanText(price.unit, 40),
+      tariff_name: cleanText(price.tariff_name, 80) || null,
+      schedule_label: cleanText(price.schedule_label, 120) || null,
+      position: Number.isInteger(price.position) && Number(price.position) >= 0 ? price.position : 0,
       club_type: validClubType(price.club_type) ? normalizeClubType(price.club_type) : null,
-    }))
+    })).sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
     : [];
   const images = Array.isArray(club.images)
     ? uniqueBy(club.images.filter((image) => (
@@ -79,7 +83,8 @@ export function normalizeClub(club: Club): Club {
     description: typeof club.description === 'string' ? cleanText(club.description, 5_000) || null : null,
     phone: typeof club.phone === 'string' ? cleanText(club.phone, 100) || null : null,
     instagram_url: typeof club.instagram_url === 'string' ? cleanText(club.instagram_url, 500) || null : null,
-    is_premium: club.is_premium === true,
+    profile_image_url: safeHttpsUrl(club.profile_image_url) ? club.profile_image_url : null,
+    is_premium: isPremiumActive(club),
     is_verified: club.is_verified === true,
     verified_at: club.verified_at ?? null,
     district: validClubType(club.district) ? normalizeClubType(club.district) : null,
@@ -146,6 +151,9 @@ export function fetchClubs(): Promise<Club[]> {
       .from('clubs')
       .select(LIST_SELECT)
       .eq('is_active', true)
+      .not('instagram_url', 'is', null)
+      .not('latitude', 'is', null)
+      .not('longitude', 'is', null)
       .order('is_premium', { ascending: false })
       .order('name', { ascending: true })
       .abortSignal(signal)
@@ -157,7 +165,21 @@ export function fetchClubs(): Promise<Club[]> {
 }
 
 export function normalizeClubList(data: unknown): Club[] {
-  return Array.isArray(data) ? data.filter(isUsableClub).map(normalizeClub) : [];
+  return Array.isArray(data) ? data.filter(isUsableClub).map(normalizeClub).filter(isPublicClub)
+    .sort((a, b) => Number(b.is_premium) - Number(a.is_premium) || a.name.localeCompare(b.name, 'az')) : [];
+}
+
+// Mirrors current public RLS (app_private.is_public_club), never an authorization replacement.
+export function isPublicClub(club: Club) {
+  return club.is_active === true && Boolean(club.instagram_url?.trim()) &&
+    clubsWithCoordinates([club]).length === 1 &&
+    club.type_assignments.some(({ club_type: type }) => type?.slug === 'pc' || type?.slug === 'playstation');
+}
+
+export function isPremiumActive(club: Pick<Club, 'is_premium' | 'premium_expires_at'>, now = Date.now()) {
+  if (club.is_premium !== true || !club.premium_expires_at) return false;
+  const expiresAt = Date.parse(club.premium_expires_at);
+  return Number.isFinite(expiresAt) && expiresAt > now;
 }
 
 export function validClubSlug(slug: string) {
@@ -172,11 +194,15 @@ export function fetchClubBySlug(slug: string, force = false): Promise<Club | nul
       .select(DETAIL_SELECT)
       .eq('slug', slug)
       .eq('is_active', true)
+      .not('instagram_url', 'is', null)
+      .not('latitude', 'is', null)
+      .not('longitude', 'is', null)
       .abortSignal(signal)
       .maybeSingle()
       .returns<Club>();
     if (error) throw publicQueryError(error, 'Klub məlumatı hazırda alınmadı. Yenidən cəhd edin.');
-    return data && isUsableClub(data) ? normalizeClub(data) : null;
+    const club = data && isUsableClub(data) ? normalizeClub(data) : null;
+    return club && isPublicClub(club) ? club : null;
   }, REQUEST_TIMEOUT_MS), force);
 }
 
@@ -200,7 +226,9 @@ export function filterClubs(clubs: Club[], filters: ClubFilters) {
     if (filters.district && club.district?.slug !== filters.district) return false;
     if (
       filters.type &&
-      !club.type_assignments.some((assignment) => assignment.club_type?.slug === filters.type)
+      !(filters.type === 'pc' || filters.type === 'playstation' || filters.type === 'ps'
+        ? inferClubTypeSlugs(club).includes(filters.type === 'ps' ? 'playstation' : filters.type)
+        : club.type_assignments.some((assignment) => assignment.club_type?.slug === filters.type))
     ) return false;
     if (!query) return true;
 
@@ -227,13 +255,14 @@ export function clubsWithCoordinates(clubs: Club[]) {
 }
 
 export function clubTypeLabels(club: Club) {
-  return club.type_assignments
+  const labels = club.type_assignments
     .map((assignment) => assignment.club_type?.name)
     .filter((name): name is string => Boolean(name));
+  return labels.length ? labels : inferClubTypeSlugs(club).map((slug) => slug === 'pc' ? 'PC' : 'PlayStation');
 }
 
 export function coverImage(club: Club) {
-  return club.images[0]?.url ?? null;
+  return club.profile_image_url ?? club.images[0]?.url ?? null;
 }
 
 export function cheapestPrice(club: Club) {
