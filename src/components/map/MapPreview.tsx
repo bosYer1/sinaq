@@ -65,7 +65,7 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
             key={`${x}-${y}`}
             className="h-full w-full bg-cover bg-center"
             style={{
-              backgroundImage: `url(https://a.basemaps.cartocdn.com/rastertiles/voyager/11/${x}/${y}.png)`,
+              backgroundImage: `url(https://tile.openstreetmap.org/11/${x}/${y}.png)`,
             }}
           />
         ))}
@@ -87,7 +87,7 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
       </div>
 
       <div className="absolute bottom-1 right-2 rounded bg-white/85 px-1.5 py-0.5 text-[9px] text-slate-600 shadow-sm" aria-hidden="true">
-        © OpenStreetMap · CARTO
+        © OpenStreetMap contributors
       </div>
     </div>
   );
