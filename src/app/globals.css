@@ -76,42 +76,27 @@ body {
   width: 100%;
   height: 100%;
   font-family: var(--font-body);
-  background: #eef2f2;
+  background: var(--color-surface-alt);
+  /* Leaflet panes use z-index values up to the hundreds. Keep them inside
+     the map's own stacking context so they can never cover sticky app chrome. */
   isolation: isolate;
   z-index: 0;
 }
 
-html[data-theme='dark'] .leaflet-container {
-  background: #111820;
-}
-
+/* Tailwind preflight Leaflet tile ölçülərini pozmasın. */
 .leaflet-container img {
   max-width: none !important;
 }
 
-/* Keep OpenStreetMap as the real map provider, but soften its visual treatment
-   so the live map matches the clean GameYer preview instead of jumping to a
-   visually different map after activation. */
+/* Keep the same OpenStreetMap renderer in both themes. In dark mode only the
+   presentation changes, so local OSM labels/streets and map geometry stay the
+   same instead of switching to a different provider/style. */
 .leaflet-tile-pane {
-  filter: grayscale(0.9) saturate(0.18) brightness(1.14) contrast(0.58) opacity(0.3);
   transition: filter 160ms ease;
 }
 
-.leaflet-container::after {
-  position: absolute;
-  inset: 0;
-  z-index: 250;
-  background: rgba(245, 248, 248, 0.38);
-  content: '';
-  pointer-events: none;
-}
-
 html[data-theme='dark'] .leaflet-tile-pane {
-  filter: grayscale(0.35) saturate(0.58) brightness(0.48) contrast(0.92) opacity(0.82);
-}
-
-html[data-theme='dark'] .leaflet-container::after {
-  background: rgba(9, 13, 19, 0.18);
+  filter: brightness(0.64) contrast(1.08) saturate(0.78);
 }
 
 .gameyer-marker {
@@ -161,13 +146,10 @@ html[data-theme='dark'] .leaflet-container::after {
 .leaflet-control-attribution {
   max-width: calc(100vw - 24px);
   overflow: hidden;
-  border-radius: 7px 0 0 0;
-  background: rgba(255, 255, 255, 0.88) !important;
-  padding: 2px 6px !important;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 9px !important;
-  opacity: 0.78;
+  opacity: 0.72;
 }
 
 html[data-theme='dark'] .leaflet-control-attribution {
@@ -180,6 +162,7 @@ html[data-theme='dark'] .leaflet-control-attribution a {
 }
 
 @media (max-width: 1023px) and (pointer: coarse) {
+  /* Siyahıda ilk toxunuş səhifəni scroll edir; istifadəçi xəritəni ayrıca aktivləşdirir. */
   [data-explore-view='list'][data-mobile-map-active='false'] .leaflet-container {
     pointer-events: none;
     touch-action: pan-y;
@@ -193,6 +176,7 @@ html[data-theme='dark'] .leaflet-control-attribution a {
 }
 
 @media (max-width: 639px) {
+  /* Telefonda pinch-zoom var; düymələri gizlətmək konum overlay-i ilə toqquşmanı aradan qaldırır. */
   .leaflet-control-zoom {
     display: none;
   }
