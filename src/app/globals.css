@@ -134,6 +134,33 @@ html[data-theme='dark'] .gameyer-map-preview-attribution {
   color: var(--color-text-muted);
 }
 
+/* Legacy light-only alert utilities still exist on submission/admin status
+   surfaces. Normalize those utilities when GameYer's explicit theme is dark
+   so error/rate-limit feedback cannot flash as a bright light card. */
+html[data-theme='dark'] .bg-amber-50 {
+  background-color: var(--color-warn-tint) !important;
+}
+
+html[data-theme='dark'] .border-amber-200 {
+  border-color: color-mix(in srgb, var(--color-warn) 35%, transparent) !important;
+}
+
+html[data-theme='dark'] .text-amber-800 {
+  color: var(--color-warn) !important;
+}
+
+html[data-theme='dark'] .bg-red-50 {
+  background-color: #35191d !important;
+}
+
+html[data-theme='dark'] .border-red-200 {
+  border-color: rgba(248, 113, 113, 0.35) !important;
+}
+
+html[data-theme='dark'] .text-red-700 {
+  color: #fecaca !important;
+}
+
 .gameyer-marker {
   border: 0;
   background: transparent;
