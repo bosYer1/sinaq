@@ -161,6 +161,14 @@ html[data-theme='dark'] .text-red-700 {
   color: #fecaca !important;
 }
 
+/* The fixed mobile nav sits above club cards and images. Keep it opaque so
+   underlying artwork cannot bleed into nav labels through backdrop blur. */
+nav[aria-label='Mobil naviqasiya'] {
+  background-color: var(--color-surface) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 .gameyer-marker {
   border: 0;
   background: transparent;
