@@ -3,10 +3,15 @@
 import { useSyncExternalStore } from 'react';
 
 type ThemePreference = 'system' | 'light' | 'dark';
+type ResolvedTheme = 'light' | 'dark';
 
 const STORAGE_KEY = 'gameyer-theme';
 const CHANGE_EVENT = 'gameyer-theme-change';
 const ORDER: ThemePreference[] = ['system', 'light', 'dark'];
+const THEME_COLORS: Record<ResolvedTheme, string> = {
+  light: '#7C5CFC',
+  dark: '#0B0D12',
+};
 
 function isThemePreference(value: string | null): value is ThemePreference {
   return value === 'system' || value === 'light' || value === 'dark';
@@ -22,15 +27,22 @@ function getServerPreference(): ThemePreference {
   return 'system';
 }
 
-function resolveTheme(preference: ThemePreference): 'light' | 'dark' {
+function resolveTheme(preference: ThemePreference): ResolvedTheme {
   if (preference !== 'system') return preference;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+function syncBrowserThemeColor(theme: ResolvedTheme) {
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (meta) meta.content = THEME_COLORS[theme];
+}
+
 function applyTheme(preference: ThemePreference) {
   const root = document.documentElement;
+  const resolved = resolveTheme(preference);
   root.dataset.themePreference = preference;
-  root.dataset.theme = resolveTheme(preference);
+  root.dataset.theme = resolved;
+  syncBrowserThemeColor(resolved);
 }
 
 function subscribe(callback: () => void) {
