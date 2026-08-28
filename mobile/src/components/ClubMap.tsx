@@ -5,12 +5,13 @@ import type { ColorPalette } from '@/constants/theme';
 import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { clusterClubs, type ClubMapPoint } from '@/lib/mapClustering';
 import type { MappableClub } from '@/types/club';
+import { ScreenState } from '@/components/ScreenState';
 
-const AZERBAIJAN_REGION: Region = {
-  latitude: 40.28,
-  longitude: 47.75,
-  latitudeDelta: 6.2,
-  longitudeDelta: 6.2,
+const BAKU_REGION: Region = {
+  latitude: 40.4093,
+  longitude: 49.8671,
+  latitudeDelta: 0.18,
+  longitudeDelta: 0.18,
 };
 
 type Props = {
@@ -20,20 +21,38 @@ type Props = {
   onClearSelection: () => void;
 };
 
-export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectClub, onClearSelection }: Props) {
+export const ClubMap = memo(function ClubMap(props: Props) {
+  const [attempt, setAttempt] = useState(0);
+  return <MapSession key={attempt} {...props} onRetry={() => {
+    props.onClearSelection();
+    setAttempt((value) => value + 1);
+  }} />;
+});
+
+function MapSession({ clubs, selectedClubId, onSelectClub, onClearSelection, onRetry }: Props & { onRetry: () => void }) {
   const { colors, scheme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const mapRef = useRef<MapView>(null);
   const hasFittedRef = useRef(false);
   const fittedClubSetRef = useRef('');
   const lastFocusedClubRef = useRef<string | null>(null);
-  const [region, setRegion] = useState(AZERBAIJAN_REGION);
+  const [region, setRegion] = useState(BAKU_REGION);
   const [mapReady, setMapReady] = useState(false);
+  const [layout, setLayout] = useState({ width: 0, height: 0 });
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
   const clubSet = useMemo(() => clubs.map((club) => club.id).sort().join(':'), [clubs]);
   const points = useMemo(() => clusterClubs(clubs, region, selectedClubId), [clubs, region, selectedClubId]);
 
   useEffect(() => {
-    if (!mapReady || clubs.length === 0) return;
+    if (mapLoaded) return;
+    const timer = setTimeout(() => setTimedOut(true), 15_000);
+    return () => clearTimeout(timer);
+  }, [mapLoaded]);
+
+  useEffect(() => {
+    // Android's newLatLngBounds requires a measured native map, not just onMapReady.
+    if (!mapReady || layout.width <= 0 || layout.height <= 0 || timedOut || clubs.length === 0) return;
     if (!hasFittedRef.current || fittedClubSetRef.current !== clubSet) {
       hasFittedRef.current = true;
       fittedClubSetRef.current = clubSet;
@@ -46,7 +65,7 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
       }
       mapRef.current?.fitToCoordinates(
         clubs.map((club) => ({ latitude: club.latitude, longitude: club.longitude })),
-        { edgePadding: { top: 80, right: 44, bottom: 190, left: 44 }, animated: false },
+        { edgePadding: { top: Math.floor(Math.min(80, layout.height * 0.15)), right: Math.floor(Math.min(44, layout.width * 0.1)), bottom: Math.floor(Math.min(190, layout.height * 0.3)), left: Math.floor(Math.min(44, layout.width * 0.1)) }, animated: false },
       );
       return;
     }
@@ -59,7 +78,7 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
       );
     }
     if (!selectedClubId) lastFocusedClubRef.current = null;
-  }, [clubs, clubSet, mapReady, selectedClubId]);
+  }, [clubs, clubSet, mapReady, layout, timedOut, selectedClubId]);
 
   const openCluster = (point: Extract<ClubMapPoint, { kind: 'cluster' }>) => {
     mapRef.current?.animateToRegion({
@@ -70,18 +89,24 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
     }, 300);
   };
 
-  return (
+  if (timedOut) return <ScreenState title="Xəritə yüklənmədi" message="İnterneti və cihazın xəritə xidmətlərini yoxlayın. Klub siyahısından istifadə edə bilərsiniz." actionLabel="Xəritəni yenidən aç" onAction={onRetry} />;
+
+  return <View style={styles.map}>
     <MapView
       ref={mapRef}
       style={styles.map}
-      initialRegion={AZERBAIJAN_REGION}
+      initialRegion={BAKU_REGION}
       userInterfaceStyle={scheme}
       toolbarEnabled={false}
       showsCompass
       showsMyLocationButton={false}
       moveOnMarkerPress={false}
-      onPress={onClearSelection}
+      onPress={(event) => {
+        if (event.nativeEvent.action !== 'marker-press') onClearSelection();
+      }}
       onMapReady={() => setMapReady(true)}
+      onLayout={(event) => setLayout(event.nativeEvent.layout)}
+      onMapLoaded={() => setMapLoaded(true)}
       onRegionChangeComplete={setRegion}
       accessibilityLabel="Azərbaycan gaming klubları xəritəsi"
     >
@@ -109,11 +134,14 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
         />
       ))}
     </MapView>
-  );
-});
+    {!mapLoaded ? <View style={styles.loading} pointerEvents="none"><Text style={styles.loadingText} accessibilityRole="alert">Xəritə yüklənir…</Text></View> : null}
+  </View>;
+}
 
 const createStyles = (colors: ColorPalette) => StyleSheet.create({
   map: { flex: 1 },
+  loading: { position: 'absolute', bottom: 16, alignSelf: 'center', padding: 12, borderRadius: 12, backgroundColor: colors.surface },
+  loadingText: { color: colors.ink },
   cluster: {
     width: 42,
     height: 42,

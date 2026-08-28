@@ -2,6 +2,23 @@
 
 Bu checklist real Android və iOS cihazında release candidate yoxlaması üçündür. Aşağıdakı maddələr desktop bundle export ilə təsdiqlənmiş sayılmır.
 
+## Android native map təkrar QA — 2026-08-29
+
+Founder-in əvvəlki cihaz nəticəsi: Expo Go launch, GameYer bundle, public klub datası və Kəşf et/list PASS; Xəritə tabı FAIL. Aşağıdakı yeni yoxlamalar **PENDING**, map release blocker-i açıqdır. iOS cihaz QA-sı BLOCKED/POSTPONED qalır.
+
+- [ ] `cd mobile` → `npx expo start --go --tunnel --clear`; uyğun SDK 57 Expo Go ilə QR açın. Cihaz modeli, Android, Expo Go versiyası və commit-i qeyd edin.
+- [ ] Xəritə tabına ilk keçiddə Bakı görünür; real public klublar marker/cluster kimi görünür.
+- [ ] Pan/zoom, cluster tap, 20 sürətli marker tap: son seçim kartda qalır; kart → doğru detail → Android back işləyir.
+- [ ] Kəşf et → filter → Xəritə və kiçik ekranda tablararası sürətli keçid: crash/boş xəritə yoxdur.
+- [ ] Sistem/İşıqlı/Qaranlıq dəyişdirib xəritəyə qayıdın: markerlər görünür, app crash etmir; Kəşf et/Görünüş dəyişməyib.
+- [ ] Şəbəkəni söndürüb xəritəni açın: native tiles gəlmirsə 15 saniyədən sonra retry görünür. Cached tiles varsa offline xəritə görünə bilər.
+- [ ] Şəbəkəni bərpa edin → Xəritəni yenidən aç: fresh map yüklənir, sonsuz spinner yoxdur.
+- [ ] Location permission istənmir; API key/billing yaratmaq lazım deyil.
+
+FAIL davam edərsə: qırmızı error ekranının tam mətni/screenshot-u, Metro terminal xətası, cihazda Google Play Services mövcudluğu və xəritənin blank/crash/timeout olmasını göndərin. React error boundary native Java crash və Google tiles authorization xətasını tuta bilmir; timeout konkret səbəb diaqnozu deyil.
+
+Uyğunluq: [Expo SDK 57 maps](https://docs.expo.dev/versions/v57.0.0/sdk/map-view/) `react-native-maps 1.27.2`-ni Expo Go-da əlavə setup olmadan dəstəkləyir. Versiya artıq uyğundur; development build tələb olunduğuna dair sübut yoxdur. Ayrı Android binary üçün Google Maps credential tələbi bu sprintdə aktivləşdirilmir.
+
 ## İlk 15–20 dəqiqə
 
 Heç bir maddəni əvvəlcədən keçmiş kimi işarələməyin. Bu ardıcıllıqla yoxlayın:
@@ -69,7 +86,7 @@ Hər testi ən azı bir real Android və bir real iPhone-da aparın. Crash, ağ 
 - Telefon zəngi, yalnız rəsmi Instagram HTTPS linki və directions action-larını yoxla; cancel etdikdə app-a təhlükəsiz qayıtmalıdır.
 - Kiçik ekran, böyük accessibility font ölçüsü, landscape bloklanması və tablet layout-u yoxla.
 - Status bar, notch/Dynamic Island, home indicator və tab bar safe-area davranışını yoxla.
-- Sistem light və dark rejimlərində app-ın qəsdən light theme saxladığını və kontrastın pozulmadığını yoxla.
+- Sistem/İşıqlı/Qaranlıq seçimində xəritə və digər ekranların kontrastını, theme dəyişərkən crash olmadığını yoxla.
 
 ## Android
 
