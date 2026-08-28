@@ -1,12 +1,17 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 type ThemePreference = 'system' | 'light' | 'dark';
+type ResolvedTheme = 'light' | 'dark';
 
 const STORAGE_KEY = 'gameyer-theme';
 const CHANGE_EVENT = 'gameyer-theme-change';
 const ORDER: ThemePreference[] = ['system', 'light', 'dark'];
+const THEME_COLORS: Record<ResolvedTheme, string> = {
+  light: '#7C5CFC',
+  dark: '#0B0D12',
+};
 
 function isThemePreference(value: string | null): value is ThemePreference {
   return value === 'system' || value === 'light' || value === 'dark';
@@ -22,15 +27,24 @@ function getServerPreference(): ThemePreference {
   return 'system';
 }
 
-function resolveTheme(preference: ThemePreference): 'light' | 'dark' {
+function resolveTheme(preference: ThemePreference): ResolvedTheme {
   if (preference !== 'system') return preference;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+function syncBrowserThemeColor(theme: ResolvedTheme) {
+  const color = THEME_COLORS[theme];
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+    meta.content = color;
+  });
+}
+
 function applyTheme(preference: ThemePreference) {
   const root = document.documentElement;
+  const resolved = resolveTheme(preference);
   root.dataset.themePreference = preference;
-  root.dataset.theme = resolveTheme(preference);
+  root.dataset.theme = resolved;
+  syncBrowserThemeColor(resolved);
 }
 
 function subscribe(callback: () => void) {
@@ -54,6 +68,10 @@ export function ThemeToggle() {
   const nextPreference = ORDER[(ORDER.indexOf(preference) + 1) % ORDER.length];
   const label = preference === 'system' ? 'Sistem' : preference === 'dark' ? 'Tünd' : 'Açıq';
   const nextLabel = nextPreference === 'system' ? 'sistem' : nextPreference === 'dark' ? 'tünd' : 'açıq';
+
+  useEffect(() => {
+    syncBrowserThemeColor(resolveTheme(preference));
+  }, [preference]);
 
   const cycleTheme = () => {
     window.localStorage.setItem(STORAGE_KEY, nextPreference);
