@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing } from '@/constants/theme';
+import { radius, spacing, type ColorPalette } from '@/constants/theme';
+import { useThemedStyles } from '@/context/ThemeContext';
 import { ClubImage } from '@/components/ClubImage';
 import { cheapestPrice, clubTypeLabels, coverImage } from '@/lib/clubs';
 import { formatPrice } from '@/lib/format';
@@ -8,6 +9,7 @@ import type { Club } from '@/types/club';
 import { openClub } from '@/lib/navigation';
 
 export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
+  const styles = useThemedStyles(createStyles);
   const image = coverImage(club);
   const types = clubTypeLabels(club);
   const firstPrice = cheapestPrice(club);
@@ -35,7 +37,7 @@ export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
   );
 });
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ColorPalette) => StyleSheet.create({
   card: { flexDirection: 'row', minHeight: 138, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface, overflow: 'hidden' },
   pressed: { opacity: 0.78 },
   image: { width: 122, minHeight: 138, backgroundColor: colors.surfaceAlt },

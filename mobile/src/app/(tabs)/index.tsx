@@ -2,15 +2,18 @@ import { FlatList, RefreshControl, StyleSheet, Text, View, type ListRenderItemIn
 import { ClubCard } from '@/components/ClubCard';
 import { FilterBar } from '@/components/FilterBar';
 import { ScreenState } from '@/components/ScreenState';
-import { colors, spacing } from '@/constants/theme';
+import { spacing, type ColorPalette } from '@/constants/theme';
+import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { useClubData } from '@/context/ClubDataContext';
 import type { Club } from '@/types/club';
 
 const keyExtractor = (club: Club) => club.id;
 const renderClub = ({ item }: ListRenderItemInfo<Club>) => <ClubCard club={item} />;
-const renderSeparator = () => <View style={styles.separator} />;
+const renderSeparator = () => <View style={{ height: spacing.md }} />;
 
 export default function DiscoveryScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const { filteredClubs, clubs, loading, refreshing, error, reload } = useClubData();
 
   if (loading) return <DiscoverySkeleton />;
@@ -48,6 +51,7 @@ export default function DiscoveryScreen() {
 }
 
 function DiscoverySkeleton() {
+  const styles = useThemedStyles(createStyles);
   return <View style={styles.skeletonPage} accessibilityLabel="Klublar yüklənir">
     <View style={[styles.skeleton, styles.skeletonHeading]} />
     <View style={[styles.skeleton, styles.skeletonSearch]} />
@@ -55,8 +59,8 @@ function DiscoverySkeleton() {
   </View>;
 }
 
-const styles = StyleSheet.create({
-  content: { padding: spacing.lg, paddingBottom: 90, flexGrow: 1 },
+const createStyles = (colors: ColorPalette) => StyleSheet.create({
+  content: { backgroundColor: colors.background, padding: spacing.lg, paddingBottom: 90, flexGrow: 1 },
   hero: { paddingVertical: spacing.md, gap: spacing.xs },
   eyebrow: { color: colors.primary, fontSize: 11, letterSpacing: 0.8, fontWeight: '800' },
   heading: { color: colors.ink, fontSize: 28, lineHeight: 34, fontWeight: '900' },

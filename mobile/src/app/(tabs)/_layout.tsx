@@ -1,12 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
   return (
     <Tabs
       screenOptions={{
         freezeOnBlur: true,
+        sceneStyle: { backgroundColor: colors.background },
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.ink,
         headerTitleStyle: { fontWeight: '800' },
@@ -29,6 +31,13 @@ export default function TabsLayout() {
         options={{
           title: 'Xəritə',
           tabBarIcon: ({ color, size }) => <Ionicons name="map-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="appearance"
+        options={{
+          title: 'Görünüş',
+          tabBarIcon: ({ color, size }) => <Ionicons name="contrast-outline" color={color} size={size} />,
         }}
       />
     </Tabs>

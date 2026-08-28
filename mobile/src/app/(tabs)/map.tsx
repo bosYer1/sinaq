@@ -5,7 +5,8 @@ import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ClubMap } from '@/components/ClubMap';
 import { ScreenState } from '@/components/ScreenState';
-import { colors, radius, spacing } from '@/constants/theme';
+import { radius, spacing, type ColorPalette } from '@/constants/theme';
+import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { useClubData } from '@/context/ClubDataContext';
 import { cheapestPrice, clubsWithCoordinates, clubTypeLabels } from '@/lib/clubs';
 import { formatPrice } from '@/lib/format';
@@ -13,6 +14,7 @@ import type { Club } from '@/types/club';
 import { openClub } from '@/lib/navigation';
 
 export default function MapScreen() {
+  const styles = useThemedStyles(createStyles);
   const { filteredClubs, loading, error, reload } = useClubData();
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
   const mapped = useMemo(() => clubsWithCoordinates(filteredClubs), [filteredClubs]);
@@ -39,6 +41,8 @@ export default function MapScreen() {
 }
 
 function MapClubCard({ club }: { club: Club }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const price = cheapestPrice(club);
   const meta = [club.district?.name, ...clubTypeLabels(club)].filter(Boolean).join(' · ');
   return <Pressable style={({ pressed }) => [styles.clubCard, pressed && styles.pressed]} onPress={() => openClub(club.slug)} accessibilityRole="button" accessibilityLabel={`${club.name} klub detalına bax`}>
@@ -47,7 +51,7 @@ function MapClubCard({ club }: { club: Club }) {
   </Pressable>;
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ColorPalette) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surfaceAlt },
   counter: { position: 'absolute', top: spacing.md, left: spacing.md, borderRadius: radius.md, backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, elevation: 4 },
   counterText: { color: colors.ink, fontWeight: '800', fontSize: 13 }, counterSubtext: { color: colors.muted, fontSize: 10, marginTop: 2 },

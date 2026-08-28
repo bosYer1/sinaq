@@ -1,26 +1,37 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ClubDataProvider } from '@/context/ClubDataContext';
-import { colors } from '@/constants/theme';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 
 export default function RootLayout() {
   return (
-    <AppErrorBoundary>
-      <ClubDataProvider>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: colors.surface },
-            headerTintColor: colors.ink,
-            headerTitleStyle: { fontWeight: '700' },
-            contentStyle: { backgroundColor: colors.background },
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="club/[slug]" options={{ title: 'Klub məlumatı', headerBackTitle: 'Geri' }} />
-        </Stack>
-      </ClubDataProvider>
-    </AppErrorBoundary>
+    <ThemeProvider>
+      <AppErrorBoundary>
+        <ClubDataProvider>
+          <RootNavigator />
+        </ClubDataProvider>
+      </AppErrorBoundary>
+    </ThemeProvider>
+  );
+}
+
+function RootNavigator() {
+  const { colors, scheme } = useTheme();
+  return (
+    <>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.surface },
+          headerTintColor: colors.ink,
+          headerTitleStyle: { fontWeight: '700' },
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="club/[slug]" options={{ title: 'Klub məlumatı', headerBackTitle: 'Geri' }} />
+      </Stack>
+    </>
   );
 }

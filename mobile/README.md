@@ -1,5 +1,7 @@
 # GameYer Mobile
 
+Current foundation audit, theme support and acceptance limits: [README-mobile.md](../README-mobile.md).
+
 GameYer-in mövcud Supabase backend-i ilə işləyən Expo/React Native mobil tətbiqidir. Android və iOS eyni kod bazasından hazırlanır. Mobil tətbiq ayrıca database yaratmır və hazırkı mərhələdə yalnız public klub məlumatlarını oxuyur.
 
 ## Arxitektura

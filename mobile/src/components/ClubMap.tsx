@@ -1,7 +1,8 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
-import { colors } from '@/constants/theme';
+import type { ColorPalette } from '@/constants/theme';
+import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { clusterClubs, type ClubMapPoint } from '@/lib/mapClustering';
 import type { MappableClub } from '@/types/club';
 
@@ -20,6 +21,8 @@ type Props = {
 };
 
 export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectClub, onClearSelection }: Props) {
+  const { colors, scheme } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const mapRef = useRef<MapView>(null);
   const hasFittedRef = useRef(false);
   const fittedClubSetRef = useRef('');
@@ -72,6 +75,7 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
       ref={mapRef}
       style={styles.map}
       initialRegion={AZERBAIJAN_REGION}
+      userInterfaceStyle={scheme}
       toolbarEnabled={false}
       showsCompass
       showsMyLocationButton={false}
@@ -83,7 +87,7 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
     >
       {points.map((point) => point.kind === 'cluster' ? (
         <Marker
-          key={point.id}
+          key={`${point.id}:${scheme}`}
           coordinate={{ latitude: point.latitude, longitude: point.longitude }}
           stopPropagation
           onPress={() => openCluster(point)}
@@ -108,7 +112,7 @@ export const ClubMap = memo(function ClubMap({ clubs, selectedClubId, onSelectCl
   );
 });
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ColorPalette) => StyleSheet.create({
   map: { flex: 1 },
   cluster: {
     width: 42,

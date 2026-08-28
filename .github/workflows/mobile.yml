@@ -37,7 +37,8 @@ jobs:
       - name: Reject private mobile credentials
         working-directory: .
         run: |
-          if git grep -nE -- 'EXPO_PUBLIC_.*(sb_secret_|service_role)|SUPABASE_(SECRET|SERVICE_ROLE)' -- mobile ':!mobile/package-lock.json'; then
+          # Tests deliberately construct invalid role tokens to verify rejection.
+          if git grep -nE -- 'EXPO_PUBLIC_.*(sb_secret_|service_role)|SUPABASE_(SECRET|SERVICE_ROLE)' -- mobile ':!mobile/package-lock.json' ':!mobile/**/*.test.ts'; then
             echo 'Private Supabase credential pattern found in mobile code.' >&2
             exit 1
           fi

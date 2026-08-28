@@ -1,11 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScrollView, StyleSheet, Text, TextInput, Pressable, View } from 'react-native';
-import { colors, radius, spacing } from '@/constants/theme';
+import { radius, spacing, type ColorPalette } from '@/constants/theme';
+import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { useClubData } from '@/context/ClubDataContext';
 
 type ChipProps = { label: string; selected: boolean; onPress: () => void };
 
 function Chip({ label, selected, onPress }: ChipProps) {
+  const styles = useThemedStyles(createStyles);
   return (
     <Pressable
       onPress={onPress}
@@ -19,6 +21,8 @@ function Chip({ label, selected, onPress }: ChipProps) {
 }
 
 export function FilterBar() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const { filters, setFilters, clearFilters, districts, types } = useClubData();
   const active = Boolean(filters.query || filters.district || filters.type || filters.verifiedOnly);
 
@@ -62,7 +66,7 @@ export function FilterBar() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ColorPalette) => StyleSheet.create({
   container: { gap: spacing.sm, paddingBottom: spacing.md },
   searchBox: { minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, paddingHorizontal: spacing.md },
   input: { flex: 1, minHeight: 48, color: colors.ink, fontSize: 15 },

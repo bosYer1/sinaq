@@ -4,16 +4,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { ScreenState } from '@/components/ScreenState';
 import { ClubImage } from '@/components/ClubImage';
-import { colors, radius, spacing } from '@/constants/theme';
+import { radius, spacing, type ColorPalette } from '@/constants/theme';
+import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { clubTypeLabels, coverImage, fetchClubBySlug } from '@/lib/clubs';
 import { directionsUrl, instagramUrl, phoneUrl } from '@/lib/actions';
 import { formatHours, formatPrice } from '@/lib/format';
 import type { Club } from '@/types/club';
 
 function ActionButton({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   return (
     <Pressable onPress={onPress} style={styles.action} accessibilityRole="button">
-      <Ionicons name={icon} size={20} color="#FFFFFF" />
+      <Ionicons name={icon} size={20} color={colors.onPrimary} />
       <Text style={styles.actionText}>{label}</Text>
     </Pressable>
   );
@@ -29,6 +32,7 @@ async function openExternalUrl(url: string) {
 }
 
 export default function ClubDetailScreen() {
+  const styles = useThemedStyles(createStyles);
   const params = useLocalSearchParams<{ slug?: string | string[] }>();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const { width } = useWindowDimensions();
@@ -83,6 +87,7 @@ export default function ClubDetailScreen() {
   if (!club) return <ScreenState title="Klub tapılmadı" message="Bu klub aktiv deyil və ya link yanlışdır." />;
 
   const image = coverImage(club);
+  const galleryImages = club.images.length ? club.images : image ? [{ id: 'profile', url: image }] : [];
   const typeLabels = clubTypeLabels(club);
   const meta = [club.district?.name, ...typeLabels].filter(Boolean).join(' · ');
   const routeUrl = directionsUrl(club.latitude, club.longitude);
@@ -98,7 +103,7 @@ export default function ClubDetailScreen() {
           pagingEnabled
           snapToInterval={galleryWidth}
           disableIntervalMomentum
-          data={club.images}
+          data={galleryImages}
           keyExtractor={(clubImage) => `${clubImage.id}:${clubImage.url}`}
           renderItem={({ item: clubImage, index }) => <ClubImage uri={clubImage.url} name={club.name} style={[styles.heroImage, { width: galleryWidth }]} priority={index === 0 ? 'high' : 'normal'} />}
           getItemLayout={(_, index) => ({ length: galleryWidth, offset: galleryWidth * index, index })}
@@ -109,7 +114,7 @@ export default function ClubDetailScreen() {
           accessibilityLabel={`${club.name} şəkilləri`}
         />
       ) : (
-        <View style={[styles.heroImage, styles.placeholder]}><Text style={styles.placeholderText}>GameYer</Text></View>
+        <View style={[styles.heroImage, styles.placeholder]}><Text style={styles.placeholderText}>Şəkil yoxdur</Text></View>
       )}
 
       <View style={styles.body}>
@@ -166,10 +171,11 @@ export default function ClubDetailScreen() {
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const styles = useThemedStyles(createStyles);
   return <View style={styles.section}><Text style={styles.sectionTitle}>{title}</Text>{children}</View>;
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ColorPalette) => StyleSheet.create({
   content: { backgroundColor: colors.background, paddingBottom: 80 },
   heroImage: { width: '100%', height: 260, backgroundColor: colors.surfaceAlt },
   placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primaryTint },
@@ -183,7 +189,7 @@ const styles = StyleSheet.create({
   address: { color: colors.muted, fontSize: 15, lineHeight: 22 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
   action: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: radius.md, backgroundColor: colors.primary, paddingHorizontal: spacing.lg },
-  actionText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 },
+  actionText: { color: colors.onPrimary, fontWeight: '800', fontSize: 14 },
   section: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.md },
   sectionTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' },
   paragraph: { color: colors.muted, fontSize: 14, lineHeight: 22 },
