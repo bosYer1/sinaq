@@ -57,9 +57,9 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
   return (
     <div
       aria-label="Xəritə önizləməsi"
-      className="relative h-full w-full overflow-hidden rounded-[18px] border border-border bg-[#eef2f2]"
+      className="relative h-full w-full overflow-hidden rounded-[18px] border border-border bg-[#eef2f2] dark:bg-[#1c222d]"
     >
-      <div className="absolute inset-0 grid grid-cols-3 grid-rows-3" aria-hidden="true">
+      <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 dark:[filter:brightness(0.64)_contrast(1.08)_saturate(0.78)]" aria-hidden="true">
         {tiles.map(([x, y]) => (
           <div
             key={`${x}-${y}`}
@@ -71,7 +71,7 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
         ))}
       </div>
 
-      <div className="absolute inset-0 bg-white/5" aria-hidden="true" />
+      <div className="absolute inset-0 bg-white/5 dark:bg-transparent" aria-hidden="true" />
 
       {markers.map(([top, left, color, open], index) => (
         <PreviewMarker key={`${top}-${left}-${index}`} top={top} left={left} color={color} open={open} />
@@ -86,7 +86,7 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
         ⌖
       </div>
 
-      <div className="absolute bottom-1 right-2 rounded bg-white/85 px-1.5 py-0.5 text-[9px] text-slate-600 shadow-sm" aria-hidden="true">
+      <div className="absolute bottom-1 right-2 rounded bg-white/85 px-1.5 py-0.5 text-[9px] text-slate-600 shadow-sm dark:bg-surface/90 dark:text-muted" aria-hidden="true">
         © OpenStreetMap contributors
       </div>
     </div>
