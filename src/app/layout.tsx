@@ -72,7 +72,7 @@ export const metadata: Metadata = {
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: [{ url: '/gameyer-logo.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
+    icon: [{ url: '/gameyer-favicon.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
     apple: [{ url: '/gameyer-logo.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
   },
   ...(googleVerification ? { verification: { google: googleVerification } } : {}),
