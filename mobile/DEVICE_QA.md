@@ -4,7 +4,7 @@ Bu checklist real Android və iOS cihazında release candidate yoxlaması üçü
 
 ## Map-dan müstəqil beta sprint — 2026-08-29
 
-**KNOWN BLOCKER — Android physical device map rendering unresolved.** Map bu sprintdə dəyişdirilməyib və təkrar PASS verilməyib.
+**KNOWN BLOCKER — Android physical device map rendering unresolved.** Expo SDK 53-dən etibarən Google Maps Expo Go Android-dan çıxarılıb; SDK 57 xəritəsi restricted Google Maps key ilə development build-də yoxlanmalıdır. Billing/key founder icazəsi tələb etdiyi üçün bu checklistdə xəritə PASS deyil.
 
 Founder əvvəlki build-də Android launch, public data, Discovery/list, theme və bottom tabs üçün PASS bildirib. Aşağıdakı yeni build ssenariləri **PENDING real-device QA**:
 
@@ -37,7 +37,17 @@ Founder-in əvvəlki cihaz nəticəsi: Expo Go launch, GameYer bundle, public kl
 
 FAIL davam edərsə: qırmızı error ekranının tam mətni/screenshot-u, Metro terminal xətası, cihazda Google Play Services mövcudluğu və xəritənin blank/crash/timeout olmasını göndərin. React error boundary native Java crash və Google tiles authorization xətasını tuta bilmir; timeout konkret səbəb diaqnozu deyil.
 
-Uyğunluq: [Expo SDK 57 maps](https://docs.expo.dev/versions/v57.0.0/sdk/map-view/) `react-native-maps 1.27.2`-ni Expo Go-da əlavə setup olmadan dəstəkləyir. Versiya artıq uyğundur; development build tələb olunduğuna dair sübut yoxdur. Ayrı Android binary üçün Google Maps credential tələbi bu sprintdə aktivləşdirilmir.
+Uyğunluq: `react-native-maps 1.27.2` Expo SDK 57 ilə aligned-dir. Lakin [Expo-nun SDK 52 beta qeydi](https://expo.dev/changelog/2024-10-24-sdk-52-beta) Google Maps-in SDK 53-dən Android Expo Go-dan çıxarıldığını bildirir. [SDK 57 map sənədi](https://docs.expo.dev/versions/v57.0.0/sdk/map-view/) ayrıca native binary üçün Google Maps konfiqurasiyası tələb edir. Buna görə Expo Go nəticəsi release acceptance deyil.
+
+Development build map gate — hamısı real cihazda PENDING:
+
+- [ ] Restricted Android Maps API key `az.gameyer.app` və development signing SHA-1 ilə uyğunlaşdırılıb.
+- [ ] Development APK real cihaza quraşdırılıb; `adb logcat`-də Maps authorization failure yoxdur.
+- [ ] Bakı tiles-i və real klub markerləri görünür.
+- [ ] Marker/cluster press, selected card və detail keçidi işləyir.
+- [ ] Pan/pinch/drag və sürətli marker toxunuşlarında freeze/crash yoxdur.
+- [ ] Light/Dark/System keçidində map remount crash etmir.
+- [ ] 15 saniyə timeout və retry yalnız həqiqi tile failure zamanı göstərilir.
 
 ## İlk 15–20 dəqiqə
 

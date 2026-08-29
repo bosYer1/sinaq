@@ -25,7 +25,20 @@
    ```bash
    npm run lint && npm run typecheck && npm test
    ```
-10. `.env.local` faylını heç vaxt commit və ya paylaşmayın. Expo Go testi Google Maps billing və store credential yaratmır.
+10. `.env.local` faylını heç vaxt commit və ya paylaşmayın.
+
+## Android xəritə development build-i
+
+SDK 53-dən etibarən Google Maps Expo Go Android-dan çıxarılıb. Buna görə SDK 57-də Discovery işləsə də native xəritə boş qala bilər; bu app kodunun billing-i avtomatik aktivləşdirməsi demək deyil.
+
+- Pulsuz lokal build üçün Windows-da Android Studio/SDK, JDK və USB debugging lazımdır. Bu kompüterdə hazırda Android SDK/ADB aşkarlanmayıb.
+- Xəritəli development build üçün Google Cloud-da Maps SDK for Android aktiv, billing-ə bağlı və `az.gameyer.app` + debug SHA-1 ilə məhdudlaşdırılmış API key tələb olunur. Founder icazəsi olmadan yaradılmamalıdır.
+- İcazədən və lokal setup-dan sonra key-i yalnız ignored `.env.local`-da `GOOGLE_MAPS_API_KEY_ANDROID` kimi yazın və işlədin:
+  ```bash
+  npm run android:dev
+  npm run start:dev-client
+  ```
+- EAS alternativi Expo hesabı və build kvotası tələb edir: `eas build --platform android --profile development`. EAS Google Maps billing/key tələbini aradan qaldırmır.
 
 ## Expo Go incompatibility on iOS (SDK 57)
 
@@ -34,6 +47,6 @@
 - Pulsuz yol: Mac + Xcode + pulsuz Apple Account (Personal Team) ilə yalnız öz iPhone-na quraşdırmaq olar; provisioning 7 gündən sonra bitir və build yenidən quraşdırılmalıdır.
 - Windows/EAS yolu: EAS cloud build Mac tələb etmir və Expo-nun Free planında məhdud, aşağı-prioritet build kvotası var. Lakin fiziki iPhone development build-i üçün aktiv Apple Developer Program üzvlüyü, cihaz qeydiyyatı və signing tələb olunur. Üzvlük illik 99 USD-dir (və ya yerli valyuta ekvivalenti).
 - Bu layihə üçün EAS build, Apple credential, ödəniş və ya billing aktivləşdirilməyib.
-- Ən sürətli sıfır-xərc yol: Android telefonda ən son Expo Go-nu açın, sonra `npx expo start --tunnel` işlədib QR kodu skan edin. Expo Go daxilindəki xəritə Google Maps billing/key tələb etmir.
+- Ən sürətli sıfır-xərc yol: Android telefonda ən son Expo Go-nu açın, sonra `npx expo start --tunnel` işlədib QR kodu skan edin. Discovery və digər qeyri-map flow-lar yoxlana bilər; SDK 57 Android xəritəsi üçün Expo Go keçərli acceptance yolu deyil.
 
 App açılan kimi `DEVICE_QA.md` faylındakı “İlk 15–20 dəqiqə” bölməsinə başlayın.
