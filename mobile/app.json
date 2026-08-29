@@ -37,16 +37,19 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-location", {
-        "locationWhenInUsePermission": "Yaxın klubları məsafəyə görə göstərmək üçün mövqeyiniz istifadə olunur.",
-        "locationAlwaysPermission": false,
-        "locationAlwaysAndWhenInUsePermission": false,
-        "motionUsagePermission": false,
-        "isAndroidMotionActivityEnabled": false,
-        "isIosBackgroundLocationEnabled": false,
-        "isAndroidBackgroundLocationEnabled": false,
-        "isAndroidForegroundServiceEnabled": false
-      }],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Yaxın klubları məsafəyə görə göstərmək üçün mövqeyiniz istifadə olunur.",
+          "locationAlwaysPermission": false,
+          "locationAlwaysAndWhenInUsePermission": false,
+          "motionUsagePermission": false,
+          "isAndroidMotionActivityEnabled": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -59,6 +62,13 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "nativeMapEnabled": false,
+      "router": {},
+      "eas": {
+        "projectId": "ffae1b38-40d8-4a29-affe-21f782979fad"
+      }
     }
   }
 }
