@@ -12,6 +12,7 @@ import { cheapestPrice, clubsWithCoordinates, clubTypeLabels } from '@/lib/clubs
 import { formatPrice } from '@/lib/format';
 import type { Club } from '@/types/club';
 import { openClub } from '@/lib/navigation';
+import { isNativeMapConfigured } from '@/lib/features';
 
 export default function MapScreen() {
   const styles = useThemedStyles(createStyles);
@@ -25,6 +26,8 @@ export default function MapScreen() {
   useFocusEffect(useCallback(() => {
     setSelectedClubId(null);
   }, []));
+
+  if (!isNativeMapConfigured()) return <ScreenState title="Xəritə hazırda beta mərhələsindədir." message="Klubları Kəşf et və Yaxınlıq bölmələrindən tapa bilərsiniz." />;
 
   if (loading) return <ScreenState loading title="Xəritə hazırlanır" />;
   if (error && mapped.length === 0) return <ScreenState title="Xəritə məlumatı alınmadı" message={error} actionLabel="Yenidən yoxla" onAction={() => void reload()} />;

@@ -18,5 +18,9 @@ module.exports = ({ config }) => {
   return {
     ...config,
     plugins,
+    extra: {
+      ...(config.extra ?? {}),
+      nativeMapEnabled: Boolean(androidGoogleMapsApiKey),
+    },
   };
 };

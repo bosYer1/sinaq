@@ -40,6 +40,19 @@ SDK 53-dən etibarən Google Maps Expo Go Android-dan çıxarılıb. Buna görə
   ```
 - EAS alternativi Expo hesabı və build kvotası tələb edir: `eas build --platform android --profile development`. EAS Google Maps billing/key tələbini aradan qaldırmır.
 
+## Installable Android preview APK — xəritə deferred
+
+Bu profil development server tələb etməyən, real Android cihazlara göndərilə bilən signed APK yaradır. Preview config yalnız public read-only Supabase dəyərlərini bundle edir; Google Maps key daxil etmir. Xəritə tabı native MapView mount etmək əvəzinə beta məlumatı göstərir.
+
+1. Pulsuz Expo hesabı yaradın və aşağıdakı tək command-i `mobile` qovluğunda işlədin:
+   ```bash
+   npx eas-cli@latest build --platform android --profile preview
+   ```
+2. İlk dəfə command daxilində Expo login, EAS project link və Android keystore yaradılması təsdiqi istənə bilər. Credential EAS-də saxlanılır, repo-ya yazılmır.
+3. Build bitəndə terminaldakı build URL-ni açın. Expo build səhifəsindən APK-nı yükləyin və ya URL-ni testerə göndərin; Android-də unknown-app install təsdiqi lazım ola bilər.
+
+Free planın aylıq build kvotası daxilində bu build ödənişsizdir. Google Maps billing, Play Console və store submission bu flow-a daxil deyil.
+
 ## Expo Go incompatibility on iOS (SDK 57)
 
 - Səbəb: iPhone-dakı Expo Go binary-si layihənin SDK 57 native runtime-ını ehtiva etmir. LAN/tunnel yalnız Metro bağlantısını dəyişir.

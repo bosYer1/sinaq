@@ -1,5 +1,6 @@
 import { createElement } from 'react';
 import NearbyScreen from '@/app/(tabs)/nearby';
+import MapScreen from '@/app/(tabs)/map';
 import { FilterBar } from './FilterBar';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { requestPosition } from '@/lib/location';
@@ -7,6 +8,8 @@ const { act, create } = jest.requireActual('react-test-renderer');
 // Native renderer cold initialization on Windows is not a device-performance test.
 jest.setTimeout(15_000);
 jest.mock('@expo/vector-icons/Ionicons', () => jest.requireActual('react-native').View);
+const mockClubMap = jest.fn((_props?: unknown) => null);
+jest.mock('@/components/ClubMap', () => ({ ClubMap: (props: unknown) => mockClubMap(props) }));
 
 const mockData = {
   filteredClubs: [], clubs: [], loading: false, error: null, reload: jest.fn(),
@@ -51,4 +54,10 @@ test('active filters have a visible reset outside and invoke the shared reset', 
   expect(reset).toBeTruthy();
   await act(async () => reset.props.onPress());
   expect(mockData.clearFilters).toHaveBeenCalledTimes(1);
+});
+
+test('keyless preview build shows the map beta fallback without mounting native map', async () => {
+  await act(async () => { tree = create(createElement(ThemeProvider, null, createElement(MapScreen))); });
+  expect(tree.root.findAll((node: { props: { children?: unknown } }) => node.props.children === 'Xəritə hazırda beta mərhələsindədir.').length).toBeGreaterThan(0);
+  expect(mockClubMap).not.toHaveBeenCalled();
 });
