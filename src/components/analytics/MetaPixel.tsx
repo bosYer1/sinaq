@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 import { buildMetaPixelBootstrap, createMetaRouteTracker, markMetaPixelReady, normalizeMetaPixelId, trackMetaPageView } from '@/lib/meta-pixel';
@@ -9,7 +9,7 @@ export function MetaPixel({ pixelId }: { pixelId?: string }) {
   const pathname = usePathname();
   const normalizedPixelId = normalizeMetaPixelId(pixelId);
   const [ready, setReady] = useState(false);
-  const shouldTrackRoute = useMemo(() => createMetaRouteTracker(), []);
+  const [shouldTrackRoute] = useState(() => createMetaRouteTracker(pathname));
 
   useEffect(() => {
     if (!ready || !shouldTrackRoute(pathname)) return;

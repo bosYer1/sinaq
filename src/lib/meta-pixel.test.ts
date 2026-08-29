@@ -10,15 +10,15 @@ test('missing or invalid Pixel ID does not produce a script', () => {
   assert.equal(buildMetaPixelBootstrap('not-a-pixel'), '');
 });
 
-test('valid Pixel ID produces init code without a PageView', () => {
+test('valid Pixel ID initializes and sends exactly one bootstrap PageView', () => {
   const script = buildMetaPixelBootstrap('1234567890');
   assert.match(script, /fbq\('init','1234567890'\)/);
-  assert.doesNotMatch(script, /PageView/);
+  assert.equal(script.match(/fbq\('track','PageView'\)/g)?.length, 1);
+  assert.ok(script.indexOf("fbq('init'") < script.indexOf("fbq('track','PageView')"));
 });
 
-test('route tracker emits one PageView decision per public pathname', () => {
-  const shouldTrack = createMetaRouteTracker();
-  assert.equal(shouldTrack('/'), true);
+test('route tracker skips bootstrap path and emits once per later public pathname', () => {
+  const shouldTrack = createMetaRouteTracker('/');
   assert.equal(shouldTrack('/'), false);
   assert.equal(shouldTrack('/klub/test-club'), true);
   assert.equal(shouldTrack('/klub/test-club'), false);
