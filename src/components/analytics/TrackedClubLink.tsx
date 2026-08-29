@@ -1,13 +1,16 @@
 'use client';
 
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from 'react';
+import { clubActionEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 
 type EventType = 'maps_click' | 'phone_click' | 'instagram_click';
 
 interface TrackedClubLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
   eventType: EventType;
+  clubId: string;
   clubSlug: string;
+  clubName: string;
   children: ReactNode;
 }
 
@@ -27,10 +30,12 @@ function visitorId() {
   }
 }
 
-export function TrackedClubLink({ href, eventType, clubSlug, children, onClick, ...props }: TrackedClubLinkProps) {
+export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, children, onClick, ...props }: TrackedClubLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
     if (event.defaultPrevented) return;
+
+    trackMetaCustomEvent(clubActionEvent(eventType, { clubId, clubSlug, clubName }));
 
     const body = JSON.stringify({
       sessionId: visitorId(),
