@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-const POSTHOG_DASHBOARD_URL = 'https://us.posthog.com/project/585472/dashboard/491088';
+const POSTHOG_DASHBOARD_URL = 'https://us.posthog.com/project/585472/dashboard/2048439';
 
 export default function FounderAnalyticsPage() {
   return (
