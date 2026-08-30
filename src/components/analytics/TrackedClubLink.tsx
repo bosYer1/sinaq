@@ -1,6 +1,7 @@
 'use client';
 
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from 'react';
+import { trackGaEvent } from '@/lib/google-analytics';
 import { clubActionEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
 
@@ -38,6 +39,7 @@ export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, c
 
     const eventProperties = { club_id: clubId, club_slug: clubSlug, club_name: clubName };
     trackMetaCustomEvent(clubActionEvent(eventType, { clubId, clubSlug, clubName }));
+    trackGaEvent(eventType, eventProperties);
     trackPostHogEvent(eventType, eventProperties);
 
     const body = JSON.stringify({
