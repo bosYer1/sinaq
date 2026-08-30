@@ -229,11 +229,9 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                   type="button"
                   aria-label="Xəritəni aktiv et"
                   onClick={() => setMobileListMapActive(true)}
-                  className="absolute inset-0 z-[600] flex items-center justify-center rounded-[18px] bg-transparent"
+                  className="absolute inset-0 z-[600] rounded-[18px] bg-transparent"
                 >
-                  <span className="rounded-xl border border-border bg-surface/95 px-4 py-3 text-sm font-semibold text-ink shadow-card backdrop-blur">
-                    Xəritəni hərəkət etdirmək üçün toxun
-                  </span>
+                  <span className="sr-only">Xəritəni hərəkət etdirmək üçün toxun</span>
                 </button>
               ) : null}
             </div>
