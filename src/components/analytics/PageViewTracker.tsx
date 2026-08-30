@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { trackGaEvent } from '@/lib/google-analytics';
+import { submissionSuccessEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
 
 const VISITOR_KEY = 'gameyer_visitor_id';
@@ -76,11 +78,14 @@ function trackSubmissionSuccess(pathname: string) {
     // Session storage is optional; event capture can still proceed.
   }
 
-  trackPostHogEvent('submission_success', {
+  const eventProperties = {
     surface,
     club_slug: clubSlug,
     club_name: clubName,
-  });
+  };
+  trackPostHogEvent('submission_success', eventProperties);
+  trackGaEvent('submission_success', eventProperties);
+  trackMetaCustomEvent(submissionSuccessEvent(surface, clubSlug, clubName));
 }
 
 export function PageViewTracker() {
@@ -99,9 +104,6 @@ export function PageViewTracker() {
     const visitId = getVisitId();
     const referrerHost = getEntryReferrerHost();
 
-    // keepalive allows the browser to finish sending the analytics event even if
-    // the component unmounts or the user navigates away. Do not abort this
-    // request in the effect cleanup, otherwise valid page views can be dropped.
     void fetch('/api/analytics/visit', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
