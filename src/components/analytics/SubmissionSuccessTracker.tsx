@@ -1,17 +1,23 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { trackPostHogEvent } from '@/lib/posthog';
 
-interface SubmissionSuccessTrackerProps {
-  surface: 'contact' | 'club_owner';
-  clubSlug?: string | null;
-  clubName?: string | null;
-}
+export function SubmissionSuccessTracker() {
+  const pathname = usePathname();
 
-export function SubmissionSuccessTracker({ surface, clubSlug, clubName }: SubmissionSuccessTrackerProps) {
   useEffect(() => {
+    if (pathname !== '/elaqe' && pathname !== '/klub-sahibi') return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('sent') !== '1') return;
+
+    const surface = pathname === '/klub-sahibi' ? 'club_owner' : 'contact';
+    const clubSlug = params.get('slug');
+    const clubName = params.get('club');
     const key = `gameyer_submission_success:${surface}:${clubSlug ?? ''}:${clubName ?? ''}`;
+
     try {
       if (window.sessionStorage.getItem(key) === '1') return;
       window.sessionStorage.setItem(key, '1');
@@ -21,10 +27,10 @@ export function SubmissionSuccessTracker({ surface, clubSlug, clubName }: Submis
 
     trackPostHogEvent('submission_success', {
       surface,
-      club_slug: clubSlug ?? null,
-      club_name: clubName ?? null,
+      club_slug: clubSlug,
+      club_name: clubName,
     });
-  }, [surface, clubSlug, clubName]);
+  }, [pathname]);
 
   return null;
 }
