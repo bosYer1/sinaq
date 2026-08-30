@@ -2,6 +2,7 @@
 
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from 'react';
 import { clubActionEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 type EventType = 'maps_click' | 'phone_click' | 'instagram_click';
 
@@ -35,7 +36,9 @@ export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, c
     onClick?.(event);
     if (event.defaultPrevented) return;
 
+    const eventProperties = { club_id: clubId, club_slug: clubSlug, club_name: clubName };
     trackMetaCustomEvent(clubActionEvent(eventType, { clubId, clubSlug, clubName }));
+    trackPostHogEvent(eventType, eventProperties);
 
     const body = JSON.stringify({
       sessionId: visitorId(),
