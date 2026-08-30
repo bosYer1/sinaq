@@ -44,3 +44,14 @@ export function trackGaPageView(measurementId: string) {
     page_title: document.title,
   });
 }
+
+export function trackGaEvent(eventName: string, params: Record<string, string | number | boolean | null | undefined> = {}) {
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
+  const measurementId = normalizeGaMeasurementId(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
+  if (!measurementId || !eventName.trim()) return;
+
+  window.gtag('event', eventName, {
+    send_to: measurementId,
+    ...params,
+  });
+}
