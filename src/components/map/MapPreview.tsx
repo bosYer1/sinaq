@@ -25,8 +25,6 @@ const markers = [
   ['40%', '60%', '#06AED4', true],
   ['37%', '64%', '#7C5CFC', true],
   ['52%', '66%', '#7C5CFC', false],
-  ['63%', '69%', '#06AED4', true],
-  ['70%', '72%', '#7C5CFC', true],
   ['38%', '82%', '#06AED4', true],
 ] as const;
 
