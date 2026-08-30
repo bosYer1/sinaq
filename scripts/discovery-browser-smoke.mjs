@@ -61,12 +61,25 @@ const navigate = async (path) => {
 
 await send('Page.enable');
 await send('Runtime.enable');
+try {
+  await send('Browser.setPermission', {
+    origin: BASE_URL,
+    permission: { name: 'geolocation' },
+    setting: 'denied',
+  });
+} catch {
+  // Older Chromium builds may not expose Browser.setPermission; map behavior is still tested below.
+}
 
 try {
   await navigate('/');
   await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input');
-  const initialCount = await evaluate(`document.body.innerText.match(/Klublar \\((\\d+)\\)/)?.[1] || null`);
-  assert(initialCount, 'Homepage club count missing');
+  const initial = await evaluate(`(() => ({
+    count: document.body.innerText.match(/Klublar \\((\\d+)\\)/)?.[1] || document.body.innerText.match(/(\\d+) klub/)?.[1] || null,
+    districtSlug: Array.from(document.querySelectorAll('a[href^="/rayon/"]')).map((a) => a.getAttribute('href')?.split('/').filter(Boolean).pop()).find(Boolean) || null,
+  }))()`);
+  assert(initial.count, 'Homepage club count missing', initial);
+  assert(initial.districtSlug, 'No active district available for regression', initial);
 
   await evaluate(`(() => {
     const input = document.querySelector('input[aria-label="Klub axtar"]');
@@ -88,6 +101,10 @@ try {
   assert(pcState.noindex.toLowerCase().includes('noindex'), 'Filtered homepage must be noindex', pcState);
   assert(pcState.canonical === 'https://gameyer.az/' || pcState.canonical === `${BASE_URL}/`, 'Filtered homepage canonical regressed', pcState);
 
+  await navigate(`/?district=${encodeURIComponent(initial.districtSlug)}`);
+  assert(await evaluate(`new URLSearchParams(location.search).get('district') === ${JSON.stringify(initial.districtSlug)}`), 'District filter query did not remain active');
+  assert(await evaluate(`document.querySelector('meta[name="robots"]')?.content?.toLowerCase().includes('noindex')`), 'District-filtered homepage must remain noindex');
+
   await navigate('/?price_max=2');
   assert(await evaluate(`location.search.includes('price_max=2')`), 'Price filter query did not remain active');
 
@@ -96,9 +113,17 @@ try {
   const map = await evaluate(`(() => {
     const el = document.querySelector('[aria-label="GameYer klub xəritəsi"]');
     const rect = el?.getBoundingClientRect();
-    return { exists: Boolean(el), width: rect?.width || 0, height: rect?.height || 0 };
+    return { exists: Boolean(el), width: rect?.width || 0, height: rect?.height || 0, bodyText: document.body.innerText.slice(0, 3000) };
   })()`);
-  assert(map.exists && map.width > 250 && map.height > 300, 'Map view failed to render', map);
+  assert(map.exists && map.width > 250 && map.height > 300, 'Map view failed to render with geolocation denied', map);
+  assert(!/undefined|cannot read properties|null is not an object/i.test(map.bodyText), 'Map view exposed a runtime failure after denied geolocation', map);
+
+  const markerCount = await evaluate(`document.querySelectorAll('.leaflet-marker-icon').length`);
+  assert(markerCount > 0, 'Map rendered without club markers', { markerCount });
+  await evaluate(`document.querySelector('.leaflet-marker-icon')?.click()`);
+  await sleep(350);
+  const popupClubHref = await evaluate(`Array.from(document.querySelectorAll('.leaflet-popup a[href^="/klub/"], a[href^="/klub/"]')).map((a) => a.getAttribute('href')).find(Boolean) || null`);
+  assert(popupClubHref?.startsWith('/klub/'), 'Marker click did not expose a club detail destination', { popupClubHref });
 
   await navigate('/');
   const resetVisible = await evaluate(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => /Filtrləri təmizlə|Təmizlə/.test(b.textContent || '')))`);
