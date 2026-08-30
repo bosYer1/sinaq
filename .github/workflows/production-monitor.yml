@@ -1,0 +1,43 @@
+name: Production monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3,15 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-monitor
+  cancel-in-progress: true
+
+jobs:
+  integrity:
+    name: Production integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TEST_BASE_URL: https://gameyer.az
+      EXPECTED_PUBLIC_HOST: gameyer.az
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Health check
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 https://gameyer.az/api/health > /tmp/health.json
+          grep '"ok":true' /tmp/health.json > /dev/null
+          grep '"database":"ok"' /tmp/health.json > /dev/null
+
+      - name: Sitemap and broken-route monitor
+        run: node scripts/site-integrity-smoke.mjs
+
+      - name: Known 404 contract
+        run: test "$(curl --silent --output /dev/null --write-out '%{http_code}' https://gameyer.az/this-route-must-not-exist)" = "404"
