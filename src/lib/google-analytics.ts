@@ -1,5 +1,7 @@
 export type GtagFunction = (...args: unknown[]) => void;
 
+export type GaEventParams = Record<string, string | number | boolean | null | undefined>;
+
 declare global {
   interface Window {
     dataLayer?: unknown[][];
@@ -8,6 +10,7 @@ declare global {
 }
 
 const GA_MEASUREMENT_ID_PATTERN = /^G-[A-Z0-9]{4,20}$/;
+const GA_EVENT_NAME_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
 
 export function normalizeGaMeasurementId(value: string | undefined | null) {
   const normalized = value?.trim().toUpperCase() ?? '';
@@ -42,5 +45,20 @@ export function trackGaPageView(measurementId: string) {
     page_location: window.location.href,
     page_path: `${window.location.pathname}${window.location.search}`,
     page_title: document.title,
+  });
+}
+
+export function trackGaEvent(eventName: string, params: GaEventParams = {}) {
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
+  const measurementId = normalizeGaMeasurementId(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
+  if (!measurementId || !GA_EVENT_NAME_PATTERN.test(eventName)) return;
+
+  const safeParams = Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== null && value !== undefined),
+  );
+
+  window.gtag('event', eventName, {
+    ...safeParams,
+    send_to: measurementId,
   });
 }
