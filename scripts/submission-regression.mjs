@@ -20,7 +20,7 @@ assert.match(actionSource, /resultUrl\(formData, 'rate'\)/, 'rate-limited submis
 assert.match(formSource, /action=\{submitClubSubmission\}/, 'public form must remain connected to the server action');
 assert.match(formSource, /name="website"/, 'honeypot field must remain present');
 assert.match(formSource, /name="contact_value"[\s\S]*required/, 'contact value must remain required');
-assert.match(formSource, /kind="new_club"/, 'contact page must continue exposing new club submissions');
+assert.match(contactSource, /kind="new_club"/, 'contact page must continue exposing new club submissions');
 assert.match(contactSource, /params\.sent === '1'/, 'contact page must render success feedback');
 assert.match(contactSource, /params\.error === '1'/, 'contact page must render failure feedback');
 assert.match(ownerSource, /kind="owner_claim"/, 'club-owner page must continue exposing owner claims');
