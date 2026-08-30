@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { LogoutButton } from '@/components/admin/LogoutButton';
 import { createClient } from '@/lib/supabase/server';
 
+const POSTHOG_FOUNDER_DASHBOARD = 'https://us.posthog.com/project/585472/dashboard/2048439';
+
 export const metadata: Metadata = {
   title: 'Admin',
   robots: {
@@ -60,6 +62,7 @@ export default async function AdminLayout({
             <nav className="mt-7 space-y-1 text-sm">
               <Link href="/admin" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Dashboard</Link>
               <Link href="/admin/statistika" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Statistika</Link>
+              <a href={POSTHOG_FOUNDER_DASHBOARD} target="_blank" rel="noopener noreferrer" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">PostHog Analytics ↗</a>
               <Link href="/admin/seo-prioritet" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Google SEO prioriteti</Link>
               <Link href="/admin/klublar" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Klublar</Link>
               <Link href="/admin/muracietler" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Müraciətlər</Link>
@@ -76,6 +79,7 @@ export default async function AdminLayout({
             <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 text-sm">
               <Link href="/admin" className="shrink-0 font-bold">GameYer Admin</Link>
               <Link href="/admin/statistika" className="shrink-0 text-gray-600">Statistika</Link>
+              <a href={POSTHOG_FOUNDER_DASHBOARD} target="_blank" rel="noopener noreferrer" className="shrink-0 text-gray-600">PostHog ↗</a>
               <Link href="/admin/seo-prioritet" className="shrink-0 text-gray-600">SEO prioriteti</Link>
               <Link href="/admin/klublar" className="shrink-0 text-gray-600">Klublar</Link>
               <Link href="/admin/muracietler" className="shrink-0 text-gray-600">Müraciətlər</Link>
