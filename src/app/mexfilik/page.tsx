@@ -19,7 +19,7 @@ export default function PrivacyPage() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <Link href="/" className="text-sm font-semibold text-primary hover:underline">← GameYer-ə qayıt</Link>
       <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-ink">Məxfilik siyasəti</h1>
-      <p className="mt-2 text-sm text-muted">Son yenilənmə: 21 avqust 2026</p>
+      <p className="mt-2 text-sm text-muted">Son yenilənmə: 30 avqust 2026</p>
 
       <div className="mt-8 space-y-7 text-sm leading-7 text-ink">
         <section>
@@ -29,8 +29,8 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="font-display text-lg font-bold">İstifadə statistikası</h2>
-          <p className="mt-2 text-muted">GameYer xidmətin keyfiyyətini yaxşılaşdırmaq, trafik mənbələrini və səhifə istifadəsini anlamaq üçün məhdud texniki statistika toplaya bilər. Bu statistika anonim sessiya identifikatoru, baxılan səhifə, trafik mənbəyi və ümumi cihaz/brauzer məlumatı kimi göstəricilərdən ibarət ola bilər və public səhifələrdə göstərilmir.</p>
-          <p className="mt-2 text-muted">Admin hesabı ilə edilmiş daxili baxışlar ümumi istifadə statistikasına daxil edilmir.</p>
+          <p className="mt-2 text-muted">GameYer xidmətin keyfiyyətini yaxşılaşdırmaq və sayt istifadəsini anlamaq məqsədilə Google Analytics və Meta Pixel kimi analitika texnologiyalarından istifadə edə bilər. Bu xidmətlər səhifə baxışları, trafik mənbəyi, cihaz/brauzer məlumatları və saytdakı müəyyən qarşılıqlı əlaqələr barədə texniki məlumat toplaya bilər.</p>
+          <p className="mt-2 text-muted">GameYer bu analitika vasitələrinə telefon nömrəsi, e-poçt, dəqiq koordinat və ya istifadəçi lokasiyası kimi məlumatları məqsədli şəkildə ötürmür.</p>
         </section>
 
         <section>

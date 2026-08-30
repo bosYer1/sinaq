@@ -4,6 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getSiteUrl } from '@/lib/site-url';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
+import { MetaPixel } from '@/components/analytics/MetaPixel';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import { PostHogAnalytics } from '@/components/analytics/PostHogAnalytics';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import './globals.css';
 
@@ -12,6 +15,8 @@ const displayFont = Space_Grotesk({ subsets: ['latin'], variable: '--font-displa
 const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 const siteUrl = getSiteUrl();
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
+const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
+const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
 const socialImage = `${siteUrl}/opengraph-image`;
 const brandLogo = `${siteUrl}/gameyer-logo.jpeg`;
 const organizationId = `${siteUrl}/#organization`;
@@ -72,7 +77,7 @@ export const metadata: Metadata = {
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: [{ url: '/gameyer-logo.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
+    icon: [{ url: '/gameyer-favicon.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
     apple: [{ url: '/gameyer-logo.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
   },
   ...(googleVerification ? { verification: { google: googleVerification } } : {}),
@@ -91,6 +96,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-bg font-body text-ink antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, '\\u003c') }} />
+        <MetaPixel pixelId={metaPixelId} />
+        <GoogleAnalytics measurementId={gaMeasurementId} />
+        <PostHogAnalytics />
         <PageViewTracker />
 
         <header className="sticky top-0 z-30 border-b border-border/80 bg-surface/95 backdrop-blur">

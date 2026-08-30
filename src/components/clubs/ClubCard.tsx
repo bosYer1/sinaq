@@ -10,6 +10,9 @@ import { inferClubTypeSlugs } from '@/lib/clubType';
 import { getPlatformStartingPrices } from '@/lib/pricing';
 import { cn, formatPriceRange, isClubOpenNow, isPremiumActive } from '@/lib/utils';
 import { formatDistance } from '@/lib/geo';
+import { trackGaEvent } from '@/lib/google-analytics';
+import { clubCardClickEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 interface ClubCardProps {
   club: ClubWithDistance;
@@ -18,25 +21,51 @@ interface ClubCardProps {
   imagePriority?: boolean;
 }
 
+type LiveState = {
+  openNow: boolean;
+  premiumActive: boolean;
+};
+
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, active, onMouseEnter, imagePriority = false }, ref) {
   const isVerified = club.is_verified;
   const hasHours = club.opening_hours.length > 0;
-  const [openNow, setOpenNow] = useState(() => hasHours ? isClubOpenNow(club.opening_hours) : false);
-  const [premiumActive, setPremiumActive] = useState(() => isPremiumActive(club));
+  const [liveState, setLiveState] = useState<LiveState | null>(null);
 
   useEffect(() => {
     const refreshLiveState = () => {
-      setOpenNow(hasHours ? isClubOpenNow(club.opening_hours) : false);
-      setPremiumActive(isPremiumActive(club));
+      setLiveState({
+        openNow: hasHours ? isClubOpenNow(club.opening_hours) : false,
+        premiumActive: isPremiumActive(club),
+      });
     };
     refreshLiveState();
     const timer = window.setInterval(refreshLiveState, 60_000);
     return () => window.clearInterval(timer);
   }, [club, hasHours]);
 
-  const statusLabel = !hasHours ? 'Saat məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
+  const openNow = liveState?.openNow ?? false;
+  const premiumActive = liveState?.premiumActive ?? false;
+  const statusLabel = !hasHours ? 'Saat məlum deyil' : liveState === null ? 'Yoxlanılır' : openNow ? 'Açıqdır' : 'Bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
   const startingPrices = getPlatformStartingPrices(club.pricing);
+
+  function trackClubCardClick() {
+    const eventProperties = {
+      club_id: club.id,
+      club_slug: club.slug,
+      club_name: club.name,
+      district: club.district?.name ?? null,
+    };
+
+    trackMetaCustomEvent(clubCardClickEvent({
+      clubId: club.id,
+      clubSlug: club.slug,
+      clubName: club.name,
+      district: club.district?.name ?? null,
+    }));
+    trackGaEvent('club_card_click', eventProperties);
+    trackPostHogEvent('club_card_click', eventProperties);
+  }
 
   return (
     <Link
@@ -44,6 +73,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       href={`/klub/${encodeURIComponent(club.slug)}`}
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
+      onClick={trackClubCardClick}
       className={cn(
         'group flex min-h-[112px] gap-3 rounded-xl border bg-surface p-3 transition-all duration-150',
         active
@@ -59,7 +89,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
           className="h-full w-full rounded-lg border-0 bg-transparent text-3xl"
           priority={imagePriority}
         />
-        {hasHours ? (
+        {hasHours && liveState !== null ? (
           <span className={cn('absolute left-2 top-2 h-2.5 w-2.5 rounded-full ring-2 ring-white', openNow ? 'bg-live' : 'bg-red-500')} title={statusLabel} />
         ) : null}
       </div>
@@ -69,7 +99,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
           <h3 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold tracking-[-0.01em] text-ink transition group-hover:text-primary">{club.name}</h3>
           <div className="flex shrink-0 items-center gap-1">
             {isVerified ? <Badge tone="verified">✓</Badge> : null}
-            {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
+            {liveState !== null && premiumActive ? <Badge tone="premium">VIP</Badge> : null}
           </div>
         </div>
 
@@ -98,7 +128,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
           </div>
           <div className="shrink-0 text-right">
             {club.distanceKm != null ? <div className="text-[10px] font-medium text-primary">{formatDistance(club.distanceKm)}</div> : null}
-            <div className={cn('mt-0.5 text-[10px] font-semibold', !hasHours ? 'text-muted' : openNow ? 'text-live' : 'text-red-500')}>{statusLabel}</div>
+            <div className={cn('mt-0.5 text-[10px] font-semibold', !hasHours || liveState === null ? 'text-muted' : openNow ? 'text-live' : 'text-red-500')}>{statusLabel}</div>
           </div>
         </div>
       </div>

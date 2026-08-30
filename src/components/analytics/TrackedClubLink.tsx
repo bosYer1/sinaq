@@ -1,13 +1,18 @@
 'use client';
 
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from 'react';
+import { trackGaEvent } from '@/lib/google-analytics';
+import { clubActionEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 type EventType = 'maps_click' | 'phone_click' | 'instagram_click';
 
 interface TrackedClubLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
   eventType: EventType;
+  clubId: string;
   clubSlug: string;
+  clubName: string;
   children: ReactNode;
 }
 
@@ -27,10 +32,15 @@ function visitorId() {
   }
 }
 
-export function TrackedClubLink({ href, eventType, clubSlug, children, onClick, ...props }: TrackedClubLinkProps) {
+export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, children, onClick, ...props }: TrackedClubLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
     if (event.defaultPrevented) return;
+
+    const eventProperties = { club_id: clubId, club_slug: clubSlug, club_name: clubName };
+    trackMetaCustomEvent(clubActionEvent(eventType, { clubId, clubSlug, clubName }));
+    trackGaEvent(eventType, eventProperties);
+    trackPostHogEvent(eventType, eventProperties);
 
     const body = JSON.stringify({
       sessionId: visitorId(),
