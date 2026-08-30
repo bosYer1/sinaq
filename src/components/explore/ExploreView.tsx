@@ -231,6 +231,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                   onClick={() => setMobileListMapActive(true)}
                   className="absolute inset-0 z-[600] rounded-[18px] bg-transparent"
                 >
+                  <span className="sr-only">Xəritəni hərəkət etdirmək üçün toxun</span>
                 </button>
               ) : null}
             </div>
