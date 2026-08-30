@@ -18,7 +18,7 @@ for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent
 assert.ok(errorPage.includes('runtime_error'), 'runtime_error observability must stay wired');
 assert.ok(notFound.includes('not_found'), 'not_found observability must stay wired');
 assert.ok(posthog.includes('/admin') && posthog.includes('/api'), 'PostHog must keep admin/API exclusions');
-assert.ok(posthog.includes('01a053ae-c894-77db-80bc-889fba23279a1'), 'known Cloud Browser test visitor must remain excluded');
+assert.ok(posthog.includes("gameyer_traffic_scope: 'public'"), 'PostHog custom events must keep the reusable public traffic scope marker');
 const combined = [card, link, pageview, errorPage, notFound, posthog].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
