@@ -29,9 +29,8 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="font-display text-lg font-bold">İstifadə statistikası</h2>
-          <p className="mt-2 text-muted">GameYer xidmətin keyfiyyətini yaxşılaşdırmaq, trafik mənbələrini və səhifə istifadəsini anlamaq üçün məhdud texniki statistika toplaya bilər. Bu statistika anonim sessiya identifikatoru, baxılan səhifə, trafik mənbəyi və ümumi cihaz/brauzer məlumatı kimi göstəricilərdən ibarət ola bilər və public səhifələrdə göstərilmir.</p>
-          <p className="mt-2 text-muted">Meta Pixel aktiv olduqda səhifə baxışları, klub profilinə baxış və telefon, Instagram və marşrut düymələrinə klik kimi hadisələr Meta ilə paylaşılır. Hadisə parametrlərinə telefon nömrəsi, e-poçt, dəqiq koordinat və ya istifadəçi lokasiyası əlavə edilmir. Meta brauzer sorğusu zamanı IP ünvanı və cihaz məlumatı kimi texniki məlumatları öz qaydalarına uyğun emal edə bilər.</p>
-          <p className="mt-2 text-muted">Admin hesabı ilə edilmiş daxili baxışlar ümumi istifadə statistikasına daxil edilmir.</p>
+          <p className="mt-2 text-muted">GameYer xidmətin keyfiyyətini yaxşılaşdırmaq və sayt istifadəsini anlamaq məqsədilə Google Analytics və Meta Pixel kimi analitika texnologiyalarından istifadə edə bilər. Bu xidmətlər səhifə baxışları, trafik mənbəyi, cihaz/brauzer məlumatları və saytdakı müəyyən qarşılıqlı əlaqələr barədə texniki məlumat toplaya bilər.</p>
+          <p className="mt-2 text-muted">GameYer bu analitika vasitələrinə telefon nömrəsi, e-poçt, dəqiq koordinat və ya istifadəçi lokasiyası kimi məlumatları məqsədli şəkildə ötürmür.</p>
         </section>
 
         <section>
