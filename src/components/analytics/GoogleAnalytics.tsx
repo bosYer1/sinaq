@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 import { buildGaBootstrap, createGaRouteTracker, normalizeGaMeasurementId, trackGaPageView } from '@/lib/google-analytics';
@@ -8,7 +8,8 @@ import { buildGaBootstrap, createGaRouteTracker, normalizeGaMeasurementId, track
 export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
   const pathname = usePathname();
   const normalizedMeasurementId = normalizeGaMeasurementId(measurementId);
-  const shouldTrackRoute = useMemo(() => createGaRouteTracker(pathname), [pathname]);
+  const initialPathname = useRef(pathname);
+  const shouldTrackRoute = useMemo(() => createGaRouteTracker(initialPathname.current), []);
 
   useEffect(() => {
     if (!normalizedMeasurementId || !shouldTrackRoute(pathname)) return;
