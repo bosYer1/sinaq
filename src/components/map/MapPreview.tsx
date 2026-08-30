@@ -29,8 +29,6 @@ const markers = [
   ['70%', '72%', '#7C5CFC', true],
   ['30%', '76%', '#2F80ED', false],
   ['38%', '82%', '#06AED4', true],
-  ['49%', '84%', '#7C5CFC', false],
-  ['58%', '87%', '#7C5CFC', false],
 ] as const;
 
 function PreviewMarker({ top, left, color, open }: { top: string; left: string; color: string; open: boolean }) {
