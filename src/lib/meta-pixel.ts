@@ -19,9 +19,11 @@ export type ClubViewMeta = ClubMeta & {
 
 export type MetaCustomEvent =
   | { name: 'ClubView'; params: Record<string, string> }
+  | { name: 'ClubCardClick'; params: Record<string, string> }
   | { name: 'Contact'; params: Record<string, string> }
   | { name: 'InstagramClick'; params: Record<string, string> }
-  | { name: 'DirectionsClick'; params: Record<string, string> };
+  | { name: 'DirectionsClick'; params: Record<string, string> }
+  | { name: 'SubmissionSuccess'; params: Record<string, string> };
 
 const PIXEL_ID_PATTERN = /^\d{5,32}$/;
 const pendingEvents: MetaCustomEvent[] = [];
@@ -68,11 +70,26 @@ export function clubViewEvent(club: ClubViewMeta): MetaCustomEvent {
   };
 }
 
+export function clubCardClickEvent(club: ClubMeta): MetaCustomEvent {
+  return { name: 'ClubCardClick', params: baseClubParams(club) };
+}
+
 export function clubActionEvent(eventType: 'maps_click' | 'phone_click' | 'instagram_click', club: ClubMeta): MetaCustomEvent {
   const params = baseClubParams(club);
   if (eventType === 'phone_click') return { name: 'Contact', params: { channel: 'phone', ...params } };
   if (eventType === 'instagram_click') return { name: 'InstagramClick', params };
   return { name: 'DirectionsClick', params };
+}
+
+export function submissionSuccessEvent(surface: 'contact' | 'club_owner', clubSlug?: string | null, clubName?: string | null): MetaCustomEvent {
+  return {
+    name: 'SubmissionSuccess',
+    params: {
+      surface,
+      ...(clubSlug ? { club_slug: clubSlug } : {}),
+      ...(clubName ? { club_name: clubName } : {}),
+    },
+  };
 }
 
 function sendEvent(event: MetaCustomEvent) {
