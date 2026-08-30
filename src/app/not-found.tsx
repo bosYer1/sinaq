@@ -1,6 +1,19 @@
+'use client';
+
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { trackGaEvent } from '@/lib/google-analytics';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 export default function NotFound() {
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (!path.startsWith('/admin') && !path.startsWith('/api')) {
+      trackGaEvent('not_found', { path });
+      trackPostHogEvent('not_found', { path });
+    }
+  }, []);
+
   return (
     <div className="mx-auto flex min-h-[65vh] max-w-xl flex-col items-center justify-center px-4 text-center sm:px-6">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">

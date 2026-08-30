@@ -10,6 +10,8 @@ import { inferClubTypeSlugs } from '@/lib/clubType';
 import { getPlatformStartingPrices } from '@/lib/pricing';
 import { cn, formatPriceRange, isClubOpenNow, isPremiumActive } from '@/lib/utils';
 import { formatDistance } from '@/lib/geo';
+import { trackGaEvent } from '@/lib/google-analytics';
+import { clubCardClickEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
 
 interface ClubCardProps {
@@ -47,18 +49,31 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
   const typeSlugs = inferClubTypeSlugs(club);
   const startingPrices = getPlatformStartingPrices(club.pricing);
 
+  function trackClubCardClick() {
+    const eventProperties = {
+      club_id: club.id,
+      club_slug: club.slug,
+      club_name: club.name,
+      district: club.district?.name ?? null,
+    };
+
+    trackMetaCustomEvent(clubCardClickEvent({
+      clubId: club.id,
+      clubSlug: club.slug,
+      clubName: club.name,
+      district: club.district?.name ?? null,
+    }));
+    trackGaEvent('club_card_click', eventProperties);
+    trackPostHogEvent('club_card_click', eventProperties);
+  }
+
   return (
     <Link
       ref={ref}
       href={`/klub/${encodeURIComponent(club.slug)}`}
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
-      onClick={() => trackPostHogEvent('club_card_click', {
-        club_id: club.id,
-        club_slug: club.slug,
-        club_name: club.name,
-        district: club.district?.name ?? null,
-      })}
+      onClick={trackClubCardClick}
       className={cn(
         'group flex min-h-[112px] gap-3 rounded-xl border bg-surface p-3 transition-all duration-150',
         active

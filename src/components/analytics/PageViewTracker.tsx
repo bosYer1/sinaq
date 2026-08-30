@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { trackGaEvent } from '@/lib/google-analytics';
+import { submissionSuccessEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
 
 const VISITOR_KEY = 'gameyer_visitor_id';
@@ -76,11 +78,15 @@ function trackSubmissionSuccess(pathname: string) {
     // Session storage is optional; event capture can still proceed.
   }
 
-  trackPostHogEvent('submission_success', {
+  const eventProperties = {
     surface,
     club_slug: clubSlug,
     club_name: clubName,
-  });
+  };
+
+  trackMetaCustomEvent(submissionSuccessEvent(surface, clubSlug, clubName));
+  trackGaEvent('submission_success', eventProperties);
+  trackPostHogEvent('submission_success', eventProperties);
 }
 
 export function PageViewTracker() {
