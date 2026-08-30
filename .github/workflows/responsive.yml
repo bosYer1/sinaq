@@ -16,7 +16,7 @@ jobs:
   responsive:
     name: Responsive
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     env:
       NEXT_TELEMETRY_DISABLED: '1'
       NEXT_PUBLIC_SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
@@ -73,8 +73,14 @@ jobs:
       - name: Mobile and desktop browser regression
         run: node scripts/responsive-browser-smoke.mjs
 
+      - name: Search filter and map discovery regression
+        run: node scripts/discovery-browser-smoke.mjs
+
       - name: Sitemap and public route integrity
         run: node scripts/site-integrity-smoke.mjs
+
+      - name: Public submission availability
+        run: node scripts/public-form-smoke.mjs
 
       - name: Upload responsive screenshots
         if: always()
