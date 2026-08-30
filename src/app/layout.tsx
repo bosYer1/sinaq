@@ -6,6 +6,7 @@ import { getSiteUrl } from '@/lib/site-url';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import { PostHogAnalytics } from '@/components/analytics/PostHogAnalytics';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import './globals.css';
 
@@ -97,6 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, '\\u003c') }} />
         <MetaPixel pixelId={metaPixelId} />
         <GoogleAnalytics measurementId={gaMeasurementId} />
+        <PostHogAnalytics />
         <PageViewTracker />
 
         <header className="sticky top-0 z-30 border-b border-border/80 bg-surface/95 backdrop-blur">
