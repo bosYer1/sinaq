@@ -125,6 +125,15 @@ try {
   const popupClubHref = await evaluate(`Array.from(document.querySelectorAll('.leaflet-popup a[href^="/klub/"], a[href^="/klub/"]')).map((a) => a.getAttribute('href')).find(Boolean) || null`);
   assert(popupClubHref?.startsWith('/klub/'), 'Marker click did not expose a club detail destination', { popupClubHref });
 
+  await navigate(popupClubHref);
+  await wait(`Boolean(document.querySelector('h1'))`, 'club detail after marker navigation');
+  const detailState = await evaluate(`({ path: location.pathname, heading: document.querySelector('h1')?.textContent?.trim() || '' })`);
+  assert(detailState.path === popupClubHref && detailState.heading.length > 0, 'Marker destination did not render a club detail page', detailState);
+  await evaluate(`history.back()`);
+  await wait(`location.search.includes('view=map')`, 'return to map after club detail');
+  await wait(`Boolean(document.querySelector('[aria-label="GameYer klub xəritəsi"]'))`, 'map restored after back navigation');
+  assert((await evaluate(`document.querySelectorAll('.leaflet-marker-icon').length`)) > 0, 'Map markers did not restore after back navigation');
+
   await navigate('/');
   const resetVisible = await evaluate(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => /Filtrləri təmizlə|Təmizlə/.test(b.textContent || '')))`);
   assert(!resetVisible, 'Clean homepage unexpectedly reports active filters');

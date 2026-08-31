@@ -5,7 +5,7 @@ import { trackGaEvent } from '@/lib/google-analytics';
 import { clubActionEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
 
-type EventType = 'maps_click' | 'phone_click' | 'instagram_click';
+type EventType = 'maps_click' | 'phone_click' | 'instagram_click' | 'club_correction_click';
 
 interface TrackedClubLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
