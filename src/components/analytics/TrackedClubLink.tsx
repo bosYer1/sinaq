@@ -14,7 +14,6 @@ interface TrackedClubLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   clubId: string;
   clubSlug: string;
   clubName: string;
-  ctaSurface?: CtaSurface;
   children: ReactNode;
 }
 
@@ -34,7 +33,14 @@ function visitorId() {
   }
 }
 
-export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, ctaSurface, children, onClick, ...props }: TrackedClubLinkProps) {
+function ctaSurface(anchor: HTMLAnchorElement, eventType: EventType): CtaSurface {
+  if (eventType === 'phone_click') return 'contact_phone';
+  if (eventType === 'instagram_click') return 'contact_instagram';
+  if (eventType === 'club_correction_click') return 'correction';
+  return anchor.closest('aside') ? 'contact_maps' : 'header_maps';
+}
+
+export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, children, onClick, ...props }: TrackedClubLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
     if (event.defaultPrevented) return;
@@ -43,7 +49,7 @@ export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, c
       club_id: clubId,
       club_slug: clubSlug,
       club_name: clubName,
-      ...(ctaSurface ? { cta_surface: ctaSurface } : {}),
+      cta_surface: ctaSurface(event.currentTarget, eventType),
     };
     trackMetaCustomEvent(clubActionEvent(eventType, { clubId, clubSlug, clubName }));
     trackGaEvent(eventType, eventProperties);
