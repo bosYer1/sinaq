@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getAnalyticsWriteMode, type AnalyticsWriteMode } from '@/lib/supabase/analytics-server';
+import {
+  getAnalyticsWriteMode,
+  requestVercelOidcToken,
+  type AnalyticsWriteMode,
+} from '@/lib/supabase/analytics-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,8 +26,8 @@ function healthResponse(
   });
 }
 
-export async function GET() {
-  const analyticsWrite = getAnalyticsWriteMode();
+export async function GET(request: Request) {
+  const analyticsWrite = getAnalyticsWriteMode(requestVercelOidcToken(request));
 
   try {
     const supabase = await createClient();
