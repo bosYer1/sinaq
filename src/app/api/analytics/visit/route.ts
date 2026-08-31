@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createAnalyticsWriteClient } from '@/lib/supabase/analytics-server';
+import { writeAnalyticsRecord } from '@/lib/supabase/analytics-server';
 import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicRequestGuard';
 
 export const dynamic = 'force-dynamic';
@@ -8,18 +8,6 @@ export const dynamic = 'force-dynamic';
 const MAX_BODY_BYTES = 1024;
 const ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const HOST_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?::\d{1,5})?$/i;
-
-type PageViewInsertClient = {
-  from: (table: 'page_views') => {
-    insert: (row: {
-      session_id: string;
-      visit_id: string | null;
-      path: string;
-      referrer_host: string | null;
-      user_agent: string | null;
-    }) => PromiseLike<{ error: { message: string } | null }>;
-  };
-};
 
 type AdminRpcClient = {
   rpc: (fn: 'is_admin') => PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
@@ -96,19 +84,20 @@ export async function POST(request: Request) {
     }
   }
 
-  const { client: analyticsClient, mode } = createAnalyticsWriteClient(supabase);
-  const analytics = analyticsClient as unknown as PageViewInsertClient;
-  const { error } = await analytics.from('page_views').insert({
-    session_id: sessionId,
-    visit_id: typeof visitId === 'string' ? visitId : null,
-    path,
-    referrer_host: cleanReferrer,
-    user_agent: userAgent(request),
+  const { error, mode } = await writeAnalyticsRecord({
+    kind: 'visit',
+    row: {
+      session_id: sessionId,
+      visit_id: typeof visitId === 'string' ? visitId : null,
+      path,
+      referrer_host: cleanReferrer,
+      user_agent: userAgent(request),
+    },
   });
 
   if (error) {
     console.error('analytics page view insert failed:', error.message);
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return NextResponse.json({ ok: false }, { status: 503 });
   }
 
   return new NextResponse(null, {
