@@ -6,18 +6,25 @@ import { useRouter } from 'next/navigation';
 
 const CLUB_ENTRY_ORIGIN_KEY = 'gameyer:club-entry-origin';
 
+type ClubEntryOrigin = {
+  origin: string;
+  destination: string;
+};
+
 function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>) {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
-export function rememberClubEntryOrigin() {
+export function rememberClubEntryOrigin(clubSlug: string) {
   if (typeof window === 'undefined') return;
 
+  const entry: ClubEntryOrigin = {
+    origin: `${window.location.pathname}${window.location.search}${window.location.hash}`,
+    destination: `/klub/${encodeURIComponent(clubSlug)}`,
+  };
+
   try {
-    window.sessionStorage.setItem(
-      CLUB_ENTRY_ORIGIN_KEY,
-      `${window.location.pathname}${window.location.search}${window.location.hash}`,
-    );
+    window.sessionStorage.setItem(CLUB_ENTRY_ORIGIN_KEY, JSON.stringify(entry));
   } catch {
     // Navigation must still work when storage is unavailable.
   }
@@ -29,14 +36,21 @@ export function BackToClubsLink({ className }: { className?: string }) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     if (!isPlainLeftClick(event)) return;
 
-    let origin: string | null = null;
+    let entry: ClubEntryOrigin | null = null;
     try {
-      origin = window.sessionStorage.getItem(CLUB_ENTRY_ORIGIN_KEY);
+      const rawEntry = window.sessionStorage.getItem(CLUB_ENTRY_ORIGIN_KEY);
+      if (rawEntry) entry = JSON.parse(rawEntry) as ClubEntryOrigin;
     } catch {
-      origin = null;
+      entry = null;
     }
 
-    if (!origin || !origin.startsWith('/') || origin.startsWith('/klub/')) return;
+    const validEntry =
+      entry &&
+      entry.destination === window.location.pathname &&
+      entry.origin.startsWith('/') &&
+      !entry.origin.startsWith('/klub/');
+
+    if (!validEntry) return;
 
     event.preventDefault();
     try {
