@@ -1,18 +1,18 @@
 # Analytics OIDC hardening
 
 ## Goal
-Remove direct public PostgREST INSERT access to `page_views` and `analytics_events` without requiring a static Supabase server credential in Vercel.
+Remove direct public PostgREST INSERT access to `page_views` and `analytics_events` once a trusted server-only writer is proven in production.
 
-## Trust path
-1. Browser submits only to same-origin Next.js analytics routes.
-2. Vercel production runtime supplies its short-lived `VERCEL_OIDC_TOKEN` server-side.
-3. Next.js forwards the normalized analytics row and OIDC token to the Supabase Edge Function `gameyer-analytics-ingest`.
-4. The Edge Function verifies Vercel issuer, audience and exact production subject before using its hosted Supabase server credential.
-5. After live verification, migration `20260831183000_server_only_analytics_writes.sql` removes anon/authenticated INSERT policies and grants.
+## Current production-safe state
+The OIDC rollout attempted in PRs #243 and #245 was not proven live. The production health check after #243 reported `analytics_write=disabled`, and #245 could not be deployed because the Vercel Hobby project hit its daily deployment limit.
 
-## Locked identity
-- issuer: `https://oidc.vercel.com/gameyer`
-- audience: `https://vercel.com/gameyer`
-- subject: `owner:gameyer:project:gameyer:environment:production`
+Until a trusted writer is verified, the application must retain the existing bounded `public-fallback` path. The database still has RLS, column-scoped INSERT grants, payload validation and rate-limit triggers. Migration `20260831183000_server_only_analytics_writes.sql` must **not** be applied while `public-fallback` is active.
 
-The old Vercel project `gameyerr` is not part of this trust path.
+## Future trusted rollout
+Either of these may replace the fallback after live verification:
+- a server-only `SUPABASE_SECRET_KEY` / `SUPABASE_SERVICE_ROLE_KEY` configured on the correct Vercel `gameyer` project; or
+- a Vercel OIDC path that is explicitly enabled and verified on that project before DB revocation.
+
+Only after a live request succeeds through the trusted writer should the server-only migration remove anon/authenticated INSERT policies and grants.
+
+The old Vercel project `gameyerr` is not part of this rollout and must not be used.
