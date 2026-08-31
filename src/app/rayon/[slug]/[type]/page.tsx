@@ -38,6 +38,12 @@ function typeLabel(type: string) {
   return null;
 }
 
+function typeSearchLabel(type: string) {
+  if (type === 'pc') return 'PC və kompüter klubları';
+  if (type === 'playstation') return 'PlayStation klubları';
+  return null;
+}
+
 function typeLanding(type: string) {
   return type === 'pc' ? '/bakida-pc-klublari' : '/bakida-playstation-klublari';
 }
@@ -56,19 +62,21 @@ function minHourlyPrice(clubs: Awaited<ReturnType<typeof getClubs>>, type: strin
 export async function generateMetadata({ params }: DistrictTypePageProps): Promise<Metadata> {
   const { slug, type } = await params;
   const label = typeLabel(type);
+  const searchLabel = typeSearchLabel(type);
   const districts = await getDistricts();
   const district = districts.find((item) => item.slug === slug);
-  if (!district || !label) return { title: 'Səhifə tapılmadı', robots: { index: false, follow: false } };
+  if (!district || !label || !searchLabel) return { title: 'Səhifə tapılmadı', robots: { index: false, follow: false } };
 
   const clubs = await getComboClubs(slug, type);
   const minPrice = minHourlyPrice(clubs, type);
   const hasHours = clubs.some((club) => club.opening_hours.length > 0);
   const canonical = `/rayon/${slug}/${type}`;
   const title = minPrice != null
-    ? `${district.name} rayonunda ${label} klubları — qiymətlər və ünvanlar`
-    : `${district.name} rayonunda ${label} klubları — ünvanlar və xəritə`;
+    ? `${district.name} rayonunda ${searchLabel} — qiymətlər və ünvanlar`
+    : `${district.name} rayonunda ${searchLabel} — ünvanlar və xəritə`;
+  const discoveryLabel = type === 'pc' ? 'PC, kompüter və internet kafe' : label;
   const descriptionParts = [
-    `${district.name} rayonunda ${label} klub axtarırsan? ${clubs.length} aktiv klubu müqayisə et.`,
+    `${district.name} rayonunda ${discoveryLabel} axtarırsan? ${clubs.length} aktiv klubu müqayisə et.`,
     minPrice != null ? `Məlum saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : null,
     hasHours ? 'Məlum iş saatlarına, ünvan və xəritə məlumatlarına GameYer-də bax.' : 'Ünvan və xəritə məlumatlarına GameYer-də bax.',
   ].filter((value): value is string => Boolean(value));
