@@ -12,18 +12,40 @@ type LargestContentfulPaintEntry = PerformanceEntry & {
   size?: number;
 };
 
+type InteractionEntry = PerformanceEntry & {
+  target?: Node | null;
+};
+
+function elementAttribution(element: Element, prefix: 'lcp' | 'inp') {
+  const classes = Array.from(element.classList).slice(0, 3).join(' ').slice(0, 160);
+  return {
+    [`${prefix}_element_tag`]: element.tagName.toLowerCase(),
+    ...(element.id ? { [`${prefix}_element_id`]: element.id.slice(0, 80) } : {}),
+    ...(classes ? { [`${prefix}_element_classes`]: classes } : {}),
+  };
+}
+
 function lcpAttribution(entries: PerformanceEntry[]) {
   const entry = entries.at(-1) as LargestContentfulPaintEntry | undefined;
   const element = entry?.element;
   if (!entry || !element) return {};
 
-  const classes = Array.from(element.classList).slice(0, 3).join(' ').slice(0, 160);
   return {
-    lcp_element_tag: element.tagName.toLowerCase(),
-    ...(element.id ? { lcp_element_id: element.id.slice(0, 80) } : {}),
-    ...(classes ? { lcp_element_classes: classes } : {}),
+    ...elementAttribution(element, 'lcp'),
     ...(typeof entry.size === 'number' ? { lcp_element_size: Math.round(entry.size) } : {}),
   };
+}
+
+function inpAttribution(entries: PerformanceEntry[]) {
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const entry = entries[index] as InteractionEntry;
+    if (!(entry.target instanceof Element)) continue;
+    return {
+      inp_event_type: entry.name.slice(0, 32),
+      ...elementAttribution(entry.target, 'inp'),
+    };
+  }
+  return {};
 }
 
 export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
@@ -40,6 +62,7 @@ export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
       metric_rating: metric.rating,
       path: pathname,
       ...(metric.name === 'LCP' ? lcpAttribution(metric.entries) : {}),
+      ...(metric.name === 'INP' ? inpAttribution(metric.entries) : {}),
     };
     trackGaEvent('web_vital', properties);
     trackPostHogEvent('web_vital', properties);
