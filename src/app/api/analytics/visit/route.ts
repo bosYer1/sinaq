@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { writeAnalyticsRecord } from '@/lib/supabase/analytics-server';
+import { requestVercelOidcToken, writeAnalyticsRecord } from '@/lib/supabase/analytics-server';
 import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicRequestGuard';
 
 export const dynamic = 'force-dynamic';
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       referrer_host: cleanReferrer,
       user_agent: userAgent(request),
     },
-  });
+  }, requestVercelOidcToken(request));
 
   if (error) {
     console.error('analytics page view insert failed:', error.message);
