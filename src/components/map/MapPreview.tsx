@@ -2,12 +2,10 @@ type MapPreviewProps = {
   clubCount: number;
 };
 
-// Keep the first paint lightweight on mobile: the preview is decorative until the
-// user activates the interactive map, so four OSM tiles are enough here.
-const tiles = [
-  [1306, 772], [1307, 772],
-  [1306, 773], [1307, 773],
-] as const;
+// Keep the first paint lightweight on mobile: this preview is decorative until the
+// user activates the interactive Leaflet map. Real RUM identified the preview tile
+// as the homepage LCP candidate, so a single real OSM tile is intentionally used.
+const previewTile = [1306, 772] as const;
 
 const markers = [
   ['42%', '20%', '#7C5CFC', true],
@@ -48,22 +46,20 @@ function PreviewMarker({ top, left, color, open }: { top: string; left: string; 
 }
 
 export function MapPreview({ clubCount }: MapPreviewProps) {
+  const [x, y] = previewTile;
+
   return (
     <div
       aria-label="Xəritə önizləməsi"
       className="gameyer-map-preview relative h-full w-full overflow-hidden rounded-[18px] border border-border"
     >
-      <div className="gameyer-map-preview-tiles absolute inset-0 grid grid-cols-2 grid-rows-2" aria-hidden="true">
-        {tiles.map(([x, y]) => (
-          <div
-            key={`${x}-${y}`}
-            className="h-full w-full bg-cover bg-center"
-            style={{
-              backgroundImage: `url(https://tile.openstreetmap.org/11/${x}/${y}.png)`,
-            }}
-          />
-        ))}
-      </div>
+      <div
+        className="gameyer-map-preview-tiles absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: `url(https://tile.openstreetmap.org/11/${x}/${y}.png)`,
+        }}
+        aria-hidden="true"
+      />
 
       <div className="gameyer-map-preview-wash absolute inset-0" aria-hidden="true" />
 
