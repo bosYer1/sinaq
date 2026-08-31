@@ -7,6 +7,25 @@ import Script from 'next/script';
 import { buildGaBootstrap, createGaRouteTracker, normalizeGaMeasurementId, trackGaEvent, trackGaPageView } from '@/lib/google-analytics';
 import { trackPostHogEvent } from '@/lib/posthog';
 
+type LargestContentfulPaintEntry = PerformanceEntry & {
+  element?: Element | null;
+  size?: number;
+};
+
+function lcpAttribution(entries: PerformanceEntry[]) {
+  const entry = entries.at(-1) as LargestContentfulPaintEntry | undefined;
+  const element = entry?.element;
+  if (!entry || !element) return {};
+
+  const classes = Array.from(element.classList).slice(0, 3).join(' ').slice(0, 160);
+  return {
+    lcp_element_tag: element.tagName.toLowerCase(),
+    ...(element.id ? { lcp_element_id: element.id.slice(0, 80) } : {}),
+    ...(classes ? { lcp_element_classes: classes } : {}),
+    ...(typeof entry.size === 'number' ? { lcp_element_size: Math.round(entry.size) } : {}),
+  };
+}
+
 export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
   const pathname = usePathname();
   const normalizedMeasurementId = normalizeGaMeasurementId(measurementId);
@@ -20,6 +39,7 @@ export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
       metric_value: metric.value,
       metric_rating: metric.rating,
       path: pathname,
+      ...(metric.name === 'LCP' ? lcpAttribution(metric.entries) : {}),
     };
     trackGaEvent('web_vital', properties);
     trackPostHogEvent('web_vital', properties);
