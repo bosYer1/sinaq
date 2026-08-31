@@ -92,7 +92,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           <p className="mt-4 text-xs leading-5 text-muted">Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl mümkün olduqda klubun rəsmi əlaqə kanalından məlumatı dəqiqləşdirin.</p>
         </div>
 
-        <aside className="h-fit rounded-xl border border-border bg-surface p-5">
+        <aside className="order-first h-fit rounded-xl border border-border bg-surface p-5 lg:order-none">
           <h2 className="font-display text-base font-semibold text-ink">Əlaqə və ünvan</h2>
           <div className="mt-4 space-y-4 text-sm">
             <div><p className="text-xs font-medium uppercase tracking-wide text-muted">Ünvan</p><p className="mt-1 leading-5 text-ink">{club.address || 'Ünvan göstərilməyib'}</p></div>
