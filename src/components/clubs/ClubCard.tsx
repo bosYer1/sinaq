@@ -6,6 +6,7 @@ import type { ClubWithDistance } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
 import { MapPinIcon } from '@/components/ui/Icon';
+import { rememberClubEntryOrigin } from '@/components/clubs/BackToClubsLink';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { getPlatformStartingPrices } from '@/lib/pricing';
 import { cn, formatPriceRange, isClubOpenNow, isPremiumActive } from '@/lib/utils';
@@ -50,6 +51,8 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
   const startingPrices = getPlatformStartingPrices(club.pricing);
 
   function trackClubCardClick() {
+    rememberClubEntryOrigin();
+
     const eventProperties = {
       club_id: club.id,
       club_slug: club.slug,
