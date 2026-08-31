@@ -11,7 +11,7 @@
     "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/meta-pixel.test.ts src/lib/google-analytics.test.ts && node scripts/submission-regression.mjs && node scripts/admin-security-regression.mjs && node scripts/analytics-parity-regression.mjs"
   },
   "dependencies": {
-    "next": "16.3.1",
+    "next": "16.3.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "@supabase/supabase-js": "^2.45.4",
