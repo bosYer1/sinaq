@@ -1,0 +1,38 @@
+name: Verify live OIDC analytics path
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-oidc-analytics-live.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify production writer and synthetic visit
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://gameyer.az'
+          session='ops_oidc_20260831'
+
+          health="$(curl --fail --silent --show-error "$base/api/health")"
+          mode="$(node -e 'const d=JSON.parse(process.argv[1]); process.stdout.write(String(d.analytics_write ?? "missing"))' "$health")"
+          echo "health_analytics_write=$mode"
+          test "$mode" = 'vercel-oidc-edge' -o "$mode" = 'server-secret'
+
+          curl --fail --silent --show-error \
+            --dump-header /tmp/headers \
+            --output /tmp/body \
+            -X POST "$base/api/analytics/visit" \
+            -H 'Origin: https://gameyer.az' \
+            -H 'Content-Type: application/json' \
+            -H 'User-Agent: GameYerOpsOIDCVerification/1.0' \
+            --data "{\"sessionId\":\"$session\",\"visitId\":null,\"path\":\"/\",\"referrerHost\":null}"
+
+          grep -Ei '^x-gameyer-analytics-write: (vercel-oidc-edge|server-secret)' /tmp/headers
+          echo 'live_oidc_analytics_request=success'
