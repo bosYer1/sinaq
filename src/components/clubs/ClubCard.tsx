@@ -51,7 +51,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
   const startingPrices = getPlatformStartingPrices(club.pricing);
 
   function trackClubCardClick() {
-    rememberClubEntryOrigin();
+    rememberClubEntryOrigin(club.slug);
 
     const eventProperties = {
       club_id: club.id,
