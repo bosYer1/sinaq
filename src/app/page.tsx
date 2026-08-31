@@ -125,7 +125,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-3 py-2 text-xs font-semibold text-white">Yaxınlıqdakı gaming klubları</Link>
             <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Gaming klub qiymətləri</Link>
             <Link href="/bakida-pc-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">PC klubları</Link>
-            <Link href="/bakida-internet-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Internet klubları</Link>
+            <Link href="/bakida-internet-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Internet kafe və klubları</Link>
             <Link href="/bakida-playstation-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">PlayStation klubları</Link>
             <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Ucuz PC klubları</Link>
             <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink hover:border-primary">Ucuz PlayStation klubları</Link>
