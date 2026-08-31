@@ -80,9 +80,10 @@ export function clubCardClickEvent(club: ClubMeta & { district?: string | null }
   };
 }
 
-export function clubActionEvent(eventType: 'maps_click' | 'phone_click' | 'instagram_click', club: ClubMeta): MetaCustomEvent {
+export function clubActionEvent(eventType: 'maps_click' | 'phone_click' | 'instagram_click' | 'club_correction_click', club: ClubMeta): MetaCustomEvent {
   const params = baseClubParams(club);
   if (eventType === 'phone_click') return { name: 'Contact', params: { channel: 'phone', ...params } };
+  if (eventType === 'club_correction_click') return { name: 'Contact', params: { channel: 'correction', ...params } };
   if (eventType === 'instagram_click') return { name: 'InstagramClick', params };
   return { name: 'DirectionsClick', params };
 }
