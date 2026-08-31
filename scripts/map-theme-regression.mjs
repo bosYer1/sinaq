@@ -35,6 +35,14 @@ assert(preview.includes('projectToPreview(club.latitude, club.longitude)'), 'Map
 assert(preview.includes("inferClubTypeSlugs(club)"), 'MapPreview marker types must come from real club type data.');
 assert(!preview.includes('const markers = ['), 'Hard-coded decorative preview markers must not return.');
 assert(exploreView.includes('<MapPreview clubs={clubsWithDistance} />'), 'Mobile list view must keep the current-data map preview before activation.');
+assert(
+  exploreView.includes('mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />'),
+  'Mobile list view must defer the live Leaflet map until activation.',
+);
+assert(
+  !exploreView.includes('isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />\n              {!mobileListMapActive ? ('),
+  'Inactive mobile list mode must not render the live map behind the preview.',
+);
 
 assert(preview.includes('loading="eager"'), 'Visible preview tiles must remain eagerly discoverable for LCP.');
 assert(preview.includes('fetchPriority="high"'), 'Visible preview tiles must retain high fetch priority for measured homepage LCP.');

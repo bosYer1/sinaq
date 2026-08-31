@@ -223,12 +223,11 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         {view === 'list' ? (
           <section>
             <div className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]">
-              {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
-              {!mobileListMapActive ? (
-                <div className="absolute inset-0 z-[550]">
-                  <MapPreview clubs={clubsWithDistance} />
-                </div>
-              ) : null}
+              {isDesktop === false ? (
+                mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />
+              ) : (
+                <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />
+              )}
               {!mobileListMapActive ? (
                 <button
                   type="button"
