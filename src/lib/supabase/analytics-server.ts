@@ -1,27 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-export type AnalyticsWriteMode = 'server-secret' | 'vercel-oidc-edge' | 'disabled';
-
-type AnalyticsWrite =
-  | {
-      kind: 'visit';
-      row: {
-        session_id: string;
-        visit_id: string | null;
-        path: string;
-        referrer_host: string | null;
-        user_agent: string | null;
-      };
-    }
-  | {
-      kind: 'event';
-      row: {
-        session_id: string;
-        path: string;
-        event_type: string;
-        club_slug: string;
-      };
-    };
+export type AnalyticsWriteMode = 'server-secret' | 'public-fallback';
 
 function serverAnalyticsSecret() {
   return process.env.SUPABASE_SECRET_KEY?.trim()
@@ -29,79 +8,30 @@ function serverAnalyticsSecret() {
     || null;
 }
 
-export function requestVercelOidcToken(request: Request) {
-  return request.headers.get('x-vercel-oidc-token')?.trim() || null;
+export function getAnalyticsWriteMode(): AnalyticsWriteMode {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() && serverAnalyticsSecret()
+    ? 'server-secret'
+    : 'public-fallback';
 }
 
-export function getAnalyticsWriteMode(oidcToken?: string | null): AnalyticsWriteMode {
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() && serverAnalyticsSecret()) {
-    return 'server-secret';
-  }
-  if (oidcToken) return 'vercel-oidc-edge';
-  return 'disabled';
-}
-
-export async function writeAnalyticsRecord(
-  write: AnalyticsWrite,
-  oidcToken?: string | null,
-): Promise<{
-  error: { message: string } | null;
+export function createAnalyticsWriteClient<T>(fallbackClient: T): {
+  client: T;
   mode: AnalyticsWriteMode;
-}> {
+} {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const secret = serverAnalyticsSecret();
 
-  if (supabaseUrl && secret) {
-    const client = createClient(supabaseUrl, secret, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
-    });
-    const { error } = write.kind === 'visit'
-      ? await client.from('page_views').insert(write.row)
-      : await client.from('analytics_events').insert(write.row);
-    return { error: error ? { message: error.message } : null, mode: 'server-secret' };
+  if (!supabaseUrl || !secret) {
+    return { client: fallbackClient, mode: 'public-fallback' };
   }
 
-  if (supabaseUrl && oidcToken) {
-    try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/gameyer-analytics-ingest`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-gameyer-vercel-oidc': oidcToken,
-          ...(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
-            ? { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim() }
-            : {}),
-        },
-        body: JSON.stringify(write),
-        cache: 'no-store',
-      });
+  const client = createClient(supabaseUrl, secret, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
 
-      if (!response.ok) {
-        return {
-          error: { message: `trusted analytics bridge returned ${response.status}` },
-          mode: 'vercel-oidc-edge',
-        };
-      }
-
-      return { error: null, mode: 'vercel-oidc-edge' };
-    } catch (error) {
-      return {
-        error: { message: error instanceof Error ? error.message : 'trusted analytics bridge failed' },
-        mode: 'vercel-oidc-edge',
-      };
-    }
-  }
-
-  if (process.env.VERCEL_ENV === 'production') {
-    return {
-      error: { message: 'no trusted production analytics writer is available' },
-      mode: 'disabled',
-    };
-  }
-
-  return { error: null, mode: 'disabled' };
+  return { client: client as unknown as T, mode: 'server-secret' };
 }
