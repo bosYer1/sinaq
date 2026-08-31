@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, googleAnalytics, correctionAnalyticsMigration] = await Promise.all([
+const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration] = await Promise.all([
   readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedClubLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
@@ -10,8 +10,11 @@ const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, g
   readFile(new URL('../src/app/not-found.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/posthog.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/api/analytics/event/route.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/api/analytics/visit/route.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/GoogleAnalytics.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/migrations/20260831163000_add_club_correction_analytics_event.sql', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/supabase/analytics-server.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/migrations/20260831183000_server_only_analytics_writes.sql', import.meta.url), 'utf8'),
 ]);
 
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(card.includes(token), `ClubCard must keep ${token}`);
@@ -25,8 +28,8 @@ for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_corre
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(eventRoute.includes(`'${event}'`), `Analytics API must accept ${event}`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(correctionAnalyticsMigration.includes(`'${event}'`), `Analytics DB migration must accept ${event}`);
 assert.ok(correctionAnalyticsMigration.includes('analytics_events_type_valid'), 'Analytics DB event CHECK constraint must stay aligned');
-assert.ok(correctionAnalyticsMigration.includes('anon_insert_analytics_events'), 'Anonymous analytics insert policy must stay aligned');
-assert.ok(correctionAnalyticsMigration.includes('authenticated_insert_analytics_events'), 'Authenticated analytics insert policy must stay aligned');
+assert.ok(correctionAnalyticsMigration.includes('anon_insert_analytics_events'), 'Historical correction migration must keep its rollout insert policy');
+assert.ok(correctionAnalyticsMigration.includes('authenticated_insert_analytics_events'), 'Historical correction migration must keep its rollout authenticated insert policy');
 assert.ok(correctionAnalyticsMigration.includes('enforce_analytics_event_rate_limit'), 'Analytics DB abuse backstop must stay aligned');
 assert.ok(correctionAnalyticsMigration.includes('session_count >= 30') && correctionAnalyticsMigration.includes('global_count >= 1500'), 'Analytics DB rate limits must not be weakened while adding correction parity');
 assert.ok((detail.match(/eventType="maps_click"/g) ?? []).length >= 2, 'ClubDetail must keep both route CTA surfaces tracked');
@@ -46,7 +49,27 @@ assert.ok(googleAnalytics.includes("metric.name === 'LCP'"), 'LCP attribution mu
 assert.ok(googleAnalytics.includes("metric.name === 'INP'"), 'INP attribution must only enrich INP web-vital events');
 assert.ok(!googleAnalytics.includes('textContent') && !googleAnalytics.includes('innerText'), 'Web-vital attribution must not collect rendered text');
 assert.ok(!googleAnalytics.includes('entry.url') && !googleAnalytics.includes('currentSrc'), 'Web-vital attribution must not collect resource URLs');
-const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, googleAnalytics, correctionAnalyticsMigration].join('\n');
+
+for (const route of [eventRoute, visitRoute]) {
+  assert.ok(route.includes('createAnalyticsWriteClient'), 'First-party analytics routes must prefer the server-only analytics write client');
+  assert.ok(route.includes('x-gameyer-analytics-write'), 'Analytics rollout must expose a non-secret write-mode header for production verification');
+}
+assert.ok(analyticsServer.includes('SUPABASE_SECRET_KEY'), 'Server analytics client must support the modern Supabase secret key');
+assert.ok(analyticsServer.includes('SUPABASE_SERVICE_ROLE_KEY'), 'Server analytics client must support the legacy service-role key during migration');
+assert.ok(!analyticsServer.includes('NEXT_PUBLIC_SUPABASE_SECRET') && !analyticsServer.includes('NEXT_PUBLIC_SUPABASE_SERVICE'), 'Server analytics credentials must never use NEXT_PUBLIC variables');
+assert.ok(analyticsServer.includes("mode: 'server-secret'"), 'Server credential selection must report server-secret mode');
+assert.ok(analyticsServer.includes("mode: 'public-fallback'"), 'Deployment-safe rollout fallback must remain explicit until database revocation is live');
+for (const policy of [
+  'anon_insert_page_views',
+  'authenticated_insert_page_views',
+  'anon_insert_analytics_events',
+  'authenticated_insert_analytics_events',
+]) assert.ok(serverOnlyAnalyticsMigration.includes(`DROP POLICY IF EXISTS ${policy}`), `Server-only migration must remove ${policy}`);
+assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, visit_id, path, referrer_host, user_agent)'), 'Server-only migration must revoke public page-view insert columns');
+assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, path, event_type, club_slug)'), 'Server-only migration must revoke public analytics-event insert columns');
+assert.ok(serverOnlyAnalyticsMigration.includes('FROM anon, authenticated'), 'Server-only migration must revoke both public PostgREST roles');
+
+const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
 console.log('Analytics parity regression contract: PASS');
