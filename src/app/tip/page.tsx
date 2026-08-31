@@ -7,7 +7,7 @@ import { getSiteUrl } from '@/lib/site-url';
 
 export const metadata: Metadata = {
   title: 'Bakıda PC və PlayStation klubları — kateqoriya və ünvan',
-  description: 'Bakıda PC, kompüter, internet və PlayStation klublarını kateqoriyaya görə tap. Rayon, ünvan və xəritəni müqayisə et; qiymət və iş saatları məlum olduqda klub profilində göstərilir.',
+  description: 'Bakıda PC, kompüter, internet kafe və PlayStation klublarını kateqoriyaya görə tap. Rayon, ünvan və xəritəni müqayisə et; qiymət və iş saatları məlum olduqda klub profilində göstərilir.',
   alternates: { canonical: '/tip' },
   openGraph: { type: 'website', locale: 'az_AZ', url: '/tip', title: 'Bakıda PC və PlayStation klubları | GameYer', description: 'Bakıdakı PC və PlayStation gaming klublarını kateqoriyaya və rayona görə tap; mövcud qiymət və iş saatlarına klub profillərində bax.' },
 };
@@ -80,6 +80,7 @@ export default async function TypeIndexPage() {
         <p className="mt-2 text-sm leading-6 text-muted">Yaxınlıq, mövcud qiymət və məlum iş saatına görə daha konkret seçim etmək üçün aşağıdakı siyahılara keç.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Yaxınlıqdakı gaming klubları</Link>
+          <Link href="/bakida-internet-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Internet kafe və kompüter klubları</Link>
           <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Gaming klub qiymətləri</Link>
           <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Ucuz PC klubları</Link>
           <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Ucuz PlayStation klubları</Link>
