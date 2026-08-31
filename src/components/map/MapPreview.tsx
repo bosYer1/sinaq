@@ -2,10 +2,11 @@ type MapPreviewProps = {
   clubCount: number;
 };
 
+// Keep the first paint lightweight on mobile: the preview is decorative until the
+// user activates the interactive map, so four OSM tiles are enough here.
 const tiles = [
-  [1306, 771], [1307, 771], [1308, 771],
-  [1306, 772], [1307, 772], [1308, 772],
-  [1306, 773], [1307, 773], [1308, 773],
+  [1306, 772], [1307, 772],
+  [1306, 773], [1307, 773],
 ] as const;
 
 const markers = [
@@ -52,7 +53,7 @@ export function MapPreview({ clubCount }: MapPreviewProps) {
       aria-label="Xəritə önizləməsi"
       className="gameyer-map-preview relative h-full w-full overflow-hidden rounded-[18px] border border-border"
     >
-      <div className="gameyer-map-preview-tiles absolute inset-0 grid grid-cols-3 grid-rows-3" aria-hidden="true">
+      <div className="gameyer-map-preview-tiles absolute inset-0 grid grid-cols-2 grid-rows-2" aria-hidden="true">
         {tiles.map(([x, y]) => (
           <div
             key={`${x}-${y}`}
