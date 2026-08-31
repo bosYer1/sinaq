@@ -12,6 +12,11 @@ type LargestContentfulPaintEntry = PerformanceEntry & {
   size?: number;
 };
 
+type INPEntry = PerformanceEventTiming & {
+  target?: Node | null;
+  targetSelector?: string;
+};
+
 function lcpAttribution(entries: PerformanceEntry[]) {
   const entry = entries.at(-1) as LargestContentfulPaintEntry | undefined;
   const element = entry?.element;
@@ -26,21 +31,42 @@ function lcpAttribution(entries: PerformanceEntry[]) {
   };
 }
 
-function inpAttribution(entries: PerformanceEntry[]) {
-  for (let index = entries.length - 1; index >= 0; index -= 1) {
-    const entry = entries[index] as PerformanceEventTiming;
-    const target = entry.target;
-    if (!(target instanceof Element)) continue;
+function selectorAttribution(selector?: string) {
+  if (!selector) return {};
+  const compound = selector.split(/[\s>+~]+/).filter(Boolean).at(-1) ?? '';
+  const tag = compound.match(/^[a-z][a-z0-9-]*/i)?.[0]?.toLowerCase();
+  const id = compound.match(/#([a-z0-9_-]+)/i)?.[1];
+  const classes = Array.from(compound.matchAll(/\.([a-z0-9_-]+)/gi), (match) => match[1]).slice(0, 3).join(' ').slice(0, 160);
 
+  return {
+    ...(tag ? { inp_element_tag: tag } : {}),
+    ...(id ? { inp_element_id: id.slice(0, 80) } : {}),
+    ...(classes ? { inp_element_classes: classes } : {}),
+  };
+}
+
+function inpAttribution(entries: PerformanceEntry[]) {
+  const eventEntries = entries as INPEntry[];
+  const firstEntry = eventEntries[0];
+  if (!firstEntry) return {};
+
+  const targetEntry = eventEntries.find((entry) => entry.target instanceof Element);
+  const target = targetEntry?.target;
+  if (target instanceof Element) {
     const classes = Array.from(target.classList).slice(0, 3).join(' ').slice(0, 160);
     return {
-      inp_event_type: entry.name.slice(0, 32),
+      inp_event_type: firstEntry.name.slice(0, 32),
       inp_element_tag: target.tagName.toLowerCase(),
       ...(target.id ? { inp_element_id: target.id.slice(0, 80) } : {}),
       ...(classes ? { inp_element_classes: classes } : {}),
     };
   }
-  return {};
+
+  const selector = eventEntries.find((entry) => entry.targetSelector)?.targetSelector;
+  return {
+    inp_event_type: firstEntry.name.slice(0, 32),
+    ...selectorAttribution(selector),
+  };
 }
 
 export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
