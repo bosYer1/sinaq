@@ -18,21 +18,21 @@ export async function generateMetadata(): Promise<Metadata> {
   const minPrice = priced.length ? Math.min(...priced.map(minPcPrice)) : null;
   const hasHours = clubs.some((club) => (club.opening_hours ?? []).some((hours) => Boolean(hours.open_time) && !hours.is_closed));
   const title = minPrice != null
-    ? 'Bakıda internet klub və kompüter klubları — qiymətlər və ünvanlar'
-    : 'Bakıda internet klub və kompüter klubları — ünvan və xəritə';
+    ? 'Bakıda internet klub, internet kafe və kompüter klubları — qiymətlər'
+    : 'Bakıda internet klub, internet kafe və kompüter klubları — xəritə';
   const facts = [
     minPrice != null ? `məlum saatlıq tariflər ${minPrice} AZN-dən başlayır` : null,
     hasHours ? 'iş saatı olan profilləri yoxla' : null,
   ].filter((item): item is string => Boolean(item));
   const description = clubs.length > 0
-    ? `Bakıda ${clubs.length} internet klub və kompüter klubunu müqayisə et. Ünvan, rayon və xəritəyə bax${facts.length > 0 ? `; ${facts.join(', ')}` : ''}.`
+    ? `Bakıda ${clubs.length} internet klub, internet kafe və kompüter klubunu müqayisə et. Ünvan, rayon və xəritəyə bax${facts.length > 0 ? `; ${facts.join(', ')}` : ''}.`
     : 'Bakıda internet klub, internet kafe və kompüter klubu axtarırsan? Aktiv PC gaming məkanlarını ünvan, rayon və xəritə ilə GameYer-də müqayisə et.';
   return {
     title,
     description,
     alternates: { canonical: '/bakida-internet-klublari' },
     robots: clubs.length > 0 ? { index: true, follow: true } : { index: false, follow: true },
-    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-internet-klublari', title: 'Bakıda internet və kompüter klubları | GameYer', description },
+    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-internet-klublari', title: 'Bakıda internet klub, internet kafe və kompüter klubları | GameYer', description },
   };
 }
 
@@ -51,11 +51,26 @@ export default async function BakuInternetClubsPage() {
   const districts = [...districtCounts.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'az'));
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/bakida-internet-klublari`;
+  const faq = [
+    {
+      question: 'Bakıda internet kafe və internet klub eyni tip məkanlardır?',
+      answer: 'Azərbaycanda internet kafe, internet klub, kompüter klubu və PC klub ifadələri çox vaxt eyni tip gaming məkanı üçün işlədilir. GameYer bu məkanları PC kateqoriyasında bir yerdə müqayisə etməyə imkan verir.',
+    },
+    {
+      question: 'Bakıda internet klub qiymətlərini necə müqayisə edə bilərəm?',
+      answer: minPrice != null ? `GameYer-də qiyməti təsdiqlənmiş PC və internet klublarında məlum saatlıq tariflər hazırda ${minPrice} AZN-dən başlayır. Konkret klub profilində mövcud tarifləri yoxlamaq lazımdır.` : 'Qiymət məlumatı təsdiqlənmiş klubların saatlıq tarifləri klub profilində göstərilir. Qiymətlər məkan və zona tipinə görə dəyişə bilər.',
+    },
+    {
+      question: 'Mənə yaxın internet kafeni necə tapa bilərəm?',
+      answer: 'Rayon keçidlərindən və GameYer xəritəsindən istifadə edərək yaxınlıqdakı PC, kompüter və internet klublarını daralda bilərsən. Klub profilində mövcud ünvan və xəritə məlumatı göstərilir.',
+    },
+  ];
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
       { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'GameYer', item: siteUrl }, { '@type': 'ListItem', position: 2, name: 'Bakıda internet klubları', item: pageUrl }] },
-      ...(clubs.length > 0 ? [{ '@type': 'ItemList', name: 'Bakıda internet və kompüter klubları', numberOfItems: clubs.length, itemListElement: clubs.map((club, index) => ({ '@type': 'ListItem', position: index + 1, name: club.name, url: `${siteUrl}/klub/${club.slug}` })) }] : []),
+      ...(clubs.length > 0 ? [{ '@type': 'ItemList', name: 'Bakıda internet klub, internet kafe və kompüter klubları', numberOfItems: clubs.length, itemListElement: clubs.map((club, index) => ({ '@type': 'ListItem', position: index + 1, name: club.name, url: `${siteUrl}/klub/${club.slug}` })) }] : []),
+      { '@type': 'FAQPage', mainEntity: faq.map((item) => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })) },
     ],
   };
 
@@ -63,16 +78,18 @@ export default async function BakuInternetClubsPage() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
       <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb"><Link href="/">GameYer</Link> / Internet klubları</nav>
-      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda internet klub və kompüter klubları</h1>
+      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda internet klub, internet kafe və kompüter klubları</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">“Internet klub”, “internet kafe”, “kompüter klubu” və “PC klub” kimi axtarılan Bakı gaming məkanlarını bir siyahıda müqayisə et. Hazırda {clubs.length} aktiv PC məkanı göstərilir.{minPrice != null ? ` Məlum saatlıq tariflər ${minPrice} AZN-dən başlayır.` : ''} Ünvan, xəritə və mövcud olduqda iş saatı və tarif məlumatlarını klub profillərində yoxla.</p>
 
       <div className="mt-5 flex flex-wrap gap-2"><Link href="/bakida-pc-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Bütün PC klubları</Link><Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Qiymətləri müqayisə et</Link><Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Ucuz PC klubları</Link><Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">24 saat klublar</Link></div>
 
-      {districts.length > 0 ? <section className="mt-6" aria-labelledby="internet-districts"><h2 id="internet-districts" className="font-display text-base font-bold text-ink">Rayon üzrə internet və kompüter klubları</h2><p className="mt-1 text-xs leading-5 text-muted">Bakı rayonları üzrə PC və internet klublarına keç.</p><div className="mt-3 flex flex-wrap gap-2">{districts.map((district) => <Link key={district.slug} href={`/rayon/${district.slug}/pc`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">{district.name} ({district.count})</Link>)}</div></section> : null}
+      {districts.length > 0 ? <section className="mt-6" aria-labelledby="internet-districts"><h2 id="internet-districts" className="font-display text-base font-bold text-ink">Rayon üzrə internet kafe və kompüter klubları</h2><p className="mt-1 text-xs leading-5 text-muted">Bakı rayonları üzrə PC, internet klub və internet kafelərə keç.</p><div className="mt-3 flex flex-wrap gap-2">{districts.map((district) => <Link key={district.slug} href={`/rayon/${district.slug}/pc`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">{district.name} ({district.count})</Link>)}</div></section> : null}
 
       {clubs.length > 0 ? <div className="mt-7"><SeoClubList clubs={clubs} /></div> : <div className="mt-7 rounded-card border border-border bg-surface p-5 text-sm text-muted">Hazırda xəritə məlumatı tam olan aktiv PC/internet klubu yoxdur. Bütün klublar yeniləndikcə bu siyahı avtomatik dolacaq.</div>}
 
       <section className="mt-10 rounded-card border border-border bg-surface p-5"><h2 className="font-display text-lg font-bold text-ink">Internet klubla PC klub arasında fərq varmı?</h2><p className="mt-2 text-sm leading-6 text-muted">Azərbaycanda “internet klub”, “internet kafe”, “kompüter klubu” və “PC klub” ifadələri çox vaxt eyni tip məkan üçün işlədilir. Müasir klublar əsasən oyun kompüterləri, sürətli internet, gaming monitor və periferiyalar təklif edir. GameYer bu məkanları PC kateqoriyasında birləşdirib ünvan, xəritə və mövcud olduqda qiymət və iş saatlarına görə müqayisə etməyə imkan verir.</p></section>
+
+      <section className="mt-8" aria-labelledby="internet-faq-heading"><h2 id="internet-faq-heading" className="font-display text-lg font-bold text-ink">Internet klub və internet kafe haqqında suallar</h2><div className="mt-4 space-y-3">{faq.map((item) => <article key={item.question} className="rounded-card border border-border bg-surface p-4"><h3 className="font-semibold text-ink">{item.question}</h3><p className="mt-2 text-sm leading-6 text-muted">{item.answer}</p></article>)}</div></section>
     </div>
   );
 }
