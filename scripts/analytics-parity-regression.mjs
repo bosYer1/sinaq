@@ -29,9 +29,11 @@ assert.ok(posthog.includes("gameyer_traffic_scope: 'public'"), 'PostHog custom e
 assert.ok(posthog.includes('captureWhenReady'), 'PostHog custom events must retry while the afterInteractive SDK initializes');
 assert.ok(posthog.includes('POSTHOG_INIT_MAX_ATTEMPTS') && posthog.includes('window.setTimeout'), 'PostHog initialization retry must remain bounded and asynchronous');
 for (const token of ['lcp_element_tag', 'lcp_element_id', 'lcp_element_classes', 'lcp_element_size']) assert.ok(googleAnalytics.includes(token), `LCP attribution must keep ${token}`);
+for (const token of ['inp_event_type', 'inp_element_tag', 'inp_element_id', 'inp_element_classes']) assert.ok(googleAnalytics.includes(token), `INP attribution must keep ${token}`);
 assert.ok(googleAnalytics.includes("metric.name === 'LCP'"), 'LCP attribution must only enrich LCP web-vital events');
-assert.ok(!googleAnalytics.includes('textContent') && !googleAnalytics.includes('innerText'), 'LCP attribution must not collect rendered text');
-assert.ok(!googleAnalytics.includes('entry.url') && !googleAnalytics.includes('currentSrc'), 'LCP attribution must not collect resource URLs');
+assert.ok(googleAnalytics.includes("metric.name === 'INP'"), 'INP attribution must only enrich INP web-vital events');
+assert.ok(!googleAnalytics.includes('textContent') && !googleAnalytics.includes('innerText'), 'Web-vital attribution must not collect rendered text');
+assert.ok(!googleAnalytics.includes('entry.url') && !googleAnalytics.includes('currentSrc'), 'Web-vital attribution must not collect resource URLs');
 const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, googleAnalytics].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
