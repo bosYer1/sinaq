@@ -26,6 +26,23 @@ function lcpAttribution(entries: PerformanceEntry[]) {
   };
 }
 
+function inpAttribution(entries: PerformanceEntry[]) {
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const entry = entries[index] as PerformanceEventTiming;
+    const target = entry.target;
+    if (!(target instanceof Element)) continue;
+
+    const classes = Array.from(target.classList).slice(0, 3).join(' ').slice(0, 160);
+    return {
+      inp_event_type: entry.name.slice(0, 32),
+      inp_element_tag: target.tagName.toLowerCase(),
+      ...(target.id ? { inp_element_id: target.id.slice(0, 80) } : {}),
+      ...(classes ? { inp_element_classes: classes } : {}),
+    };
+  }
+  return {};
+}
+
 export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
   const pathname = usePathname();
   const normalizedMeasurementId = normalizeGaMeasurementId(measurementId);
@@ -40,6 +57,7 @@ export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
       metric_rating: metric.rating,
       path: pathname,
       ...(metric.name === 'LCP' ? lcpAttribution(metric.entries) : {}),
+      ...(metric.name === 'INP' ? inpAttribution(metric.entries) : {}),
     };
     trackGaEvent('web_vital', properties);
     trackPostHogEvent('web_vital', properties);
