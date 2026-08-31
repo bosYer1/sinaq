@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAnalyticsWriteClient } from '@/lib/supabase/analytics-server';
 import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicRequestGuard';
 
 export const dynamic = 'force-dynamic';
@@ -62,7 +63,8 @@ export async function POST(request: Request) {
     }
   }
 
-  const analytics = supabase as unknown as AnalyticsInsertClient;
+  const { client: analyticsClient, mode } = createAnalyticsWriteClient(supabase);
+  const analytics = analyticsClient as unknown as AnalyticsInsertClient;
   const { error } = await analytics.from('analytics_events').insert({ session_id: sessionId, path, event_type: eventType, club_slug: clubSlug });
 
   if (error) {
@@ -70,5 +72,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 
-  return new NextResponse(null, { status: 204, headers: { 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' } });
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'cache-control': 'no-store',
+      'x-robots-tag': 'noindex, nofollow',
+      'x-gameyer-analytics-write': mode,
+    },
+  });
 }
