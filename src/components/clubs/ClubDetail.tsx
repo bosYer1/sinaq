@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import type { ClubWithRelations } from '@/types/database';
 import { TrackedClubLink } from '@/components/analytics/TrackedClubLink';
 import { ClubViewTracker } from '@/components/analytics/ClubViewTracker';
@@ -104,7 +103,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           <div className="mt-5 border-t border-border pt-4">
             {updatedLabel ? <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p> : null}
             {isVerified ? <p className="mt-2 text-xs leading-5 text-primary">✓ Klubun sahibi və ya rəsmi nümayəndəsi GameYer tərəfindən təsdiqlənib.</p> : null}
-            <div className="mt-3 flex flex-col gap-2"><Link href={correctionHref} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</Link></div>
+            <div className="mt-3 flex flex-col gap-2"><TrackedClubLink href={correctionHref} eventType="club_correction_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</TrackedClubLink></div>
           </div>
         </aside>
       </div>
