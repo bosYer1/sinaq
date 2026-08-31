@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAnalyticsWriteClient } from '@/lib/supabase/analytics-server';
 import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicRequestGuard';
 
 export const dynamic = 'force-dynamic';
@@ -95,7 +96,8 @@ export async function POST(request: Request) {
     }
   }
 
-  const analytics = supabase as unknown as PageViewInsertClient;
+  const { client: analyticsClient, mode } = createAnalyticsWriteClient(supabase);
+  const analytics = analyticsClient as unknown as PageViewInsertClient;
   const { error } = await analytics.from('page_views').insert({
     session_id: sessionId,
     visit_id: typeof visitId === 'string' ? visitId : null,
@@ -114,6 +116,7 @@ export async function POST(request: Request) {
     headers: {
       'cache-control': 'no-store',
       'x-robots-tag': 'noindex, nofollow',
+      'x-gameyer-analytics-write': mode,
     },
   });
 }
