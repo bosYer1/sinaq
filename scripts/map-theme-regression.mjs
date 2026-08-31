@@ -36,6 +36,11 @@ assert(preview.includes("inferClubTypeSlugs(club)"), 'MapPreview marker types mu
 assert(!preview.includes('const markers = ['), 'Hard-coded decorative preview markers must not return.');
 assert(exploreView.includes('<MapPreview clubs={clubsWithDistance} />'), 'Mobile list view must keep the current-data map preview before activation.');
 
+assert(preview.includes('loading="eager"'), 'Visible preview tiles must remain eagerly discoverable for LCP.');
+assert(preview.includes('fetchPriority="high"'), 'Visible preview tiles must retain high fetch priority for measured homepage LCP.');
+assert(preview.includes('width={256}') && preview.includes('height={256}'), 'Preview tile intrinsic dimensions must remain explicit.');
+assert(!preview.includes('backgroundImage:'), 'Preview tiles must not regress to CSS background requests that are discovered later.');
+
 assert(css.includes("html[data-theme='dark'] .leaflet-tile-pane"), 'Live map dark-mode data-theme selector is missing.');
 assert(css.includes("html[data-theme='dark'] .gameyer-map-preview-tiles"), 'Preview dark-mode data-theme selector is missing.');
 assert(css.includes("html[data-theme='dark'] .gameyer-map-preview-attribution"), 'Preview attribution dark-mode selector is missing.');
