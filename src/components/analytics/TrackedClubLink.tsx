@@ -6,6 +6,7 @@ import { clubActionEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
 
 type EventType = 'maps_click' | 'phone_click' | 'instagram_click' | 'club_correction_click';
+type CtaSurface = 'header_maps' | 'contact_phone' | 'contact_instagram' | 'contact_maps' | 'correction';
 
 interface TrackedClubLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
@@ -13,6 +14,7 @@ interface TrackedClubLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   clubId: string;
   clubSlug: string;
   clubName: string;
+  ctaSurface?: CtaSurface;
   children: ReactNode;
 }
 
@@ -32,12 +34,17 @@ function visitorId() {
   }
 }
 
-export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, children, onClick, ...props }: TrackedClubLinkProps) {
+export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, ctaSurface, children, onClick, ...props }: TrackedClubLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
     if (event.defaultPrevented) return;
 
-    const eventProperties = { club_id: clubId, club_slug: clubSlug, club_name: clubName };
+    const eventProperties = {
+      club_id: clubId,
+      club_slug: clubSlug,
+      club_name: clubName,
+      ...(ctaSurface ? { cta_surface: ctaSurface } : {}),
+    };
     trackMetaCustomEvent(clubActionEvent(eventType, { clubId, clubSlug, clubName }));
     trackGaEvent(eventType, eventProperties);
     trackPostHogEvent(eventType, eventProperties);
