@@ -1,8 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
-const [preview, clubMap, css] = await Promise.all([
+const [preview, clubMap, exploreView, css] = await Promise.all([
   readFile(new URL('../src/components/map/MapPreview.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/map/ClubMap.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/explore/ExploreView.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/globals.css', import.meta.url), 'utf8'),
 ]);
 
@@ -27,6 +28,13 @@ for (const className of [
 ]) {
   assert(preview.includes(className), `MapPreview is missing ${className}.`);
 }
+
+assert(preview.includes('data-map-preview="current-clubs"'), 'MapPreview must remain identified as the current-club-data preview.');
+assert(preview.includes('data-map-preview-marker-count'), 'MapPreview must expose the real positioned marker count.');
+assert(preview.includes('projectToPreview(club.latitude, club.longitude)'), 'MapPreview markers must be projected from real club coordinates.');
+assert(preview.includes("inferClubTypeSlugs(club)"), 'MapPreview marker types must come from real club type data.');
+assert(!preview.includes('const markers = ['), 'Hard-coded decorative preview markers must not return.');
+assert(exploreView.includes('<MapPreview clubs={clubsWithDistance} />'), 'Mobile list view must keep the current-data map preview before activation.');
 
 assert(css.includes("html[data-theme='dark'] .leaflet-tile-pane"), 'Live map dark-mode data-theme selector is missing.');
 assert(css.includes("html[data-theme='dark'] .gameyer-map-preview-tiles"), 'Preview dark-mode data-theme selector is missing.');
