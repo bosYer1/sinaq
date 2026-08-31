@@ -52,8 +52,9 @@ export async function writeAnalyticsRecord(write: AnalyticsWrite): Promise<{
         detectSessionInUrl: false,
       },
     });
-    const table = write.kind === 'visit' ? 'page_views' : 'analytics_events';
-    const { error } = await client.from(table).insert(write.row);
+    const { error } = write.kind === 'visit'
+      ? await client.from('page_views').insert(write.row)
+      : await client.from('analytics_events').insert(write.row);
     return { error: error ? { message: error.message } : null, mode: 'server-secret' };
   }
 
@@ -96,6 +97,5 @@ export async function writeAnalyticsRecord(write: AnalyticsWrite): Promise<{
     };
   }
 
-  // Local/CI environments intentionally do not write first-party analytics.
   return { error: null, mode: 'disabled' };
 }
