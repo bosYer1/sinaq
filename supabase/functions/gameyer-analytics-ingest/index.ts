@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck -- Supabase Edge Function runs on Deno; Next.js CI typechecks the Node app separately.
 import { createRemoteJWKSet, jwtVerify } from 'npm:jose@6.1.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
