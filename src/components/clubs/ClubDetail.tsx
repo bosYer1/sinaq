@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ClubWithRelations } from '@/types/database';
 import { TrackedClubLink } from '@/components/analytics/TrackedClubLink';
 import { ClubViewTracker } from '@/components/analytics/ClubViewTracker';
+import { BackToClubsLink } from '@/components/clubs/BackToClubsLink';
 import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
 import { ClubPricingDisplay } from '@/components/clubs/ClubPricingDisplay';
@@ -36,7 +37,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
   return (
     <article className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
       <ClubViewTracker club={{ clubId: club.id, clubSlug: club.slug, clubName: club.name, district: club.district?.name, clubTypes: typeSlugs }} />
-      <div className="mb-4"><Link href="/" className="text-sm font-medium text-muted transition hover:text-ink">← Klublara qayıt</Link></div>
+      <div className="mb-4"><BackToClubsLink className="text-sm font-medium text-muted transition hover:text-ink" /></div>
 
       {sortedImages.length > 0 ? (
         <div className="mb-6 grid grid-cols-4 gap-1.5 overflow-hidden rounded-card bg-surface-alt">
