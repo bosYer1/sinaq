@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, googleAnalytics] = await Promise.all([
+const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, googleAnalytics, correctionAnalyticsMigration] = await Promise.all([
   readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedClubLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
@@ -11,6 +11,7 @@ const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, g
   readFile(new URL('../src/lib/posthog.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/api/analytics/event/route.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/GoogleAnalytics.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/migrations/20260831163000_add_club_correction_analytics_event.sql', import.meta.url), 'utf8'),
 ]);
 
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(card.includes(token), `ClubCard must keep ${token}`);
@@ -19,6 +20,12 @@ assert.ok(card.includes('club_card_click'), 'club_card_click must stay wired');
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(link.includes(event), `${event} must stay wired`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(detail.includes(`eventType="${event}"`), `ClubDetail must keep ${event} conversion wiring`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(eventRoute.includes(`'${event}'`), `Analytics API must accept ${event}`);
+for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(correctionAnalyticsMigration.includes(`'${event}'`), `Analytics DB migration must accept ${event}`);
+assert.ok(correctionAnalyticsMigration.includes('analytics_events_type_valid'), 'Analytics DB event CHECK constraint must stay aligned');
+assert.ok(correctionAnalyticsMigration.includes('anon_insert_analytics_events'), 'Anonymous analytics insert policy must stay aligned');
+assert.ok(correctionAnalyticsMigration.includes('authenticated_insert_analytics_events'), 'Authenticated analytics insert policy must stay aligned');
+assert.ok(correctionAnalyticsMigration.includes('enforce_analytics_event_rate_limit'), 'Analytics DB abuse backstop must stay aligned');
+assert.ok(correctionAnalyticsMigration.includes('session_count >= 30') && correctionAnalyticsMigration.includes('global_count >= 1500'), 'Analytics DB rate limits must not be weakened while adding correction parity');
 assert.ok((detail.match(/eventType="maps_click"/g) ?? []).length >= 2, 'ClubDetail must keep both route CTA surfaces tracked');
 assert.ok(!detail.includes('Bu klubun sahibisiniz?'), 'Premature club-owner claim CTA must remain hidden until the owner flow is ready');
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
@@ -36,7 +43,7 @@ assert.ok(googleAnalytics.includes("metric.name === 'LCP'"), 'LCP attribution mu
 assert.ok(googleAnalytics.includes("metric.name === 'INP'"), 'INP attribution must only enrich INP web-vital events');
 assert.ok(!googleAnalytics.includes('textContent') && !googleAnalytics.includes('innerText'), 'Web-vital attribution must not collect rendered text');
 assert.ok(!googleAnalytics.includes('entry.url') && !googleAnalytics.includes('currentSrc'), 'Web-vital attribution must not collect resource URLs');
-const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, googleAnalytics].join('\n');
+const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, googleAnalytics, correctionAnalyticsMigration].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
 console.log('Analytics parity regression contract: PASS');
