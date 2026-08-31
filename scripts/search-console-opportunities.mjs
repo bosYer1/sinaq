@@ -25,13 +25,16 @@ function parseCsv(text) {
 }
 
 function normalizedHeader(value) {
-  return value.toLowerCase().trim().replace(/[%()]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  return value.toLowerCase().trim().replace(/[%()]/g, '').replace(/[^\p{L}0-9]+/gu, ' ').trim();
 }
 
 const aliases = {
-  query: ['query', 'top queries', 'search query'],
-  page: ['page', 'top pages', 'landing page', 'url'],
-  clicks: ['clicks'], impressions: ['impressions'], ctr: ['ctr', 'average ctr'], position: ['position', 'average position'],
+  query: ['query', 'top queries', 'search query', 'sorğu', 'sorgu'],
+  page: ['page', 'pages', 'top pages', 'landing page', 'url', 'səhifə', 'sehife'],
+  clicks: ['clicks', 'kliklər', 'klikler'],
+  impressions: ['impressions', 'göstərilmələr', 'gosterilmeler'],
+  ctr: ['ctr', 'average ctr'],
+  position: ['position', 'average position', 'mövqe', 'movqe'],
 };
 
 function loadRows(text) {
