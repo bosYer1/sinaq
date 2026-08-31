@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute] = await Promise.all([
+const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, googleAnalytics] = await Promise.all([
   readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedClubLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
@@ -10,6 +10,7 @@ const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute] =
   readFile(new URL('../src/app/not-found.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/posthog.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/api/analytics/event/route.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/analytics/GoogleAnalytics.tsx', import.meta.url), 'utf8'),
 ]);
 
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(card.includes(token), `ClubCard must keep ${token}`);
@@ -27,7 +28,11 @@ assert.ok(posthog.includes('/admin') && posthog.includes('/api'), 'PostHog must 
 assert.ok(posthog.includes("gameyer_traffic_scope: 'public'"), 'PostHog custom events must keep the reusable public traffic scope marker');
 assert.ok(posthog.includes('captureWhenReady'), 'PostHog custom events must retry while the afterInteractive SDK initializes');
 assert.ok(posthog.includes('POSTHOG_INIT_MAX_ATTEMPTS') && posthog.includes('window.setTimeout'), 'PostHog initialization retry must remain bounded and asynchronous');
-const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute].join('\n');
+for (const token of ['lcp_element_tag', 'lcp_element_id', 'lcp_element_classes', 'lcp_element_size']) assert.ok(googleAnalytics.includes(token), `LCP attribution must keep ${token}`);
+assert.ok(googleAnalytics.includes("metric.name === 'LCP'"), 'LCP attribution must only enrich LCP web-vital events');
+assert.ok(!googleAnalytics.includes('textContent') && !googleAnalytics.includes('innerText'), 'LCP attribution must not collect rendered text');
+assert.ok(!googleAnalytics.includes('entry.url') && !googleAnalytics.includes('currentSrc'), 'LCP attribution must not collect resource URLs');
+const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, googleAnalytics].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
 console.log('Analytics parity regression contract: PASS');
