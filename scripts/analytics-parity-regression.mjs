@@ -53,11 +53,12 @@ assert.ok(!googleAnalytics.includes('entry.url') && !googleAnalytics.includes('c
 
 for (const route of [eventRoute, visitRoute]) {
   assert.ok(route.includes('writeAnalyticsRecord'), 'First-party analytics routes must use the trusted server analytics writer');
+  assert.ok(route.includes('requestVercelOidcToken'), 'First-party analytics routes must forward the request-scoped Vercel OIDC token');
   assert.ok(route.includes('x-gameyer-analytics-write'), 'Analytics rollout must expose a non-secret write-mode header for production verification');
 }
 assert.ok(analyticsServer.includes('SUPABASE_SECRET_KEY'), 'Server analytics writer must still support a direct modern Supabase secret when available');
 assert.ok(analyticsServer.includes('SUPABASE_SERVICE_ROLE_KEY'), 'Server analytics writer must still support the legacy service-role key when available');
-assert.ok(analyticsServer.includes('VERCEL_OIDC_TOKEN'), 'Server analytics writer must support Vercel OIDC without a static Vercel secret');
+assert.ok(analyticsServer.includes("request.headers.get('x-vercel-oidc-token')"), 'Server analytics writer must consume the fresh per-request Vercel OIDC token');
 assert.ok(analyticsServer.includes('gameyer-analytics-ingest'), 'Server analytics writer must target the trusted Supabase Edge Function');
 assert.ok(!analyticsServer.includes('public-fallback'), 'Public PostgREST analytics fallback must be removed before DB revocation');
 assert.ok(analyticsServer.includes("'vercel-oidc-edge'"), 'OIDC analytics mode must be explicitly observable');
