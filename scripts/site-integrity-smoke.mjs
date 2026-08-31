@@ -176,14 +176,23 @@ async function checkParameterizedHomeIsNotIndexable() {
   }
 }
 
-async function checkInternalLinks(homeHtml) {
-  const hrefs = [...new Set(extractInternalHrefs(homeHtml))];
-  const failures = [];
-  for (const href of hrefs) {
-    const response = await fetch(absolute(href), { redirect: 'manual' });
-    if (response.status >= 400 || response.status === 0) failures.push({ href, status: response.status });
+async function checkInternalLinks(pageHtmlByPath) {
+  const sourcesByHref = new Map();
+  for (const [sourcePath, html] of pageHtmlByPath.entries()) {
+    for (const href of extractInternalHrefs(html)) {
+      if (!sourcesByHref.has(href)) sourcesByHref.set(href, new Set());
+      sourcesByHref.get(href).add(sourcePath);
+    }
   }
-  assert(failures.length === 0, 'Homepage contains broken internal links', failures);
+
+  const failures = [];
+  for (const [href, sources] of sourcesByHref.entries()) {
+    const response = await fetch(absolute(href), { redirect: 'manual' });
+    if (response.status >= 400 || response.status === 0) {
+      failures.push({ href, status: response.status, sources: [...sources].slice(0, 5) });
+    }
+  }
+  assert(failures.length === 0, 'Public sitemap pages contain broken internal links', failures);
 }
 
 function checkHomepageClubCount(homeHtml, sitemapUrls) {
@@ -198,15 +207,21 @@ function checkHomepageClubCount(homeHtml, sitemapUrls) {
 await checkHealth();
 const sitemapUrls = await checkRobotsAndSitemap();
 
+const pageHtmlByPath = new Map();
 let homeHtml = '';
 for (const url of sitemapUrls) {
   const html = await checkHtmlPage(url);
-  if (new URL(url).pathname === '/') homeHtml = html;
+  const pathname = new URL(url).pathname;
+  pageHtmlByPath.set(pathname, html);
+  if (pathname === '/') homeHtml = html;
 }
 
-if (!homeHtml) homeHtml = await checkHtmlPage(absolute('/'));
+if (!homeHtml) {
+  homeHtml = await checkHtmlPage(absolute('/'));
+  pageHtmlByPath.set('/', homeHtml);
+}
 checkHomepageClubCount(homeHtml, sitemapUrls);
-await checkInternalLinks(homeHtml);
+await checkInternalLinks(pageHtmlByPath);
 await checkParameterizedHomeIsNotIndexable();
 
 console.log(`Site integrity smoke passed for ${sitemapUrls.length} sitemap URLs on ${EXPECTED_CANONICAL_ORIGIN}.`);
