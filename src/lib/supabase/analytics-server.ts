@@ -8,6 +8,12 @@ function serverAnalyticsSecret() {
     || null;
 }
 
+export function getAnalyticsWriteMode(): AnalyticsWriteMode {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() && serverAnalyticsSecret()
+    ? 'server-secret'
+    : 'public-fallback';
+}
+
 export function createAnalyticsWriteClient<T>(fallbackClient: T): {
   client: T;
   mode: AnalyticsWriteMode;
