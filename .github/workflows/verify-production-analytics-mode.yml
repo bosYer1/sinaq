@@ -1,0 +1,26 @@
+name: Verify production analytics mode
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-production-analytics-mode.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect production health mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl --fail --silent --show-error --retry 3 --retry-delay 2 https://gameyer.az/api/health)"
+          mode="$(node -e 'const data=JSON.parse(process.argv[1]); process.stdout.write(String(data.analytics_write ?? "missing"));' "$response")"
+          echo "analytics_write=$mode"
+          if [ "$mode" != "server-secret" ] && [ "$mode" != "public-fallback" ]; then
+            echo "Unexpected analytics_write mode" >&2
+            exit 1
+          fi
