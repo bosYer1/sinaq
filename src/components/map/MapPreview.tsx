@@ -109,10 +109,17 @@ export function MapPreview({ clubs }: MapPreviewProps) {
     >
       <div className="gameyer-map-preview-tiles absolute inset-0 grid grid-cols-2 grid-rows-2" aria-hidden="true">
         {tiles.map(([x, y]) => (
-          <div
+          <img
             key={`${x}-${y}`}
-            className="h-full w-full bg-cover bg-center"
-            style={{ backgroundImage: `url(https://tile.openstreetmap.org/${ZOOM}/${x}/${y}.png)` }}
+            src={`https://tile.openstreetmap.org/${ZOOM}/${x}/${y}.png`}
+            alt=""
+            width={256}
+            height={256}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            draggable={false}
+            className="block h-full w-full object-cover object-center"
           />
         ))}
       </div>
