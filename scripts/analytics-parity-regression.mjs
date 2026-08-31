@@ -30,6 +30,8 @@ assert.ok(posthog.includes('captureWhenReady'), 'PostHog custom events must retr
 assert.ok(posthog.includes('POSTHOG_INIT_MAX_ATTEMPTS') && posthog.includes('window.setTimeout'), 'PostHog initialization retry must remain bounded and asynchronous');
 for (const token of ['lcp_element_tag', 'lcp_element_id', 'lcp_element_classes', 'lcp_element_size']) assert.ok(googleAnalytics.includes(token), `LCP attribution must keep ${token}`);
 for (const token of ['inp_event_type', 'inp_element_tag', 'inp_element_id', 'inp_element_classes']) assert.ok(googleAnalytics.includes(token), `INP attribution must keep ${token}`);
+assert.ok(googleAnalytics.includes('targetSelector'), 'INP attribution must preserve a browser selector fallback when the interaction target detaches');
+assert.ok(googleAnalytics.includes('selectorAttribution'), 'INP selector fallback must stay sanitized before analytics capture');
 assert.ok(googleAnalytics.includes("metric.name === 'LCP'"), 'LCP attribution must only enrich LCP web-vital events');
 assert.ok(googleAnalytics.includes("metric.name === 'INP'"), 'INP attribution must only enrich INP web-vital events');
 assert.ok(!googleAnalytics.includes('textContent') && !googleAnalytics.includes('innerText'), 'Web-vital attribution must not collect rendered text');
