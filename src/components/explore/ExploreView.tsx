@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ClubWithRelations } from '@/types/database';
 import { ClubList } from '@/components/clubs/ClubList';
 import { MapErrorBoundary } from '@/components/map/MapErrorBoundary';
-import { MapPreview } from '@/components/map/MapPreview';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useFilters } from '@/hooks/useFilters';
 import { formatDistance, haversineDistanceKm } from '@/lib/geo';
@@ -223,7 +222,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         {view === 'list' ? (
           <section>
             <div className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]">
-              {mobileListMapActive && isDesktop === false ? renderMapPanel() : <MapPreview clubCount={clubsWithDistance.length} />}
+              {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
               {!mobileListMapActive ? (
                 <button
                   type="button"
