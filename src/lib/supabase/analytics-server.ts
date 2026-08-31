@@ -29,15 +29,22 @@ function serverAnalyticsSecret() {
     || null;
 }
 
-export function getAnalyticsWriteMode(): AnalyticsWriteMode {
+export function requestVercelOidcToken(request: Request) {
+  return request.headers.get('x-vercel-oidc-token')?.trim() || null;
+}
+
+export function getAnalyticsWriteMode(oidcToken?: string | null): AnalyticsWriteMode {
   if (process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() && serverAnalyticsSecret()) {
     return 'server-secret';
   }
-  if (process.env.VERCEL_OIDC_TOKEN?.trim()) return 'vercel-oidc-edge';
+  if (oidcToken) return 'vercel-oidc-edge';
   return 'disabled';
 }
 
-export async function writeAnalyticsRecord(write: AnalyticsWrite): Promise<{
+export async function writeAnalyticsRecord(
+  write: AnalyticsWrite,
+  oidcToken?: string | null,
+): Promise<{
   error: { message: string } | null;
   mode: AnalyticsWriteMode;
 }> {
@@ -58,7 +65,6 @@ export async function writeAnalyticsRecord(write: AnalyticsWrite): Promise<{
     return { error: error ? { message: error.message } : null, mode: 'server-secret' };
   }
 
-  const oidcToken = process.env.VERCEL_OIDC_TOKEN?.trim();
   if (supabaseUrl && oidcToken) {
     try {
       const response = await fetch(`${supabaseUrl}/functions/v1/gameyer-analytics-ingest`, {
