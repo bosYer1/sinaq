@@ -1,7 +1,8 @@
 name: Verify live OIDC analytics
 
 on:
-  pull_request:
+  push:
+    branches: [ops/verify-live-oidc]
     paths:
       - '.github/workflows/verify-live-oidc.yml'
 
