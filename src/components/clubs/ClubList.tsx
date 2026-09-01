@@ -45,6 +45,7 @@ export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchAct
         <ClubCard
           key={club.id}
           club={club}
+          listPosition={index + 1}
           active={club.id === activeClubId}
           onMouseEnter={onHoverClub ? () => onHoverClub(club.id) : undefined}
           ref={cardRefs ? (el) => { cardRefs.current[club.id] = el; } : undefined}
