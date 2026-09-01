@@ -94,6 +94,37 @@ Core fields:
 
 Potential placement types may include featured-list placement, premium badge and sponsored campaign, but production values must only be introduced when those products are actually approved.
 
+## Admin commercial workflow
+
+### Customer
+Admin creates or selects a commercial customer. Initially only display name and status are required; legal/contact data remains optional until verified.
+
+### Offer/package
+Admin selects a reusable package or leaves `package_id` null for a custom agreement. Package price is a default only. The agreed contract price is copied to the contract and remains historical truth.
+
+### Contract
+Admin records customer, optional club, optional package, agreed price, discount, start/end dates, status and internal notes.
+
+Rules:
+- `draft` has no public effect.
+- `active` may power approved placements.
+- `completed` and `cancelled` preserve payment and placement history.
+
+### Payment ledger
+Each commercial money movement is a separate payment row with amount, status, method, optional external reference and paid timestamp. Historical paid facts are not silently overwritten to represent a later correction/refund.
+
+### Placement
+A sold contract is linked to delivered inventory using a stable `placement_id`. Every active monetized placement must reference an existing contract and club.
+
+Suggested admin routes for implementation after migration:
+- `/admin/kommersiya`
+- `/admin/kommersiya/musteriler`
+- `/admin/kommersiya/muqavileler`
+- `/admin/kommersiya/odenisler`
+- `/admin/kommersiya/yerlesdirmeler`
+
+The admin actions must reuse existing `requireAdmin()` / `is_admin()` authorization. No public commercial CRUD routes.
+
 ## Analytics join contract
 PostHog remains the behavioral event store. PostgreSQL remains the commercial source of truth.
 
@@ -101,12 +132,13 @@ Analytics events should carry stable identifiers only:
 - `club_id`
 - `club_slug`
 - `placement_id` when applicable
+- `placement_type` when applicable
 - `contract_id` only when needed for internal attribution and never as visible user data
 
 Core funnel:
 `club_impression -> club_card_click -> club_page_view -> phone_click | instagram_click | maps_click`
 
-Commercial reporting joins placement/club identifiers with aggregate PostHog metrics. Do not copy raw visitor identity into revenue tables.
+Commercial reporting joins placement/club identifiers with aggregate PostHog metrics. Do not copy raw visitor identity into revenue tables. Do not emit customer contacts, tax identifiers, contract notes or payment references to PostHog.
 
 ## KPI definitions
 For each paid placement and club:
@@ -125,12 +157,12 @@ All commercial tables are admin-only.
 
 Required migration behavior:
 1. Enable RLS on every new `public` table.
-2. Revoke `anon` and normal `authenticated` access unless an explicit admin-only policy is required by the server workflow.
-3. Grant only the minimum privileges needed by the trusted server/admin path.
-4. Use existing GameYer `is_admin()` authorization pattern where appropriate; do not use user-editable JWT metadata.
+2. Revoke default/client grants explicitly and grant back only the operations needed by the trusted authenticated admin path.
+3. Use existing GameYer `is_admin()` authorization pattern; do not use user-editable JWT metadata.
+4. Current production `is_admin()` requires both AAL2 and membership in `admin_users`; revenue policies must preserve this requirement.
 5. Do not add public `SECURITY DEFINER` helpers.
-6. Test deny cases for `anon` and non-admin authenticated roles.
-7. Verify admin create/read/update flows before production.
+6. Test deny cases for anon, non-admin authenticated users and AAL1 admin members.
+7. Verify AAL2 admin create/read/update flows before production.
 
 Supabase's 2026 Data API default changes mean new public tables must not assume automatic exposure/grants. Grants and RLS must be explicit in the migration.
 
@@ -138,6 +170,14 @@ Supabase's 2026 Data API default changes mean new public tables must not assume 
 `clubs.is_premium` and `clubs.premium_expires_at` stay as denormalized/current presentation state for now. They must not become the financial ledger.
 
 When a placement becomes active, admin workflow may synchronize those two fields from the authoritative commercial contract/placement. Historical contracts/payments must remain intact after premium expiry.
+
+## Business invariants
+- No payment without a contract.
+- No active paid placement without an existing contract.
+- Contract price remains historical truth after acceptance except through an explicit correction flow.
+- Placement expiry never deletes its performance history.
+- Foreign-key behavior must preserve financial history even if a club later becomes inactive.
+- No automatic recurring billing or payment gateway in Phase 1.
 
 ## Implementation gates before migration is applied
 - generate migration with the repository's Supabase CLI workflow; do not invent migration numbering
