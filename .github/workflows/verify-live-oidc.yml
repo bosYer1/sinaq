@@ -1,0 +1,47 @@
+name: Verify live OIDC analytics
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-live-oidc.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Production OIDC proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify production health mode
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 \
+            https://gameyer.az/api/health > /tmp/health.json
+          cat /tmp/health.json
+          grep '"ok":true' /tmp/health.json > /dev/null
+          grep '"database":"ok"' /tmp/health.json > /dev/null
+          grep '"analytics_write":"vercel-oidc-edge"' /tmp/health.json > /dev/null
+
+      - name: Prove trusted synthetic pageview write
+        run: |
+          set -euo pipefail
+          SESSION_ID="oidcverify${GITHUB_RUN_ID}"
+          VISIT_ID="oidcvisit${GITHUB_RUN_ID}"
+          BODY=$(printf '{"sessionId":"%s","visitId":"%s","path":"/__oidc_verify__","referrerHost":null}' "$SESSION_ID" "$VISIT_ID")
+          STATUS=$(curl --silent --show-error --retry 2 --retry-delay 1 \
+            --output /tmp/visit-body.txt \
+            --dump-header /tmp/visit-headers.txt \
+            --write-out '%{http_code}' \
+            --request POST https://gameyer.az/api/analytics/visit \
+            --header 'Origin: https://gameyer.az' \
+            --header 'Sec-Fetch-Site: same-origin' \
+            --header 'Content-Type: application/json' \
+            --data "$BODY")
+          echo "synthetic_session_id=$SESSION_ID"
+          echo "synthetic_visit_id=$VISIT_ID"
+          echo "status=$STATUS"
+          grep -i '^x-gameyer-analytics-write:' /tmp/visit-headers.txt || true
+          test "$STATUS" = "204"
+          grep -qi '^x-gameyer-analytics-write: vercel-oidc-edge' /tmp/visit-headers.txt
