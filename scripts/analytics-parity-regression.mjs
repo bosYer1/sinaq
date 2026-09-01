@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration] = await Promise.all([
+const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest] = await Promise.all([
   readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedClubLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
@@ -15,6 +15,7 @@ const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, v
   readFile(new URL('../supabase/migrations/20260831163000_add_club_correction_analytics_event.sql', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/supabase/analytics-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/migrations/20260831183000_server_only_analytics_writes.sql', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/functions/gameyer-analytics-ingest/index.ts', import.meta.url), 'utf8'),
 ]);
 
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(card.includes(token), `ClubCard must keep ${token}`);
@@ -51,14 +52,28 @@ assert.ok(!googleAnalytics.includes('textContent') && !googleAnalytics.includes(
 assert.ok(!googleAnalytics.includes('entry.url') && !googleAnalytics.includes('currentSrc'), 'Web-vital attribution must not collect resource URLs');
 
 for (const route of [eventRoute, visitRoute]) {
-  assert.ok(route.includes('createAnalyticsWriteClient'), 'First-party analytics routes must prefer the server-only analytics write client');
+  assert.ok(route.includes('writeAnalyticsRecord'), 'First-party analytics routes must use the trusted server analytics writer');
+  assert.ok(route.includes('requestVercelOidcToken'), 'First-party analytics routes must forward the request-scoped Vercel OIDC token');
   assert.ok(route.includes('x-gameyer-analytics-write'), 'Analytics rollout must expose a non-secret write-mode header for production verification');
 }
-assert.ok(analyticsServer.includes('SUPABASE_SECRET_KEY'), 'Server analytics client must support the modern Supabase secret key');
-assert.ok(analyticsServer.includes('SUPABASE_SERVICE_ROLE_KEY'), 'Server analytics client must support the legacy service-role key during migration');
-assert.ok(!analyticsServer.includes('NEXT_PUBLIC_SUPABASE_SECRET') && !analyticsServer.includes('NEXT_PUBLIC_SUPABASE_SERVICE'), 'Server analytics credentials must never use NEXT_PUBLIC variables');
-assert.ok(analyticsServer.includes("mode: 'server-secret'"), 'Server credential selection must report server-secret mode');
-assert.ok(analyticsServer.includes("mode: 'public-fallback'"), 'Deployment-safe rollout fallback must remain explicit until database revocation is live');
+assert.ok(analyticsServer.includes('SUPABASE_SECRET_KEY'), 'Server analytics writer must still support a direct modern Supabase secret when available');
+assert.ok(analyticsServer.includes('SUPABASE_SERVICE_ROLE_KEY'), 'Server analytics writer must still support the legacy service-role key when available');
+assert.ok(analyticsServer.includes("request.headers.get('x-vercel-oidc-token')"), 'Server analytics writer must consume the fresh per-request Vercel OIDC token');
+assert.ok(analyticsServer.includes('gameyer-analytics-ingest'), 'Server analytics writer must target the trusted Supabase Edge Function');
+assert.ok(!analyticsServer.includes('public-fallback'), 'Public PostgREST analytics fallback must be removed before DB revocation');
+assert.ok(analyticsServer.includes("'vercel-oidc-edge'"), 'OIDC analytics mode must be explicitly observable');
+
+for (const token of [
+  "VERCEL_ISSUER = 'https://oidc.vercel.com/gameyer'",
+  "VERCEL_AUDIENCE = 'https://vercel.com/gameyer'",
+  "VERCEL_SUBJECT = 'owner:gameyer:project:gameyer:environment:production'",
+  'jwtVerify',
+  'SUPABASE_SECRET_KEYS',
+  'SUPABASE_SERVICE_ROLE_KEY',
+]) assert.ok(trustedIngest.includes(token), `Trusted ingest must enforce ${token}`);
+assert.ok(trustedIngest.includes("request.headers.get('x-gameyer-vercel-oidc')"), 'Trusted ingest must require the server-only Vercel OIDC token');
+assert.ok(!trustedIngest.includes("Access-Control-Allow-Origin: '*'"), 'Trusted ingest must never become a public CORS analytics endpoint');
+
 for (const policy of [
   'anon_insert_page_views',
   'authenticated_insert_page_views',
@@ -69,7 +84,7 @@ assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, visi
 assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, path, event_type, club_slug)'), 'Server-only migration must revoke public analytics-event insert columns');
 assert.ok(serverOnlyAnalyticsMigration.includes('FROM anon, authenticated'), 'Server-only migration must revoke both public PostgREST roles');
 
-const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration].join('\n');
+const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
 console.log('Analytics parity regression contract: PASS');
