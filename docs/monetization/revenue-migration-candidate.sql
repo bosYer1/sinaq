@@ -122,5 +122,5 @@ create policy commercial_placements_admin_insert on public.commercial_placements
 create policy commercial_placements_admin_update on public.commercial_placements for update to authenticated using ((select public.is_admin())) with check ((select public.is_admin()));
 create policy commercial_placements_admin_delete on public.commercial_placements for delete to authenticated using ((select public.is_admin()));
 
--- service_role keeps its platform-level privileges; no public SECURITY DEFINER helpers are introduced.
+-- service_role keeps its platform-level privileges; no privileged helper functions are introduced.
 -- payment DELETE is deliberately omitted for authenticated admins to preserve ledger history.
