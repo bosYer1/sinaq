@@ -1,12 +1,11 @@
 export const MAP_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const MAP_TILE_SIZE = 256;
-export const MAP_DEFAULT_CENTER = [40.4093, 49.8671] as const;
+export type MapCoordinate = [latitude: number, longitude: number];
+export const MAP_DEFAULT_CENTER: MapCoordinate = [40.4093, 49.8671];
 export const MAP_DEFAULT_ZOOM = 12;
 export const MAP_SINGLE_CLUB_ZOOM = 14;
 export const MAP_FIT_PADDING = 36;
 export const MAP_MAX_FIT_ZOOM = 14;
-
-export type MapCoordinate = readonly [latitude: number, longitude: number];
 
 export type MapBounds = {
   south: number;
