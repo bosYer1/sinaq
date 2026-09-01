@@ -1,4 +1,5 @@
 import { submitClubSubmission } from '@/app/submissions/actions';
+import { SubmissionAnalytics } from '@/components/submissions/SubmissionAnalytics';
 import { SubmissionSubmitButton } from '@/components/submissions/SubmissionSubmitButton';
 
 type SubmissionKind = 'correction' | 'new_club' | 'owner_claim';
@@ -19,6 +20,7 @@ export function SubmissionForm({ kind, clubName, clubSlug, returnTo, submitLabel
 
   return (
     <form action={submitClubSubmission} className="mt-5 space-y-4">
+      <SubmissionAnalytics kind={kind} returnTo={returnTo} hasLinkedClub={Boolean(clubSlug)} />
       <input type="hidden" name="kind" value={kind} />
       <input type="hidden" name="club_slug" value={clubSlug ?? ''} />
       <input type="hidden" name="return_to" value={returnTo} />
