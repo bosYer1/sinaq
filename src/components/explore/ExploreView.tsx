@@ -222,7 +222,10 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
         {view === 'list' ? (
           <section>
-            <div className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]">
+            <div
+              data-mobile-list-map-container="true"
+              className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[380px]"
+            >
               {isDesktop === false ? (
                 mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />
               ) : (
