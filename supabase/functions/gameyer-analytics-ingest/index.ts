@@ -115,9 +115,9 @@ Deno.serve(async (request: Request) => {
   const client = createClient(url, secret, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
-  const { error } = await client.from(table).insert(row);
-  if (error) {
-    console.error('analytics ingest insert failed', error.message);
+  const { data, error } = await client.from(table).insert(row).select('id').single();
+  if (error || !data || typeof data.id !== 'number') {
+    console.error('analytics ingest persistence failed', error?.message ?? 'insert did not return an id');
     return Response.json({ ok: false }, { status: 500 });
   }
 
