@@ -8,6 +8,8 @@ Capture every commercial relationship from the first paid club onward so revenue
 ## Current gap
 `clubs.is_premium` and `clubs.premium_expires_at` only describe current state. They do not preserve customer history, commercial terms, payment state, invoice/reference identifiers, campaign dates, placement scope, or historical performance.
 
+See also `docs/monetization/september-kpi-contract.md` for the stable company measurement definitions used during September.
+
 ## Proposed model
 
 ### `business_customers`
