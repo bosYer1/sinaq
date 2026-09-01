@@ -30,5 +30,7 @@ jobs:
           set -euo pipefail
           curl --fail --silent --show-error --retry 3 --retry-delay 2 \
             https://gameyer.az/ > /tmp/home.html
+          grep -o '<title>[^<]*</title>' /tmp/home.html | head -1
+          grep -o '<link rel="canonical"[^>]*>' /tmp/home.html | head -1 || true
           grep -F '<title>GameYer — Bakıda gaming, PC və PlayStation klubları</title>' /tmp/home.html > /dev/null
           grep -F 'rel="canonical" href="https://gameyer.az/' /tmp/home.html > /dev/null
