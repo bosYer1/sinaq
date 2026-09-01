@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 interface ShareClubButtonProps {
   name: string;
@@ -8,12 +9,27 @@ interface ShareClubButtonProps {
 }
 
 type ShareStatus = 'idle' | 'copied' | 'error';
+type ShareMethod = 'native' | 'copy';
 
 export function ShareClubButton({ name, url }: ShareClubButtonProps) {
   const [status, setStatus] = useState<ShareStatus>('idle');
 
   function resetStatus() {
     window.setTimeout(() => setStatus('idle'), 1800);
+  }
+
+  function trackSuccessfulShare(method: ShareMethod) {
+    let clubPath = url;
+    try {
+      clubPath = new URL(url, window.location.origin).pathname;
+    } catch {
+      // Keep the supplied path if URL parsing is unavailable.
+    }
+
+    trackPostHogEvent('club_share', {
+      method,
+      club_path: clubPath,
+    });
   }
 
   function legacyCopy(value: string) {
@@ -47,10 +63,12 @@ export function ShareClubButton({ name, url }: ShareClubButtonProps) {
           text: `${name} klub məlumatlarına GameYer-də bax.`,
           url,
         });
+        trackSuccessfulShare('native');
         return;
       }
 
       const copied = await copyUrl();
+      if (copied) trackSuccessfulShare('copy');
       setStatus(copied ? 'copied' : 'error');
       resetStatus();
     } catch (error) {
