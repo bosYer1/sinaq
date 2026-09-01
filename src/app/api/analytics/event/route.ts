@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createAnalyticsWriteClient } from '@/lib/supabase/analytics-server';
+import { requestVercelOidcToken, writeAnalyticsRecord } from '@/lib/supabase/analytics-server';
 import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicRequestGuard';
 
 export const dynamic = 'force-dynamic';
@@ -9,12 +9,6 @@ const MAX_BODY_BYTES = 1024;
 const SESSION_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const EVENT_TYPES = new Set(['maps_click', 'phone_click', 'instagram_click', 'club_correction_click']);
-
-type AnalyticsInsertClient = {
-  from: (table: 'analytics_events') => {
-    insert: (row: { session_id: string; path: string; event_type: string; club_slug: string }) => PromiseLike<{ error: { message: string } | null }>;
-  };
-};
 
 type AdminRpcClient = {
   rpc: (fn: 'is_admin') => PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
@@ -63,13 +57,19 @@ export async function POST(request: Request) {
     }
   }
 
-  const { client: analyticsClient, mode } = createAnalyticsWriteClient(supabase);
-  const analytics = analyticsClient as unknown as AnalyticsInsertClient;
-  const { error } = await analytics.from('analytics_events').insert({ session_id: sessionId, path, event_type: eventType, club_slug: clubSlug });
+  const { error, mode } = await writeAnalyticsRecord({
+    kind: 'event',
+    row: {
+      session_id: sessionId,
+      path,
+      event_type: eventType,
+      club_slug: clubSlug,
+    },
+  }, requestVercelOidcToken(request));
 
   if (error) {
     console.error('analytics event insert failed:', error.message);
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return NextResponse.json({ ok: false }, { status: 503 });
   }
 
   return new NextResponse(null, {
