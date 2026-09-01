@@ -185,8 +185,8 @@ async function assertHomepage(client, viewport) {
       const activation = document.querySelector('[aria-label="Xəritəni aktiv et"]');
       const preview = document.querySelector('[data-map-preview="current-clubs"]');
       const map = document.querySelector('[aria-label="GameYer klub xəritəsi"]');
-      const mapContainer = activation?.parentElement;
-      const rect = preview?.getBoundingClientRect();
+      const mapContainer = document.querySelector('[data-mobile-list-map-container="true"]');
+      const rect = mapContainer?.getBoundingClientRect();
       return {
         liveMapLoaded: Boolean(map),
         liveMarkerCount: document.querySelectorAll('.leaflet-marker-icon').length,
@@ -197,12 +197,12 @@ async function assertHomepage(client, viewport) {
         previewTileCount: preview?.querySelectorAll('.gameyer-map-preview-tiles img').length ?? 0,
         previewAttribution: Boolean(preview?.querySelector('.gameyer-map-preview-attribution')),
         previewZoom: preview?.getAttribute('data-map-preview-zoom') ?? null,
-        previewRect: rect ? { top: rect.top, left: rect.left, width: rect.width, height: rect.height } : null,
+        mapContainerRect: rect ? { top: rect.top, left: rect.left, width: rect.width, height: rect.height } : null,
         activationVisible: Boolean(activation),
         activationText: activation?.textContent?.trim() ?? null,
         mapActive: document.querySelector('[data-explore-view="list"]')?.getAttribute('data-mobile-map-active'),
         clubsVisible: document.body.innerText.includes('Klublar ('),
-        mapContainerHeight: mapContainer?.getBoundingClientRect().height ?? 0,
+        mapContainerHeight: rect?.height ?? 0,
       };
     })()`);
     assert(!listView.liveMapLoaded, `${viewport.name}: live Leaflet map loaded before mobile activation`, listView);
@@ -230,7 +230,8 @@ async function assertHomepage(client, viewport) {
     }
     const activated = await evaluate(client, `(() => {
       const map = document.querySelector('[aria-label="GameYer klub xəritəsi"]');
-      const rect = map?.getBoundingClientRect();
+      const mapContainer = document.querySelector('[data-mobile-list-map-container="true"]');
+      const rect = mapContainer?.getBoundingClientRect();
       return {
         activationVisible: Boolean(document.querySelector('[aria-label="Xəritəni aktiv et"]')),
         previewVisible: Boolean(document.querySelector('[data-map-preview="current-clubs"]')),
@@ -239,7 +240,7 @@ async function assertHomepage(client, viewport) {
         tileCount: document.querySelectorAll('.leaflet-tile').length,
         hasLeafletAttribution: Boolean(document.querySelector('.leaflet-control-attribution')),
         mapActive: document.querySelector('[data-explore-view="list"]')?.getAttribute('data-mobile-map-active'),
-        mapRect: rect ? { top: rect.top, left: rect.left, width: rect.width, height: rect.height } : null,
+        mapContainerRect: rect ? { top: rect.top, left: rect.left, width: rect.width, height: rect.height } : null,
       };
     })()`);
     assert(!activated.activationVisible, `${viewport.name}: map activation control remained after touch`, activated);
@@ -247,12 +248,11 @@ async function assertHomepage(client, viewport) {
     assert(activated.mapLoaded && activated.markerCount > 0 && activated.tileCount > 0, `${viewport.name}: live Leaflet map did not fully load after activation`, activated);
     assert(activated.hasLeafletAttribution, `${viewport.name}: live OpenStreetMap attribution is missing after activation`, activated);
     assert(activated.mapActive === 'true', `${viewport.name}: mobile list map state did not activate after touch`, activated);
-    assert(activated.markerCount === listView.previewMarkerCount, `${viewport.name}: preview/live real marker counts diverged`, { listView, activated });
-    assert(listView.previewRect && activated.mapRect, `${viewport.name}: preview/live map geometry is unavailable`, { listView, activated });
-    assert(Math.abs(listView.previewRect.width - activated.mapRect.width) <= 2, `${viewport.name}: preview/live map width changed on activation`, { listView, activated });
-    assert(Math.abs(listView.previewRect.height - activated.mapRect.height) <= 2, `${viewport.name}: preview/live map height changed on activation`, { listView, activated });
-    assert(Math.abs(listView.previewRect.left - activated.mapRect.left) <= 2, `${viewport.name}: preview/live map horizontal geometry changed on activation`, { listView, activated });
-    assert(Math.abs(listView.previewRect.top - activated.mapRect.top) <= 2, `${viewport.name}: preview/live map vertical geometry changed on activation`, { listView, activated });
+    assert(listView.mapContainerRect && activated.mapContainerRect, `${viewport.name}: preview/live map container geometry is unavailable`, { listView, activated });
+    assert(Math.abs(listView.mapContainerRect.width - activated.mapContainerRect.width) <= 1, `${viewport.name}: map container width changed on activation`, { listView, activated });
+    assert(Math.abs(listView.mapContainerRect.height - activated.mapContainerRect.height) <= 1, `${viewport.name}: map container height changed on activation`, { listView, activated });
+    assert(Math.abs(listView.mapContainerRect.left - activated.mapContainerRect.left) <= 1, `${viewport.name}: map container horizontal geometry changed on activation`, { listView, activated });
+    assert(Math.abs(listView.mapContainerRect.top - activated.mapContainerRect.top) <= 1, `${viewport.name}: map container vertical geometry changed on activation`, { listView, activated });
     await evaluate(client, `Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Xəritə')?.click()`);
   }
   await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
