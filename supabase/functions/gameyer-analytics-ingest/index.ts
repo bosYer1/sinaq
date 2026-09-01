@@ -38,6 +38,9 @@ async function verifyVercelProductionToken(token: string) {
 }
 
 function secretKey() {
+  const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (serviceRole) return serviceRole;
+
   const modern = Deno.env.get('SUPABASE_SECRET_KEYS');
   if (modern) {
     try {
@@ -48,10 +51,10 @@ function secretKey() {
         if (typeof value === 'string' && value.startsWith('sb_secret_')) return value;
       }
     } catch {
-      // Fall through to the legacy service-role key.
+      // No usable modern secret was found.
     }
   }
-  return Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? null;
+  return null;
 }
 
 function validVisit(row: Record<string, unknown>) {
