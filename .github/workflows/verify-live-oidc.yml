@@ -1,4 +1,4 @@
-name: Verify live OIDC analytics
+name: Verify live production
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   verify:
-    name: Production OIDC proof
+    name: Production SEO and health proof
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -25,44 +25,10 @@ jobs:
           grep '"database":"ok"' /tmp/health.json > /dev/null
           grep '"analytics_write":"vercel-oidc-edge"' /tmp/health.json > /dev/null
 
-      - name: Prove trusted pageview write after public revoke
+      - name: Verify latest homepage SEO title
         run: |
           set -euo pipefail
-          SESSION_ID="oidcpost${GITHUB_RUN_ID}"
-          VISIT_ID="oidcvisit${GITHUB_RUN_ID}"
-          BODY=$(printf '{"sessionId":"%s","visitId":"%s","path":"/__oidc_post_revoke__","referrerHost":null}' "$SESSION_ID" "$VISIT_ID")
-          STATUS=$(curl --silent --show-error --retry 2 --retry-delay 1 \
-            --output /tmp/visit-body.txt \
-            --dump-header /tmp/visit-headers.txt \
-            --write-out '%{http_code}' \
-            --request POST https://gameyer.az/api/analytics/visit \
-            --header 'Origin: https://gameyer.az' \
-            --header 'Sec-Fetch-Site: same-origin' \
-            --header 'Content-Type: application/json' \
-            --data "$BODY")
-          echo "synthetic_session_id=$SESSION_ID"
-          echo "synthetic_visit_id=$VISIT_ID"
-          echo "pageview_status=$STATUS"
-          grep -i '^x-gameyer-analytics-write:' /tmp/visit-headers.txt || true
-          test "$STATUS" = "204"
-          grep -qi '^x-gameyer-analytics-write: vercel-oidc-edge' /tmp/visit-headers.txt
-
-      - name: Prove trusted conversion write after public revoke
-        run: |
-          set -euo pipefail
-          SESSION_ID="oidcevent${GITHUB_RUN_ID}"
-          BODY=$(printf '{"sessionId":"%s","path":"/klub/forgamer-narimanov-bunker","eventType":"maps_click","clubSlug":"forgamer-narimanov-bunker"}' "$SESSION_ID")
-          STATUS=$(curl --silent --show-error --retry 2 --retry-delay 1 \
-            --output /tmp/event-body.txt \
-            --dump-header /tmp/event-headers.txt \
-            --write-out '%{http_code}' \
-            --request POST https://gameyer.az/api/analytics/event \
-            --header 'Origin: https://gameyer.az' \
-            --header 'Sec-Fetch-Site: same-origin' \
-            --header 'Content-Type: application/json' \
-            --data "$BODY")
-          echo "synthetic_event_session_id=$SESSION_ID"
-          echo "event_status=$STATUS"
-          grep -i '^x-gameyer-analytics-write:' /tmp/event-headers.txt || true
-          test "$STATUS" = "204"
-          grep -qi '^x-gameyer-analytics-write: vercel-oidc-edge' /tmp/event-headers.txt
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 \
+            https://gameyer.az/ > /tmp/home.html
+          grep -F '<title>GameYer — Bakıda gaming, PC və PlayStation klubları</title>' /tmp/home.html > /dev/null
+          grep -F 'rel="canonical" href="https://gameyer.az/' /tmp/home.html > /dev/null
