@@ -41,14 +41,16 @@ export function BackToClubsLink({ className }: { className?: string }) {
       entry = null;
     }
 
-    const validEntry =
-      entry &&
-      entry.destination === window.location.pathname &&
-      entry.origin.startsWith('/') &&
-      !entry.origin.startsWith('/klub/');
+    if (
+      !entry ||
+      entry.destination !== window.location.pathname ||
+      !entry.origin.startsWith('/') ||
+      entry.origin.startsWith('/klub/')
+    ) {
+      return;
+    }
 
-    if (!validEntry) return;
-
+    const origin = entry.origin;
     event.preventDefault();
     try {
       window.sessionStorage.removeItem(CLUB_ENTRY_ORIGIN_KEY);
@@ -61,7 +63,7 @@ export function BackToClubsLink({ className }: { className?: string }) {
     // stale client state/listeners. Replacing the detail entry with the exact
     // remembered discovery URL gives us a clean interactive page while still
     // preserving filters/search in the URL.
-    window.location.replace(entry.origin);
+    window.location.replace(origin);
   }
 
   return (
