@@ -10,6 +10,37 @@ import { useUserLocation } from '@/hooks/useUserLocation';
 import { useFilters } from '@/hooks/useFilters';
 import { formatDistance, haversineDistanceKm } from '@/lib/geo';
 
+const MOBILE_EXPANDED_STATE_KEY = 'gameyer:mobile-expanded-state';
+
+type MobileExpandedState = {
+  origin: string;
+  scrollY: number;
+};
+
+function getCurrentExploreOrigin() {
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
+function saveMobileExpandedState(scrollY: number) {
+  try {
+    const state: MobileExpandedState = {
+      origin: getCurrentExploreOrigin(),
+      scrollY: Math.max(0, scrollY),
+    };
+    window.sessionStorage.setItem(MOBILE_EXPANDED_STATE_KEY, JSON.stringify(state));
+  } catch {
+    // Returning to the club list must still work when storage is unavailable.
+  }
+}
+
+function clearMobileExpandedState() {
+  try {
+    window.sessionStorage.removeItem(MOBILE_EXPANDED_STATE_KEY);
+  } catch {
+    // Ignore storage cleanup failures.
+  }
+}
+
 const MapWrapper = dynamic(
   () => import('@/components/map/MapWrapper').then((module) => module.MapWrapper),
   {
@@ -34,6 +65,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const [mobileListMapActive, setMobileListMapActive] = useState(false);
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const restoredScrollYRef = useRef<number | null>(null);
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');
@@ -42,6 +74,71 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     media.addEventListener?.('change', sync);
     return () => media.removeEventListener?.('change', sync);
   }, []);
+
+  useEffect(() => {
+    if (view !== 'list' || window.matchMedia('(min-width: 1024px)').matches) return;
+
+    let restoreTimer: number | null = null;
+    try {
+      const rawState = window.sessionStorage.getItem(MOBILE_EXPANDED_STATE_KEY);
+      if (!rawState) return;
+
+      const savedState = JSON.parse(rawState) as Partial<MobileExpandedState>;
+      if (
+        savedState.origin !== getCurrentExploreOrigin() ||
+        typeof savedState.scrollY !== 'number' ||
+        !Number.isFinite(savedState.scrollY)
+      ) {
+        return;
+      }
+
+      const restoredScrollY = Math.max(0, savedState.scrollY);
+      restoreTimer = window.setTimeout(() => {
+        restoredScrollYRef.current = restoredScrollY;
+        setMobileExpanded(true);
+      }, 0);
+    } catch {
+      // Ignore malformed or unavailable session state.
+    }
+
+    return () => {
+      if (restoreTimer != null) window.clearTimeout(restoreTimer);
+    };
+  }, [view]);
+
+  useEffect(() => {
+    const restoredScrollY = restoredScrollYRef.current;
+    if (!mobileExpanded || restoredScrollY == null) return;
+
+    restoredScrollYRef.current = null;
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        window.scrollTo({ top: restoredScrollY, left: 0, behavior: 'auto' });
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+  }, [mobileExpanded]);
+
+  useEffect(() => {
+    if (view !== 'list' || !mobileExpanded) return;
+
+    let frame = 0;
+    const persistScroll = () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => saveMobileExpandedState(window.scrollY));
+    };
+
+    window.addEventListener('scroll', persistScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', persistScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [mobileExpanded, view]);
 
   const clubsWithDistance = useMemo(() => {
     const enriched = clubs.map((club) => ({
@@ -96,6 +193,13 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   function handleSelectMarker(id: string) {
     setActiveClubId(id);
     cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function handleMobileExpandedToggle() {
+    const nextExpanded = !mobileExpanded;
+    setMobileExpanded(nextExpanded);
+    if (nextExpanded) saveMobileExpandedState(window.scrollY);
+    else clearMobileExpandedState();
   }
 
   const locationButtonLabel = status === 'loading'
@@ -267,7 +371,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             {clubsWithDistance.length > 4 ? (
               <button
                 type="button"
-                onClick={() => setMobileExpanded((value) => !value)}
+                onClick={handleMobileExpandedToggle}
                 className="mt-3 h-12 w-full rounded-xl border border-border bg-surface text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
               >
                 {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - 4})`}
