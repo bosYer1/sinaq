@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/meta-pixel.test.ts src/lib/google-analytics.test.ts && node scripts/submission-regression.mjs && node scripts/admin-security-regression.mjs && node scripts/analytics-parity-regression.mjs && node scripts/search-console-opportunities-regression.mjs && node scripts/search-input-regression.mjs && node scripts/revenue-migration-regression.mjs"
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/meta-pixel.test.ts src/lib/google-analytics.test.ts && node scripts/submission-regression.mjs && node scripts/admin-security-regression.mjs && node scripts/analytics-parity-regression.mjs && node scripts/search-console-opportunities-regression.mjs && node scripts/search-input-regression.mjs && node scripts/revenue-migration-regression.mjs && node scripts/club-back-navigation-regression.mjs"
   },
   "dependencies": {
     "next": "16.3.3",
