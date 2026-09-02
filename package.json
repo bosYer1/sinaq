@@ -30,7 +30,7 @@
     "@types/leaflet": "^1.9.15",
     "tailwindcss": "^3.4.7",
     "postcss": "^8.5.23",
-    "autoprefixer": "^8.5.23"
+    "autoprefixer": "^10.4.19"
   },
   "engines": {
     "node": "24.x"
