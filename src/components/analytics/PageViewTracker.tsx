@@ -2,6 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { trackGaEvent } from '@/lib/google-analytics';
+import { submissionSuccessEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 const VISITOR_KEY = 'gameyer_visitor_id';
 const VISIT_KEY = 'gameyer_visit_id';
@@ -58,12 +61,43 @@ function getEntryReferrerHost() {
   }
 }
 
+function trackSubmissionSuccess(pathname: string) {
+  if (pathname !== '/elaqe' && pathname !== '/klub-sahibi') return;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('sent') !== '1') return;
+
+  const surface = pathname === '/klub-sahibi' ? 'club_owner' : 'contact';
+  const clubSlug = params.get('slug');
+  const clubName = params.get('club');
+  const key = `gameyer_submission_success:${surface}:${clubSlug ?? ''}:${clubName ?? ''}`;
+
+  try {
+    if (window.sessionStorage.getItem(key) === '1') return;
+    window.sessionStorage.setItem(key, '1');
+  } catch {
+    // Session storage is optional; event capture can still proceed.
+  }
+
+  const eventProperties = {
+    surface,
+    club_slug: clubSlug,
+    club_name: clubName,
+  };
+
+  trackMetaCustomEvent(submissionSuccessEvent(surface, clubSlug, clubName));
+  trackGaEvent('submission_success', eventProperties);
+  trackPostHogEvent('submission_success', eventProperties);
+}
+
 export function PageViewTracker() {
   const pathname = usePathname();
   const lastTrackedPath = useRef<string | null>(null);
 
   useEffect(() => {
     if (!pathname || pathname.startsWith('/admin') || pathname.startsWith('/api')) return;
+
+    trackSubmissionSuccess(pathname);
+
     if (lastTrackedPath.current === pathname) return;
     lastTrackedPath.current = pathname;
 

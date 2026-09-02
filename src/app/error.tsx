@@ -4,16 +4,19 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { AlertIcon } from '@/components/ui/Icon';
+import { trackGaEvent } from '@/lib/google-analytics';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('GameYer səhifə xətası:', error);
 
+    const path = window.location.pathname;
     const payload = {
       message: error.message,
       stack: error.stack,
       digest: error.digest,
-      path: window.location.pathname,
+      path,
     };
 
     fetch('/api/client-error', {
@@ -22,6 +25,11 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       body: JSON.stringify(payload),
       keepalive: true,
     }).catch(() => undefined);
+
+    // Third-party analytics receive only operational metadata, never stack/message content.
+    const analyticsProperties = { path, digest_present: Boolean(error.digest) };
+    trackGaEvent('runtime_error', analyticsProperties);
+    trackPostHogEvent('runtime_error', analyticsProperties);
   }, [error]);
 
   return (
@@ -30,7 +38,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <AlertIcon width={24} height={24} />
       </div>
       <h1 className="font-display text-xl font-semibold text-ink">Nəsə səhv getdi</h1>
-      <p className="text-sm text-muted">
+      <p className="text-sm leading-6 text-muted">
         Səhifə yüklənərkən xəta baş verdi. Yenidən cəhd edin.
       </p>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-3">

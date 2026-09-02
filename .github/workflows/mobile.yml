@@ -43,6 +43,9 @@ jobs:
             exit 1
           fi
 
+      - name: Expo Doctor
+        run: npx --yes expo-doctor
+
       - name: Lint
         run: npm run lint
 
