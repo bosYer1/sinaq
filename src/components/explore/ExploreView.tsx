@@ -78,6 +78,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   useEffect(() => {
     if (view !== 'list' || window.matchMedia('(min-width: 1024px)').matches) return;
 
+    let restoreTimer: number | null = null;
     try {
       const rawState = window.sessionStorage.getItem(MOBILE_EXPANDED_STATE_KEY);
       if (!rawState) return;
@@ -91,11 +92,18 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         return;
       }
 
-      restoredScrollYRef.current = Math.max(0, savedState.scrollY);
-      setMobileExpanded(true);
+      const restoredScrollY = Math.max(0, savedState.scrollY);
+      restoreTimer = window.setTimeout(() => {
+        restoredScrollYRef.current = restoredScrollY;
+        setMobileExpanded(true);
+      }, 0);
     } catch {
       // Ignore malformed or unavailable session state.
     }
+
+    return () => {
+      if (restoreTimer != null) window.clearTimeout(restoreTimer);
+    };
   }, [view]);
 
   useEffect(() => {
