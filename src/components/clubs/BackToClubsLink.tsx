@@ -2,7 +2,6 @@
 
 import type { MouseEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 const CLUB_ENTRY_ORIGIN_KEY = 'gameyer:club-entry-origin';
 
@@ -31,8 +30,6 @@ export function rememberClubEntryOrigin(clubSlug: string) {
 }
 
 export function BackToClubsLink({ className }: { className?: string }) {
-  const router = useRouter();
-
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     if (!isPlainLeftClick(event)) return;
 
@@ -59,9 +56,12 @@ export function BackToClubsLink({ className }: { className?: string }) {
       // Ignore storage cleanup failures.
     }
 
-    // Reuse the existing history entry instead of rendering a fresh homepage.
-    // This preserves the previous list/filter/scroll snapshot and avoids the return flicker.
-    router.back();
+    // Do not restore the cached App Router history snapshot here. On mobile,
+    // that snapshot can leave the discovery page visually restored but with
+    // stale client state/listeners. Replacing the detail entry with the exact
+    // remembered discovery URL gives us a clean interactive page while still
+    // preserving filters/search in the URL.
+    window.location.replace(entry.origin);
   }
 
   return (
