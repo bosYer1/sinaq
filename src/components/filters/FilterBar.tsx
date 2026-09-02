@@ -22,7 +22,7 @@ export function FilterBar({ districts, types }: FilterBarProps) {
   return (
     <div id="club-search" className="mb-3 scroll-mt-20 rounded-2xl border border-border bg-surface p-2.5 shadow-[0_6px_24px_rgba(31,35,48,0.04)] sm:mb-4 sm:p-4">
       <div className="grid gap-2.5 xl:grid-cols-[minmax(300px,1.35fr)_minmax(0,2fr)_auto] xl:items-center xl:gap-3">
-        <SearchFilter key={searchQuery} />
+        <SearchFilter />
 
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:overflow-visible xl:pb-0" aria-label="Klub filtrləri">
           <ViewToggle />
