@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { SearchIcon } from '@/components/ui/Icon';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 export function SearchFilter() {
   const router = useRouter();
@@ -12,15 +13,34 @@ export function SearchFilter() {
   const paramsString = searchParams.toString();
   const currentQuery = searchParams.get('q') ?? '';
   const [value, setValue] = useState(currentQuery);
+  const lastRequestedQueryRef = useRef(currentQuery);
+
+  useEffect(() => {
+    if (currentQuery === lastRequestedQueryRef.current) return;
+
+    lastRequestedQueryRef.current = currentQuery;
+    setValue(currentQuery);
+  }, [currentQuery]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const nextQuery = value.trim();
       if (nextQuery === currentQuery) return;
 
+      lastRequestedQueryRef.current = nextQuery;
+
       const params = new URLSearchParams(paramsString);
       if (nextQuery) params.set('q', nextQuery);
       else params.delete('q');
+
+      trackPostHogEvent(nextQuery ? 'search_query' : 'search_cleared', {
+        search_query: nextQuery || null,
+        search_query_length: nextQuery.length,
+        district: params.get('district'),
+        club_type: params.get('type'),
+        price_max: params.get('price_max'),
+        explore_view: params.get('view') === 'map' ? 'map' : 'list',
+      });
 
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });

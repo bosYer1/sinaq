@@ -5,7 +5,8 @@ import { trackGaEvent } from '@/lib/google-analytics';
 import { clubActionEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
 
-type EventType = 'maps_click' | 'phone_click' | 'instagram_click';
+type EventType = 'maps_click' | 'phone_click' | 'instagram_click' | 'club_correction_click';
+type CtaSurface = 'header_maps' | 'contact_phone' | 'contact_instagram' | 'contact_maps' | 'correction';
 
 interface TrackedClubLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
@@ -32,12 +33,24 @@ function visitorId() {
   }
 }
 
+function ctaSurface(anchor: HTMLAnchorElement, eventType: EventType): CtaSurface {
+  if (eventType === 'phone_click') return 'contact_phone';
+  if (eventType === 'instagram_click') return 'contact_instagram';
+  if (eventType === 'club_correction_click') return 'correction';
+  return anchor.closest('aside') ? 'contact_maps' : 'header_maps';
+}
+
 export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, children, onClick, ...props }: TrackedClubLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
     if (event.defaultPrevented) return;
 
-    const eventProperties = { club_id: clubId, club_slug: clubSlug, club_name: clubName };
+    const eventProperties = {
+      club_id: clubId,
+      club_slug: clubSlug,
+      club_name: clubName,
+      cta_surface: ctaSurface(event.currentTarget, eventType),
+    };
     trackMetaCustomEvent(clubActionEvent(eventType, { clubId, clubSlug, clubName }));
     trackGaEvent(eventType, eventProperties);
     trackPostHogEvent(eventType, eventProperties);

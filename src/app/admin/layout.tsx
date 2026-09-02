@@ -38,8 +38,6 @@ export default async function AdminLayout({
     }
   }
 
-  // Login and MFA enrollment/challenge must never expose admin navigation before
-  // the session has reached authenticator assurance level 2.
   if (!isAdmin || !hasAal2) {
     return (
       <div className="min-h-screen bg-[#f7f7f9] text-[#14161c]">
@@ -59,7 +57,8 @@ export default async function AdminLayout({
 
             <nav className="mt-7 space-y-1 text-sm">
               <Link href="/admin" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Dashboard</Link>
-              <Link href="/admin/statistika" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Statistika</Link>
+              <Link href="/admin/analitika" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Analitika</Link>
+              <Link href="/admin/statistika" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Supabase statistikası</Link>
               <Link href="/admin/seo-prioritet" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Google SEO prioriteti</Link>
               <Link href="/admin/klublar" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Klublar</Link>
               <Link href="/admin/muracietler" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Müraciətlər</Link>
@@ -75,7 +74,8 @@ export default async function AdminLayout({
           <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/95 backdrop-blur lg:hidden">
             <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 text-sm">
               <Link href="/admin" className="shrink-0 font-bold">GameYer Admin</Link>
-              <Link href="/admin/statistika" className="shrink-0 text-gray-600">Statistika</Link>
+              <Link href="/admin/analitika" className="shrink-0 text-gray-600">Analitika</Link>
+              <Link href="/admin/statistika" className="shrink-0 text-gray-600">Supabase</Link>
               <Link href="/admin/seo-prioritet" className="shrink-0 text-gray-600">SEO prioriteti</Link>
               <Link href="/admin/klublar" className="shrink-0 text-gray-600">Klublar</Link>
               <Link href="/admin/muracietler" className="shrink-0 text-gray-600">Müraciətlər</Link>

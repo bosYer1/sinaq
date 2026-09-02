@@ -1,11 +1,12 @@
 'use client';
 
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { ClubWithDistance } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
 import { MapPinIcon } from '@/components/ui/Icon';
+import { rememberClubEntryOrigin } from '@/components/clubs/BackToClubsLink';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { getPlatformStartingPrices } from '@/lib/pricing';
 import { cn, formatPriceRange, isClubOpenNow, isPremiumActive } from '@/lib/utils';
@@ -16,6 +17,7 @@ import { trackPostHogEvent } from '@/lib/posthog';
 
 interface ClubCardProps {
   club: ClubWithDistance;
+  listPosition: number;
   active?: boolean;
   onMouseEnter?: () => void;
   imagePriority?: boolean;
@@ -26,10 +28,11 @@ type LiveState = {
   premiumActive: boolean;
 };
 
-export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, active, onMouseEnter, imagePriority = false }, ref) {
+export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, listPosition, active, onMouseEnter, imagePriority = false }, ref) {
   const isVerified = club.is_verified;
   const hasHours = club.opening_hours.length > 0;
   const [liveState, setLiveState] = useState<LiveState | null>(null);
+  const cardElementRef = useRef<HTMLAnchorElement | null>(null);
 
   useEffect(() => {
     const refreshLiveState = () => {
@@ -43,18 +46,55 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     return () => window.clearInterval(timer);
   }, [club, hasHours]);
 
+  useEffect(() => {
+    const element = cardElementRef.current;
+    if (!element || typeof IntersectionObserver === 'undefined') return;
+
+    let captured = false;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (!entry?.isIntersecting || entry.intersectionRatio < 0.6 || captured) return;
+      captured = true;
+      trackPostHogEvent('club_impression', {
+        club_id: club.id,
+        club_slug: club.slug,
+        club_name: club.name,
+        district: club.district?.name ?? null,
+        list_position: listPosition,
+        is_verified: Boolean(club.is_verified),
+        has_profile_image: Boolean(club.profile_image_url),
+        image_count: club.images.length,
+        has_pricing: club.pricing.length > 0,
+        has_hours: hasHours,
+      });
+      observer.disconnect();
+    }, { threshold: [0.6] });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [club.district?.name, club.id, club.images.length, club.is_verified, club.name, club.pricing.length, club.profile_image_url, club.slug, hasHours, listPosition]);
+
   const openNow = liveState?.openNow ?? false;
   const premiumActive = liveState?.premiumActive ?? false;
   const statusLabel = !hasHours ? 'Saat məlum deyil' : liveState === null ? 'Yoxlanılır' : openNow ? 'Açıqdır' : 'Bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
   const startingPrices = getPlatformStartingPrices(club.pricing);
 
+  function setCardRef(element: HTMLAnchorElement | null) {
+    cardElementRef.current = element;
+    if (typeof ref === 'function') ref(element);
+    else if (ref) ref.current = element;
+  }
+
   function trackClubCardClick() {
+    rememberClubEntryOrigin(club.slug);
+
     const eventProperties = {
       club_id: club.id,
       club_slug: club.slug,
       club_name: club.name,
       district: club.district?.name ?? null,
+      list_position: listPosition,
     };
 
     trackMetaCustomEvent(clubCardClickEvent({
@@ -69,7 +109,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
 
   return (
     <Link
-      ref={ref}
+      ref={setCardRef}
       href={`/klub/${encodeURIComponent(club.slug)}`}
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}

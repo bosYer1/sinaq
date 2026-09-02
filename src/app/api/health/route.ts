@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import {
+  getAnalyticsWriteMode,
+  requestVercelOidcToken,
+  type AnalyticsWriteMode,
+} from '@/lib/supabase/analytics-server';
 
 export const dynamic = 'force-dynamic';
 
 function healthResponse(
-  body: { ok: boolean; service: 'gameyer'; database: 'ok' | 'error' | 'unavailable' },
+  body: {
+    ok: boolean;
+    service: 'gameyer';
+    database: 'ok' | 'error' | 'unavailable';
+    analytics_write: AnalyticsWriteMode;
+  },
   status = 200
 ) {
   return NextResponse.json(body, {
@@ -16,7 +26,9 @@ function healthResponse(
   });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const analyticsWrite = getAnalyticsWriteMode(requestVercelOidcToken(request));
+
   try {
     const supabase = await createClient();
     const { error } = await supabase
@@ -31,6 +43,7 @@ export async function GET() {
           ok: false,
           service: 'gameyer',
           database: 'error',
+          analytics_write: analyticsWrite,
         },
         503
       );
@@ -40,6 +53,7 @@ export async function GET() {
       ok: true,
       service: 'gameyer',
       database: 'ok',
+      analytics_write: analyticsWrite,
     });
   } catch {
     return healthResponse(
@@ -47,6 +61,7 @@ export async function GET() {
         ok: false,
         service: 'gameyer',
         database: 'unavailable',
+        analytics_write: analyticsWrite,
       },
       503
     );

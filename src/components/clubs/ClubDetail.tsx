@@ -1,8 +1,8 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import type { ClubWithRelations } from '@/types/database';
 import { TrackedClubLink } from '@/components/analytics/TrackedClubLink';
 import { ClubViewTracker } from '@/components/analytics/ClubViewTracker';
+import { BackToClubsLink } from '@/components/clubs/BackToClubsLink';
 import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
 import { ClubPricingDisplay } from '@/components/clubs/ClubPricingDisplay';
@@ -31,12 +31,11 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
   const googleMapsUrl = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}` : null;
   const clubContext = `club=${encodeURIComponent(club.name)}&slug=${encodeURIComponent(club.slug)}`;
   const correctionHref = `/elaqe?${clubContext}`;
-  const ownerHref = `/klub-sahibi?${clubContext}`;
 
   return (
     <article className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
       <ClubViewTracker club={{ clubId: club.id, clubSlug: club.slug, clubName: club.name, district: club.district?.name, clubTypes: typeSlugs }} />
-      <div className="mb-4"><Link href="/" className="text-sm font-medium text-muted transition hover:text-ink">← Klublara qayıt</Link></div>
+      <div className="mb-4"><BackToClubsLink className="text-sm font-medium text-muted transition hover:text-ink" /></div>
 
       {sortedImages.length > 0 ? (
         <div className="mb-6 grid grid-cols-4 gap-1.5 overflow-hidden rounded-card bg-surface-alt">
@@ -93,7 +92,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           <p className="mt-4 text-xs leading-5 text-muted">Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl mümkün olduqda klubun rəsmi əlaqə kanalından məlumatı dəqiqləşdirin.</p>
         </div>
 
-        <aside className="h-fit rounded-xl border border-border bg-surface p-5">
+        <aside className="order-first h-fit rounded-xl border border-border bg-surface p-5 lg:order-none">
           <h2 className="font-display text-base font-semibold text-ink">Əlaqə və ünvan</h2>
           <div className="mt-4 space-y-4 text-sm">
             <div><p className="text-xs font-medium uppercase tracking-wide text-muted">Ünvan</p><p className="mt-1 leading-5 text-ink">{club.address || 'Ünvan göstərilməyib'}</p></div>
@@ -104,7 +103,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           <div className="mt-5 border-t border-border pt-4">
             {updatedLabel ? <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p> : null}
             {isVerified ? <p className="mt-2 text-xs leading-5 text-primary">✓ Klubun sahibi və ya rəsmi nümayəndəsi GameYer tərəfindən təsdiqlənib.</p> : null}
-            <div className="mt-3 flex flex-col gap-2"><Link href={correctionHref} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</Link>{!isVerified ? <Link href={ownerHref} className="text-sm font-semibold text-ink hover:text-primary">Bu klubun sahibisiniz? Klub məlumatını təsdiqləyin</Link> : null}</div>
+            <div className="mt-3 flex flex-col gap-2"><TrackedClubLink href={correctionHref} eventType="club_correction_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</TrackedClubLink></div>
           </div>
         </aside>
       </div>
