@@ -1,4 +1,6 @@
-import { FlatList, RefreshControl, StyleSheet, Text, View, type ListRenderItemInfo } from 'react-native';
+import { useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { FlatList, RefreshControl, StyleSheet, Text, View, useWindowDimensions, type ListRenderItemInfo } from 'react-native';
 import { ClubCard } from '@/components/ClubCard';
 import { FilterBar } from '@/components/FilterBar';
 import { ScreenState } from '@/components/ScreenState';
@@ -6,15 +8,25 @@ import { spacing, type ColorPalette } from '@/constants/theme';
 import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { useClubData } from '@/context/ClubDataContext';
 import type { Club } from '@/types/club';
+import { resetNavigationGuard } from '@/lib/navigation';
 
 const keyExtractor = (club: Club) => club.id;
-const renderClub = ({ item }: ListRenderItemInfo<Club>) => <ClubCard club={item} />;
 const renderSeparator = () => <View style={{ height: spacing.md }} />;
 
 export default function DiscoveryScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const { width, fontScale } = useWindowDimensions();
   const { filteredClubs, clubs, loading, refreshing, error, reload, clearFilters } = useClubData();
+  const compactCards = width < 360 || fontScale > 1.3;
+  const renderClub = useCallback(
+    ({ item }: ListRenderItemInfo<Club>) => <ClubCard club={item} compact={compactCards} />,
+    [compactCards],
+  );
+
+  useFocusEffect(useCallback(() => {
+    resetNavigationGuard();
+  }, []));
 
   if (loading) return <DiscoverySkeleton />;
   if (error && clubs.length === 0) return <ScreenState title="Məlumat alınmadı" message={error} actionLabel="Yenidən yoxla" onAction={() => void reload()} />;

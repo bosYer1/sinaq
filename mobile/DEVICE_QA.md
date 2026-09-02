@@ -4,7 +4,7 @@ Bu checklist real Android və iOS cihazında release candidate yoxlaması üçü
 
 ## Map-dan müstəqil beta sprint — 2026-08-29
 
-**KNOWN BLOCKER — Android physical device map rendering unresolved.** Expo SDK 53-dən etibarən Google Maps Expo Go Android-dan çıxarılıb; SDK 57 xəritəsi restricted Google Maps key ilə development build-də yoxlanmalıdır. Billing/key founder icazəsi tələb etdiyi üçün bu checklistdə xəritə PASS deyil.
+**KNOWN BLOCKER — Android physical device map rendering unresolved.** Expo SDK 57 `react-native-maps`-i Expo Go-da daxil etsə də, GameYer-in Android release acceptance-i `az.gameyer.app` və signing SHA-1 ilə məhdudlaşdırılmış Google Maps key olan development build tələb edir. Cari keyless build xəritəni təhlükəsiz deaktiv edir. Billing/key founder icazəsi tələb etdiyi üçün bu checklistdə xəritə PASS deyil.
 
 Founder əvvəlki build-də Android launch, public data, Discovery/list, theme və bottom tabs üçün PASS bildirib. Aşağıdakı yeni build ssenariləri **PENDING real-device QA**:
 
@@ -37,7 +37,7 @@ Founder-in əvvəlki cihaz nəticəsi: Expo Go launch, GameYer bundle, public kl
 
 FAIL davam edərsə: qırmızı error ekranının tam mətni/screenshot-u, Metro terminal xətası, cihazda Google Play Services mövcudluğu və xəritənin blank/crash/timeout olmasını göndərin. React error boundary native Java crash və Google tiles authorization xətasını tuta bilmir; timeout konkret səbəb diaqnozu deyil.
 
-Uyğunluq: `react-native-maps 1.27.2` Expo SDK 57 ilə aligned-dir. Lakin [Expo-nun SDK 52 beta qeydi](https://expo.dev/changelog/2024-10-24-sdk-52-beta) Google Maps-in SDK 53-dən Android Expo Go-dan çıxarıldığını bildirir. [SDK 57 map sənədi](https://docs.expo.dev/versions/v57.0.0/sdk/map-view/) ayrıca native binary üçün Google Maps konfiqurasiyası tələb edir. Buna görə Expo Go nəticəsi release acceptance deyil.
+Uyğunluq: `react-native-maps 1.27.2` Expo SDK 57 ilə aligned-dir və [SDK 57 map sənədinə](https://docs.expo.dev/versions/v57.0.0/sdk/map-view/) görə Expo Go-da daxildir. Həmin sənəd Android tətbiq binary-si üçün package + signing SHA-1 ilə məhdud Google Maps key və config plugin tələb edir. Buna görə Expo Go nəticəsi release acceptance deyil.
 
 Development build map gate — hamısı real cihazda PENDING:
 

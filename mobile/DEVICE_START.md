@@ -29,7 +29,7 @@
 
 ## Android xəritə development build-i
 
-SDK 53-dən etibarən Google Maps Expo Go Android-dan çıxarılıb. Buna görə SDK 57-də Discovery işləsə də native xəritə boş qala bilər; bu app kodunun billing-i avtomatik aktivləşdirməsi demək deyil.
+SDK 57 `react-native-maps`-i Expo Go-da daxil edir, lakin GameYer-in keyless config-i native xəritəni qəsdən deaktiv edir və Expo Go nəticəsi Android release acceptance sayılmır. Xəritəli acceptance build-i aşağıdakı restricted-key native yolu tələb edir; app özü billing-i avtomatik aktivləşdirmir.
 
 - Pulsuz lokal build üçün Windows-da Android Studio/SDK, JDK və USB debugging lazımdır. Bu kompüterdə hazırda Android SDK/ADB aşkarlanmayıb.
 - Xəritəli development build üçün Google Cloud-da Maps SDK for Android aktiv, billing-ə bağlı və `az.gameyer.app` + debug SHA-1 ilə məhdudlaşdırılmış API key tələb olunur. Founder icazəsi olmadan yaradılmamalıdır.
@@ -56,7 +56,7 @@ Free planın aylıq build kvotası daxilində bu build ödənişsizdir. Google M
 ## Expo Go incompatibility on iOS (SDK 57)
 
 - Səbəb: iPhone-dakı Expo Go binary-si layihənin SDK 57 native runtime-ını ehtiva etmir. LAN/tunnel yalnız Metro bağlantısını dəyişir.
-- Dəstəklənən alternativ: SDK 57 ilə uyğun `expo-dev-client` development build (`~57.0.10`). Hazırda əlavə edilməyib, çünki Windows-da onu iPhone-a quraşdırmaq üçün aşağıdakı tələblərdən biri yenə lazımdır.
+- Dəstəklənən alternativ: SDK 57 ilə uyğun `expo-dev-client` development build (`~57.0.18`). Paket hazırdır, lakin Windows-da onu iPhone-a quraşdırmaq üçün aşağıdakı tələblərdən biri yenə lazımdır.
 - Pulsuz yol: Mac + Xcode + pulsuz Apple Account (Personal Team) ilə yalnız öz iPhone-na quraşdırmaq olar; provisioning 7 gündən sonra bitir və build yenidən quraşdırılmalıdır.
 - Windows/EAS yolu: EAS cloud build Mac tələb etmir və Expo-nun Free planında məhdud, aşağı-prioritet build kvotası var. Lakin fiziki iPhone development build-i üçün aktiv Apple Developer Program üzvlüyü, cihaz qeydiyyatı və signing tələb olunur. Üzvlük illik 99 USD-dir (və ya yerli valyuta ekvivalenti).
 - Bu layihə üçün EAS build, Apple credential, ödəniş və ya billing aktivləşdirilməyib.

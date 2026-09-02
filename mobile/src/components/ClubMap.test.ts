@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { ClubMap } from './ClubMap';
+import { ClubMap, mapReadyCompletesLoading } from './ClubMap';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ScreenState } from './ScreenState';
 import type { MappableClub } from '@/types/club';
@@ -12,6 +12,7 @@ jest.mock('react-native-maps', () => {
   const { View } = jest.requireActual('react-native');
   return {
     __esModule: true,
+    PROVIDER_GOOGLE: 'google',
     default: React.forwardRef(function MockMap(props: object, ref: unknown) {
       React.useImperativeHandle(ref, () => mockCamera);
       return React.createElement(View, { ...props, testID: 'native-map' });
@@ -45,6 +46,7 @@ const nativeMap = () => tree.root.findByProps({ testID: 'native-map' });
 
 test('starts in Baku and waits for positive layout AND native readiness before fitting', async () => {
   expect(nativeMap().props.initialRegion.longitude).toBe(49.8671);
+  expect(nativeMap().props.provider).toBe(jest.requireActual('react-native').Platform.OS === 'android' ? 'google' : undefined);
   await act(async () => nativeMap().props.onMapReady());
   expect(mockCamera.fitToCoordinates).not.toHaveBeenCalled();
   await act(async () => nativeMap().props.onLayout({ nativeEvent: { layout: { width: 0, height: 0 } } }));
@@ -72,4 +74,9 @@ test('loaded map cancels its timeout', async () => {
   await act(async () => nativeMap().props.onMapLoaded());
   await act(async () => jest.advanceTimersByTime(15_000));
   expect(tree.root.findAllByType(ScreenState)).toHaveLength(0);
+});
+
+test('treats iOS MapKit readiness as loaded but keeps Android tile confirmation separate', () => {
+  expect(mapReadyCompletesLoading('ios')).toBe(true);
+  expect(mapReadyCompletesLoading('android')).toBe(false);
 });

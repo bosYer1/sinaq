@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { AppState, FlatList, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, FlatList, Linking, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { ClubCard } from '@/components/ClubCard';
 import { FilterBar } from '@/components/FilterBar';
 import { ScreenState } from '@/components/ScreenState';
@@ -9,16 +9,20 @@ import { useThemedStyles } from '@/context/ThemeContext';
 import { useClubData } from '@/context/ClubDataContext';
 import { formatDistance, sortByDistance, type Position } from '@/lib/distance';
 import { LOCATION_MESSAGES, requestPosition } from '@/lib/location';
+import { resetNavigationGuard } from '@/lib/navigation';
 
 export default function NearbyScreen() {
   const styles = useThemedStyles(createStyles);
+  const { width, fontScale } = useWindowDimensions();
   const { filteredClubs, loading, error, reload, clearFilters } = useClubData();
   const [position, setPosition] = useState<Position | null>(null);
   const [status, setStatus] = useState<keyof typeof LOCATION_MESSAGES>('idle');
   const activeRequest = useRef<AbortController | null>(null);
   const rows = useMemo(() => position ? sortByDistance(filteredClubs, position) : [], [filteredClubs, position]);
+  const compactCards = width < 360 || fontScale > 1.3;
 
   useFocusEffect(useCallback(() => {
+    resetNavigationGuard();
     const clear = () => {
       activeRequest.current?.abort();
       activeRequest.current = null;
@@ -66,7 +70,7 @@ export default function NearbyScreen() {
       {position ? <Text style={styles.text}>{rows.length} nəticə · məsafəyə görə</Text> : null}
     </View>}
     ListEmptyComponent={position && !loading && !error ? <ScreenState title="Yaxınlıq üçün uyğun klub yoxdur" message="Koordinatlı klublar göstərilir. Filtrləri sıfırlaya bilərsiniz." actionLabel="Filtrləri sıfırla" onAction={clearFilters} /> : null}
-    renderItem={({ item }) => <View style={styles.result}><Text style={styles.distance}>{formatDistance(item.distanceKm)} · təxmini</Text><ClubCard club={item.club} /></View>}
+    renderItem={({ item }) => <View style={styles.result}><Text style={styles.distance}>{formatDistance(item.distanceKm)} · təxmini</Text><ClubCard club={item.club} compact={compactCards} /></View>}
   />;
 }
 

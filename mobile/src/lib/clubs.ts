@@ -68,7 +68,8 @@ export function normalizeClub(club: Club): Club {
     ? uniqueBy(club.images.filter((image) => (
       image && typeof image.id === 'string' && image.id && safeHttpsUrl(image.url) &&
       typeof image.is_cover === 'boolean' && Number.isFinite(image.position)
-    )), (image) => image.id).sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.position - b.position)
+    )), (image) => image.id).map((image) => ({ ...image, url: image.url.trim() }))
+      .sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.position - b.position)
     : [];
   const openingHours = Array.isArray(club.opening_hours)
     ? uniqueBy(club.opening_hours.filter(validOpeningHours), (hours) => String(hours.day_of_week))
@@ -83,7 +84,7 @@ export function normalizeClub(club: Club): Club {
     description: typeof club.description === 'string' ? cleanText(club.description, 5_000) || null : null,
     phone: typeof club.phone === 'string' ? cleanText(club.phone, 100) || null : null,
     instagram_url: typeof club.instagram_url === 'string' ? cleanText(club.instagram_url, 500) || null : null,
-    profile_image_url: safeHttpsUrl(club.profile_image_url) ? club.profile_image_url : null,
+    profile_image_url: safeHttpsUrl(club.profile_image_url) ? club.profile_image_url!.trim() : null,
     is_premium: isPremiumActive(club),
     is_verified: club.is_verified === true,
     verified_at: club.verified_at ?? null,
@@ -242,7 +243,7 @@ export function filterClubs(clubs: Club[], filters: ClubFilters) {
 }
 
 export function normalizeSearchText(value: string) {
-  return value.trim().toLocaleLowerCase('az-AZ');
+  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('az-AZ');
 }
 
 export function clubsWithCoordinates(clubs: Club[]) {

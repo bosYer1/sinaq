@@ -13,7 +13,7 @@ GameYer-in mövcud Supabase backend-i ilə işləyən Expo/React Native mobil t�
 - Route səviyyəsində bərpa edilə bilən error boundary və sürətli təkrar keçid qoruması
 - Supabase publishable key + production RLS
 - Native `react-native-maps` ekranı və dependency-siz region əsaslı marker clustering-i
-- Route-lar: discovery, map, `club/[slug]`
+- Route-lar: discovery, map, nearby, more, appearance, info və `club/[slug]`
 - Konfiqurasiya yoxdur və ya səhvdirsə production fallback edilmir
 
 ## Lokal konfiqurasiya
@@ -53,4 +53,4 @@ Founder üçün qısa QR/LAN başlatma addımları [DEVICE_START.md](./DEVICE_ST
 
 ## Dependency audit qeydi
 
-2026-08-20 tarixində `npm audit` 8 high və 8 moderate transitive advisory göstərir. Bunlar Expo CLI/Metro build zəncirindəki `image-size` (build zamanı xüsusi ICNS/JXL/HEIF fayllarının parse edilməsi) və `xcode -> uuid` asılılıqlarından gəlir; tətbiqin runtime bundle-ında uzaq input emal edən kod yolu deyil. `image-size` üçün audit-in göstərdiyi 2.0.3 hələ npm-də yayımlanmayıb, `uuid`-u major override etmək isə Expo-nun xcode tooling-ni poza bilər. Audit-in yeganə avtomatik təklifi Expo 57-dən 53-ə breaking downgrade olduğuna görə tətbiq edilməyib. Expo 57 uyğun patch buraxdıqda ayrıca yenilənməlidir.
+2026-09-02 tarixində `npm audit` 14 moderate advisory göstərir. Çoxu Expo config/CLI və `xcode -> uuid` build tooling zəncirindədir; `expo-router -> query-string -> decode-uri-component` isə malformed deep-link input üçün potensial DoS yoludur. npm-in təklif etdiyi avtomatik həll Expo/Router major downgrade-dir və SDK 57-ni pozduğu üçün tətbiq edilməyib. Mobil route-larda admin/privileged davranış yoxdur, slug və xarici URL-lər ayrıca allowlist olunur, lakin Expo SDK 57-compatible upstream patch çıxana qədər advisory açıq riskdir.

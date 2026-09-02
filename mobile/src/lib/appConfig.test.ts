@@ -53,4 +53,13 @@ describe('native Android release configuration', () => {
     expect(easConfig.build.preview.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY).toMatch(/^sb_publishable_/);
     expect(easConfig.build.production.android.buildType).toBe('app-bundle');
   });
+
+  test('blocks background location and unused legacy storage permissions', () => {
+    expect(baseConfig.android.blockedPermissions).toEqual(expect.arrayContaining([
+      'android.permission.ACCESS_BACKGROUND_LOCATION',
+      'android.permission.FOREGROUND_SERVICE_LOCATION',
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
+    ]));
+  });
 });

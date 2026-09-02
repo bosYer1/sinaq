@@ -54,6 +54,11 @@ describe('filterClubs', () => {
     expect(filterClubs([{ ...CLUB, name: 'İnternet Klub' }], { query: 'internet', district: null, type: null, verifiedOnly: false })).toHaveLength(1);
   });
 
+  test('normalizes Unicode and repeated whitespace in search input', () => {
+    const club = { ...CLUB, name: 'Əla   Arena' };
+    expect(filterClubs([club], { query: '  Əla Arena  ', district: null, type: null, verifiedOnly: false })).toEqual([club]);
+  });
+
   test('keeps rapid Azerbaijani search updates deterministic', () => {
     const clubs = [{ ...CLUB, name: 'Əyləncə üçün Işıqlı Ödənişsiz Üzvlük Çeşidi və Yağış' }];
     for (const query of ['ə', 'ı', 'ö', 'ü', 'ş', 'ç', 'ğ', 'mövcud deyil', 'yağış']) {
@@ -109,6 +114,16 @@ describe('filterClubs', () => {
     };
     expect(normalizeClub(malformed).images.map((image) => image.id)).toEqual(['ok']);
     expect(normalizeClub(malformed).pricing).toEqual([]);
+  });
+
+  test('trims safe remote image URLs before rendering them', () => {
+    const normalized = normalizeClub({
+      ...CLUB,
+      profile_image_url: '  https://cdn.example.com/profile.jpg  ',
+      images: [{ id: 'image', url: ' https://cdn.example.com/club.jpg ', is_cover: true, position: 0 }],
+    });
+    expect(normalized.profile_image_url).toBe('https://cdn.example.com/profile.jpg');
+    expect(normalized.images[0].url).toBe('https://cdn.example.com/club.jpg');
   });
 
   test('deduplicates relations and rejects invalid prices and hours', () => {

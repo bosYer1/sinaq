@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, type ColorPalette } from '@/constants/theme';
 import { useThemedStyles } from '@/context/ThemeContext';
 import { ClubImage } from '@/components/ClubImage';
@@ -8,10 +8,8 @@ import { formatPrice } from '@/lib/format';
 import type { Club } from '@/types/club';
 import { openClub } from '@/lib/navigation';
 
-export const ClubCard = memo(function ClubCard({ club }: { club: Club }) {
+export const ClubCard = memo(function ClubCard({ club, compact = false }: { club: Club; compact?: boolean }) {
   const styles = useThemedStyles(createStyles);
-  const { width, fontScale } = useWindowDimensions();
-  const compact = width < 360 || fontScale > 1.3;
   const image = coverImage(club);
   const types = clubTypeLabels(club);
   const firstPrice = cheapestPrice(club);

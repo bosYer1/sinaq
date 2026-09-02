@@ -10,6 +10,7 @@ jest.setTimeout(15_000);
 jest.mock('@expo/vector-icons/Ionicons', () => jest.requireActual('react-native').View);
 const mockClubMap = jest.fn((_props?: unknown) => null);
 jest.mock('@/components/ClubMap', () => ({ ClubMap: (props: unknown) => mockClubMap(props) }));
+jest.mock('@/lib/features', () => ({ isNativeMapConfigured: () => false }));
 
 const mockData = {
   filteredClubs: [], clubs: [], loading: false, error: null, reload: jest.fn(),

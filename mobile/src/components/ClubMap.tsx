@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker, type Region } from 'react-native-maps';
+import { Platform, StyleSheet, Text, View } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
 import type { ColorPalette } from '@/constants/theme';
 import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { clusterClubs, type ClubMapPoint } from '@/lib/mapClustering';
@@ -28,6 +28,10 @@ export const ClubMap = memo(function ClubMap(props: Props) {
     setAttempt((value) => value + 1);
   }} />;
 });
+
+export function mapReadyCompletesLoading(platform: string) {
+  return platform === 'ios';
+}
 
 function MapSession({ clubs, selectedClubId, onSelectClub, onClearSelection, onRetry }: Props & { onRetry: () => void }) {
   const { colors, scheme } = useTheme();
@@ -95,6 +99,7 @@ function MapSession({ clubs, selectedClubId, onSelectClub, onClearSelection, onR
     <MapView
       ref={mapRef}
       style={styles.map}
+      provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
       initialRegion={BAKU_REGION}
       userInterfaceStyle={scheme}
       toolbarEnabled={false}
@@ -104,7 +109,11 @@ function MapSession({ clubs, selectedClubId, onSelectClub, onClearSelection, onR
       onPress={(event) => {
         if (event.nativeEvent.action !== 'marker-press') onClearSelection();
       }}
-      onMapReady={() => setMapReady(true)}
+      onMapReady={() => {
+        setMapReady(true);
+        // Apple MapKit does not emit onMapLoaded; onMapReady is its terminal readiness event.
+        if (mapReadyCompletesLoading(Platform.OS)) setMapLoaded(true);
+      }}
       onLayout={(event) => setLayout(event.nativeEvent.layout)}
       onMapLoaded={() => setMapLoaded(true)}
       onRegionChangeComplete={setRegion}

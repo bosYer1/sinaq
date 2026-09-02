@@ -20,4 +20,10 @@ describe('club navigation guard', () => {
     const results = Array.from({ length: 20 }, (_, index) => shouldNavigateToClub(`club-${index}`, 1000 + index * 20));
     expect(results.filter(Boolean)).toHaveLength(1);
   });
+
+  test('allows navigation immediately after the list regains focus', () => {
+    expect(shouldNavigateToClub('arena-gaming', 1000)).toBe(true);
+    resetNavigationGuard();
+    expect(shouldNavigateToClub('next-club', 1001)).toBe(true);
+  });
 });
