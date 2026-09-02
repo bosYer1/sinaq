@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 import type { ClubFilters } from '@/types/database';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 export type ViewMode = 'list' | 'map';
 
@@ -44,18 +45,41 @@ export function useFilters() {
     [pathname, router, searchParams],
   );
 
-  const setDistrict = useCallback((slug: string | undefined) => updateParams({ district: slug }), [updateParams]);
-  const setType = useCallback((slug: string | undefined) => updateParams({ type: slug }), [updateParams]);
-  const setPriceMax = useCallback((price: number | undefined) => updateParams({ price_max: price }), [updateParams]);
+  const setDistrict = useCallback((slug: string | undefined) => {
+    trackPostHogEvent('filter_changed', { filter_name: 'district', filter_value: slug ?? null });
+    updateParams({ district: slug });
+  }, [updateParams]);
+
+  const setType = useCallback((slug: string | undefined) => {
+    trackPostHogEvent('filter_changed', { filter_name: 'club_type', filter_value: slug ?? null });
+    updateParams({ type: slug });
+  }, [updateParams]);
+
+  const setPriceMax = useCallback((price: number | undefined) => {
+    trackPostHogEvent('filter_changed', { filter_name: 'price_max', filter_value: price ?? null });
+    updateParams({ price_max: price });
+  }, [updateParams]);
+
   const setQuery = useCallback((q: string | undefined) => updateParams({ q: q?.trim() || undefined }), [updateParams]);
-  const setView = useCallback((mode: ViewMode) => updateParams({ view: mode }), [updateParams]);
+
+  const setView = useCallback((mode: ViewMode) => {
+    trackPostHogEvent('explore_view_changed', { explore_view: mode });
+    updateParams({ view: mode });
+  }, [updateParams]);
 
   const clearAll = useCallback(() => {
+    trackPostHogEvent('filters_cleared', {
+      had_district: Boolean(filters.district),
+      had_club_type: Boolean(filters.type),
+      had_price_max: Boolean(filters.priceMax),
+      had_search_query: Boolean(filters.q),
+    });
+
     const params = new URLSearchParams();
     if (view === 'map') params.set('view', 'map');
     const query = params.toString();
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [pathname, router, view]);
+  }, [filters.district, filters.priceMax, filters.q, filters.type, pathname, router, view]);
 
   const hasActiveFilters = Boolean(filters.district || filters.type || filters.priceMax || filters.q);
 
