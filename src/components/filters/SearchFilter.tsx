@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { SearchIcon } from '@/components/ui/Icon';
 import { trackPostHogEvent } from '@/lib/posthog';
+
+const SEARCH_ANALYTICS_SETTLE_MS = 1500;
 
 export function SearchFilter() {
   const router = useRouter();
@@ -15,8 +17,27 @@ export function SearchFilter() {
   const [value, setValue] = useState(currentQuery);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const lastRequestedQueryRef = useRef(currentQuery);
+  const lastTrackedQueryRef = useRef(currentQuery);
   const currentQueryRef = useRef(currentQuery);
   const paramsStringRef = useRef(paramsString);
+
+  const trackSearchIntent = useCallback((rawQuery: string) => {
+    const nextQuery = rawQuery.trim();
+    if (!nextQuery || nextQuery === lastTrackedQueryRef.current) return;
+
+    const params = new URLSearchParams(paramsStringRef.current);
+    params.set('q', nextQuery);
+    lastTrackedQueryRef.current = nextQuery;
+
+    trackPostHogEvent('search_query', {
+      search_query: nextQuery,
+      search_query_length: nextQuery.length,
+      district: params.get('district'),
+      club_type: params.get('type'),
+      price_max: params.get('price_max'),
+      explore_view: params.get('view') === 'map' ? 'map' : 'list',
+    });
+  }, []);
 
   useEffect(() => {
     currentQueryRef.current = currentQuery;
@@ -30,8 +51,20 @@ export function SearchFilter() {
     if (document.activeElement === inputRef.current) return;
 
     lastRequestedQueryRef.current = currentQuery;
+    lastTrackedQueryRef.current = currentQuery;
     setValue(currentQuery);
   }, [currentQuery, paramsString]);
+
+  useEffect(() => {
+    const nextQuery = value.trim();
+    if (!nextQuery || nextQuery === lastTrackedQueryRef.current) return;
+
+    const timer = window.setTimeout(() => {
+      trackSearchIntent(nextQuery);
+    }, SEARCH_ANALYTICS_SETTLE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [value, trackSearchIntent]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -45,14 +78,17 @@ export function SearchFilter() {
       if (nextQuery) params.set('q', nextQuery);
       else params.delete('q');
 
-      trackPostHogEvent(nextQuery ? 'search_query' : 'search_cleared', {
-        search_query: nextQuery || null,
-        search_query_length: nextQuery.length,
-        district: params.get('district'),
-        club_type: params.get('type'),
-        price_max: params.get('price_max'),
-        explore_view: params.get('view') === 'map' ? 'map' : 'list',
-      });
+      if (!nextQuery && currentQueryAtDispatch) {
+        lastTrackedQueryRef.current = '';
+        trackPostHogEvent('search_cleared', {
+          search_query: null,
+          search_query_length: 0,
+          district: params.get('district'),
+          club_type: params.get('type'),
+          price_max: params.get('price_max'),
+          explore_view: params.get('view') === 'map' ? 'map' : 'list',
+        });
+      }
 
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
@@ -74,6 +110,12 @@ export function SearchFilter() {
         type="search"
         value={value}
         onChange={(event) => setValue(event.target.value)}
+        onBlur={(event) => trackSearchIntent(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter') return;
+          trackSearchIntent(event.currentTarget.value);
+          event.currentTarget.blur();
+        }}
         placeholder="Klub adı və ya ünvan axtar"
         aria-label="Klub axtar"
         enterKeyHint="search"
