@@ -46,6 +46,7 @@ assert.ok(posthog.includes('/admin') && posthog.includes('/api'), 'PostHog must 
 assert.ok(posthog.includes("gameyer_traffic_scope: 'public'"), 'PostHog custom events must keep the reusable public traffic scope marker');
 assert.ok(posthog.includes('captureWhenReady'), 'PostHog custom events must retry while the afterInteractive SDK initializes');
 assert.ok(posthog.includes('POSTHOG_INIT_MAX_ATTEMPTS') && posthog.includes('window.setTimeout'), 'PostHog initialization retry must remain bounded and asynchronous');
+assert.ok(posthog.includes('client?.__loaded === true'), 'PostHog custom events must wait for the real SDK instead of calling the bootstrap stub');
 for (const token of ['lcp_element_tag', 'lcp_element_id', 'lcp_element_classes', 'lcp_element_size']) assert.ok(googleAnalytics.includes(token), `LCP attribution must keep ${token}`);
 for (const token of ['inp_event_type', 'inp_element_tag', 'inp_element_id', 'inp_element_classes']) assert.ok(googleAnalytics.includes(token), `INP attribution must keep ${token}`);
 assert.ok(googleAnalytics.includes('targetSelector'), 'INP attribution must preserve a browser selector fallback when the interaction target detaches');
