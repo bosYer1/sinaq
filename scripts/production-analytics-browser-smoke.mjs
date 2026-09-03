@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import process from 'node:process';
 
 const BASE_URL = process.env.TEST_BASE_URL || 'https://gameyer.az';
+const BASE_ORIGIN = new URL(BASE_URL).origin;
 const CHROME_BIN = process.env.CHROME_BIN || 'google-chrome-stable';
 const PORT = Number(process.env.ANALYTICS_CDP_PORT || 9444);
 const SMOKE_QUERY = '__analytics_smoke=1';
@@ -180,6 +181,29 @@ try {
   assert(analyticsRequests.ga4.length > 0, 'No GA4/GTM network request observed', { count: 0 });
   assert(analyticsRequests.meta.length > 0, 'No Meta Pixel network request observed', { count: 0 });
 
+  // Simulate a fresh browser identity that arrives from another GameYer page. This
+  // catches http→https or internal navigation being misclassified as acquisition.
+  await send('Storage.clearDataForOrigin', { origin: BASE_ORIGIN, storageTypes: 'all' });
+  await send('Network.clearBrowserCookies');
+  const attributionProbeUrl = `${BASE_URL}/tip?${SMOKE_QUERY}&__same_origin_referrer_probe=1`;
+  await evaluate(`(() => { window.location.href = ${JSON.stringify(attributionProbeUrl)}; return true; })()`);
+  await wait(`document.readyState === 'complete'`, 'same-origin referrer probe navigation');
+  await wait(`Boolean(window.posthog && typeof window.posthog.get_property === 'function')`, 'PostHog referrer probe initialization');
+  await sleep(1500);
+
+  const attributionProbe = await evaluate(`(() => ({
+    currentUrl: window.location.href,
+    documentReferrer: document.referrer || null,
+    firstReferrer: window.posthog?.get_property?.('gameyer_first_referrer') || null,
+    smoke: new URLSearchParams(window.location.search).get('__analytics_smoke'),
+  }))()`);
+  assert(attributionProbe.smoke === '1', 'Referrer probe lost analytics smoke marker', attributionProbe);
+  assert(attributionProbe.documentReferrer, 'Same-origin referrer probe did not produce a document referrer', attributionProbe);
+  const probeReferrerHost = new URL(attributionProbe.documentReferrer).hostname.replace(/^www\./i, '').toLowerCase();
+  const probeCurrentHost = new URL(attributionProbe.currentUrl).hostname.replace(/^www\./i, '').toLowerCase();
+  assert(probeReferrerHost === probeCurrentHost, 'Referrer probe must originate from the same GameYer host', attributionProbe);
+  assert(attributionProbe.firstReferrer === '(direct)', 'Same-origin GameYer referrer must normalize to direct acquisition', attributionProbe);
+
   console.log(JSON.stringify({
     status: 'PASS',
     baseUrl: BASE_URL,
@@ -194,6 +218,10 @@ try {
       posthogRequestsAfterClubDetail: posthogAfterClubDetail,
     },
     clubActionsPresent: actionPresence,
+    attribution: {
+      sameOriginReferrer: attributionProbe.documentReferrer,
+      normalizedFirstReferrer: attributionProbe.firstReferrer,
+    },
     network: {
       posthogRequests: analyticsRequests.posthog.length,
       ga4Requests: analyticsRequests.ga4.length,
