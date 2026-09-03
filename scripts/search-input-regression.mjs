@@ -12,8 +12,14 @@ function assert(condition, message) {
 assert(!filterBar.includes('<SearchFilter key={searchQuery} />'), 'SearchFilter must not remount whenever the q parameter changes.');
 assert(filterBar.includes('<SearchFilter />'), 'FilterBar must render a stable SearchFilter instance.');
 assert(searchFilter.includes('lastRequestedQueryRef'), 'SearchFilter must preserve local typing while URL navigation catches up.');
+assert(searchFilter.includes('lastTrackedQueryRef'), 'Search analytics must deduplicate already tracked settled queries.');
 assert(searchFilter.includes('currentQueryRef'), 'SearchFilter must track the latest committed query without restarting the typing debounce.');
 assert(searchFilter.includes('paramsStringRef'), 'SearchFilter must preserve the latest URL parameters without making them debounce dependencies.');
+assert(searchFilter.includes('const SEARCH_ANALYTICS_SETTLE_MS = 1500;'), 'Search analytics must wait for a settled query instead of treating short typing pauses as completed searches.');
+assert(searchFilter.includes("trackPostHogEvent('search_query'"), 'Settled search intent must still emit search_query analytics.');
+assert(!searchFilter.includes("nextQuery ? 'search_query' : 'search_cleared'"), 'The 300ms URL debounce must not emit search_query for intermediate keystrokes.');
+assert(searchFilter.includes('onBlur={(event) => trackSearchIntent(event.currentTarget.value)}'), 'Blurring the search field must capture the final search intent immediately.');
+assert(searchFilter.includes("if (event.key !== 'Enter') return;"), 'Pressing Enter must capture explicit search intent.');
 assert(searchFilter.includes('const currentQueryAtDispatch = currentQueryRef.current;'), 'Search dispatch must compare against the latest committed query at timer execution time.');
 assert(searchFilter.includes('nextQuery === lastRequestedQueryRef.current'), 'Search dispatch must deduplicate an already requested final query.');
 assert(searchFilter.includes('}, [value, pathname, router]);'), 'Typing debounce must not restart when stale server search params arrive.');
