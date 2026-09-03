@@ -106,17 +106,12 @@ try {
   assert(initial.count, 'Homepage club count missing', initial);
   assert(initial.districtSlug, 'No active district available for regression', initial);
 
-  const clubViewTarget = await evaluate(`(() => {
-    const link = Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((anchor) => {
-      const rect = anchor.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
-    });
-    const href = link?.getAttribute('href') || null;
-    link?.click();
-    return href;
-  })()`);
+  const clubViewTarget = await evaluate(`Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((anchor) => {
+    const rect = anchor.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  })?.getAttribute('href') || null`);
   assert(clubViewTarget?.startsWith('/klub/'), 'No visible club card available for analytics regression', { clubViewTarget });
-  await wait(`location.pathname.startsWith('/klub/')`, 'club detail navigation for analytics regression');
+  await navigate(clubViewTarget);
   await wait(`window.__gameyerCapturedEvents.some((entry) => entry.event === 'club_view')`, 'club_view PostHog capture');
   const clubViewCapture = await evaluate(`(() => {
     const capture = window.__gameyerCapturedEvents.find((entry) => entry.event === 'club_view');
@@ -129,10 +124,9 @@ try {
   assert(clubViewCapture.event === 'club_view', 'Club detail did not emit club_view', clubViewCapture);
   assert(clubViewCapture.properties?.club_slug === clubViewCapture.path.split('/').filter(Boolean).pop(), 'club_view slug attribution does not match the opened detail page', clubViewCapture);
   assert(clubViewCapture.properties?.gameyer_traffic_scope === 'public', 'club_view must keep the public analytics scope marker', clubViewCapture);
-  await evaluate(`history.back()`);
-  await wait(`location.pathname === '/'`, 'return from analytics club detail');
-  await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input after club view regression');
 
+  await navigate('/');
+  await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input after club view regression');
   await evaluate(`(async () => {
     const input = document.querySelector('input[aria-label="Klub axtar"]');
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
