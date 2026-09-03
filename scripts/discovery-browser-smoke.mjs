@@ -81,6 +81,27 @@ try {
   assert(initial.count, 'Homepage club count missing', initial);
   assert(initial.districtSlug, 'No active district available for regression', initial);
 
+  await evaluate(`(async () => {
+    const input = document.querySelector('input[aria-label="Klub axtar"]');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    input.focus();
+    for (const nextValue of ['g', 'ga', 'gam', 'game', 'gamey', 'gameye', 'gameyer']) {
+      setter.call(input, nextValue);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 340));
+    }
+    return true;
+  })()`);
+  await wait(`document.querySelector('input[aria-label="Klub axtar"]')?.value === 'gameyer'`, 'rapid search input preserves latest text');
+  await wait(`new URLSearchParams(location.search).get('q') === 'gameyer'`, 'rapid search URL catches up to latest text');
+  await sleep(500);
+  const rapidSearchState = await evaluate(`(() => ({
+    value: document.querySelector('input[aria-label="Klub axtar"]')?.value || '',
+    query: new URLSearchParams(location.search).get('q'),
+    focused: document.activeElement === document.querySelector('input[aria-label="Klub axtar"]'),
+  }))()`);
+  assert(rapidSearchState.value === 'gameyer' && rapidSearchState.query === 'gameyer', 'Rapid search typing was overwritten by an older route response', rapidSearchState);
+
   await evaluate(`(() => {
     const input = document.querySelector('input[aria-label="Klub axtar"]');
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;

@@ -13,10 +13,16 @@ export function SearchFilter() {
   const paramsString = searchParams.toString();
   const currentQuery = searchParams.get('q') ?? '';
   const [value, setValue] = useState(currentQuery);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const lastRequestedQueryRef = useRef(currentQuery);
 
   useEffect(() => {
     if (currentQuery === lastRequestedQueryRef.current) return;
+
+    // A slower route response for an older query must never replace text the
+    // user is still typing. Once the field is no longer active, URL changes
+    // can safely become the source of truth again.
+    if (document.activeElement === inputRef.current) return;
 
     lastRequestedQueryRef.current = currentQuery;
     setValue(currentQuery);
@@ -58,6 +64,7 @@ export function SearchFilter() {
       />
 
       <input
+        ref={inputRef}
         type="search"
         value={value}
         onChange={(event) => setValue(event.target.value)}
