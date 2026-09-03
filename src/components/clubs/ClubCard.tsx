@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
 import type { ClubWithDistance } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
@@ -28,11 +28,16 @@ type LiveState = {
   premiumActive: boolean;
 };
 
+function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>) {
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+}
+
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, listPosition, active, onMouseEnter, imagePriority = false }, ref) {
   const isVerified = club.is_verified;
   const hasHours = club.opening_hours.length > 0;
   const [liveState, setLiveState] = useState<LiveState | null>(null);
   const cardElementRef = useRef<HTMLAnchorElement | null>(null);
+  const clubHref = `/klub/${encodeURIComponent(club.slug)}`;
 
   useEffect(() => {
     const refreshLiveState = () => {
@@ -86,7 +91,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     else if (ref) ref.current = element;
   }
 
-  function trackClubCardClick() {
+  function trackClubCardClick(event: MouseEvent<HTMLAnchorElement>) {
     rememberClubEntryOrigin(club.slug);
 
     const eventProperties = {
@@ -105,12 +110,21 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     }));
     trackGaEvent('club_card_click', eventProperties);
     trackPostHogEvent('club_card_click', eventProperties);
+
+    // Mobile browser Back can restore a stale App Router snapshot after opening
+    // a club from the expanded list. Use a real document navigation on mobile
+    // so returning restores a clean interactive page. ExploreView persists the
+    // expanded-list state and scroll position separately.
+    if (isPlainLeftClick(event) && window.matchMedia('(max-width: 1023px)').matches) {
+      event.preventDefault();
+      window.location.assign(clubHref);
+    }
   }
 
   return (
     <Link
       ref={setCardRef}
-      href={`/klub/${encodeURIComponent(club.slug)}`}
+      href={clubHref}
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
       onClick={trackClubCardClick}
