@@ -186,7 +186,7 @@ async function assertHomepage(client, viewport) {
       const preview = document.querySelector('[data-map-preview="current-clubs"]');
       const map = document.querySelector('[aria-label="GameYer klub xəritəsi"]');
       const mapContainer = document.querySelector('[data-mobile-list-map-container="true"]');
-      const firstClubCard = document.querySelector('[data-explore-view="list"] a[href^="/klub/"]');
+      const firstClubCard = Array.from(document.querySelectorAll('[data-explore-view="list"] a[href^="/klub/"]')).find((element) => element.getBoundingClientRect().height > 0);
       const mobileNav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
       const rect = mapContainer?.getBoundingClientRect();
       const cardRect = firstClubCard?.getBoundingClientRect();
