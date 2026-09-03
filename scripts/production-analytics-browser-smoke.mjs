@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import process from 'node:process';
+import { gunzipSync } from 'node:zlib';
 
 const BASE_URL = process.env.TEST_BASE_URL || 'https://gameyer.az';
 const CHROME_BIN = process.env.CHROME_BIN || 'google-chrome-stable';
@@ -30,7 +31,16 @@ const pending = new Map();
 const requests = [];
 ws.addEventListener('message', (event) => {
   const message = JSON.parse(String(event.data));
-  if (message.method === 'Network.requestWillBeSent') requests.push(message.params?.request?.url || '');
+  if (message.method === 'Network.requestWillBeSent') {
+    const request = message.params?.request ?? {};
+    requests.push({
+      requestId: message.params?.requestId ?? null,
+      url: request.url || '',
+      method: request.method || '',
+      postData: request.postData ?? null,
+      postDataEntries: request.postDataEntries ?? [],
+    });
+  }
   const request = pending.get(message.id);
   if (!request) return;
   pending.delete(message.id);
@@ -68,6 +78,48 @@ const clickWithoutNavigation = async (selectorExpression) => evaluate(`(() => {
   el.click();
   return true;
 })()`);
+
+function maybeGunzip(buffer) {
+  if (buffer.length >= 2 && buffer[0] === 0x1f && buffer[1] === 0x8b) return gunzipSync(buffer);
+  return buffer;
+}
+
+function parseJsonBuffer(buffer) {
+  try {
+    return JSON.parse(maybeGunzip(buffer).toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function decodePostHogPayload(request) {
+  const entryBuffers = (request.postDataEntries ?? [])
+    .map((entry) => entry?.bytes ? Buffer.from(entry.bytes, 'base64') : null)
+    .filter(Boolean);
+
+  let payload = entryBuffers.length > 0 ? parseJsonBuffer(Buffer.concat(entryBuffers)) : null;
+  if (!payload && request.postData) {
+    payload = parseJsonBuffer(Buffer.from(request.postData, 'latin1'))
+      ?? parseJsonBuffer(Buffer.from(request.postData, 'utf8'));
+  }
+  if (payload) return payload;
+
+  if (request.postData) {
+    try {
+      const encoded = new URLSearchParams(request.postData).get('data');
+      if (encoded) return parseJsonBuffer(Buffer.from(encoded, 'base64'));
+    } catch {}
+  }
+  return null;
+}
+
+function payloadEvents(payload) {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload.flatMap(payloadEvents);
+  if (Array.isArray(payload.batch)) return payload.batch;
+  if (typeof payload.event === 'string') return [payload];
+  return [];
+}
 
 await send('Page.enable');
 await send('Runtime.enable');
@@ -107,13 +159,38 @@ try {
   await sleep(3500);
 
   const analyticsRequests = {
-    posthog: requests.filter((url) => /posthog|us\.i\.posthog\.com/i.test(url)),
-    ga4: requests.filter((url) => /google-analytics\.com|googletagmanager\.com/i.test(url)),
-    meta: requests.filter((url) => /connect\.facebook\.net|facebook\.com\/tr/i.test(url)),
+    posthog: requests.filter((request) => /posthog|us\.i\.posthog\.com/i.test(request.url)),
+    ga4: requests.filter((request) => /google-analytics\.com|googletagmanager\.com/i.test(request.url)),
+    meta: requests.filter((request) => /connect\.facebook\.net|facebook\.com\/tr/i.test(request.url)),
   };
-  assert(analyticsRequests.posthog.length > 0, 'No PostHog network request observed', analyticsRequests);
-  assert(analyticsRequests.ga4.length > 0, 'No GA4/GTM network request observed', analyticsRequests);
-  assert(analyticsRequests.meta.length > 0, 'No Meta Pixel network request observed', analyticsRequests);
+  assert(analyticsRequests.posthog.length > 0, 'No PostHog network request observed', { count: 0 });
+  assert(analyticsRequests.ga4.length > 0, 'No GA4/GTM network request observed', { count: 0 });
+  assert(analyticsRequests.meta.length > 0, 'No Meta Pixel network request observed', { count: 0 });
+
+  const decodedPostHogPayloads = analyticsRequests.posthog
+    .filter((request) => request.method === 'POST')
+    .map(decodePostHogPayload)
+    .filter(Boolean);
+  const posthogEvents = decodedPostHogPayloads.flatMap(payloadEvents);
+  const posthogEventNames = [...new Set(posthogEvents.map((entry) => entry?.event).filter(Boolean))];
+  const expectedClubSlug = home.clubHref.split('/').filter(Boolean).pop();
+  const clubViewNetworkEvent = posthogEvents.find((entry) => entry?.event === 'club_view');
+
+  assert(clubViewNetworkEvent, 'No club_view event found in real PostHog request body', {
+    posthogRequestCount: analyticsRequests.posthog.length,
+    decodedPayloadCount: decodedPostHogPayloads.length,
+    eventNames: posthogEventNames,
+  });
+  assert(clubViewNetworkEvent.properties?.club_slug === expectedClubSlug, 'PostHog club_view slug does not match opened club', {
+    expectedClubSlug,
+    actualClubSlug: clubViewNetworkEvent.properties?.club_slug ?? null,
+  });
+  assert(clubViewNetworkEvent.properties?.gameyer_analytics_test === true, 'Production analytics smoke event must remain tagged as test traffic', {
+    marker: clubViewNetworkEvent.properties?.gameyer_analytics_test ?? null,
+  });
+  assert(clubViewNetworkEvent.properties?.gameyer_traffic_scope === 'public', 'PostHog club_view must keep public traffic scope', {
+    scope: clubViewNetworkEvent.properties?.gameyer_traffic_scope ?? null,
+  });
 
   console.log(JSON.stringify({
     status: 'PASS',
@@ -123,6 +200,8 @@ try {
     clubActionsPresent: actionPresence,
     network: {
       posthogRequests: analyticsRequests.posthog.length,
+      decodedPostHogPayloads: decodedPostHogPayloads.length,
+      posthogEventNames,
       ga4Requests: analyticsRequests.ga4.length,
       metaRequests: analyticsRequests.meta.length,
     },
