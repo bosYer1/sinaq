@@ -9,14 +9,34 @@
 > Bakıda PC və PlayStation klublarını tap 🎮  
 > Ünvan • iş saatı • xəritə • mövcud olduqda qiymət
 
-Sayt linki həmin anda istifadə olunan canonical production domain olmalıdır. `gameyer.az` canlı və Vercel-ə qoşulanadək mövcud GameYer production URL-i istifadə olunur.
+Profil və post linkləri canonical production domain olan `https://gameyer.az` üzərindən verilməlidir.
 
 ## UTM qaydası
-- Instagram: `/?utm_source=instagram&utm_medium=social&utm_campaign=launch`
-- TikTok: `/?utm_source=tiktok&utm_medium=social&utm_campaign=launch`
-- Klub sahibi outreach: `/klub-sahibi?utm_source=owner_outreach&utm_medium=direct&utm_campaign=verification`
+Məqsəd təkcə sosial şəbəkədən neçə istifadəçi gəldiyini yox, **hansı postun hansı discovery və conversion davranışını yaratdığını** ayırmaqdır.
 
-Custom domain aktiv olduqda yalnız host dəyişir.
+### Canonical source / medium
+- Instagram organic: `utm_source=instagram&utm_medium=organic_social`
+- TikTok organic: `utm_source=tiktok&utm_medium=organic_social`
+- Facebook organic: `utm_source=facebook&utm_medium=organic_social`
+- Meta paid: kampaniyada istifadə olunan platform source saxlanılır, `utm_medium=paid_social`
+- Klub sahibi outreach: `utm_source=owner_outreach&utm_medium=direct`
+
+`ig` kimi köhnə source alias-ları tarixi datada qala bilər. Onları geriyə dönük dəyişmə; yeni organik Instagram linklərində canonical `instagram` istifadə et.
+
+### Campaign / content
+- `utm_campaign` istifadəçi niyyətini göstərir: məsələn `club_discovery`, `pc_clubs`, `ps_clubs`, `nearby`, `owner_verification`.
+- `utm_content` konkret postu və kreativi ayırır: məsələn `find_club_01`, `search_demo_01`, `pc_filter_01`.
+- Eyni post Instagram və TikTok-da paylaşılırsa `campaign` və `content` eyni qala bilər, yalnız `source` dəyişir.
+- `fbclid` və platformanın avtomatik click ID-lərini əl ilə əlavə etmə və silmə.
+
+### Cari nümunələr
+- Instagram — klub discovery: `/?utm_source=instagram&utm_medium=organic_social&utm_campaign=club_discovery&utm_content=find_club_01`
+- Instagram — axtarış demo: `/?utm_source=instagram&utm_medium=organic_social&utm_campaign=club_discovery&utm_content=search_demo_01`
+- Instagram — PC intent: `/bakida-pc-klublari?utm_source=instagram&utm_medium=organic_social&utm_campaign=pc_clubs&utm_content=pc_filter_01`
+- Instagram — PlayStation intent: `/bakida-playstation-klublari?utm_source=instagram&utm_medium=organic_social&utm_campaign=ps_clubs&utm_content=ps_filter_01`
+- Instagram — yaxınlıq intent: `/yaxinliqda-gaming-klublari?utm_source=instagram&utm_medium=organic_social&utm_campaign=nearby&utm_content=nearby_01`
+- TikTok üçün yuxarıdakı linklərdə yalnız `utm_source=tiktok` dəyişir.
+- Klub sahibi outreach: `/klub-sahibi?utm_source=owner_outreach&utm_medium=direct&utm_campaign=owner_verification&utm_content=club_dm`
 
 ## İlk launch postu
 **Başlıq:**
@@ -47,24 +67,24 @@ Custom domain aktiv olduqda yalnız host dəyişir.
 
 ### Gün 2 — PC intent
 - Reel/TikTok: “Bakıda PC klubu axtarırsansa…”
-- Landing: `/bakida-pc-klublari?utm_source=instagram&utm_medium=social&utm_campaign=pc_clubs`
+- Landing: `/bakida-pc-klublari?utm_source=instagram&utm_medium=organic_social&utm_campaign=pc_clubs&utm_content=pc_filter_01`
 
 ### Gün 3 — PlayStation intent
 - Reel/TikTok: “PS oynamaq üçün yer axtarırsan?”
-- Landing: `/bakida-playstation-klublari?utm_source=tiktok&utm_medium=social&utm_campaign=ps_clubs`
+- Landing: `/bakida-playstation-klublari?utm_source=tiktok&utm_medium=organic_social&utm_campaign=ps_clubs&utm_content=ps_filter_01`
 
 ### Gün 4 — Rayon intent
 - Nərimanov və ya Yasamal üzrə qısa video.
-- Landing: uyğun `/rayon/{slug}` səhifəsi.
+- Landing: uyğun `/rayon/{slug}` səhifəsi və post-specific UTM.
 - Sonda “başqa rayon yaz, növbəti videoda baxaq” CTA.
 
 ### Gün 5 — 24/7 intent
 - “Gecə gaming üçün açıq yerlər” videosu.
-- Landing: `/bakida-24-saat-gaming-klublari`.
+- Landing: `/bakida-24-saat-gaming-klublari` + post-specific UTM.
 
 ### Gün 6 — Klub detail paylaşımı
 - Bir real klub detail səhifəsini göstər.
-- Yeni “Klubu paylaş” funksiyası ilə istifadəçini link paylaşmağa təşviq et.
+- İstifadəçini klub səhifəsini paylaşmağa təşviq et.
 - Klub seçərkən yalnız cari audit edilmiş məlumatdan istifadə et.
 
 ### Gün 7 — Data/trust postu
@@ -91,23 +111,27 @@ Custom domain aktiv olduqda yalnız host dəyişir.
 - “Sən hansı klubda oynayırsan?” engagement postu
 
 ## Launch ölçümü
-Admin → **Statistika** ekranında:
-- günlük page view
-- unikal anonim session
-- ən çox baxılan səhifələr
-- trafik mənbələri: Direct / Google / Instagram / Facebook / TikTok
+Founder Analytics / PostHog və first-party statistikada:
+- pageviews, unique users və sessions
+- top landing / public pages
+- Instagram / Facebook / TikTok / Google / direct source
+- `club_card_click`
+- `club_view`
+- `maps_click`, `instagram_click`, `phone_click`
+- successful submissions
 
-İlk 7 gün üçün əsas KPI:
-- ilk real Instagram/TikTok referral session
-- ən az 1 owner verification müraciəti
-- klub detail səhifələrinin ana səhifədən kənar baxış payının artması
-- shared club URL-lərdən gələn trafik
+Əsas conversion KPI:
+- **club card click → club detail view → contact action**
+- contact action = Maps, Instagram və ya telefon klikidir
+- test/synthetic browser trafikini real nəticəyə qatma
+- post nəticəsini `utm_campaign` + `utm_content` ilə ayrıca müqayisə et
 
 ## Paylaşmadan əvvəl son yoxlama
 - production link 200 qaytarır
-- `x-robots-tag: noindex` yoxdur
+- indexable landing-də `x-robots-tag: noindex` yoxdur
 - OG şəkil production host-dan gəlir
 - mobil ana səhifə və klub detail normal görünür
-- Instagram/TikTok bio linkində düzgün UTM var
+- Instagram/TikTok bio və post linkində düzgün UTM var
+- `utm_content` konkret postu identifikasiya edir
 - yanlış klub məlumatı üçün Əlaqə / klub sahibi müraciət axını işləyir
 - postda sabit klub sayı yazılmır; cari say dəyişə bilər
