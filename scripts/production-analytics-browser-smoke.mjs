@@ -190,8 +190,8 @@ try {
       slug: clubViewCapture.properties?.club_slug ?? null,
       sendInstantly: clubViewCapture.options?.send_instantly ?? null,
       transport: clubViewCapture.options?.transport ?? null,
-      posthogRequestsBeforeClubDetail,
-      posthogRequestsAfterClubDetail,
+      posthogRequestsBeforeClubDetail: posthogBeforeClubDetail,
+      posthogRequestsAfterClubDetail: posthogAfterClubDetail,
     },
     clubActionsPresent: actionPresence,
     network: {
