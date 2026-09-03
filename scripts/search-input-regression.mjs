@@ -14,6 +14,10 @@ assert(filterBar.includes('<SearchFilter />'), 'FilterBar must render a stable S
 assert(searchFilter.includes('lastRequestedQueryRef'), 'SearchFilter must preserve local typing while URL navigation catches up.');
 assert(searchFilter.includes('currentQueryRef'), 'SearchFilter must track the latest committed query without restarting the typing debounce.');
 assert(searchFilter.includes('paramsStringRef'), 'SearchFilter must preserve the latest URL parameters without making them debounce dependencies.');
+assert(searchFilter.includes('pendingSearchAnalyticsRef'), 'SearchFilter must defer search analytics until the committed result state renders.');
+assert(searchFilter.includes('readRenderedResultCount'), 'SearchFilter must read the committed rendered result count rather than the stale pre-navigation count.');
+assert(searchFilter.includes('result_count: resultCount'), 'search_query must include the committed result_count.');
+assert(searchFilter.includes('no_results: resultCount === 0'), 'search_query must include the derived no_results boolean.');
 assert(searchFilter.includes('const currentQueryAtDispatch = currentQueryRef.current;'), 'Search dispatch must compare against the latest committed query at timer execution time.');
 assert(searchFilter.includes('nextQuery === lastRequestedQueryRef.current'), 'Search dispatch must deduplicate an already requested final query.');
 assert(searchFilter.includes('}, [value, pathname, router]);'), 'Typing debounce must not restart when stale server search params arrive.');
