@@ -29,6 +29,10 @@ function canonicalHref(html) {
   return reverse?.[1] || null;
 }
 
+function pageTitle(html) {
+  return html.match(/<title>([^<]*)<\/title>/i)?.[1] || '';
+}
+
 const knownPath = '/rayon/binaqadi';
 const known = await fetchText(knownPath);
 assert(known.response.status === 200, 'A known district route must stay usable even when it has no active clubs', {
@@ -55,20 +59,21 @@ if (isEmptyState) {
 const missingPath = '/rayon/__gameyer_missing_district_regression__';
 const missing = await fetchText(missingPath);
 const missingRobots = metaRobots(missing.text).toLowerCase();
-const hasNotFoundUi = missing.text.includes('Səhifə tapılmadı') && missing.text.includes('>404<');
+const missingTitle = pageTitle(missing.text);
 const hasKnownEmptyUi = missing.text.includes('data-district-state="empty"');
-const hasNotFoundSemantics = missing.response.status === 404 || (
-  missing.response.status === 200
-  && hasNotFoundUi
-  && missingRobots.includes('noindex')
+assert(
+  missingRobots.includes('noindex')
+    && /Rayon tapılmadı/i.test(missingTitle)
+    && !hasKnownEmptyUi,
+  'An unknown district slug must remain noindex and must never render as a known empty district',
+  {
+    path: missingPath,
+    status: missing.response.status,
+    robots: missingRobots,
+    title: missingTitle,
+    hasKnownEmptyUi,
+    location: missing.response.headers.get('location'),
+  },
 );
-assert(hasNotFoundSemantics && !hasKnownEmptyUi, 'An unknown district slug must keep not-found semantics and must never render as a known empty district', {
-  path: missingPath,
-  status: missing.response.status,
-  robots: missingRobots,
-  hasNotFoundUi,
-  hasKnownEmptyUi,
-  location: missing.response.headers.get('location'),
-});
 
-console.log(`Known district route regression: PASS (${isEmptyState ? 'empty/noindex' : 'active/indexable'}; unknown=${missing.response.status === 404 ? '404' : 'noindex-not-found'}).`);
+console.log(`Known district route regression: PASS (${isEmptyState ? 'empty/noindex' : 'active/indexable'}; unknown=noindex).`);
