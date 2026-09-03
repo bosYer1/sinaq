@@ -150,7 +150,7 @@ try {
     scope: clubViewCapture.properties?.gameyer_traffic_scope ?? null,
   });
   assert(clubViewCapture.options?.send_instantly === true, 'club_view must bypass the PostHog batch queue', clubViewCapture.options);
-  assert(clubViewCapture.options?.transport === 'sendBeacon', 'club_view must use unload-safe sendBeacon transport', clubViewCapture.options);
+  assert(clubViewCapture.options?.transport === 'fetch', 'club_view must use immediate fetch delivery', clubViewCapture.options);
 
   const posthogAfterClubDetail = posthogRequests().length;
   assert(posthogAfterClubDetail > posthogBeforeClubDetail, 'No PostHog network request observed after club detail capture', {
