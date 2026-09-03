@@ -54,10 +54,21 @@ if (isEmptyState) {
 
 const missingPath = '/rayon/__gameyer_missing_district_regression__';
 const missing = await fetchText(missingPath);
-assert(missing.response.status === 404, 'An unknown district slug must remain a real 404', {
+const missingRobots = metaRobots(missing.text).toLowerCase();
+const hasNotFoundUi = missing.text.includes('Səhifə tapılmadı') && missing.text.includes('>404<');
+const hasKnownEmptyUi = missing.text.includes('data-district-state="empty"');
+const hasNotFoundSemantics = missing.response.status === 404 || (
+  missing.response.status === 200
+  && hasNotFoundUi
+  && missingRobots.includes('noindex')
+);
+assert(hasNotFoundSemantics && !hasKnownEmptyUi, 'An unknown district slug must keep not-found semantics and must never render as a known empty district', {
   path: missingPath,
   status: missing.response.status,
+  robots: missingRobots,
+  hasNotFoundUi,
+  hasKnownEmptyUi,
   location: missing.response.headers.get('location'),
 });
 
-console.log(`Known district route regression: PASS (${isEmptyState ? 'empty/noindex' : 'active/indexable'}).`);
+console.log(`Known district route regression: PASS (${isEmptyState ? 'empty/noindex' : 'active/indexable'}; unknown=${missing.response.status === 404 ? '404' : 'noindex-not-found'}).`);
