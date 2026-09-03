@@ -71,6 +71,18 @@ const visibleClubLinks = `Array.from(document.querySelectorAll('a[href^="/klub/"
 
 await send('Page.enable');
 await send('Runtime.enable');
+await send('Network.enable');
+await send('Network.setBlockedURLs', {
+  urls: [
+    '*/api/analytics/visit*',
+    '*posthog.com/*',
+    '*posthog.com*',
+    '*googletagmanager.com/*',
+    '*google-analytics.com/*',
+    '*connect.facebook.net/*',
+    '*facebook.com/tr/*',
+  ],
+});
 await send('Emulation.setDeviceMetricsOverride', {
   width: 390,
   height: 844,
