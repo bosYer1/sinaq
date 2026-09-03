@@ -6,6 +6,7 @@ type PostHogCaptureOptions = {
 };
 
 type PostHogClient = {
+  __loaded?: boolean;
   capture?: (event: string, properties?: Record<string, unknown>, options?: PostHogCaptureOptions) => void;
 };
 
@@ -33,8 +34,9 @@ export function trackPostHogEvent(
 
   const captureWhenReady = (attempt = 0) => {
     try {
-      if (window.posthog?.capture) {
-        window.posthog.capture(event, payload, options);
+      const client = window.posthog;
+      if (client?.__loaded === true && client.capture) {
+        client.capture(event, payload, options);
         return;
       }
     } catch {
