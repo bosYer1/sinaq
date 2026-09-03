@@ -12,6 +12,7 @@ on:
       - 'scripts/known-district-route-smoke.mjs'
       - 'scripts/public-form-smoke.mjs'
       - 'scripts/discovery-browser-smoke.mjs'
+      - 'scripts/outbound-cta-browser-smoke.mjs'
       - 'scripts/mobile-club-return-browser-smoke.mjs'
   schedule:
     - cron: '17 3,15 * * *'
@@ -84,6 +85,9 @@ jobs:
 
       - name: Search and discovery production regression
         run: node scripts/discovery-browser-smoke.mjs
+
+      - name: Outbound CTA production regression
+        run: node scripts/outbound-cta-browser-smoke.mjs
 
       - name: Mobile club return production regression
         run: node scripts/mobile-club-return-browser-smoke.mjs
