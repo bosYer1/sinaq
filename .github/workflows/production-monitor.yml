@@ -7,12 +7,19 @@ on:
     paths:
       - '.github/workflows/production-monitor.yml'
       - 'src/components/filters/SearchFilter.tsx'
+      - 'src/components/analytics/**'
+      - 'src/components/clubs/ClubViewTracker.tsx'
+      - 'src/components/clubs/TrackedClubLink.tsx'
+      - 'src/lib/google-analytics.ts'
+      - 'src/lib/posthog.ts'
+      - 'src/lib/meta-pixel.ts'
       - 'src/app/rayon/[slug]/page.tsx'
       - 'scripts/site-integrity-smoke.mjs'
       - 'scripts/known-district-route-smoke.mjs'
       - 'scripts/public-form-smoke.mjs'
       - 'scripts/discovery-browser-smoke.mjs'
       - 'scripts/mobile-club-return-browser-smoke.mjs'
+      - 'scripts/production-analytics-browser-smoke.mjs'
   schedule:
     - cron: '17 3,15 * * *'
 
@@ -81,6 +88,10 @@ jobs:
           fi
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
           "$CHROME_BIN" --version
+
+      - name: Analytics delivery production regression
+        if: github.event_name == 'push'
+        run: node scripts/production-analytics-browser-smoke.mjs
 
       - name: Search and discovery production regression
         run: node scripts/discovery-browser-smoke.mjs
