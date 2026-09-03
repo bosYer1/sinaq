@@ -64,6 +64,10 @@ const navigate = async (path) => {
   await wait(`document.readyState === 'complete'`, `navigate ${path}`);
   await sleep(500);
 };
+const visibleClubLinks = `Array.from(document.querySelectorAll('a[href^="/klub/"]')).filter((a) => {
+  const rect = a.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+})`;
 
 await send('Page.enable');
 await send('Runtime.enable');
@@ -82,28 +86,28 @@ try {
 
   const beforeExpand = await evaluate(`({
     path: location.pathname + location.search + location.hash,
-    clubLinks: document.querySelectorAll('a[href^="/klub/"]').length,
+    clubLinks: (${visibleClubLinks}).length,
   })`);
   assert(beforeExpand.path === originPath, 'Initial filtered discovery URL changed unexpectedly', beforeExpand);
-  assert(beforeExpand.clubLinks === 4, 'Collapsed mobile list must initially expose exactly four club cards', beforeExpand);
+  assert(beforeExpand.clubLinks === 4, 'Collapsed mobile list must initially expose exactly four visible club cards', beforeExpand);
 
   await evaluate(`Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha çox klub göstər'))?.click()`);
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər')))`, 'expanded mobile list');
-  await wait(`document.querySelectorAll('a[href^="/klub/"]').length > 4`, 'additional club cards after expand');
+  await wait(`(${visibleClubLinks}).length > 4`, 'additional visible club cards after expand');
 
   const expanded = await evaluate(`(() => {
-    const links = Array.from(document.querySelectorAll('a[href^="/klub/"]'));
+    const links = ${visibleClubLinks};
     const target = links[Math.min(8, links.length - 1)];
     target?.scrollIntoView({ block: 'center' });
     return { count: links.length, href: target?.getAttribute('href') || null };
   })()`);
-  assert(expanded.count > 4 && expanded.href?.startsWith('/klub/'), 'Expanded list did not provide a lower club destination', expanded);
+  assert(expanded.count > 4 && expanded.href?.startsWith('/klub/'), 'Expanded list did not provide a lower visible club destination', expanded);
   await sleep(300);
 
   const savedScrollY = await evaluate('window.scrollY');
   assert(savedScrollY > 0, 'Regression scenario failed to move below the top of the expanded list', { savedScrollY });
 
-  await evaluate(`Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((a) => a.getAttribute('href') === ${JSON.stringify(expanded.href)})?.click()`);
+  await evaluate(`(${visibleClubLinks}).find((a) => a.getAttribute('href') === ${JSON.stringify(expanded.href)})?.click()`);
   await wait(`location.pathname === ${JSON.stringify(expanded.href)}`, 'club detail navigation');
   await wait(`Boolean(Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt')))`, 'Klublara qayıt link');
 
@@ -119,27 +123,27 @@ try {
   await evaluate(`Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt'))?.click()`);
   await wait(`location.pathname === '/' && location.search === '?type=pc'`, 'clean return to exact filtered discovery URL');
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər')))`, 'expanded state restored after return');
-  await wait(`document.querySelectorAll('a[href^="/klub/"]').length > 4`, 'expanded club cards restored after return');
+  await wait(`(${visibleClubLinks}).length > 4`, 'expanded visible club cards restored after return');
   await sleep(500);
 
   const restored = await evaluate(`({
     path: location.pathname + location.search + location.hash,
     scrollY: window.scrollY,
-    clubLinks: document.querySelectorAll('a[href^="/klub/"]').length,
+    clubLinks: (${visibleClubLinks}).length,
     expandedState: sessionStorage.getItem('gameyer:mobile-expanded-state'),
   })`);
   assert(restored.path === originPath, 'Search/filter query parameters were lost on return', restored);
-  assert(restored.clubLinks > 4, 'Returned list collapsed back to the first four clubs', restored);
+  assert(restored.clubLinks > 4, 'Returned visible list collapsed back to the first four clubs', restored);
   assert(Math.abs(restored.scrollY - savedScrollY) <= 180, 'Scroll position was not restored close enough to the pre-navigation position', { savedScrollY, ...restored });
 
   await evaluate(`Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər'))?.click()`);
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha çox klub göstər')))`, 'collapse after restored return');
-  await wait(`document.querySelectorAll('a[href^="/klub/"]').length === 4`, 'four-card collapsed list after restored return');
+  await wait(`(${visibleClubLinks}).length === 4`, 'four-card visible collapsed list after restored return');
   assert(await evaluate(`sessionStorage.getItem('gameyer:mobile-expanded-state') === null`), 'Collapse left stale expanded-list restoration state behind');
 
-  const firstHref = await evaluate(`document.querySelector('a[href^="/klub/"]')?.getAttribute('href') || null`);
+  const firstHref = await evaluate(`(${visibleClubLinks})[0]?.getAttribute('href') || null`);
   assert(firstHref?.startsWith('/klub/'), 'Collapsed list no longer exposes clickable club cards', { firstHref });
-  await evaluate(`document.querySelector('a[href^="/klub/"]')?.click()`);
+  await evaluate(`(${visibleClubLinks})[0]?.click()`);
   await wait(`location.pathname === ${JSON.stringify(firstHref)}`, 'club card remains interactive after restoration and collapse');
 
   console.log('Mobile club return browser regression: PASS');
