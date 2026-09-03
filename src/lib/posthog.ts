@@ -1,7 +1,12 @@
 'use client';
 
+type PostHogCaptureOptions = {
+  send_instantly?: boolean;
+  transport?: 'XHR' | 'fetch' | 'sendBeacon';
+};
+
 type PostHogClient = {
-  capture?: (event: string, properties?: Record<string, unknown>) => void;
+  capture?: (event: string, properties?: Record<string, unknown>, options?: PostHogCaptureOptions) => void;
 };
 
 declare global {
@@ -13,7 +18,11 @@ declare global {
 const POSTHOG_INIT_RETRY_MS = 100;
 const POSTHOG_INIT_MAX_ATTEMPTS = 50;
 
-export function trackPostHogEvent(event: string, properties?: Record<string, unknown>) {
+export function trackPostHogEvent(
+  event: string,
+  properties?: Record<string, unknown>,
+  options?: PostHogCaptureOptions,
+) {
   if (typeof window === 'undefined') return;
   if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/api')) return;
 
@@ -25,7 +34,7 @@ export function trackPostHogEvent(event: string, properties?: Record<string, unk
   const captureWhenReady = (attempt = 0) => {
     try {
       if (window.posthog?.capture) {
-        window.posthog.capture(event, payload);
+        window.posthog.capture(event, payload, options);
         return;
       }
     } catch {
