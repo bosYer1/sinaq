@@ -8,6 +8,7 @@ on:
       - '.github/workflows/production-monitor.yml'
       - 'scripts/site-integrity-smoke.mjs'
       - 'scripts/public-form-smoke.mjs'
+      - 'scripts/mobile-club-return-browser-smoke.mjs'
   schedule:
     - cron: '17 3,15 * * *'
 
@@ -35,12 +36,50 @@ jobs:
         with:
           node-version: 24
 
+      - name: Wait for this commit's Vercel deployment
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for i in {1..60}; do
+            json="$(curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H 'Accept: application/vnd.github+json' \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status")"
+            state="$(STATUS_JSON="$json" node -e "const s=JSON.parse(process.env.STATUS_JSON); const v=s.statuses.find((x)=>x.context==='Vercel'); process.stdout.write(v?.state || 'pending')")"
+            if [ "$state" = 'success' ]; then
+              exit 0
+            fi
+            if [ "$state" = 'failure' ] || [ "$state" = 'error' ]; then
+              echo "Vercel deployment status: $state" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          echo 'Timed out waiting for Vercel deployment.' >&2
+          exit 1
+
       - name: Health check
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --retry 3 --retry-delay 2 https://gameyer.az/api/health > /tmp/health.json
           grep '"ok":true' /tmp/health.json > /dev/null
           grep '"database":"ok"' /tmp/health.json > /dev/null
+
+      - name: Locate Chrome
+        run: |
+          set -euo pipefail
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME_BIN" ]; then
+            echo 'No Chromium-compatible browser found on runner.' >&2
+            exit 1
+          fi
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+          "$CHROME_BIN" --version
+
+      - name: Mobile club return production regression
+        run: node scripts/mobile-club-return-browser-smoke.mjs
 
       - name: Sitemap, SEO and broken-link integrity
         run: node scripts/site-integrity-smoke.mjs

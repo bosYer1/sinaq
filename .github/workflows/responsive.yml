@@ -76,6 +76,9 @@ jobs:
       - name: Search filter and map discovery regression
         run: node scripts/discovery-browser-smoke.mjs
 
+      - name: Mobile club return browser regression
+        run: node scripts/mobile-club-return-browser-smoke.mjs
+
       - name: Sitemap and public route integrity
         run: node scripts/site-integrity-smoke.mjs
 
