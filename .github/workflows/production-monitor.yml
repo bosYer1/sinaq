@@ -6,8 +6,10 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/production-monitor.yml'
+      - 'src/components/filters/SearchFilter.tsx'
       - 'scripts/site-integrity-smoke.mjs'
       - 'scripts/public-form-smoke.mjs'
+      - 'scripts/discovery-browser-smoke.mjs'
       - 'scripts/mobile-club-return-browser-smoke.mjs'
   schedule:
     - cron: '17 3,15 * * *'
@@ -77,6 +79,9 @@ jobs:
           fi
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
           "$CHROME_BIN" --version
+
+      - name: Search and discovery production regression
+        run: node scripts/discovery-browser-smoke.mjs
 
       - name: Mobile club return production regression
         run: node scripts/mobile-club-return-browser-smoke.mjs
