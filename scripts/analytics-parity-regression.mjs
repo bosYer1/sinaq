@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest] = await Promise.all([
+const [card, link, detail, clubView, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest] = await Promise.all([
   readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedClubLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/analytics/ClubViewTracker.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/PageViewTracker.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/error.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/not-found.tsx', import.meta.url), 'utf8'),
@@ -20,7 +21,10 @@ const [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, v
 
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(card.includes(token), `ClubCard must keep ${token}`);
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(link.includes(token), `TrackedClubLink must keep ${token}`);
+for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(clubView.includes(token), `ClubViewTracker must keep ${token}`);
 assert.ok(card.includes('club_card_click'), 'club_card_click must stay wired');
+assert.ok(clubView.includes("trackGaEvent('club_view'") && clubView.includes("trackPostHogEvent('club_view'"), 'club_view must stay wired to GA and PostHog');
+for (const property of ['club_id', 'club_slug', 'club_name', 'district', 'club_types']) assert.ok(clubView.includes(property), `club_view must keep ${property} attribution`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(link.includes(event), `${event} must stay wired`);
 for (const surface of ['header_maps', 'contact_phone', 'contact_instagram', 'contact_maps', 'correction']) assert.ok(link.includes(`'${surface}'`), `TrackedClubLink must keep CTA surface ${surface}`);
 assert.ok(link.includes('cta_surface'), 'Club action analytics must keep CTA surface attribution');
@@ -84,7 +88,7 @@ assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, visi
 assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, path, event_type, club_slug)'), 'Server-only migration must revoke public analytics-event insert columns');
 assert.ok(serverOnlyAnalyticsMigration.includes('FROM anon, authenticated'), 'Server-only migration must revoke both public PostgREST roles');
 
-const combined = [card, link, detail, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest].join('\n');
+const combined = [card, link, detail, clubView, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
 console.log('Analytics parity regression contract: PASS');
