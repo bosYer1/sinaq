@@ -22,7 +22,10 @@ export function ClubViewTracker({ club }: { club: ClubViewMeta }) {
 
     trackMetaCustomEvent(clubViewEvent(club));
     trackGaEvent('club_view', eventProperties);
-    trackPostHogEvent('club_view', eventProperties);
+    trackPostHogEvent('club_view', eventProperties, {
+      send_instantly: true,
+      transport: 'sendBeacon',
+    });
   }, [club]);
 
   return null;
