@@ -111,27 +111,58 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 
 try {
   await navigate('/');
-  const clubHref = await evaluate(`Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((anchor) => {
+  const clubHrefs = await evaluate(`Array.from(new Set(Array.from(document.querySelectorAll('a[href^="/klub/"]')).filter((anchor) => {
     const rect = anchor.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;
-  })?.getAttribute('href') || null`);
-  assert(clubHref?.startsWith('/klub/'), 'No visible public club card is available for outbound CTA regression', { clubHref });
+  }).map((anchor) => anchor.getAttribute('href')).filter(Boolean)))`);
+  assert(Array.isArray(clubHrefs) && clubHrefs.length > 0, 'No visible public club card is available for outbound CTA regression', { clubHrefs });
 
-  await navigate(clubHref);
-  await wait(`Boolean(document.querySelector('h1'))`, 'club detail heading');
+  let clubHref = null;
+  let detail = null;
+  for (const candidateHref of clubHrefs) {
+    await navigate(candidateHref);
+    await wait(`Boolean(document.querySelector('h1'))`, `club detail heading ${candidateHref}`);
+    const candidateDetail = await evaluate(`(() => {
+      const instagram = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').includes('Instagram profilinə bax'));
+      const maps = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').includes('Google Maps-də marşrut'));
+      const phone = document.querySelector('a[href^="tel:"]');
+      return {
+        path: location.pathname,
+        instagramHref: instagram?.href || null,
+        mapsHref: maps?.href || null,
+        phoneHref: phone?.getAttribute('href') || null,
+      };
+    })()`);
+    if (candidateDetail.instagramHref && candidateDetail.mapsHref && candidateDetail.phoneHref) {
+      clubHref = candidateHref;
+      detail = candidateDetail;
+      break;
+    }
+  }
 
-  const detail = await evaluate(`(() => {
-    const instagram = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').includes('Instagram profilinə bax'));
-    const maps = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').includes('Google Maps-də marşrut'));
+  assert(clubHref && detail, 'No public club detail exposes Phone, Instagram, and Maps CTAs for outbound analytics regression', { checkedClubHrefs: clubHrefs });
+  assert(detail.path === clubHref, 'Outbound CTA regression did not land on the selected club detail page', detail);
+
+  await evaluate(`(() => {
+    const anchor = document.querySelector('a[href^="tel:"]');
+    anchor.setAttribute('href', 'javascript:void(0)');
+    anchor.click();
+    return true;
+  })()`);
+  await wait(`window.__gameyerCapturedEvents.some((entry) => entry.event === 'phone_click')`, 'phone_click PostHog capture');
+
+  const phoneCapture = await evaluate(`(() => {
+    const capture = window.__gameyerCapturedEvents.find((entry) => entry.event === 'phone_click');
     return {
       path: location.pathname,
-      instagramHref: instagram?.href || null,
-      mapsHref: maps?.href || null,
+      event: capture?.event || null,
+      properties: capture?.properties || null,
     };
   })()`);
-  assert(detail.path === clubHref, 'Outbound CTA regression did not land on the selected club detail page', detail);
-  assert(detail.instagramHref, 'Public club detail is missing its Instagram CTA', detail);
-  assert(detail.mapsHref, 'Public club detail is missing its Maps CTA', detail);
+  assert(phoneCapture.event === 'phone_click', 'Phone CTA did not emit phone_click', phoneCapture);
+  assert(phoneCapture.properties?.club_slug === clubHref.split('/').filter(Boolean).pop(), 'Phone CTA lost club slug attribution', phoneCapture);
+  assert(phoneCapture.properties?.cta_surface === 'contact_phone', 'Phone CTA lost contact surface attribution', phoneCapture);
+  assert(phoneCapture.path === clubHref, 'Phone regression click unexpectedly navigated away from the club detail page', phoneCapture);
 
   await evaluate(`(() => {
     const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').includes('Instagram profilinə bax'));
