@@ -59,6 +59,13 @@ const wait = async (expression, label, attempts = 100) => {
   }
   throw new Error(`Timed out: ${label}`);
 };
+const waitForPath = async (expectedPath, label, attempts = 100) => {
+  for (let i = 0; i < attempts; i += 1) {
+    if ((await evaluate('location.pathname')) === expectedPath) return;
+    await sleep(100);
+  }
+  throw new Error(`Timed out: ${label}`);
+};
 const navigate = async (path) => {
   await send('Page.navigate', { url: `${BASE_URL}${path}` });
   await wait(`document.readyState === 'complete'`, `navigate ${path}`);
@@ -111,7 +118,8 @@ try {
     const links = ${visibleClubLinks};
     const target = links[Math.min(8, links.length - 1)];
     target?.scrollIntoView({ block: 'center' });
-    return { count: links.length, href: target?.getAttribute('href') || null };
+    window.__gameyerTestClubHref = target?.getAttribute('href') || null;
+    return { count: links.length, href: window.__gameyerTestClubHref };
   })()`);
   assert(expanded.count > 4 && expanded.href?.startsWith('/klub/'), 'Expanded list did not provide a lower visible club destination', expanded);
   await sleep(300);
@@ -119,8 +127,8 @@ try {
   const savedScrollY = await evaluate('window.scrollY');
   assert(savedScrollY > 0, 'Regression scenario failed to move below the top of the expanded list', { savedScrollY });
 
-  await evaluate(`(${visibleClubLinks}).find((a) => a.getAttribute('href') === ${JSON.stringify(expanded.href)})?.click()`);
-  await wait(`location.pathname === ${JSON.stringify(expanded.href)}`, 'club detail navigation');
+  await evaluate(`(${visibleClubLinks}).find((a) => a.getAttribute('href') === window.__gameyerTestClubHref)?.click()`);
+  await waitForPath(expanded.href, 'club detail navigation');
   await wait(`Boolean(Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt')))`, 'Klublara qayıt link');
 
   const detailState = await evaluate(`({
@@ -156,7 +164,7 @@ try {
   const firstHref = await evaluate(`(${visibleClubLinks})[0]?.getAttribute('href') || null`);
   assert(firstHref?.startsWith('/klub/'), 'Collapsed list no longer exposes clickable club cards', { firstHref });
   await evaluate(`(${visibleClubLinks})[0]?.click()`);
-  await wait(`location.pathname === ${JSON.stringify(firstHref)}`, 'club card remains interactive after restoration and collapse');
+  await waitForPath(firstHref, 'club card remains interactive after restoration and collapse');
 
   console.log('Mobile club return browser regression: PASS');
 } finally {
