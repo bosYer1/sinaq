@@ -82,6 +82,9 @@ jobs:
       - name: Sitemap and public route integrity
         run: node scripts/site-integrity-smoke.mjs
 
+      - name: Known district route regression
+        run: node scripts/known-district-route-smoke.mjs
+
       - name: Public submission availability
         run: node scripts/public-form-smoke.mjs
 
