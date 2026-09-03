@@ -23,6 +23,8 @@ jobs:
   analytics-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    env:
+      TEST_BASE_URL: https://gameyer.az
     steps:
       - uses: actions/checkout@v4
       - name: Wait for this commit's Vercel deployment
@@ -53,7 +55,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --retry 3 --retry-delay 2 https://gameyer.az/api/health > /tmp/health.json
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 "${TEST_BASE_URL}/api/health" > /tmp/health.json
           grep '"ok":true' /tmp/health.json > /dev/null
           grep '"database":"ok"' /tmp/health.json > /dev/null
       - name: Locate Chrome
@@ -64,6 +66,4 @@ jobs:
           test -n "$chrome"
           echo "CHROME_BIN=$chrome" >> "$GITHUB_ENV"
       - name: Run tagged browser analytics smoke
-        env:
-          TEST_BASE_URL: https://gameyer.az
         run: node scripts/production-analytics-browser-smoke.mjs
