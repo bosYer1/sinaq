@@ -61,6 +61,18 @@ const navigate = async (path) => {
 
 await send('Page.enable');
 await send('Runtime.enable');
+await send('Network.enable');
+await send('Network.setBlockedURLs', {
+  urls: [
+    '*/api/analytics/visit*',
+    '*posthog.com/*',
+    '*posthog.com*',
+    '*googletagmanager.com/*',
+    '*google-analytics.com/*',
+    '*connect.facebook.net/*',
+    '*facebook.com/tr/*',
+  ],
+});
 try {
   await send('Browser.setPermission', {
     origin: BASE_URL,
