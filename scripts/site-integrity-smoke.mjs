@@ -176,6 +176,20 @@ async function checkParameterizedHomeIsNotIndexable() {
   }
 }
 
+async function checkParameterizedClubOwnerIsNotIndexable() {
+  const clean = await fetchText('/klub-sahibi');
+  assert(clean.response.status === 200, 'Clean club-owner page must remain usable', { status: clean.response.status });
+  assert(!metaRobots(clean.text).toLowerCase().includes('noindex'), 'Clean club-owner page must remain indexable', { robots: metaRobots(clean.text) });
+
+  for (const query of ['?club=Regression+Club&slug=regression-club', '?sent=1', '?error=1', '?rate=1']) {
+    const { response, text } = await fetchText(`/klub-sahibi${query}`);
+    assert(response.status === 200, 'Parameterized club-owner page must remain usable', { query, status: response.status });
+    assert(metaRobots(text).toLowerCase().includes('noindex'), 'Parameterized club-owner page must be noindex', { query, robots: metaRobots(text) });
+    const canonical = canonicalHref(text);
+    assert(canonical.count === 1 && new URL(canonical.href, EXPECTED_CANONICAL_ORIGIN).href === `${EXPECTED_CANONICAL_ORIGIN}/klub-sahibi`, 'Parameterized club-owner page must canonicalize to the clean club-owner page', { query, canonical });
+  }
+}
+
 async function checkInternalLinks(pageHtmlByPath) {
   const sourcesByHref = new Map();
   for (const [sourcePath, html] of pageHtmlByPath.entries()) {
@@ -223,5 +237,6 @@ if (!homeHtml) {
 checkHomepageClubCount(homeHtml, sitemapUrls);
 await checkInternalLinks(pageHtmlByPath);
 await checkParameterizedHomeIsNotIndexable();
+await checkParameterizedClubOwnerIsNotIndexable();
 
 console.log(`Site integrity smoke passed for ${sitemapUrls.length} sitemap URLs on ${EXPECTED_CANONICAL_ORIGIN}.`);

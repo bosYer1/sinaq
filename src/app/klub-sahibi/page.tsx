@@ -2,7 +2,17 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SubmissionForm } from '@/components/submissions/SubmissionForm';
 
-export const metadata: Metadata = {
+interface ClubOwnerPageProps {
+  searchParams: Promise<{
+    club?: string;
+    slug?: string;
+    sent?: string;
+    error?: string;
+    rate?: string;
+  }>;
+}
+
+const clubOwnerMetadata: Metadata = {
   title: 'Klub sahibləri üçün',
   description: 'GameYer-də klub məlumatını təsdiqlə, düzəliş göndər və rəsmi klub məlumatlarının dəqiq saxlanmasına kömək et.',
   alternates: { canonical: '/klub-sahibi' },
@@ -15,14 +25,14 @@ export const metadata: Metadata = {
   },
 };
 
-interface ClubOwnerPageProps {
-  searchParams: Promise<{
-    club?: string;
-    slug?: string;
-    sent?: string;
-    error?: string;
-    rate?: string;
-  }>;
+export async function generateMetadata({ searchParams }: ClubOwnerPageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const hasQueryState = Object.values(params).some((value) => typeof value === 'string' && value.length > 0);
+
+  return {
+    ...clubOwnerMetadata,
+    robots: hasQueryState ? { index: false, follow: true } : undefined,
+  };
 }
 
 export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps) {
