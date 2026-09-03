@@ -15,8 +15,13 @@ export function SearchFilter() {
   const [value, setValue] = useState(currentQuery);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const lastRequestedQueryRef = useRef(currentQuery);
+  const currentQueryRef = useRef(currentQuery);
+  const paramsStringRef = useRef(paramsString);
 
   useEffect(() => {
+    currentQueryRef.current = currentQuery;
+    paramsStringRef.current = paramsString;
+
     if (currentQuery === lastRequestedQueryRef.current) return;
 
     // A slower route response for an older query must never replace text the
@@ -26,16 +31,17 @@ export function SearchFilter() {
 
     lastRequestedQueryRef.current = currentQuery;
     setValue(currentQuery);
-  }, [currentQuery]);
+  }, [currentQuery, paramsString]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const nextQuery = value.trim();
-      if (nextQuery === currentQuery) return;
+      const currentQueryAtDispatch = currentQueryRef.current;
+      if (nextQuery === currentQueryAtDispatch || nextQuery === lastRequestedQueryRef.current) return;
 
       lastRequestedQueryRef.current = nextQuery;
 
-      const params = new URLSearchParams(paramsString);
+      const params = new URLSearchParams(paramsStringRef.current);
       if (nextQuery) params.set('q', nextQuery);
       else params.delete('q');
 
@@ -53,7 +59,7 @@ export function SearchFilter() {
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [value, currentQuery, paramsString, pathname, router]);
+  }, [value, pathname, router]);
 
   return (
     <div className="relative w-full">
