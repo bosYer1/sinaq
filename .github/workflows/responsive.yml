@@ -76,6 +76,9 @@ jobs:
       - name: Search filter and map discovery regression
         run: node scripts/discovery-browser-smoke.mjs
 
+      - name: Outbound CTA browser regression
+        run: node scripts/outbound-cta-browser-smoke.mjs
+
       - name: Mobile club return browser regression
         run: node scripts/mobile-club-return-browser-smoke.mjs
 
