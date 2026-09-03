@@ -5,6 +5,23 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { SearchIcon } from '@/components/ui/Icon';
 import { trackPostHogEvent } from '@/lib/posthog';
 
+type PendingSearchAnalytics = {
+  query: string;
+  district: string | null;
+  clubType: string | null;
+  priceMax: string | null;
+  exploreView: 'list' | 'map';
+};
+
+function readRenderedResultCount() {
+  const exploreText = document.querySelector('[data-explore-view]')?.textContent ?? '';
+  const match = exploreText.match(/Klublar \((\d+)\)/);
+  if (!match) return null;
+
+  const count = Number(match[1]);
+  return Number.isInteger(count) && count >= 0 ? count : null;
+}
+
 export function SearchFilter() {
   const router = useRouter();
   const pathname = usePathname();
@@ -17,6 +34,7 @@ export function SearchFilter() {
   const lastRequestedQueryRef = useRef(currentQuery);
   const currentQueryRef = useRef(currentQuery);
   const paramsStringRef = useRef(paramsString);
+  const pendingSearchAnalyticsRef = useRef<PendingSearchAnalytics | null>(null);
 
   useEffect(() => {
     currentQueryRef.current = currentQuery;
@@ -34,6 +52,46 @@ export function SearchFilter() {
   }, [currentQuery, paramsString]);
 
   useEffect(() => {
+    const pending = pendingSearchAnalyticsRef.current;
+    if (!pending || !currentQuery || pending.query !== currentQuery) return;
+
+    let frame = 0;
+    let attempts = 0;
+    let cancelled = false;
+
+    const captureCommittedSearch = () => {
+      if (cancelled) return;
+
+      const resultCount = readRenderedResultCount();
+      if (resultCount == null) {
+        if (attempts < 12) {
+          attempts += 1;
+          frame = window.requestAnimationFrame(captureCommittedSearch);
+        }
+        return;
+      }
+
+      pendingSearchAnalyticsRef.current = null;
+      trackPostHogEvent('search_query', {
+        search_query: pending.query,
+        search_query_length: pending.query.length,
+        district: pending.district,
+        club_type: pending.clubType,
+        price_max: pending.priceMax,
+        explore_view: pending.exploreView,
+        result_count: resultCount,
+        no_results: resultCount === 0,
+      });
+    };
+
+    frame = window.requestAnimationFrame(captureCommittedSearch);
+    return () => {
+      cancelled = true;
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [currentQuery]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       const nextQuery = value.trim();
       const currentQueryAtDispatch = currentQueryRef.current;
@@ -45,14 +103,29 @@ export function SearchFilter() {
       if (nextQuery) params.set('q', nextQuery);
       else params.delete('q');
 
-      trackPostHogEvent(nextQuery ? 'search_query' : 'search_cleared', {
-        search_query: nextQuery || null,
-        search_query_length: nextQuery.length,
+      const searchContext = {
         district: params.get('district'),
-        club_type: params.get('type'),
-        price_max: params.get('price_max'),
-        explore_view: params.get('view') === 'map' ? 'map' : 'list',
-      });
+        clubType: params.get('type'),
+        priceMax: params.get('price_max'),
+        exploreView: params.get('view') === 'map' ? 'map' as const : 'list' as const,
+      };
+
+      if (nextQuery) {
+        pendingSearchAnalyticsRef.current = {
+          query: nextQuery,
+          ...searchContext,
+        };
+      } else {
+        pendingSearchAnalyticsRef.current = null;
+        trackPostHogEvent('search_cleared', {
+          search_query: null,
+          search_query_length: 0,
+          district: searchContext.district,
+          club_type: searchContext.clubType,
+          price_max: searchContext.priceMax,
+          explore_view: searchContext.exploreView,
+        });
+      }
 
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
