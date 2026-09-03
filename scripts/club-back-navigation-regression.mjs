@@ -16,6 +16,8 @@ assert(backSource.includes('entry.destination !== window.location.pathname'), 'C
 assert(backSource.includes("entry.origin.startsWith('/klub/')"), 'Club return must reject club-detail origins.');
 
 assert(cardSource.includes("window.matchMedia('(max-width: 1023px)').matches"), 'Mobile club navigation must bypass the App Router history snapshot.');
+assert(cardSource.includes("transport: 'sendBeacon'"), 'Mobile hard navigation must send club_card_click with beacon transport before unload.');
+assert(cardSource.includes('send_instantly: true'), 'Mobile hard navigation must flush club_card_click immediately before unload.');
 assert(cardSource.includes('event.preventDefault()'), 'Mobile club navigation must prevent the client-side Link transition.');
 assert(cardSource.includes('window.location.assign(clubHref)'), 'Mobile club navigation must use a full document navigation so browser Back returns cleanly.');
 

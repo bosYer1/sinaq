@@ -101,6 +101,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       district: club.district?.name ?? null,
       list_position: listPosition,
     };
+    const isMobileHardNavigation = isPlainLeftClick(event) && window.matchMedia('(max-width: 1023px)').matches;
 
     trackMetaCustomEvent(clubCardClickEvent({
       clubId: club.id,
@@ -109,13 +110,17 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       district: club.district?.name ?? null,
     }));
     trackGaEvent('club_card_click', eventProperties);
-    trackPostHogEvent('club_card_click', eventProperties);
+    trackPostHogEvent(
+      'club_card_click',
+      eventProperties,
+      isMobileHardNavigation ? { send_instantly: true, transport: 'sendBeacon' } : undefined,
+    );
 
     // Mobile browser Back can restore a stale App Router snapshot after opening
     // a club from the expanded list. Use a real document navigation on mobile
     // so returning restores a clean interactive page. ExploreView persists the
     // expanded-list state and scroll position separately.
-    if (isPlainLeftClick(event) && window.matchMedia('(max-width: 1023px)').matches) {
+    if (isMobileHardNavigation) {
       event.preventDefault();
       window.location.assign(clubHref);
     }
