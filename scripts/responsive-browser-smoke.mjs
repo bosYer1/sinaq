@@ -186,7 +186,14 @@ async function assertHomepage(client, viewport) {
       const preview = document.querySelector('[data-map-preview="current-clubs"]');
       const map = document.querySelector('[aria-label="GameYer klub xəritəsi"]');
       const mapContainer = document.querySelector('[data-mobile-list-map-container="true"]');
+      const firstClubCard = document.querySelector('[data-explore-view="list"] a[href^="/klub/"]');
+      const mobileNav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
       const rect = mapContainer?.getBoundingClientRect();
+      const cardRect = firstClubCard?.getBoundingClientRect();
+      const navRect = mobileNav?.getBoundingClientRect();
+      const visibleBottom = Math.min(window.innerHeight, navRect?.top ?? window.innerHeight);
+      const visibleCardHeight = cardRect ? Math.max(0, Math.min(cardRect.bottom, visibleBottom) - Math.max(cardRect.top, 0)) : 0;
+      const firstClubVisibleRatio = cardRect?.height ? visibleCardHeight / cardRect.height : 0;
       return {
         liveMapLoaded: Boolean(map),
         liveMarkerCount: document.querySelectorAll('.leaflet-marker-icon').length,
@@ -203,6 +210,9 @@ async function assertHomepage(client, viewport) {
         mapActive: document.querySelector('[data-explore-view="list"]')?.getAttribute('data-mobile-map-active'),
         clubsVisible: document.body.innerText.includes('Klublar ('),
         mapContainerHeight: rect?.height ?? 0,
+        firstClubVisibleRatio,
+        firstClubCardRect: cardRect ? { top: cardRect.top, bottom: cardRect.bottom, height: cardRect.height } : null,
+        mobileNavTop: navRect?.top ?? null,
       };
     })()`);
     assert(!listView.liveMapLoaded, `${viewport.name}: live Leaflet map loaded before mobile activation`, listView);
@@ -218,7 +228,8 @@ async function assertHomepage(client, viewport) {
     assert(listView.activationText === 'Xəritəni hərəkət etdirmək üçün toxun', `${viewport.name}: map activation accessibility text regressed`, listView);
     assert(listView.mapActive === 'false', `${viewport.name}: list map is interactive before activation`, listView);
     assert(listView.clubsVisible, `${viewport.name}: club list heading is missing`, listView);
-    assert(listView.mapContainerHeight >= 330 && listView.mapContainerHeight <= 400, `${viewport.name}: list-view map height regressed`, listView);
+    assert(listView.mapContainerHeight >= 250 && listView.mapContainerHeight <= 330, `${viewport.name}: list-view map height regressed`, listView);
+    assert(listView.firstClubVisibleRatio >= 0.6, `${viewport.name}: first club card is not at least 60% visible above the mobile navigation`, listView);
     await capture(client, `${viewport.name}-home-list`);
     await evaluate(client, `document.querySelector('[aria-label="Xəritəni aktiv et"]')?.click()`);
     await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
