@@ -7,7 +7,9 @@ on:
     paths:
       - '.github/workflows/production-monitor.yml'
       - 'src/components/filters/SearchFilter.tsx'
+      - 'src/app/rayon/[slug]/page.tsx'
       - 'scripts/site-integrity-smoke.mjs'
+      - 'scripts/known-district-route-smoke.mjs'
       - 'scripts/public-form-smoke.mjs'
       - 'scripts/discovery-browser-smoke.mjs'
       - 'scripts/mobile-club-return-browser-smoke.mjs'
@@ -88,6 +90,9 @@ jobs:
 
       - name: Sitemap, SEO and broken-link integrity
         run: node scripts/site-integrity-smoke.mjs
+
+      - name: Known district route production regression
+        run: node scripts/known-district-route-smoke.mjs
 
       - name: Public submission availability
         run: node scripts/public-form-smoke.mjs

@@ -20,7 +20,7 @@ export async function generateStaticParams() {
 const getDistrictPageData = cache(async (slug: string) => {
   const [districts, clubs] = await Promise.all([getDistricts(), getClubs({ district: slug })]);
   const district = districts.find((item) => item.slug === slug);
-  if (!district || clubs.length === 0) return null;
+  if (!district) return null;
   return { district, clubs };
 });
 
@@ -34,14 +34,27 @@ function minHourlyPrice(clubs: Awaited<ReturnType<typeof getClubs>>, type: 'pc' 
 export async function generateMetadata({ params }: DistrictPageProps): Promise<Metadata> {
   const { slug } = await params;
   const data = await getDistrictPageData(slug);
-  if (!data) return { title: 'Rayonda aktiv klub tapılmadı', robots: { index: false, follow: true } };
+  if (!data) return { title: 'Rayon tapılmadı', robots: { index: false, follow: true } };
+
+  const canonical = `/rayon/${data.district.slug}`;
+  if (data.clubs.length === 0) {
+    const title = `${data.district.name} rayonunda gaming klubları — məlumat hazırlanır`;
+    const description = `${data.district.name} rayonunda hazırda GameYer-də aktiv və təsdiqlənmiş gaming klubu yoxdur. Yeni təsdiqlənmiş məkanlar əlavə olunduqca bu səhifədə görünəcək.`;
+    return {
+      title,
+      description,
+      robots: { index: false, follow: true },
+      alternates: { canonical },
+      openGraph: { type: 'website', locale: 'az_AZ', url: canonical, title: `${title} | GameYer`, description },
+      twitter: { card: 'summary', title: `${title} | GameYer`, description },
+    };
+  }
 
   const pcMin = minHourlyPrice(data.clubs, 'pc');
   const psMin = minHourlyPrice(data.clubs, 'playstation');
   const priceParts = [pcMin != null ? `PC ${pcMin} AZN-dən` : null, psMin != null ? `PlayStation ${psMin} AZN-dən` : null].filter(Boolean).join(', ');
   const title = `${data.district.name} rayonunda PC və PlayStation klubları — qiymətlər`;
   const description = `${data.district.name} rayonundakı ${data.clubs.length} aktiv gaming klubunu müqayisə et.${priceParts ? ` Saatlıq qiymətlər: ${priceParts}.` : ''} Ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
-  const canonical = `/rayon/${data.district.slug}`;
   return {
     title,
     description,
@@ -56,6 +69,33 @@ export default async function DistrictPage({ params }: DistrictPageProps) {
   const data = await getDistrictPageData(slug);
   if (!data) notFound();
   const { district, clubs } = data;
+
+  if (clubs.length === 0) {
+    return (
+      <div className="min-h-[calc(100dvh-64px)] bg-[#F8F9FC]" data-district-state="empty">
+        <div className="mx-auto max-w-[900px] px-4 py-7 sm:px-6 sm:py-12 lg:px-8">
+          <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-ink">GameYer</Link> <span aria-hidden="true">/</span> <Link href="/rayon" className="hover:text-ink">Rayonlar</Link> <span aria-hidden="true">/</span> <span>{district.name}</span>
+          </nav>
+
+          <section className="rounded-[22px] border border-border bg-white px-5 py-7 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:px-8 sm:py-9">
+            <span className="inline-flex rounded-full bg-surface-alt px-3 py-1 text-[11px] font-semibold text-muted">Məlumat hazırlanır</span>
+            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-primary">{district.name} · Bakı</p>
+            <h1 className="mt-2 font-display text-2xl font-bold tracking-[-0.035em] text-ink sm:text-3xl">{district.name} rayonunda gaming klubları</h1>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">Hazırda GameYer-də {district.name} rayonu üçün aktiv və təsdiqlənmiş PC və ya PlayStation klubu yoxdur. Yeni məkanın məlumatı yoxlanılıb aktivləşdirildikdə bu səhifədə avtomatik görünəcək.</p>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Bu müddətdə aktiv klub olan digər rayonlara baxa və ya xəritədən yaxınlıqdakı gaming məkanlarını tapa bilərsən.</p>
+
+            <div className="mt-6 flex flex-wrap gap-2 border-t border-border/70 pt-5">
+              <Link href="/rayon" className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark">Aktiv rayonlara bax</Link>
+              <Link href="/yaxinliqda-gaming-klublari" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary">Yaxınlıqdakı klubları tap</Link>
+              <Link href="/" className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary">Bütün klublar</Link>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   const pcCount = clubs.filter((club) => inferClubTypeSlugs(club).includes('pc')).length;
   const playStationCount = clubs.filter((club) => inferClubTypeSlugs(club).includes('playstation')).length;
   const pcMin = minHourlyPrice(clubs, 'pc');
