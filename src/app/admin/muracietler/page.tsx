@@ -10,8 +10,8 @@ export const dynamic = 'force-dynamic';
 type SubmissionRow = ClubSubmission;
 type SubmissionStatus = SubmissionRow['status'];
 type SubmissionKind = SubmissionRow['kind'];
-type ActiveClubOption = { id: string; name: string; slug: string };
-type ClubSnapshotRow = ActiveClubOption & {
+type ClubOption = { id: string; name: string; slug: string; is_active: boolean };
+type ClubSnapshotRow = ClubOption & {
   instagram_url: string | null;
   pricing: Array<{ price_from: number; club_type: { slug: string } | null }>;
   opening_hours: Array<{ day_of_week: number; open_time: string | null; close_time: string | null; is_closed: boolean }>;
@@ -69,17 +69,28 @@ function currentValues(club: ClubSnapshotRow): OwnerClaimCurrentValues {
   };
 }
 
-function ClubLinkForm({ item, activeClubs }: { item: SubmissionRow; activeClubs: ActiveClubOption[] }) {
+function ClubLinkForm({ item, clubs }: { item: SubmissionRow; clubs: ClubOption[] }) {
   const action = item.kind === 'owner_claim' ? linkOwnerClaimToClub : linkCorrectionToClub;
+  const selectableClubs = item.kind === 'owner_claim' ? clubs : clubs.filter((club) => club.is_active);
+  const placeholder = item.kind === 'owner_claim' ? 'Klub seç' : 'Aktiv klub seç';
+
   return (
     <form action={action} className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
       <input type="hidden" name="id" value={item.id} />
       <p className="text-xs font-semibold text-amber-900">Əvvəl müraciəti real klub profilinə bağla.</p>
-      <p className="mt-1 text-xs leading-5 text-amber-800">Klub adı sərbəst yazıldığı üçün avtomatik uyğunlaşdırmırıq. Səhv klubun məlumatının dəyişməməsi üçün seçimi admin edir.</p>
+      <p className="mt-1 text-xs leading-5 text-amber-800">
+        {item.kind === 'owner_claim'
+          ? 'Klub aktiv deyilsə də onu seçə bilərsən. Təsdiqdən sonra klub avtomatik aktivləşəcək.'
+          : 'Klub adı sərbəst yazıldığı üçün avtomatik uyğunlaşdırmırıq. Səhv klubun məlumatının dəyişməməsi üçün seçimi admin edir.'}
+      </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         <select name="club_id" required defaultValue="" className="h-10 min-w-0 flex-1 rounded-lg border border-amber-300 bg-white px-3 text-sm text-gray-900">
-          <option value="" disabled>Aktiv klub seç</option>
-          {activeClubs.map((club) => <option key={club.id} value={club.id}>{club.name}</option>)}
+          <option value="" disabled>{placeholder}</option>
+          {selectableClubs.map((club) => (
+            <option key={club.id} value={club.id}>
+              {club.name}{club.is_active ? '' : ' — deaktiv'}
+            </option>
+          ))}
         </select>
         <button type="submit" className="h-10 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white transition hover:bg-amber-700">Kluba bağla</button>
       </div>
@@ -109,8 +120,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase
       .from('clubs')
-      .select('id,name,slug,instagram_url,pricing:club_pricing(price_from,club_type:club_types(slug)),opening_hours:club_opening_hours(day_of_week,open_time,close_time,is_closed)')
-      .eq('is_active', true)
+      .select('id,name,slug,is_active,instagram_url,pricing:club_pricing(price_from,club_type:club_types(slug)),opening_hours:club_opening_hours(day_of_week,open_time,close_time,is_closed)')
       .order('name', { ascending: true }),
   ]);
 
@@ -119,8 +129,8 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
 
   const submissions = (submissionsResult.data ?? []) as SubmissionRow[];
   const clubSnapshots = (clubsResult.data ?? []) as unknown as ClubSnapshotRow[];
-  const activeClubs = clubSnapshots.map(({ id, name, slug }) => ({ id, name, slug }));
-  const activeClubById = new Map(activeClubs.map((club) => [club.id, club]));
+  const clubs = clubSnapshots.map(({ id, name, slug, is_active }) => ({ id, name, slug, is_active }));
+  const clubById = new Map(clubs.map((club) => [club.id, club]));
   const currentValuesByClubId = new Map(clubSnapshots.map((club) => [club.id, currentValues(club)]));
   const pendingCount = pendingResult.count ?? 0;
   const hasFilters = Boolean(status || kind || q);
@@ -167,7 +177,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
       ) : (
         <div className="mt-5 space-y-4">
           {submissions.map((item) => {
-            const linkedClub = item.club_id ? activeClubById.get(item.club_id) : null;
+            const linkedClub = item.club_id ? clubById.get(item.club_id) : null;
             const completed = item.status === 'resolved' || item.status === 'rejected';
             const canLinkExisting = (item.kind === 'owner_claim' || item.kind === 'correction') && !item.club_id && !completed;
 
@@ -182,7 +192,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                     </div>
                     <h2 className="mt-3 text-lg font-bold text-gray-900">{item.club_name}</h2>
                     <p className="mt-1 text-xs text-gray-400">{new Date(item.created_at).toLocaleString('az-AZ', { timeZone: 'Asia/Baku' })}</p>
-                    {linkedClub ? <p className="mt-1 text-xs font-medium text-emerald-700">Bağlı klub: {linkedClub.name}</p> : null}
+                    {linkedClub ? <p className="mt-1 text-xs font-medium text-emerald-700">Bağlı klub: {linkedClub.name}{linkedClub.is_active ? '' : ' (deaktiv)'}</p> : null}
                   </div>
                   {item.club_id ? <Link href={`/admin/klublar/${item.club_id}`} className="text-sm font-semibold text-[#6A47F0] hover:underline">Klub admininə bax</Link> : null}
                 </div>
@@ -195,7 +205,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
                   </a>
                 </div>
 
-                {canLinkExisting ? <ClubLinkForm item={item} activeClubs={activeClubs} /> : null}
+                {canLinkExisting ? <ClubLinkForm item={item} clubs={clubs} /> : null}
 
                 {item.kind === 'correction' && item.club_id && !completed ? (
                   <div className="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-3">
