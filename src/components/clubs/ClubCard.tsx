@@ -221,6 +221,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
           <div className="shrink-0 text-right">
             {club.distanceKm != null ? <div className="text-[10px] font-medium text-primary">{formatDistance(club.distanceKm)}</div> : null}
             <div className={cn('mt-0.5 text-[10px] font-semibold', !hasHours || liveState === null ? 'text-muted' : openNow ? 'text-live' : 'text-red-500')}>{statusLabel}</div>
+            <span data-club-card-cta="true" aria-hidden="true" className="mt-1 inline-flex items-center text-[11px] font-bold text-primary transition group-hover:text-primary-dark">Kluba bax →</span>
           </div>
         </div>
       </div>
