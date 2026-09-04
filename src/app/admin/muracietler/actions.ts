@@ -12,6 +12,7 @@ import {
 import type { Json } from '@/types/database';
 
 const STATUSES = new Set(['pending', 'reviewing', 'resolved', 'rejected']);
+const IMAGE_BUCKET = 'club-images';
 
 type SubmissionStatus = 'pending' | 'reviewing' | 'resolved' | 'rejected';
 type LinkableSubmissionKind = 'owner_claim' | 'correction';
@@ -23,6 +24,43 @@ function submissionId(formData: FormData) {
 
 function checked(formData: FormData, key: string) {
   return formData.get(key) === 'on';
+}
+
+function storagePathFromPublicUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    const marker = `/storage/v1/object/public/${IMAGE_BUCKET}/`;
+    const index = parsed.pathname.indexOf(marker);
+    if (index === -1) return null;
+    return decodeURIComponent(parsed.pathname.slice(index + marker.length));
+  } catch {
+    return null;
+  }
+}
+
+async function cleanupRejectedOwnerImages(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  id: string,
+  urls: string[],
+) {
+  const paths = urls
+    .map(storagePathFromPublicUrl)
+    .filter((path): path is string => Boolean(path && path.startsWith(`owner-submissions/${id}/`)));
+
+  if (paths.length > 0) {
+    const { error: removeError } = await supabase.storage.from(IMAGE_BUCKET).remove(paths);
+    if (removeError) {
+      console.error('GAMEYER_OWNER_IMAGE_CLEANUP_ERROR', removeError.message);
+      return;
+    }
+  }
+
+  const { error: clearError } = await supabase
+    .from('club_submissions')
+    .update({ submitted_images: [] })
+    .eq('id', id)
+    .eq('kind', 'owner_claim');
+  if (clearError) console.error('GAMEYER_OWNER_IMAGE_CLEAR_ERROR', clearError.message);
 }
 
 async function linkedOwnerClaim(id: string) {
@@ -58,29 +96,16 @@ async function linkSubmissionToClub(formData: FormData, kind: LinkableSubmission
 
   const supabase = await createClient();
   const [{ data: submission, error: submissionError }, { data: club, error: clubError }] = await Promise.all([
-    supabase
-      .from('club_submissions')
-      .select('id,kind,club_id,status')
-      .eq('id', id)
-      .eq('kind', kind)
-      .maybeSingle(),
-    supabase
-      .from('clubs')
-      .select('id,is_active')
-      .eq('id', clubId)
-      .maybeSingle(),
+    supabase.from('club_submissions').select('id,kind,club_id,status').eq('id', id).eq('kind', kind).maybeSingle(),
+    supabase.from('clubs').select('id,is_active').eq('id', clubId).maybeSingle(),
   ]);
 
   if (submissionError) throw new Error(submissionError.message);
   if (clubError) throw new Error(clubError.message);
   if (!submission) throw new Error('Müraciət tapılmadı.');
   if (!club) throw new Error('Seçilən klub tapılmadı.');
-  if (kind === 'correction' && !club.is_active) {
-    throw new Error('Düzəliş müraciəti yalnız aktiv kluba bağlana bilər.');
-  }
-  if (submission.status === 'resolved' || submission.status === 'rejected') {
-    throw new Error('Tamamlanmış müraciəti kluba bağlamaq olmaz.');
-  }
+  if (kind === 'correction' && !club.is_active) throw new Error('Düzəliş müraciəti yalnız aktiv kluba bağlana bilər.');
+  if (submission.status === 'resolved' || submission.status === 'rejected') throw new Error('Tamamlanmış müraciəti kluba bağlamaq olmaz.');
   if (submission.club_id) throw new Error('Bu müraciət artıq real kluba bağlıdır.');
 
   const { data: linked, error } = await supabase
@@ -95,7 +120,6 @@ async function linkSubmissionToClub(formData: FormData, kind: LinkableSubmission
 
   if (error) throw new Error(error.message);
   if (!linked?.club_id) throw new Error('Müraciət kluba bağlanmadı. Səhifəni yeniləyib yenidən yoxlayın.');
-
   revalidateSubmission(linked.club_id);
 }
 
@@ -106,6 +130,18 @@ export async function updateSubmissionStatus(formData: FormData) {
   if (!id || !STATUSES.has(status)) throw new Error('Müraciət statusu düzgün deyil.');
 
   const supabase = await createClient();
+  const { data: submission, error: readError } = await supabase
+    .from('club_submissions')
+    .select('id,kind,club_id,status,submitted_images')
+    .eq('id', id)
+    .maybeSingle();
+  if (readError) throw new Error(readError.message);
+  if (!submission) throw new Error('Müraciət tapılmadı.');
+
+  if (submission.kind === 'owner_claim' && status === 'resolved') {
+    throw new Error('Klub sahibi müraciətini “Təsdiq et və aktivləşdir” düyməsi ilə təsdiqlə.');
+  }
+
   const { error } = await supabase
     .from('club_submissions')
     .update({
@@ -113,9 +149,13 @@ export async function updateSubmissionStatus(formData: FormData) {
       reviewed_at: status === 'pending' ? null : new Date().toISOString(),
     })
     .eq('id', id);
-
   if (error) throw new Error(error.message);
-  revalidateSubmission();
+
+  if (submission.kind === 'owner_claim' && status === 'rejected' && submission.submitted_images.length > 0) {
+    await cleanupRejectedOwnerImages(supabase, id, submission.submitted_images);
+  }
+
+  revalidateSubmission(submission.club_id);
 }
 
 export async function linkOwnerClaimToClub(formData: FormData) {
@@ -137,12 +177,9 @@ export async function applyOwnerClaimFields(formData: FormData) {
   const applyPcPrice = checked(formData, 'apply_pc_price');
   const applyPsPrice = checked(formData, 'apply_ps_price');
   const applyHours = checked(formData, 'apply_hours');
-  if (!applyInstagram && !applyPcPrice && !applyPsPrice && !applyHours) {
-    throw new Error('Tətbiq etmək üçün ən azı bir sahə seçilməlidir.');
-  }
+  if (!applyInstagram && !applyPcPrice && !applyPsPrice && !applyHours) throw new Error('Tətbiq etmək üçün ən azı bir sahə seçilməlidir.');
 
   const { supabase, submission, claim } = await linkedOwnerClaim(id);
-
   const instagramUrl = applyInstagram ? normalizeOwnerInstagram(claim.officialInstagram) : null;
   const pcPrice = applyPcPrice ? parseOwnerPrice(claim.pcPrice) : null;
   const psPrice = applyPsPrice ? parseOwnerPrice(claim.psPrice) : null;
@@ -151,20 +188,11 @@ export async function applyOwnerClaimFields(formData: FormData) {
   if (applyInstagram && !instagramUrl) throw new Error('Instagram məlumatı təhlükəsiz formatda deyil.');
   if (applyPcPrice && pcPrice == null) throw new Error('PC qiyməti təhlükəsiz formatda deyil.');
   if (applyPsPrice && psPrice == null) throw new Error('PlayStation qiyməti təhlükəsiz formatda deyil.');
-  if (applyHours && !parsedHours) {
-    throw new Error('İş saatları avtomatik tətbiq üçün tanınan formatda deyil. Manual yoxlama tələb olunur.');
-  }
+  if (applyHours && !parsedHours) throw new Error('İş saatları avtomatik tətbiq üçün tanınan formatda deyil. Manual yoxlama tələb olunur.');
 
   let hoursPayload: Json | null = null;
-  if (parsedHours === '24/7') {
-    hoursPayload = { mode: '24/7' };
-  } else if (parsedHours) {
-    hoursPayload = {
-      mode: 'daily',
-      open_time: parsedHours.openTime,
-      close_time: parsedHours.closeTime,
-    };
-  }
+  if (parsedHours === '24/7') hoursPayload = { mode: '24/7' };
+  else if (parsedHours) hoursPayload = { mode: 'daily', open_time: parsedHours.openTime, close_time: parsedHours.closeTime };
 
   const { data: clubId, error } = await supabase.rpc('apply_owner_claim_fields_atomic', {
     p_submission_id: id,
@@ -176,7 +204,6 @@ export async function applyOwnerClaimFields(formData: FormData) {
 
   if (error) throw new Error(error.message);
   if (!clubId || clubId !== submission.club_id) throw new Error('Məlumatların tətbiq olunduğu klub təsdiqlənmədi.');
-
   revalidateSubmission(clubId, true);
 }
 
@@ -186,13 +213,9 @@ export async function verifyOwnerClaim(formData: FormData) {
   if (!id) throw new Error('Klub sahibi müraciəti tapılmadı.');
 
   const supabase = await createClient();
-  const { data: clubId, error } = await supabase.rpc('verify_owner_claim_atomic', {
-    p_submission_id: id,
-  });
-
+  const { data: clubId, error } = await supabase.rpc('verify_owner_claim_atomic', { p_submission_id: id });
   if (error) throw new Error(error.message);
   if (!clubId) throw new Error('Təsdiqlənən klub tapılmadı.');
-
   revalidateSubmission(clubId, true);
 }
 
@@ -202,6 +225,19 @@ export async function deleteCompletedSubmission(formData: FormData) {
   if (!id) throw new Error('Müraciət ID tapılmadı.');
 
   const supabase = await createClient();
+  const { data: existing, error: readError } = await supabase
+    .from('club_submissions')
+    .select('id,kind,status,submitted_images')
+    .eq('id', id)
+    .in('status', ['resolved', 'rejected'])
+    .maybeSingle();
+  if (readError) throw new Error(readError.message);
+  if (!existing) throw new Error('Yalnız həll olunmuş və ya rədd edilmiş müraciət silinə bilər.');
+
+  if (existing.kind === 'owner_claim' && existing.status === 'rejected' && existing.submitted_images.length > 0) {
+    await cleanupRejectedOwnerImages(supabase, id, existing.submitted_images);
+  }
+
   const { data, error } = await supabase
     .from('club_submissions')
     .delete()
@@ -209,9 +245,7 @@ export async function deleteCompletedSubmission(formData: FormData) {
     .in('status', ['resolved', 'rejected'])
     .select('id')
     .maybeSingle();
-
   if (error) throw new Error(error.message);
-  if (!data) throw new Error('Yalnız həll olunmuş və ya rədd edilmiş müraciət silinə bilər.');
-
+  if (!data) throw new Error('Müraciət silinmədi.');
   revalidateSubmission();
 }
