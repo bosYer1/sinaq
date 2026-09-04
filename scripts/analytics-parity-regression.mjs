@@ -23,6 +23,10 @@ for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent'
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(link.includes(token), `TrackedClubLink must keep ${token}`);
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(clubView.includes(token), `ClubViewTracker must keep ${token}`);
 assert.ok(card.includes('club_card_click'), 'club_card_click must stay wired');
+for (const property of ['source_surface', 'explore_view', 'search_active', 'club_type_filter', 'district_filter', 'price_max_filter']) assert.ok(card.includes(property), `Club discovery events must keep ${property} context`);
+for (const surface of ['explore_list', 'search_results', 'filtered_list']) assert.ok(card.includes(`'${surface}'`), `Club discovery events must keep controlled surface ${surface}`);
+assert.ok((card.match(/\.\.\.currentDiscoveryContext\(\)/g) ?? []).length >= 2, 'Impressions and card clicks must share the same discovery-context contract');
+assert.ok(!card.includes('search_query:'), 'Club impression/click events must not duplicate raw search text');
 assert.ok(clubView.includes("trackGaEvent('club_view'") && clubView.includes("trackPostHogEvent('club_view'"), 'club_view must stay wired to GA and PostHog');
 for (const property of ['club_id', 'club_slug', 'club_name', 'district', 'club_types']) assert.ok(clubView.includes(property), `club_view must keep ${property} attribution`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(link.includes(event), `${event} must stay wired`);
