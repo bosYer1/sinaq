@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { ClubSubmission } from '@/types/database';
 import { OwnerClaimSummary } from '@/components/admin/OwnerClaimSummary';
 import { OwnerClaimApplyForm, type OwnerClaimCurrentValues } from '@/components/admin/OwnerClaimApplyForm';
-import { deleteCompletedSubmission, linkCorrectionToClub, linkOwnerClaimToClub, updateSubmissionStatus } from './actions';
+import { deleteCompletedSubmission, linkCorrectionToClub, updateSubmissionStatus } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,24 +69,18 @@ function currentValues(club: ClubSnapshotRow): OwnerClaimCurrentValues {
 }
 
 function ClubLinkForm({ item, clubs }: { item: SubmissionRow; clubs: ClubOption[] }) {
-  const action = item.kind === 'owner_claim' ? linkOwnerClaimToClub : linkCorrectionToClub;
-  const selectableClubs = item.kind === 'owner_claim' ? clubs : clubs.filter((club) => club.is_active);
-  const placeholder = item.kind === 'owner_claim' ? 'Klub seç' : 'Aktiv klub seç';
+  const selectableClubs = clubs.filter((club) => club.is_active);
 
   return (
-    <form action={action} className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+    <form action={linkCorrectionToClub} className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
       <input type="hidden" name="id" value={item.id} />
-      <p className="text-xs font-semibold text-amber-900">Bu köhnə və ya birbaşa kluba bağlanmamış müraciətdir.</p>
-      <p className="mt-1 text-xs leading-5 text-amber-800">
-        {item.kind === 'owner_claim'
-          ? 'Doğru klubu seç. Klub deaktivdirsə də seçilə bilər və təsdiq zamanı avtomatik aktivləşəcək.'
-          : 'Səhv klubun məlumatının dəyişməməsi üçün doğru aktiv klub profilini admin seçir.'}
-      </p>
+      <p className="text-xs font-semibold text-amber-900">Bu köhnə və ya birbaşa kluba bağlanmamış düzəliş müraciətidir.</p>
+      <p className="mt-1 text-xs leading-5 text-amber-800">Səhv klubun məlumatının dəyişməməsi üçün doğru aktiv klub profilini admin seçir.</p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         <select name="club_id" required defaultValue="" className="h-10 min-w-0 flex-1 rounded-lg border border-amber-300 bg-white px-3 text-sm text-gray-900">
-          <option value="" disabled>{placeholder}</option>
+          <option value="" disabled>Aktiv klub seç</option>
           {selectableClubs.map((club) => (
-            <option key={club.id} value={club.id}>{club.name}{club.is_active ? '' : ' — deaktiv'}</option>
+            <option key={club.id} value={club.id}>{club.name}</option>
           ))}
         </select>
         <button type="submit" className="h-10 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white transition hover:bg-amber-700">Kluba bağla</button>
@@ -157,7 +151,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
           {submissions.map((item) => {
             const linkedClub = item.club_id ? clubById.get(item.club_id) : null;
             const completed = item.status === 'resolved' || item.status === 'rejected';
-            const canLinkExisting = (item.kind === 'owner_claim' || item.kind === 'correction') && !item.club_id && !completed;
+            const canLinkExistingCorrection = item.kind === 'correction' && !item.club_id && !completed;
             return (
               <article key={item.id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -172,7 +166,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminSubmis
 
                 {item.kind === 'owner_claim' ? <OwnerClaimSummary message={item.message} /> : <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-gray-700">{item.message}</p>}
                 <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4"><a href={contactHref(item)} target={item.contact_type === 'instagram' ? '_blank' : undefined} rel={item.contact_type === 'instagram' ? 'noopener noreferrer' : undefined} className="text-sm font-semibold text-[#6A47F0] hover:underline">{item.contact_type}: {item.contact_value}</a></div>
-                {canLinkExisting ? <ClubLinkForm item={item} clubs={clubs} /> : null}
+                {canLinkExistingCorrection ? <ClubLinkForm item={item} clubs={clubs} /> : null}
 
                 {item.kind === 'correction' && item.club_id && !completed ? <div className="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-3"><p className="text-xs leading-5 text-sky-800">Düzəliş mətnini yoxla, sonra real klub admin səhifəsində yalnız təsdiqlədiyin sahələri dəyiş.</p><Link href={`/admin/klublar/${item.club_id}`} className="mt-2 inline-flex h-9 items-center rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-700">Klub məlumatını düzəlt</Link></div> : null}
                 {item.kind === 'new_club' && !completed ? <div className="mt-4 rounded-lg border border-violet-200 bg-violet-50 p-3"><p className="text-xs leading-5 text-violet-800">Klubun real olduğunu və xəritə koordinatını ayrıca yoxla. Sonra yeni klub formasını bu müraciətlə aç.</p><Link href={`/admin/klublar/yeni?submission=${encodeURIComponent(item.id)}`} className="mt-2 inline-flex h-9 items-center rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white hover:bg-[#6A47F0]">Yeni klub formasında aç</Link></div> : null}
