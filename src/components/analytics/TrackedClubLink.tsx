@@ -4,6 +4,7 @@ import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from 'react';
 import { trackGaEvent } from '@/lib/google-analytics';
 import { clubActionEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
+import { cn } from '@/lib/utils';
 
 type EventType = 'maps_click' | 'phone_click' | 'instagram_click' | 'club_correction_click';
 type CtaSurface = 'header_maps' | 'contact_phone' | 'contact_instagram' | 'contact_maps' | 'correction';
@@ -18,6 +19,7 @@ interface TrackedClubLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
 }
 
 const STORAGE_KEY = 'gameyer_visitor_id';
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface';
 
 function visitorId() {
   try {
@@ -40,7 +42,17 @@ function ctaSurface(anchor: HTMLAnchorElement, eventType: EventType): CtaSurface
   return anchor.closest('aside') ? 'contact_maps' : 'header_maps';
 }
 
-export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, children, onClick, ...props }: TrackedClubLinkProps) {
+function interactionClassName(eventType: EventType) {
+  if (eventType === 'phone_click' || eventType === 'instagram_click') {
+    return cn('inline-flex min-h-11 items-center rounded-md px-2', FOCUS_RING);
+  }
+  if (eventType === 'club_correction_click') {
+    return cn('inline-flex min-h-10 items-center rounded-md px-2', FOCUS_RING);
+  }
+  return FOCUS_RING;
+}
+
+export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, children, onClick, className, ...props }: TrackedClubLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
     if (event.defaultPrevented) return;
@@ -80,5 +92,5 @@ export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, c
     }).catch(() => undefined);
   }
 
-  return <a href={href} onClick={handleClick} {...props}>{children}</a>;
+  return <a href={href} onClick={handleClick} {...props} className={cn(className, interactionClassName(eventType))}>{children}</a>;
 }
