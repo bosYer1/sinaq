@@ -64,21 +64,12 @@ function ownerClaimMessage(formData: FormData, freeMessage: string) {
   const pcPrice = optionalPrice(formData, 'pc_price');
   const psPrice = optionalPrice(formData, 'ps_price');
 
-  if (!OWNER_ROLES[role] || !validInstagram(officialInstagram) || Number.isNaN(pcPrice) || Number.isNaN(psPrice)) {
-    return null;
-  }
+  if (!OWNER_ROLES[role] || !validInstagram(officialInstagram) || Number.isNaN(pcPrice) || Number.isNaN(psPrice)) return null;
 
-  const hasEvidenceSignal = Boolean(
-    officialInstagram ||
-    hoursNote ||
-    pcPrice != null ||
-    psPrice != null ||
-    freeMessage.length >= 10
-  );
-
+  const hasEvidenceSignal = Boolean(officialInstagram || hoursNote || pcPrice != null || psPrice != null || freeMessage.length >= 10);
   if (!hasEvidenceSignal) return null;
 
-  const lines = [
+  return [
     '[STRUKTURLAŞDIRILMIŞ KLUB SAHİBİ MƏLUMATI]',
     `Klubla əlaqə: ${OWNER_ROLES[role]}`,
     officialInstagram ? `Rəsmi Instagram: ${officialInstagram}` : null,
@@ -86,15 +77,11 @@ function ownerClaimMessage(formData: FormData, freeMessage: string) {
     psPrice != null ? `PlayStation qiyməti: ${psPrice} AZN/saat` : null,
     hoursNote ? `İş saatları: ${hoursNote}` : null,
     freeMessage ? `Əlavə qeyd: ${freeMessage}` : null,
-  ].filter((line): line is string => Boolean(line));
-
-  return lines.join('\n').slice(0, 3000);
+  ].filter((line): line is string => Boolean(line)).join('\n').slice(0, 3000);
 }
 
 function ownerImages(formData: FormData) {
-  return formData
-    .getAll('owner_images')
-    .filter((value): value is File => value instanceof File && value.size > 0);
+  return formData.getAll('owner_images').filter((value): value is File => value instanceof File && value.size > 0);
 }
 
 function extensionFor(file: File) {
@@ -125,11 +112,7 @@ async function submitOwnerClaim(args: {
 
   let clubId: string | null = null;
   if (clubSlug) {
-    const { data: club, error: clubError } = await admin
-      .from('clubs')
-      .select('id')
-      .eq('slug', clubSlug)
-      .maybeSingle();
+    const { data: club, error: clubError } = await admin.from('clubs').select('id').eq('slug', clubSlug).maybeSingle();
     if (clubError) throw new Error(clubError.message);
     clubId = club?.id ?? null;
   }
@@ -145,7 +128,6 @@ async function submitOwnerClaim(args: {
     contact_value: contactValue,
     submitted_images: [],
   });
-
   if (insertError) throw new Error(insertError.message);
 
   const uploadedPaths: string[] = [];
@@ -161,17 +143,12 @@ async function submitOwnerClaim(args: {
         upsert: false,
       });
       if (uploadError) throw new Error(uploadError.message);
-
       uploadedPaths.push(path);
       uploadedUrls.push(admin.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl);
     }
 
     if (uploadedUrls.length > 0) {
-      const { error: updateError } = await admin
-        .from('club_submissions')
-        .update({ submitted_images: uploadedUrls })
-        .eq('id', submissionId)
-        .eq('kind', 'owner_claim');
+      const { error: updateError } = await admin.from('club_submissions').update({ submitted_images: uploadedUrls }).eq('id', submissionId).eq('kind', 'owner_claim');
       if (updateError) throw new Error(updateError.message);
     }
   } catch (error) {
@@ -183,7 +160,6 @@ async function submitOwnerClaim(args: {
 
 export async function submitClubSubmission(formData: FormData) {
   const successUrl = resultUrl(formData, 'sent');
-
   if (text(formData, 'website', 200)) redirect(successUrl);
 
   const kind = text(formData, 'kind', 30);
@@ -198,9 +174,7 @@ export async function submitClubSubmission(formData: FormData) {
   }
 
   const message = kind === 'owner_claim' ? ownerClaimMessage(formData, freeMessage) : freeMessage;
-  if (!message || (kind !== 'owner_claim' && message.length < 10)) {
-    redirect(resultUrl(formData, 'error'));
-  }
+  if (!message || (kind !== 'owner_claim' && message.length < 10)) redirect(resultUrl(formData, 'error'));
 
   try {
     if (kind === 'owner_claim') {
@@ -212,34 +186,30 @@ export async function submitClubSubmission(formData: FormData) {
         contactType: contactType as 'instagram' | 'phone' | 'email',
         contactValue,
       });
-      redirect(successUrl);
+    } else {
+      const supabase = await createClient();
+      let clubId: string | null = null;
+      if (clubSlug) {
+        const { data } = await supabase.from('clubs').select('id').eq('slug', clubSlug).eq('is_active', true).maybeSingle();
+        clubId = data?.id ?? null;
+      }
+
+      const { error } = await supabase.from('club_submissions').insert({
+        kind: kind as 'correction' | 'new_club',
+        club_id: clubId,
+        club_name: clubName,
+        message,
+        contact_type: contactType as 'instagram' | 'phone' | 'email',
+        contact_value: contactValue,
+      });
+      if (error) throw new Error(error.message);
     }
-
-    const supabase = await createClient();
-    let clubId: string | null = null;
-
-    if (clubSlug) {
-      const { data } = await supabase.from('clubs').select('id').eq('slug', clubSlug).eq('is_active', true).maybeSingle();
-      clubId = data?.id ?? null;
-    }
-
-    const { error } = await supabase.from('club_submissions').insert({
-      kind: kind as 'correction' | 'new_club',
-      club_id: clubId,
-      club_name: clubName,
-      message,
-      contact_type: contactType as 'instagram' | 'phone' | 'email',
-      contact_value: contactValue,
-    });
-
-    if (error) throw new Error(error.message);
-    redirect(successUrl);
   } catch (error) {
     const messageText = error instanceof Error ? error.message : 'unknown submission error';
-    if (messageText.includes('Submission rate limit exceeded')) {
-      redirect(resultUrl(formData, 'rate'));
-    }
+    if (messageText.includes('Submission rate limit exceeded')) redirect(resultUrl(formData, 'rate'));
     console.error('GAMEYER_SUBMISSION_ERROR', messageText);
     redirect(resultUrl(formData, 'error'));
   }
+
+  redirect(successUrl);
 }
