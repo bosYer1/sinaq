@@ -5,8 +5,26 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { SearchIcon } from '@/components/ui/Icon';
 import { trackPostHogEvent } from '@/lib/posthog';
 
+type PendingSearchAnalytics = {
+  query: string;
+  district: string | null;
+  clubType: string | null;
+  priceMax: string | null;
+  exploreView: 'list' | 'map';
+};
+
 const SEARCH_NAVIGATION_DEBOUNCE_MS = 300;
 const SEARCH_ANALYTICS_SETTLE_MS = 1200;
+const SEARCH_RESULT_READ_ATTEMPTS = 30;
+
+function readRenderedResultCount() {
+  const exploreText = document.querySelector('[data-explore-view]')?.textContent ?? '';
+  const match = exploreText.match(/Klublar \((\d+)\)/);
+  if (!match) return null;
+
+  const count = Number(match[1]);
+  return Number.isInteger(count) && count >= 0 ? count : null;
+}
 
 export function SearchFilter() {
   const router = useRouter();
@@ -16,6 +34,7 @@ export function SearchFilter() {
   const paramsString = searchParams.toString();
   const currentQuery = searchParams.get('q') ?? '';
   const [value, setValue] = useState(currentQuery);
+  const [pendingSearchAnalytics, setPendingSearchAnalytics] = useState<PendingSearchAnalytics | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const lastRequestedQueryRef = useRef(currentQuery);
   const lastTrackedQueryRef = useRef(currentQuery);
@@ -35,6 +54,7 @@ export function SearchFilter() {
 
     lastRequestedQueryRef.current = currentQuery;
     lastTrackedQueryRef.current = currentQuery;
+    setPendingSearchAnalytics(null);
     setValue(currentQuery);
   }, [currentQuery, paramsString]);
 
@@ -62,24 +82,76 @@ export function SearchFilter() {
       const nextQuery = value.trim();
       if (nextQuery === lastTrackedQueryRef.current) return;
 
-      lastTrackedQueryRef.current = nextQuery;
-
       const params = new URLSearchParams(paramsStringRef.current);
       if (nextQuery) params.set('q', nextQuery);
       else params.delete('q');
 
-      trackPostHogEvent(nextQuery ? 'search_query' : 'search_cleared', {
-        search_query: nextQuery || null,
-        search_query_length: nextQuery.length,
+      setPendingSearchAnalytics({
+        query: nextQuery,
         district: params.get('district'),
-        club_type: params.get('type'),
-        price_max: params.get('price_max'),
-        explore_view: params.get('view') === 'map' ? 'map' : 'list',
+        clubType: params.get('type'),
+        priceMax: params.get('price_max'),
+        exploreView: params.get('view') === 'map' ? 'map' : 'list',
       });
     }, SEARCH_ANALYTICS_SETTLE_MS);
 
     return () => window.clearTimeout(timer);
   }, [value]);
+
+  useEffect(() => {
+    const pending = pendingSearchAnalytics;
+    if (!pending || currentQuery !== pending.query) return;
+
+    let frame = 0;
+    let attempts = 0;
+    let cancelled = false;
+
+    const captureCommittedSearch = () => {
+      if (cancelled || currentQueryRef.current !== pending.query) return;
+
+      if (!pending.query) {
+        lastTrackedQueryRef.current = '';
+        setPendingSearchAnalytics(null);
+        trackPostHogEvent('search_cleared', {
+          search_query: null,
+          search_query_length: 0,
+          district: pending.district,
+          club_type: pending.clubType,
+          price_max: pending.priceMax,
+          explore_view: pending.exploreView,
+        });
+        return;
+      }
+
+      const resultCount = readRenderedResultCount();
+      if (resultCount == null) {
+        if (attempts < SEARCH_RESULT_READ_ATTEMPTS) {
+          attempts += 1;
+          frame = window.requestAnimationFrame(captureCommittedSearch);
+        }
+        return;
+      }
+
+      lastTrackedQueryRef.current = pending.query;
+      setPendingSearchAnalytics(null);
+      trackPostHogEvent('search_query', {
+        search_query: pending.query,
+        search_query_length: pending.query.length,
+        district: pending.district,
+        club_type: pending.clubType,
+        price_max: pending.priceMax,
+        explore_view: pending.exploreView,
+        result_count: resultCount,
+        no_results: resultCount === 0,
+      });
+    };
+
+    frame = window.requestAnimationFrame(captureCommittedSearch);
+    return () => {
+      cancelled = true;
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [currentQuery, pendingSearchAnalytics]);
 
   return (
     <div className="relative w-full">
