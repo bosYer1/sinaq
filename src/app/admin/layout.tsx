@@ -12,6 +12,27 @@ export const metadata: Metadata = {
   },
 };
 
+function NotificationLink({ unread, mobile = false }: { unread: number | null; mobile?: boolean }) {
+  const badge = unread && unread > 0
+    ? <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">{unread > 99 ? '99+' : unread}</span>
+    : null;
+
+  if (mobile) {
+    return (
+      <Link href="/admin/bildirisler" className="shrink-0 text-gray-600">
+        Bildirişlər{badge}
+      </Link>
+    );
+  }
+
+  return (
+    <Link href="/admin/bildirisler" className="flex items-center justify-between rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">
+      <span>Bildirişlər</span>
+      {badge}
+    </Link>
+  );
+}
+
 export default async function AdminLayout({
   children,
 }: {
@@ -22,6 +43,7 @@ export default async function AdminLayout({
 
   let isAdmin = false;
   let hasAal2 = false;
+  let unreadNotifications: number | null = null;
 
   if (user) {
     const { data: adminRow } = await supabase
@@ -35,6 +57,14 @@ export default async function AdminLayout({
     if (isAdmin) {
       const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       hasAal2 = aal?.currentLevel === 'aal2';
+
+      if (hasAal2) {
+        const { count, error } = await supabase
+          .from('admin_notifications')
+          .select('id', { count: 'exact', head: true })
+          .is('read_at', null);
+        if (!error) unreadNotifications = count ?? 0;
+      }
     }
   }
 
@@ -60,6 +90,7 @@ export default async function AdminLayout({
               <Link href="/admin/analitika" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Analitika</Link>
               <Link href="/admin/statistika" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Supabase statistikası</Link>
               <Link href="/admin/seo-prioritet" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Google SEO prioriteti</Link>
+              <NotificationLink unread={unreadNotifications} />
               <Link href="/admin/klublar" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Klublar</Link>
               <Link href="/admin/muracietler" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Müraciətlər</Link>
               <Link href="/admin/klublar/yeni" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">+ Yeni klub</Link>
@@ -77,6 +108,7 @@ export default async function AdminLayout({
               <Link href="/admin/analitika" className="shrink-0 text-gray-600">Analitika</Link>
               <Link href="/admin/statistika" className="shrink-0 text-gray-600">Supabase</Link>
               <Link href="/admin/seo-prioritet" className="shrink-0 text-gray-600">SEO prioriteti</Link>
+              <NotificationLink unread={unreadNotifications} mobile />
               <Link href="/admin/klublar" className="shrink-0 text-gray-600">Klublar</Link>
               <Link href="/admin/muracietler" className="shrink-0 text-gray-600">Müraciətlər</Link>
               <Link href="/admin/klublar/yeni" className="shrink-0 text-[#7C5CFC]">+ Yeni klub</Link>
