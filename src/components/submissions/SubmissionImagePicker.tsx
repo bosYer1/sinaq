@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -18,14 +18,6 @@ export function SubmissionImagePicker() {
   const [items, setItems] = useState<SelectedImage[]>([]);
   const [error, setError] = useState('');
 
-  const previewUrls = useMemo(() => items.map((item) => item.previewUrl), [items]);
-
-  useEffect(() => {
-    return () => {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [previewUrls]);
-
   function syncInput(next: SelectedImage[]) {
     if (!inputRef.current) return;
     const transfer = new DataTransfer();
@@ -40,7 +32,7 @@ export function SubmissionImagePicker() {
     const incoming = Array.from(files);
     if (items.length + incoming.length > MAX_IMAGES) {
       setError(`Maksimum ${MAX_IMAGES} şəkil əlavə edə bilərsiniz.`);
-      if (inputRef.current) syncInput(items);
+      syncInput(items);
       return;
     }
 
@@ -51,7 +43,7 @@ export function SubmissionImagePicker() {
           ? 'Yalnız JPG, PNG və WEBP şəkilləri qəbul edilir.'
           : 'Hər şəkil maksimum 5 MB ola bilər.'
       );
-      if (inputRef.current) syncInput(items);
+      syncInput(items);
       return;
     }
 
@@ -94,13 +86,7 @@ export function SubmissionImagePicker() {
               <div className="relative aspect-video bg-black/5">
                 <Image src={item.previewUrl} alt={`Seçilmiş klub şəkli ${index + 1}`} fill unoptimized className="object-cover" />
               </div>
-              <button
-                type="button"
-                onClick={() => removeImage(item.id)}
-                className="w-full border-t border-border px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
-              >
-                Sil
-              </button>
+              <button type="button" onClick={() => removeImage(item.id)} className="w-full border-t border-border px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50">Sil</button>
             </div>
           ))}
         </div>
