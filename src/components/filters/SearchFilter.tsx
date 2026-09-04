@@ -5,6 +5,9 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { SearchIcon } from '@/components/ui/Icon';
 import { trackPostHogEvent } from '@/lib/posthog';
 
+const SEARCH_NAVIGATION_DEBOUNCE_MS = 300;
+const SEARCH_ANALYTICS_SETTLE_MS = 1200;
+
 export function SearchFilter() {
   const router = useRouter();
   const pathname = usePathname();
@@ -15,6 +18,7 @@ export function SearchFilter() {
   const [value, setValue] = useState(currentQuery);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const lastRequestedQueryRef = useRef(currentQuery);
+  const lastTrackedQueryRef = useRef(currentQuery);
   const currentQueryRef = useRef(currentQuery);
   const paramsStringRef = useRef(paramsString);
 
@@ -30,6 +34,7 @@ export function SearchFilter() {
     if (document.activeElement === inputRef.current) return;
 
     lastRequestedQueryRef.current = currentQuery;
+    lastTrackedQueryRef.current = currentQuery;
     setValue(currentQuery);
   }, [currentQuery, paramsString]);
 
@@ -45,6 +50,24 @@ export function SearchFilter() {
       if (nextQuery) params.set('q', nextQuery);
       else params.delete('q');
 
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    }, SEARCH_NAVIGATION_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [value, pathname, router]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const nextQuery = value.trim();
+      if (nextQuery === lastTrackedQueryRef.current) return;
+
+      lastTrackedQueryRef.current = nextQuery;
+
+      const params = new URLSearchParams(paramsStringRef.current);
+      if (nextQuery) params.set('q', nextQuery);
+      else params.delete('q');
+
       trackPostHogEvent(nextQuery ? 'search_query' : 'search_cleared', {
         search_query: nextQuery || null,
         search_query_length: nextQuery.length,
@@ -53,13 +76,10 @@ export function SearchFilter() {
         price_max: params.get('price_max'),
         explore_view: params.get('view') === 'map' ? 'map' : 'list',
       });
-
-      const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-    }, 300);
+    }, SEARCH_ANALYTICS_SETTLE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [value, pathname, router]);
+  }, [value]);
 
   return (
     <div className="relative w-full">
