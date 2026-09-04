@@ -90,6 +90,39 @@ function extensionFor(file: File) {
   return 'jpg';
 }
 
+async function resolvePublicClubId(clubSlug: string) {
+  if (!clubSlug) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('clubs')
+    .select('id')
+    .eq('slug', clubSlug)
+    .eq('is_active', true)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data?.id ?? null;
+}
+
+async function insertOwnerClaimWithoutImages(args: {
+  clubName: string;
+  clubSlug: string;
+  message: string;
+  contactType: 'instagram' | 'phone' | 'email';
+  contactValue: string;
+}) {
+  const supabase = await createClient();
+  const clubId = await resolvePublicClubId(args.clubSlug);
+  const { error } = await supabase.from('club_submissions').insert({
+    kind: 'owner_claim',
+    club_id: clubId,
+    club_name: args.clubName,
+    message: args.message,
+    contact_type: args.contactType,
+    contact_value: args.contactValue,
+  });
+  if (error) throw new Error(error.message);
+}
+
 async function submitOwnerClaim(args: {
   formData: FormData;
   clubName: string;
@@ -107,8 +140,15 @@ async function submitOwnerClaim(args: {
     if (file.size > MAX_IMAGE_SIZE) throw new Error('Hər şəkil maksimum 5 MB ola bilər.');
   }
 
+  // Şəkil əlavə edilmirsə trusted/service-role client tələb olunmur.
+  // Bu, sadə owner claim-i şəkil upload infrastrukturu ilə lazımsız şəkildə bağlamır.
+  if (files.length === 0) {
+    await insertOwnerClaimWithoutImages({ clubName, clubSlug, message, contactType, contactValue });
+    return;
+  }
+
   const admin = createServerAdminClient();
-  if (!admin) throw new Error('Owner claim üçün trusted server bağlantısı mövcud deyil.');
+  if (!admin) throw new Error('Owner claim şəkilləri üçün trusted server bağlantısı mövcud deyil.');
 
   let clubId: string | null = null;
   if (clubSlug) {
