@@ -1,18 +1,35 @@
 # Analytics OIDC hardening
 
 ## Goal
-Remove direct public PostgREST INSERT access to `page_views` and `analytics_events` once a trusted server-only writer is proven in production.
+Keep `page_views` and `analytics_events` on a trusted server-only write path so public clients cannot insert analytics rows directly through PostgREST.
 
-## Current production-safe state
-The OIDC rollout attempted in PRs #243 and #245 was not proven live. The production health check after #243 reported `analytics_write=disabled`, and #245 could not be deployed because the Vercel Hobby project hit its daily deployment limit.
+## Current production state
+Production hardening is complete on the correct Vercel project, `gameyer`.
 
-Until a trusted writer is verified, the application must retain the existing bounded `public-fallback` path. The database still has RLS, column-scoped INSERT grants, payload validation and rate-limit triggers. Migration `20260831183000_server_only_analytics_writes.sql` must **not** be applied while `public-fallback` is active.
+Verified live state:
+- `/api/health` reports `analytics_write=vercel-oidc-edge`.
+- Production analytics writes use the Vercel OIDC-backed edge writer.
+- Public INSERT policies for `page_views` and `analytics_events` have been removed.
+- `anon` and `authenticated` INSERT privileges for those analytics tables have been removed.
+- Synthetic writes were verified before and after revocation, then cleaned up.
+- The final production integrity monitor passed after the hardening rollout.
 
-## Future trusted rollout
-Either of these may replace the fallback after live verification:
-- a server-only `SUPABASE_SECRET_KEY` / `SUPABASE_SERVICE_ROLE_KEY` configured on the correct Vercel `gameyer` project; or
-- a Vercel OIDC path that is explicitly enabled and verified on that project before DB revocation.
+The database records the production migration as `20260901035951_server_only_analytics_writes`. The corresponding repository SQL file remains named `20260831183000_server_only_analytics_writes.sql`; do not rename or replay it only to make the timestamps match.
 
-Only after a live request succeeds through the trusted writer should the server-only migration remove anon/authenticated INSERT policies and grants.
+## Required operating contract
+Do not restore the former `public-fallback` path during normal operation. Public browsers must continue sending analytics through the application endpoints, while database INSERT authority remains server-only.
 
-The old Vercel project `gameyerr` is not part of this rollout and must not be used.
+If analytics delivery is suspected to be broken:
+1. Check `/api/health` and require `analytics_write=vercel-oidc-edge`.
+2. Verify the correct Vercel project is `gameyer` before changing any deployment or identity configuration.
+3. Run the existing production analytics/integrity regressions against `https://gameyer.az`.
+4. Diagnose the trusted writer or OIDC identity path first; do not re-grant public table INSERT access as a shortcut.
+5. Any database-policy rollback must be an explicit incident decision with a tested rollback plan, not an automatic fallback.
+
+## Safety boundaries
+- Do not change club data, map/provider configuration, DNS, domain, or unrelated environment variables as part of analytics hardening.
+- Do not loosen the OIDC identity lock without a production incident reason and a verified replacement identity.
+- Do not expose service-role or secret credentials to client code.
+- Keep synthetic/browser-test traffic excluded from founder reporting and clean up any verification rows created by controlled tests.
+
+The old Vercel project `gameyerr` is not part of this system and must not be recreated or used.

@@ -28,8 +28,39 @@ type LiveState = {
   premiumActive: boolean;
 };
 
+type DiscoverySurface = 'explore_list' | 'search_results' | 'filtered_list';
+
+type DiscoveryContext = {
+  source_surface: DiscoverySurface;
+  explore_view: 'list' | 'map';
+  search_active: boolean;
+  club_type_filter: string | null;
+  district_filter: string | null;
+  price_max_filter: number | null;
+};
+
 function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>) {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+}
+
+function currentDiscoveryContext(): DiscoveryContext {
+  const params = new URLSearchParams(window.location.search);
+  const searchActive = Boolean(params.get('q')?.trim());
+  const clubTypeFilter = params.get('type') || null;
+  const districtFilter = params.get('district') || null;
+  const rawPriceMax = params.get('price_max');
+  const parsedPriceMax = rawPriceMax ? Number(rawPriceMax) : Number.NaN;
+  const priceMaxFilter = Number.isFinite(parsedPriceMax) && parsedPriceMax > 0 ? parsedPriceMax : null;
+  const hasStructuredFilter = Boolean(clubTypeFilter || districtFilter || priceMaxFilter != null);
+
+  return {
+    source_surface: searchActive ? 'search_results' : hasStructuredFilter ? 'filtered_list' : 'explore_list',
+    explore_view: params.get('view') === 'map' ? 'map' : 'list',
+    search_active: searchActive,
+    club_type_filter: clubTypeFilter,
+    district_filter: districtFilter,
+    price_max_filter: priceMaxFilter,
+  };
 }
 
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, listPosition, active, onMouseEnter, imagePriority = false }, ref) {
@@ -71,6 +102,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
         image_count: club.images.length,
         has_pricing: club.pricing.length > 0,
         has_hours: hasHours,
+        ...currentDiscoveryContext(),
       });
       observer.disconnect();
     }, { threshold: [0.6] });
@@ -100,6 +132,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       club_name: club.name,
       district: club.district?.name ?? null,
       list_position: listPosition,
+      ...currentDiscoveryContext(),
     };
     const isMobileHardNavigation = isPlainLeftClick(event) && window.matchMedia('(max-width: 1023px)').matches;
 

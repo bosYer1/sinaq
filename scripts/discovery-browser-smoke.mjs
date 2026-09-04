@@ -99,10 +99,12 @@ try {
 try {
   await navigate('/');
   await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input');
-  const initial = await evaluate(`(() => ({
-    count: document.body.innerText.match(/Klublar \\((\\d+)\\)/)?.[1] || document.body.innerText.match(/(\\d+) klub/)?.[1] || null,
-    districtSlug: Array.from(document.querySelectorAll('a[href^="/rayon/"]')).map((a) => a.getAttribute('href')?.split('/').filter(Boolean).pop()).find(Boolean) || null,
-  }))()`);
+  const initial = await evaluate(`(() => {
+    return {
+      count: document.body.innerText.match(/Klublar \\((\\d+)\\)/)?.[1] || document.body.innerText.match(/(\\d+) klub/)?.[1] || null,
+      districtSlug: Array.from(document.querySelectorAll('a[href^="/rayon/"]')).map((a) => a.getAttribute('href')?.split('/').filter(Boolean).pop()).find(Boolean) || null,
+    };
+  })()`);
   assert(initial.count, 'Homepage club count missing', initial);
   assert(initial.districtSlug, 'No active district available for regression', initial);
 
@@ -127,6 +129,29 @@ try {
 
   await navigate('/');
   await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input after club view regression');
+  const hasSearchTerm = await evaluate(`(() => {
+    const visibleClub = Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((anchor) => {
+      const rect = anchor.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+    window.__gameyerSearchTerm = visibleClub?.querySelector('h3')?.textContent?.trim() || '';
+    return Boolean(window.__gameyerSearchTerm);
+  })()`);
+  assert(hasSearchTerm, 'No visible club name available for search analytics regression');
+  await evaluate(`(() => {
+    const input = document.querySelector('input[aria-label="Klub axtar"]');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(input, window.__gameyerSearchTerm);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return true;
+  })()`);
+  await wait(`new URLSearchParams(location.search).get('q') === window.__gameyerSearchTerm`, 'nonzero search URL update');
+  await wait(`window.__gameyerCapturedEvents.some((entry) => entry.event === 'search_query' && entry.properties?.search_query === window.__gameyerSearchTerm && Number.isInteger(entry.properties?.result_count) && entry.properties.result_count > 0 && entry.properties?.no_results === false)`, 'nonzero search analytics capture');
+  const nonzeroSearchAnalytics = await evaluate(`window.__gameyerCapturedEvents.find((entry) => entry.event === 'search_query' && entry.properties?.search_query === window.__gameyerSearchTerm)?.properties || null`);
+  assert(nonzeroSearchAnalytics?.result_count > 0 && nonzeroSearchAnalytics?.no_results === false, 'Nonzero search analytics result contract failed', nonzeroSearchAnalytics);
+
+  await navigate('/');
+  await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input before rapid typing regression');
   await evaluate(`(async () => {
     const input = document.querySelector('input[aria-label="Klub axtar"]');
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
@@ -157,6 +182,9 @@ try {
   })()`);
   await wait(`location.search.includes('q=__definitely_no_real_club__')`, 'search query URL update');
   await wait(`document.body.innerText.includes('Nəticə tapılmadı') || document.body.innerText.includes('klub tapılmadı') || document.body.innerText.includes('0 klub')`, 'search no-results state');
+  await wait(`window.__gameyerCapturedEvents.some((entry) => entry.event === 'search_query' && entry.properties?.search_query === '__definitely_no_real_club__' && entry.properties?.result_count === 0 && entry.properties?.no_results === true)`, 'zero-result search analytics capture');
+  const zeroResultSearchAnalytics = await evaluate(`window.__gameyerCapturedEvents.find((entry) => entry.event === 'search_query' && entry.properties?.search_query === '__definitely_no_real_club__')?.properties || null`);
+  assert(zeroResultSearchAnalytics?.result_count === 0 && zeroResultSearchAnalytics?.no_results === true, 'Zero-result search analytics result contract failed', zeroResultSearchAnalytics);
 
   await navigate('/?type=pc');
   const pcState = await evaluate(`(() => ({
@@ -169,7 +197,8 @@ try {
   assert(pcState.canonical === 'https://gameyer.az/' || pcState.canonical === `${BASE_URL}/`, 'Filtered homepage canonical regressed', pcState);
 
   await navigate(`/?district=${encodeURIComponent(initial.districtSlug)}`);
-  assert(await evaluate(`new URLSearchParams(location.search).get('district') === ${JSON.stringify(initial.districtSlug)}`), 'District filter query did not remain active');
+  const activeDistrict = await evaluate(`new URLSearchParams(location.search).get('district')`);
+  assert(activeDistrict === initial.districtSlug, 'District filter query did not remain active', { expected: initial.districtSlug, actual: activeDistrict });
   assert(await evaluate(`document.querySelector('meta[name="robots"]')?.content?.toLowerCase().includes('noindex')`), 'District-filtered homepage must remain noindex');
 
   await navigate('/?price_max=2');
