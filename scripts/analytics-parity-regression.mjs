@@ -33,6 +33,8 @@ for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_corre
 for (const surface of ['header_maps', 'contact_phone', 'contact_instagram', 'contact_maps', 'correction']) assert.ok(link.includes(`'${surface}'`), `TrackedClubLink must keep CTA surface ${surface}`);
 assert.ok(link.includes('cta_surface'), 'Club action analytics must keep CTA surface attribution');
 assert.ok(link.includes("closest('aside')"), 'Maps CTA attribution must distinguish header and contact-card surfaces without visual selectors or text');
+assert.ok(link.includes("'inline-flex min-h-11 items-center rounded-md px-2'"), 'Phone and Instagram links must preserve a 44px minimum tap target');
+assert.ok(link.includes('focus-visible:ring-2') && link.includes('focus-visible:ring-offset-2'), 'Tracked club links must preserve visible keyboard focus treatment');
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(detail.includes(`eventType="${event}"`), `ClubDetail must keep ${event} conversion wiring`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(eventRoute.includes(`'${event}'`), `Analytics API must accept ${event}`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(correctionAnalyticsMigration.includes(`'${event}'`), `Analytics DB migration must accept ${event}`);
