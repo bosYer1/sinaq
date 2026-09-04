@@ -37,7 +37,7 @@ export function OwnerClaimApplyForm({ id, clubId, message, status, current }: Ow
     return (
       <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
         <p className="text-xs font-semibold text-emerald-900">Təsdiq seçimi klub bağlandıqdan sonra aktiv olacaq.</p>
-        <p className="mt-1 text-xs leading-5 text-emerald-800">Əvvəl yuxarıdakı “Aktiv klub seç” sahəsindən doğru klub profilini seç və “Kluba bağla” düyməsini vur. Bundan sonra müraciəti birbaşa təsdiq edib klubu aktivləşdirə biləcəksən.</p>
+        <p className="mt-1 text-xs leading-5 text-emerald-800">Yuxarıdakı “Klub seç” sahəsindən doğru klub profilini seç və “Kluba bağla” düyməsini vur. Klub hazırda deaktivdirsə də seçilə bilər; təsdiq zamanı avtomatik aktivləşəcək.</p>
         <button type="button" disabled className="mt-2 h-9 cursor-not-allowed rounded-lg bg-emerald-300 px-4 text-sm font-semibold text-white opacity-70">Təsdiq et və aktivləşdir</button>
       </div>
     );

@@ -68,14 +68,16 @@ async function linkSubmissionToClub(formData: FormData, kind: LinkableSubmission
       .from('clubs')
       .select('id,is_active')
       .eq('id', clubId)
-      .eq('is_active', true)
       .maybeSingle(),
   ]);
 
   if (submissionError) throw new Error(submissionError.message);
   if (clubError) throw new Error(clubError.message);
   if (!submission) throw new Error('Müraciət tapılmadı.');
-  if (!club) throw new Error('Seçilən aktiv klub tapılmadı.');
+  if (!club) throw new Error('Seçilən klub tapılmadı.');
+  if (kind === 'correction' && !club.is_active) {
+    throw new Error('Düzəliş müraciəti yalnız aktiv kluba bağlana bilər.');
+  }
   if (submission.status === 'resolved' || submission.status === 'rejected') {
     throw new Error('Tamamlanmış müraciəti kluba bağlamaq olmaz.');
   }
