@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { applyOwnerClaimFields, verifyOwnerClaim } from '@/app/admin/muracietler/actions';
+import { createClient } from '@/lib/supabase/server';
 import {
   normalizeOwnerInstagram,
   parseOwnerClaimMessage,
@@ -32,16 +33,35 @@ function comparison(current: string | number | null | undefined, proposed: strin
   );
 }
 
-export function OwnerClaimApplyForm({ id, clubId, message, status, current, submittedImages = [] }: OwnerClaimApplyFormProps) {
+export async function OwnerClaimApplyForm({ id, clubId, message, status, current, submittedImages = [] }: OwnerClaimApplyFormProps) {
   if (status === 'resolved' || status === 'rejected') return null;
 
   if (!clubId) {
+    const supabase = await createClient();
+    const { data: clubs, error } = await supabase
+      .from('clubs')
+      .select('id,name,is_active')
+      .order('name', { ascending: true });
+
+    if (error) throw new Error(error.message);
+
     return (
-      <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-        <p className="text-xs font-semibold text-emerald-900">Bu müraciət avtomatik kluba bağlanmayıb.</p>
-        <p className="mt-1 text-xs leading-5 text-emerald-800">Yalnız legacy və ya klub səhifəsindən gəlməyən müraciətlər üçün yuxarıdan doğru klubu manual seç. Yeni owner claim-lər klub səhifəsindən göndəriləndə klub avtomatik bağlanacaq.</p>
-        <button type="button" disabled className="mt-2 h-9 cursor-not-allowed rounded-lg bg-emerald-300 px-4 text-sm font-semibold text-white opacity-70">Təsdiq et və aktivləşdir</button>
-      </div>
+      <form action={verifyOwnerClaim} className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+        <input type="hidden" name="id" value={id} />
+        <p className="text-xs font-semibold text-emerald-900">Klubu seç və birbaşa təsdiqlə.</p>
+        <p className="mt-1 text-xs leading-5 text-emerald-800">
+          Aktiv və ya deaktiv doğru klubu seç. “Təsdiq et və aktivləşdir” bir klikdə müraciəti həmin kluba bağlayacaq, klubu aktiv + verified edəcək və müraciəti həll olunmuş vəziyyətə keçirəcək.
+        </p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <select name="club_id" required defaultValue="" className="h-10 min-w-0 flex-1 rounded-lg border border-emerald-300 bg-white px-3 text-sm text-gray-900">
+            <option value="" disabled>Klub seç</option>
+            {(clubs ?? []).map((club) => (
+              <option key={club.id} value={club.id}>{club.name}{club.is_active ? '' : ' — deaktiv'}</option>
+            ))}
+          </select>
+          <button type="submit" className="h-10 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700">Təsdiq et və aktivləşdir</button>
+        </div>
+      </form>
     );
   }
 
