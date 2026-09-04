@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { applyOwnerClaimFields, verifyOwnerClaim } from '@/app/admin/muracietler/actions';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -46,22 +47,34 @@ export async function OwnerClaimApplyForm({ id, clubId, message, status, current
     if (error) throw new Error(error.message);
 
     return (
-      <form action={verifyOwnerClaim} className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-        <input type="hidden" name="id" value={id} />
-        <p className="text-xs font-semibold text-emerald-900">Klubu seç və birbaşa təsdiqlə.</p>
-        <p className="mt-1 text-xs leading-5 text-emerald-800">
-          Aktiv və ya deaktiv doğru klubu seç. “Təsdiq et və aktivləşdir” bir klikdə müraciəti həmin kluba bağlayacaq, klubu aktiv + verified edəcək və müraciəti həll olunmuş vəziyyətə keçirəcək.
-        </p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-          <select name="club_id" required defaultValue="" className="h-10 min-w-0 flex-1 rounded-lg border border-emerald-300 bg-white px-3 text-sm text-gray-900">
-            <option value="" disabled>Klub seç</option>
-            {(clubs ?? []).map((club) => (
-              <option key={club.id} value={club.id}>{club.name}{club.is_active ? '' : ' — deaktiv'}</option>
-            ))}
-          </select>
-          <button type="submit" className="h-10 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700">Təsdiq et və aktivləşdir</button>
+      <div className="mt-4 space-y-3">
+        <form action={verifyOwnerClaim} className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+          <input type="hidden" name="id" value={id} />
+          <p className="text-xs font-semibold text-emerald-900">1. Klub artıq GameYer bazasındadır</p>
+          <p className="mt-1 text-xs leading-5 text-emerald-800">
+            Aktiv və ya deaktiv doğru klubu seç. “Təsdiq et və aktivləşdir” bir klikdə müraciəti həmin kluba bağlayacaq, klubu aktiv + verified edəcək və müraciəti həll olunmuş vəziyyətə keçirəcək.
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <select name="club_id" required defaultValue="" className="h-10 min-w-0 flex-1 rounded-lg border border-emerald-300 bg-white px-3 text-sm text-gray-900">
+              <option value="" disabled>Klub seç</option>
+              {(clubs ?? []).map((club) => (
+                <option key={club.id} value={club.id}>{club.name}{club.is_active ? '' : ' — deaktiv'}</option>
+              ))}
+            </select>
+            <button type="submit" className="h-10 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700">Təsdiq et və aktivləşdir</button>
+          </div>
+        </form>
+
+        <div className="rounded-lg border border-violet-200 bg-violet-50 p-3">
+          <p className="text-xs font-semibold text-violet-900">2. Klub GameYer bazasında yoxdur</p>
+          <p className="mt-1 text-xs leading-5 text-violet-800">
+            Yeni klub yaratma axınını aç. Sistem real ünvan, koordinat, Instagram və klub tipini tələb edəcək; klubu əvvəlcə inactive + unverified yaradıb bu müraciətə bağlayacaq. Owner təsdiqi ayrıca son mərhələdə ediləcək.
+          </p>
+          <Link href={`/admin/muracietler/${encodeURIComponent(id)}/yeni-klub`} className="mt-3 inline-flex h-10 items-center rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white transition hover:bg-[#6A47F0]">
+            Bazada yoxdur — yeni klub yarat
+          </Link>
         </div>
-      </form>
+      </div>
     );
   }
 
