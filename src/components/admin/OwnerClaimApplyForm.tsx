@@ -31,7 +31,17 @@ function comparison(current: string | number | null | undefined, proposed: strin
 }
 
 export function OwnerClaimApplyForm({ id, clubId, message, status, current }: OwnerClaimApplyFormProps) {
-  if (!clubId || status === 'resolved' || status === 'rejected') return null;
+  if (status === 'resolved' || status === 'rejected') return null;
+
+  if (!clubId) {
+    return (
+      <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+        <p className="text-xs font-semibold text-emerald-900">Təsdiq seçimi klub bağlandıqdan sonra aktiv olacaq.</p>
+        <p className="mt-1 text-xs leading-5 text-emerald-800">Əvvəl yuxarıdakı “Aktiv klub seç” sahəsindən doğru klub profilini seç və “Kluba bağla” düyməsini vur. Bundan sonra müraciəti birbaşa təsdiq edib klubu aktivləşdirə biləcəksən.</p>
+        <button type="button" disabled className="mt-2 h-9 cursor-not-allowed rounded-lg bg-emerald-300 px-4 text-sm font-semibold text-white opacity-70">Təsdiq et və aktivləşdir</button>
+      </div>
+    );
+  }
 
   const claim = parseOwnerClaimMessage(message);
   if (!claim) return null;
@@ -83,8 +93,8 @@ export function OwnerClaimApplyForm({ id, clubId, message, status, current }: Ow
 
       <form action={verifyOwnerClaim} className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
         <input type="hidden" name="id" value={id} />
-        <p className="text-xs leading-5 text-emerald-800">Sahiblik rəsmi kanal vasitəsilə ayrıca yoxlanıldıqdan sonra klubu verified et. Bu əməliyyat müraciəti də “Həll olunub” statusuna keçirir.</p>
-        <button type="submit" className="mt-2 h-9 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700">Klub sahibini təsdiqlə</button>
+        <p className="text-xs leading-5 text-emerald-800">Sahiblik rəsmi kanal vasitəsilə ayrıca yoxlanıldıqdan sonra təsdiqlə. Bu əməliyyat klubu aktiv və verified edir, müraciəti isə “Həll olunub” statusuna keçirir.</p>
+        <button type="submit" className="mt-2 h-9 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700">Təsdiq et və aktivləşdir</button>
       </form>
     </div>
   );
