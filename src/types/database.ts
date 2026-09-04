@@ -115,6 +115,12 @@ export interface Database {
         };
         Relationships: [{ foreignKeyName: 'club_submissions_club_id_fkey'; columns: ['club_id']; isOneToOne: false; referencedRelation: 'clubs'; referencedColumns: ['id'] }];
       };
+      admin_notifications: {
+        Row: { id: string; type: string; submission_id: string | null; title: string; message: string; read_at: string | null; created_at: string };
+        Insert: { id?: string; type: string; submission_id?: string | null; title: string; message: string; read_at?: string | null; created_at?: string };
+        Update: { id?: string; type?: string; submission_id?: string | null; title?: string; message?: string; read_at?: string | null; created_at?: string };
+        Relationships: [{ foreignKeyName: 'admin_notifications_submission_id_fkey'; columns: ['submission_id']; isOneToOne: false; referencedRelation: 'club_submissions'; referencedColumns: ['id'] }];
+      };
       admin_users: {
         Row: { user_id: string; created_at: string };
         Insert: { user_id: string; created_at?: string };
@@ -144,6 +150,7 @@ export type ClubOpeningHours = Database['public']['Tables']['club_opening_hours'
 export type ClubImage = Database['public']['Tables']['club_images']['Row'];
 export type ClubSubmission = Database['public']['Tables']['club_submissions']['Row'];
 export type PageView = Database['public']['Tables']['page_views']['Row'];
+export type AdminNotification = Database['public']['Tables']['admin_notifications']['Row'];
 
 export interface ClubWithRelations extends ClubRow {
   district: Pick<District, 'id' | 'name' | 'slug'> | null;
