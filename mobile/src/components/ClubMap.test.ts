@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { ClubMap, mapReadyCompletesLoading } from './ClubMap';
+import { ClubMap, mapClubSetKey, mapReadyCompletesLoading } from './ClubMap';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ScreenState } from './ScreenState';
 import type { MappableClub } from '@/types/club';
@@ -79,4 +79,9 @@ test('loaded map cancels its timeout', async () => {
 test('treats iOS MapKit readiness as loaded but keeps Android tile confirmation separate', () => {
   expect(mapReadyCompletesLoading('ios')).toBe(true);
   expect(mapReadyCompletesLoading('android')).toBe(false);
+});
+
+test('map dataset identity changes when a club coordinate changes', () => {
+  expect(mapClubSetKey(clubs)).toBe(mapClubSetKey([...clubs].reverse()));
+  expect(mapClubSetKey(clubs)).not.toBe(mapClubSetKey([{ ...clubs[0], latitude: 40.6 }, clubs[1]]));
 });

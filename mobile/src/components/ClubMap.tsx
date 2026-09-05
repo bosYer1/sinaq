@@ -33,6 +33,10 @@ export function mapReadyCompletesLoading(platform: string) {
   return platform === 'ios';
 }
 
+export function mapClubSetKey(clubs: MappableClub[]) {
+  return JSON.stringify(clubs.map(({ id, latitude, longitude }) => [id, latitude, longitude]).sort());
+}
+
 function MapSession({ clubs, selectedClubId, onSelectClub, onClearSelection, onRetry }: Props & { onRetry: () => void }) {
   const { colors, scheme } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -45,7 +49,7 @@ function MapSession({ clubs, selectedClubId, onSelectClub, onClearSelection, onR
   const [layout, setLayout] = useState({ width: 0, height: 0 });
   const [mapLoaded, setMapLoaded] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
-  const clubSet = useMemo(() => clubs.map((club) => club.id).sort().join(':'), [clubs]);
+  const clubSet = useMemo(() => mapClubSetKey(clubs), [clubs]);
   const points = useMemo(() => clusterClubs(clubs, region, selectedClubId), [clubs, region, selectedClubId]);
 
   useEffect(() => {

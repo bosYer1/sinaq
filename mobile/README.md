@@ -13,6 +13,7 @@ GameYer-in mövcud Supabase backend-i ilə işləyən Expo/React Native mobil t�
 - Route səviyyəsində bərpa edilə bilən error boundary və sürətli təkrar keçid qoruması
 - Supabase publishable key + production RLS
 - Native `react-native-maps` ekranı və dependency-siz region əsaslı marker clustering-i
+- Telefon, rəsmi Instagram, istiqamət və yalnız `gameyer.az/klub/...` hədəfli native paylaşma action-ları
 - Route-lar: discovery, map, nearby, more, appearance, info və `club/[slug]`
 - Konfiqurasiya yoxdur və ya səhvdirsə production fallback edilmir
 

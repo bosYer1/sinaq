@@ -3,6 +3,7 @@ import { memo, useState } from 'react';
 import { StyleSheet, Text, View, type StyleProp } from 'react-native';
 import type { ColorPalette } from '@/constants/theme';
 import { useThemedStyles } from '@/context/ThemeContext';
+import { normalizeRemoteImageUrl } from '@/lib/clubs';
 
 type Props = {
   uri: string | null;
@@ -13,19 +14,21 @@ type Props = {
 
 export const ClubImage = memo(function ClubImage({ uri, name, style, priority = 'normal' }: Props) {
   const styles = useThemedStyles(createStyles);
-  const [failed, setFailed] = useState(false);
-  if (!uri || failed) {
+  const normalizedUri = normalizeRemoteImageUrl(uri);
+  const [failedUri, setFailedUri] = useState<string | null>(null);
+  if (!normalizedUri || failedUri === normalizedUri) {
     return <View style={[style, styles.placeholder]} accessibilityLabel={`${name} üçün şəkil yoxdur`}><Text style={styles.placeholderText}>Şəkil yoxdur</Text></View>;
   }
   return (
     <Image
-      source={{ uri }}
+      source={{ uri: normalizedUri }}
+      recyclingKey={normalizedUri}
       style={style}
       contentFit="cover"
       transition={180}
       cachePolicy="memory-disk"
       priority={priority}
-      onError={() => setFailed(true)}
+      onError={() => setFailedUri(normalizedUri)}
       accessibilityLabel={`${name} klub şəkli`}
     />
   );

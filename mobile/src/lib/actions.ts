@@ -1,4 +1,12 @@
 const PHONE_PATTERN = /^\+?\d{7,15}$/;
+const PUBLIC_SITE_ORIGIN = 'https://gameyer.az';
+
+export function clubSharePayload(name: string, slug: string) {
+  const cleanName = name.trim().replace(/\s+/g, ' ').slice(0, 160);
+  if (!cleanName || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120) return null;
+  const url = `${PUBLIC_SITE_ORIGIN}/klub/${slug}`;
+  return { title: cleanName, message: `${cleanName}\n${url}`, url };
+}
 
 export function allowedExternalUrl(value: string) {
   if (value.startsWith('tel:')) return phoneUrl(value.slice(4)) === value;

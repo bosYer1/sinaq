@@ -45,6 +45,12 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
   const deferredQuery = useDeferredValue(filters.query);
+  const deferredFilters = useMemo<ClubFilters>(() => ({
+    query: deferredQuery,
+    district: filters.district,
+    type: filters.type,
+    verifiedOnly: filters.verifiedOnly,
+  }), [deferredQuery, filters.district, filters.type, filters.verifiedOnly]);
   const acceptClubs = useCallback((nextClubs: Club[]) => {
     setClubs(nextClubs);
     setFilterState((current) => reconcileFilters(current, nextClubs));
@@ -111,8 +117,8 @@ export function ClubDataProvider({ children }: { children: ReactNode }) {
   }, [clubs]);
 
   const filteredClubs = useMemo(
-    () => filterClubs(clubs, { ...filters, query: deferredQuery }),
-    [clubs, deferredQuery, filters],
+    () => filterClubs(clubs, deferredFilters),
+    [clubs, deferredFilters],
   );
   const setFilters = useCallback((next: Partial<ClubFilters>) => {
     setFilterState((current) => ({ ...current, ...next }));

@@ -40,13 +40,13 @@ export default function NearbyScreen() {
     const controller = new AbortController();
     activeRequest.current = controller;
     setStatus('loading');
-    setPosition(null);
     const result = await requestPosition(controller.signal);
     if (controller.signal.aborted || activeRequest.current !== controller) return;
     activeRequest.current = null;
     if (result.status === 'cancelled') { setStatus('idle'); return; }
     setStatus(result.status);
     if (result.status === 'ready') setPosition(result.position);
+    else if (result.status !== 'error') setPosition(null);
   };
 
   return <FlatList

@@ -24,7 +24,6 @@ export default function MapScreen() {
   const clearSelection = useCallback(() => setSelectedClubId(null), []);
 
   useFocusEffect(useCallback(() => {
-    setSelectedClubId(null);
     resetNavigationGuard();
   }, []));
 

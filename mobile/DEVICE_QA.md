@@ -2,6 +2,15 @@
 
 Bu checklist real Android və iOS cihazında release candidate yoxlaması üçündür. Aşağıdakı maddələr desktop bundle export ilə təsdiqlənmiş sayılmır.
 
+Hər maddənin nəticəsini aşağıdakı formatla ayrıca yazın; yoxlanmamış maddə `PENDING` qalır:
+
+```text
+Status: PASS / FAIL / BLOCKED / PENDING
+Device + OS:
+Commit:
+Qeyd / bug linki:
+```
+
 ## Map-dan müstəqil beta sprint — 2026-08-29
 
 **KNOWN BLOCKER — Android physical device map rendering unresolved.** Expo SDK 57 `react-native-maps`-i Expo Go-da daxil etsə də, GameYer-in Android release acceptance-i `az.gameyer.app` və signing SHA-1 ilə məhdudlaşdırılmış Google Maps key olan development build tələb edir. Cari keyless build xəritəni təhlükəsiz deaktiv edir. Billing/key founder icazəsi tələb etdiyi üçün bu checklistdə xəritə PASS deyil.
@@ -11,7 +20,7 @@ Founder əvvəlki build-də Android launch, public data, Discovery/list, theme v
 - [ ] Təmiz launch: heç bir location prompt yoxdur; Kəşf et, Xəritə, Yaxınlıq, Daha çox tabları görünür.
 - [ ] Kəşf et: uzun scroll, Azerbaijani search, PC/PlayStation/rayon/verified, görünən reset və no-results reset.
 - [ ] Detail: original profile şəkli birincidir, qalan gallery swipe işləyir; qiymət/tariff/saatlar realdır; unknown data uydurulmur; expired Premium görünmür.
-- [ ] Telefon/Instagram/İstiqamət al cihaz tətbiqini açır; geri qayıtmaq mümkündür; dəstəklənməyən link alert göstərir.
+- [ ] Telefon/Instagram/İstiqamət al/Paylaş cihaz əməliyyatını açır; geri qayıtmaq mümkündür; dəstəklənməyən əməliyyat alert göstərir.
 - [ ] Yaxınlığa girmək prompt göstərmir. Yalnız “Mövqeyimi istifadə et” soruşur. Deny və “bir daha soruşma” hallarında izahlı UI, settings/retry və Kəşf et işləyir.
 - [ ] Android approximate və precise permission: məsafələr artan sıra ilə, km formatında görünür; koordinatsız klub yoxdur. Bu, düz xətt məsafəsidir, yol məsafəsi deyil.
 - [ ] GPS sönülü, indoor timeout, permission sorğusu zamanı geri/tab dəyişmə: stuck spinner və crash yoxdur. Yenidən cəhd işləyir.
@@ -41,7 +50,11 @@ Uyğunluq: `react-native-maps 1.27.2` Expo SDK 57 ilə aligned-dir və [SDK 57 m
 
 Development build map gate — hamısı real cihazda PENDING:
 
+- [ ] Expo dashboard → Credentials → Android → `az.gameyer.app` → Android Keystore-dan build-i imzalayan SHA-1 götürülüb.
 - [ ] Restricted Android Maps API key `az.gameyer.app` və development signing SHA-1 ilə uyğunlaşdırılıb.
+- [ ] Key yalnız Maps SDK for Android API-si ilə məhdudlaşdırılıb və Preview environment-də Sensitive `GOOGLE_MAPS_API_KEY_ANDROID` kimi saxlanılıb; git-də yoxdur.
+- [ ] Founder Maps SDK billing aktivləşdirməsini ayrıca təsdiqləyib; təsdiq yoxdursa status `BLOCKED` qalır.
+- [ ] `cd mobile` → `npx eas-cli@latest build --platform android --profile preview` ilə yeni APK yaradılıb.
 - [ ] Development APK real cihaza quraşdırılıb; `adb logcat`-də Maps authorization failure yoxdur.
 - [ ] Bakı tiles-i və real klub markerləri görünür.
 - [ ] Marker/cluster press, selected card və detail keçidi işləyir.
@@ -96,7 +109,7 @@ Hər testi ən azı bir real Android və bir real iPhone-da aparın. Crash, ağ 
 4. 20 fərqli klub kartına sürətlə toxunun; yalnız bir detail screen açılmalıdır. Hardware back/iOS swipe-back ilə bir addımda siyahıya qayıdın.
 5. Bir detail yüklənərkən geri qayıdıb başqa klub açın; əvvəlki klubun adı, şəkli və məlumatı heç vaxt yeni route-da görünməməlidir.
 6. Xəritədə 20 markerə sürətlə toxunun, sonra cluster və marker arasında keçin; son seçim preview-də görünməli və kamera nəzarətsiz animasiya növbəsinə düşməməlidir.
-7. Map/list arasında təkrar keçin, discovery-də filtri dəyişib map-a qayıdın; köhnə marker seçimi/preview bərpa olmamalı və location icazəsi istənməməlidir.
+7. Map/list arasında təkrar keçin, discovery-də filtri dəyişib map-a qayıdın; detail-dən geri qayıdanda seçilmiş marker qalmalı, artıq filtrə uyğun olmayan seçim bağlanmalı və location icazəsi istənməməlidir.
 8. Şəkilli siyahını sürətlə yuxarı-aşağı scroll edin və qırıq image URL olan klub açın; scroll cavabdeh qalmalı, fallback görünməli, gallery ağ/boş sahədə ilişməməlidir.
 9. Kiçik ekran və maksimum accessibility font ilə uzun ad/ünvanlı detail-i yoxlayın; badge, action-lar, qiymətlər və saatlar kəsilmədən scroll edilə bilməlidir.
 10. Zəng, Instagram və Marşrut action-larını açın və ləğv edib app-a qayıdın; yalnız `tel:` və yoxlanmış HTTPS hədəflər açılmalı, dəstəklənməyən action professional alert göstərməlidir.
@@ -113,7 +126,7 @@ Hər testi ən azı bir real Android və bir real iPhone-da aparın. Crash, ağ 
 - Uzaq zoom-da cluster saylarını, cluster-ə toxunaraq yaxınlaşmanı və yaxın zoom-da markerə ayrılmanı yoxla.
 - Seçilmiş markerin kamera fokusunu, preview kartını və detail keçidini yoxla.
 - Detail qalereyasında swipe, qırıq şəkil fallback-i, uzun mətn və bütün missing-data vəziyyətlərini yoxla.
-- Telefon zəngi, yalnız rəsmi Instagram HTTPS linki və directions action-larını yoxla; cancel etdikdə app-a təhlükəsiz qayıtmalıdır.
+- Telefon zəngi, yalnız rəsmi Instagram HTTPS linki, directions və fixed-origin Paylaş action-larını yoxla; cancel etdikdə app-a təhlükəsiz qayıtmalıdır.
 - Kiçik ekran, böyük accessibility font ölçüsü, landscape bloklanması və tablet layout-u yoxla.
 - Status bar, notch/Dynamic Island, home indicator və tab bar safe-area davranışını yoxla.
 - Sistem/İşıqlı/Qaranlıq seçimində xəritə və digər ekranların kontrastını, theme dəyişərkən crash olmadığını yoxla.
@@ -131,3 +144,11 @@ Hər testi ən azı bir real Android və bir real iPhone-da aparın. Crash, ağ 
 - Apple Maps əsaslı map tile, marker/cluster rendering və gesture-ləri yoxla.
 - Telefon/Instagram/directions action-larını və Safari/Maps-dən app-a qayıdışı yoxla.
 - Location prompt yalnız Yaxınlıq düyməsi ilə göstərilməlidir; Always/background icazə istənməməlidir.
+
+## Closed beta backlog
+
+- **P0 / release blocker:** restricted-key Android native map acceptance və tam real Android cihaz regression-u; iOS physical-device install/launch/navigation QA.
+- **P1:** offline launch/recovery, Nearby permission/GPS/timeout, detail/back spam, gallery və external action-lar, böyük font və kiçik ekran real cihazda yoxlanmalıdır.
+- **P2:** müxtəlif Android istehsalçı image-cache davranışı, tablet görünüşü və çox böyük klub datasetində scroll/cluster performansı ölçülməlidir.
+
+Bu maddələrin heç biri bundle export və unit test nəticəsinə əsasən PASS sayılmır.

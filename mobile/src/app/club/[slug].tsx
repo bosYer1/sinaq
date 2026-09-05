@@ -8,7 +8,7 @@ import { radius, spacing, type ColorPalette } from '@/constants/theme';
 import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { clubTypeLabels, coverImage, fetchClubBySlug, isPremiumActive } from '@/lib/clubs';
 import { detailImages } from '@/lib/detail';
-import { openExternalUrl } from '@/lib/openExternal';
+import { openExternalUrl, shareClub } from '@/lib/openExternal';
 import { directionsUrl, instagramUrl, phoneUrl } from '@/lib/actions';
 import { formatHours, formatPrice } from '@/lib/format';
 import type { Club } from '@/types/club';
@@ -17,7 +17,7 @@ function ActionButton({ icon, label, onPress }: { icon: keyof typeof Ionicons.gl
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   return (
-    <Pressable onPress={onPress} style={styles.action} accessibilityRole="button">
+    <Pressable onPress={onPress} style={styles.action} accessibilityRole="button" accessibilityLabel={label}>
       <Ionicons name={icon} size={20} color={colors.onPrimary} />
       <Text style={styles.actionText}>{label}</Text>
     </Pressable>
@@ -136,6 +136,7 @@ export default function ClubDetailScreen() {
           {socialUrl ? (
             <ActionButton icon="logo-instagram" label="Instagram" onPress={() => void openExternalUrl(socialUrl)} />
           ) : null}
+          <ActionButton icon="share-social-outline" label="Paylaş" onPress={() => void shareClub(club.name, club.slug)} />
         </View>
 
         {club.description ? <Section title="Haqqında"><Text style={styles.paragraph}>{club.description}</Text></Section> : null}

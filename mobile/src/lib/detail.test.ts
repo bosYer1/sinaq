@@ -5,6 +5,7 @@ test('original profile image leads the gallery without duplication', () => {
   expect(detailImages({ profile_image_url: 'https://example.com/profile.jpg', images: [
     { id: 'p', url: 'https://example.com/profile.jpg', is_cover: false, position: 1 },
     { id: 'g', url: 'https://example.com/gallery.jpg', is_cover: true, position: 0 },
+    { id: 'duplicate', url: 'https://example.com/gallery.jpg', is_cover: false, position: 2 },
   ] }).map(({ id }) => id)).toEqual(['profile', 'g']);
 });
 test('missing images and hours do not become fabricated values', () => {

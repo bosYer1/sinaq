@@ -11,7 +11,7 @@ const searchIndex = new WeakMap<Club, string>();
 const TIME_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 
 const LIST_SELECT = `
-  id, name, slug, description, address, latitude, longitude,
+  id, name, slug, address, latitude, longitude,
   instagram_url, profile_image_url, is_active, is_premium, premium_expires_at, is_verified, updated_at,
   district:districts ( id, name, slug ),
   type_assignments:club_type_assignments (
@@ -66,7 +66,7 @@ export function normalizeClub(club: Club): Club {
     : [];
   const images = Array.isArray(club.images)
     ? uniqueBy(club.images.filter((image) => (
-      image && typeof image.id === 'string' && image.id && safeHttpsUrl(image.url) &&
+      image && typeof image.id === 'string' && image.id && normalizeRemoteImageUrl(image.url) &&
       typeof image.is_cover === 'boolean' && Number.isFinite(image.position)
     )), (image) => image.id).map((image) => ({ ...image, url: image.url.trim() }))
       .sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.position - b.position)
@@ -84,7 +84,7 @@ export function normalizeClub(club: Club): Club {
     description: typeof club.description === 'string' ? cleanText(club.description, 5_000) || null : null,
     phone: typeof club.phone === 'string' ? cleanText(club.phone, 100) || null : null,
     instagram_url: typeof club.instagram_url === 'string' ? cleanText(club.instagram_url, 500) || null : null,
-    profile_image_url: safeHttpsUrl(club.profile_image_url) ? club.profile_image_url!.trim() : null,
+    profile_image_url: normalizeRemoteImageUrl(club.profile_image_url),
     is_premium: isPremiumActive(club),
     is_verified: club.is_verified === true,
     verified_at: club.verified_at ?? null,
@@ -136,13 +136,14 @@ function uniqueBy<T>(values: T[], keyFor: (value: T) => string) {
   });
 }
 
-function safeHttpsUrl(value: unknown) {
-  if (typeof value !== 'string') return false;
+export function normalizeRemoteImageUrl(value: unknown) {
+  if (typeof value !== 'string') return null;
   try {
-    const url = new URL(value);
-    return url.protocol === 'https:' && !url.username && !url.password;
+    const normalized = value.trim();
+    const url = new URL(normalized);
+    return url.protocol === 'https:' && !url.username && !url.password ? normalized : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -243,7 +244,11 @@ export function filterClubs(clubs: Club[], filters: ClubFilters) {
 }
 
 export function normalizeSearchText(value: string) {
-  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('az-AZ');
+  return cleanSearchQuery(value).toLocaleLowerCase('az-AZ');
+}
+
+export function cleanSearchQuery(value: string) {
+  return value.normalize('NFKC').trim().replace(/\s+/g, ' ');
 }
 
 export function clubsWithCoordinates(clubs: Club[]) {

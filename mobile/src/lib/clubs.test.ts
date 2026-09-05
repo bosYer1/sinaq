@@ -1,4 +1,4 @@
-import { cheapestPrice, clubsWithCoordinates, coverImage, filterClubs, isPremiumActive, isPublicClub, normalizeClub, normalizeClubList, validClubSlug } from '@/lib/clubs';
+import { cheapestPrice, cleanSearchQuery, clubsWithCoordinates, coverImage, filterClubs, isPremiumActive, isPublicClub, normalizeClub, normalizeClubList, normalizeRemoteImageUrl, validClubSlug } from '@/lib/clubs';
 import type { Club } from '@/types/club';
 
 const CLUB: Club = {
@@ -57,6 +57,7 @@ describe('filterClubs', () => {
   test('normalizes Unicode and repeated whitespace in search input', () => {
     const club = { ...CLUB, name: 'Əla   Arena' };
     expect(filterClubs([club], { query: '  Əla Arena  ', district: null, type: null, verifiedOnly: false })).toEqual([club]);
+    expect(cleanSearchQuery('  Əla   Arena  ')).toBe('Əla Arena');
   });
 
   test('keeps rapid Azerbaijani search updates deterministic', () => {
@@ -124,6 +125,7 @@ describe('filterClubs', () => {
     });
     expect(normalized.profile_image_url).toBe('https://cdn.example.com/profile.jpg');
     expect(normalized.images[0].url).toBe('https://cdn.example.com/club.jpg');
+    expect(normalizeRemoteImageUrl('javascript:alert(1)')).toBeNull();
   });
 
   test('deduplicates relations and rejects invalid prices and hours', () => {

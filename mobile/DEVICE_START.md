@@ -40,6 +40,15 @@ SDK 57 `react-native-maps`-i Expo Go-da daxil edir, lakin GameYer-in keyless con
   ```
 - EAS alternativi Expo hesabı və build kvotası tələb edir: `eas build --platform android --profile development`. EAS Google Maps billing/key tələbini aradan qaldırmır.
 
+Restricted-key acceptance ardıcıllığı (yalnız founder billing/key aktivləşdirməsini təsdiqlədikdən sonra):
+
+1. Expo dashboard → GameYer project → Credentials → Android → `az.gameyer.app` → Android Keystore bölməsindən development/preview build-in SHA-1 fingerprint-ini götürün.
+2. Google Cloud-da Maps SDK for Android-i aktivləşdirin. API key-i yalnız Android apps üçün `az.gameyer.app` + həmin SHA-1 ilə, API istifadəsini isə yalnız Maps SDK for Android ilə məhdudlaşdırın.
+3. Key-i Expo project-in **Preview** environment-inə Sensitive `GOOGLE_MAPS_API_KEY_ANDROID` kimi əlavə edin; source və `.env.example`-a real value yazmayın.
+4. `cd mobile` daxilində `npx eas-cli@latest build --platform android --profile preview` işlədin və yaranan APK-nı real cihaza quraşdırın.
+
+Billing Maps SDK aktivləşdirilən 2-ci addımda tələb olunur. Bu repo həmin addımı avtomatik etmir.
+
 ## Installable Android preview APK — xəritə deferred
 
 Bu profil development server tələb etməyən, real Android cihazlara göndərilə bilən signed APK yaradır. Preview config yalnız public read-only Supabase dəyərlərini bundle edir; Google Maps key daxil etmir. Xəritə tabı native MapView mount etmək əvəzinə beta məlumatı göstərir.

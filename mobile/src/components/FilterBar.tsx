@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, TextInput, Pressable, View } from 'react-
 import { radius, spacing, type ColorPalette } from '@/constants/theme';
 import { useTheme, useThemedStyles } from '@/context/ThemeContext';
 import { useClubData } from '@/context/ClubDataContext';
+import { cleanSearchQuery, normalizeSearchText } from '@/lib/clubs';
 
 type ChipProps = { label: string; selected: boolean; onPress: () => void };
 
@@ -24,7 +25,7 @@ export function FilterBar() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const { filters, setFilters, clearFilters, districts, types } = useClubData();
-  const active = Boolean(filters.query || filters.district || filters.type || filters.verifiedOnly);
+  const active = Boolean(normalizeSearchText(filters.query) || filters.district || filters.type || filters.verifiedOnly);
 
   return (
     <View style={styles.container}>
@@ -33,6 +34,10 @@ export function FilterBar() {
         <TextInput
           value={filters.query}
           onChangeText={(query) => setFilters({ query })}
+          onEndEditing={({ nativeEvent }) => {
+            const query = cleanSearchQuery(nativeEvent.text);
+            if (query !== filters.query) setFilters({ query });
+          }}
           placeholder="Klub, şəhər və ya ünvan axtar"
           placeholderTextColor={colors.faint}
           style={styles.input}

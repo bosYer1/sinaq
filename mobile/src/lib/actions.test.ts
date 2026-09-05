@@ -1,4 +1,4 @@
-import { directionsUrl, instagramUrl, phoneUrl } from '@/lib/actions';
+import { clubSharePayload, directionsUrl, instagramUrl, phoneUrl } from '@/lib/actions';
 
 describe('native action URLs', () => {
   test('normalizes valid phone numbers and rejects unsafe values', () => {
@@ -17,5 +17,15 @@ describe('native action URLs', () => {
   test('builds directions only for valid coordinates', () => {
     expect(directionsUrl(40.4, 49.8)).toContain('destination=40.4,49.8');
     expect(directionsUrl(100, 49.8)).toBeNull();
+  });
+
+  test('builds a fixed-origin public share payload and rejects invalid routes', () => {
+    expect(clubSharePayload('  Arena   Gaming ', 'arena-gaming')).toEqual({
+      title: 'Arena Gaming',
+      message: 'Arena Gaming\nhttps://gameyer.az/klub/arena-gaming',
+      url: 'https://gameyer.az/klub/arena-gaming',
+    });
+    expect(clubSharePayload('Arena', '../admin')).toBeNull();
+    expect(clubSharePayload(' ', 'arena')).toBeNull();
   });
 });
