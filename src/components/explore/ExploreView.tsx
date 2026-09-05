@@ -336,9 +336,33 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
         {view === 'list' ? (
           <section>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
+                <p className="text-xs text-muted">Klubları müqayisə et</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLocationSort}
+                disabled={status === 'loading' || status === 'unsupported'}
+                className={`rounded-xl border px-3 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted'}`}
+              >
+                {locationButtonLabel}
+              </button>
+            </div>
+            {locationMessage ? <div className="mb-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
+            <div data-mobile-club-list-priority="true">
+              <ClubList
+                clubs={mobileClubs}
+                activeClubId={activeClubId}
+                onHoverClub={handleHoverCard}
+                searchActive={searchActive}
+                onClearFilters={hasActiveFilters ? clearAll : undefined}
+              />
+            </div>
             <div
               data-mobile-list-map-container="true"
-              className="relative mb-3 h-[260px] overflow-hidden rounded-[18px] sm:h-[320px]"
+              className="relative mt-4 h-[260px] overflow-hidden rounded-[18px] sm:h-[320px]"
             >
               {isDesktop === false ? (
                 mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />
@@ -356,28 +380,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 </button>
               ) : null}
             </div>
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
-                <p className="text-xs text-muted">Klubları müqayisə et</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleLocationSort}
-                disabled={status === 'loading' || status === 'unsupported'}
-                className={`rounded-xl border px-3 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted'}`}
-              >
-                {locationButtonLabel}
-              </button>
-            </div>
-            {locationMessage ? <div className="mb-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
-            <ClubList
-              clubs={mobileClubs}
-              activeClubId={activeClubId}
-              onHoverClub={handleHoverCard}
-              searchActive={searchActive}
-              onClearFilters={hasActiveFilters ? clearAll : undefined}
-            />
             {clubsWithDistance.length > 4 ? (
               <button
                 type="button"
