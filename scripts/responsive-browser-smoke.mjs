@@ -1,11 +1,14 @@
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import process from 'node:process';
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 const CHROME_BIN = process.env.CHROME_BIN;
 const CDP_PORT = Number(process.env.CDP_PORT || 9222);
 const ARTIFACT_DIR = process.env.RESPONSIVE_ARTIFACT_DIR || '/tmp/gameyer-responsive';
+const CHROME_PROFILE_DIR = process.env.RESPONSIVE_CHROME_PROFILE_DIR || join(tmpdir(), 'gameyer-responsive-chrome');
 
 if (!CHROME_BIN) throw new Error('CHROME_BIN is required');
 await mkdir(ARTIFACT_DIR, { recursive: true });
@@ -16,7 +19,7 @@ const chrome = spawn(CHROME_BIN, [
   '--disable-gpu',
   '--disable-dev-shm-usage',
   `--remote-debugging-port=${CDP_PORT}`,
-  '--user-data-dir=/tmp/gameyer-responsive-chrome',
+  `--user-data-dir=${CHROME_PROFILE_DIR}`,
   '--no-first-run',
   '--no-default-browser-check',
   'about:blank',
@@ -264,7 +267,22 @@ async function assertHomepage(client, viewport) {
     assert(Math.abs(listView.mapContainerRect.height - activated.mapContainerRect.height) <= 1, `${viewport.name}: map container height changed on activation`, { listView, activated });
     assert(Math.abs(listView.mapContainerRect.left - activated.mapContainerRect.left) <= 1, `${viewport.name}: map container horizontal geometry changed on activation`, { listView, activated });
     assert(Math.abs(listView.mapContainerRect.top - activated.mapContainerRect.top) <= 1, `${viewport.name}: map container vertical geometry changed on activation`, { listView, activated });
-    await evaluate(client, `Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Xəritə')?.click()`);
+    const mapViewClicked = await evaluate(client, `(() => {
+      const button = Array.from(document.querySelectorAll('button')).find((candidate) => candidate.textContent?.trim() === 'Xəritə');
+      if (!button) return false;
+      button.click();
+      return true;
+    })()`);
+    assert(mapViewClicked, `${viewport.name}: map view control is missing`);
+    for (let i = 0; i < 80; i += 1) {
+      const mapViewReady = await evaluate(client, `
+        new URLSearchParams(location.search).get('view') === 'map' &&
+        Boolean(document.querySelector('[data-explore-view="map"]'))
+      `);
+      if (mapViewReady) break;
+      if (i === 79) throw new Error(`${viewport.name}: map view did not become active`);
+      await sleep(100);
+    }
   }
   await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
   await sleep(900);

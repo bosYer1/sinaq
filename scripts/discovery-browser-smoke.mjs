@@ -1,9 +1,12 @@
 import { spawn } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import process from 'node:process';
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 const CHROME_BIN = process.env.CHROME_BIN;
 const PORT = Number(process.env.DISCOVERY_CDP_PORT || 9333);
+const CHROME_PROFILE_DIR = process.env.DISCOVERY_CHROME_PROFILE_DIR || join(tmpdir(), 'gameyer-discovery-chrome');
 if (!CHROME_BIN) throw new Error('CHROME_BIN is required');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -11,7 +14,7 @@ const assert = (condition, message, context) => { if (!condition) throw new Erro
 
 const chrome = spawn(CHROME_BIN, [
   '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
-  `--remote-debugging-port=${PORT}`, '--user-data-dir=/tmp/gameyer-discovery-chrome', 'about:blank',
+  `--remote-debugging-port=${PORT}`, `--user-data-dir=${CHROME_PROFILE_DIR}`, 'about:blank',
 ], { stdio: ['ignore', 'pipe', 'pipe'] });
 let chromeLog = '';
 chrome.stdout.on('data', (chunk) => { chromeLog += chunk.toString(); });
