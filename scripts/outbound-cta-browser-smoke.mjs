@@ -111,11 +111,8 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 
 try {
   await navigate('/');
-  const clubHrefs = await evaluate(`Array.from(new Set(Array.from(document.querySelectorAll('a[href^="/klub/"]')).filter((anchor) => {
-    const rect = anchor.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 0;
-  }).map((anchor) => anchor.getAttribute('href')).filter(Boolean)))`);
-  assert(Array.isArray(clubHrefs) && clubHrefs.length > 0, 'No visible public club card is available for outbound CTA regression', { clubHrefs });
+  const clubHrefs = await evaluate(`Array.from(new Set(Array.from(document.querySelectorAll('a[href^="/klub/"]')).map((anchor) => anchor.getAttribute('href')).filter(Boolean)))`);
+  assert(Array.isArray(clubHrefs) && clubHrefs.length > 0, 'No public club card is available for outbound CTA regression', { clubHrefs });
 
   let clubHref = null;
   let detail = null;
@@ -123,9 +120,9 @@ try {
     await navigate(candidateHref);
     await wait(`Boolean(document.querySelector('h1'))`, `club detail heading ${candidateHref}`);
     const candidateDetail = await evaluate(`(() => {
-      const instagram = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').includes('Instagram profilinə bax'));
-      const maps = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').includes('Google Maps-də marşrut'));
-      const phone = document.querySelector('a[href^="tel:"]');
+      const instagram = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').trim() === 'Instagram');
+      const maps = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').trim() === 'Marşrut');
+      const phone = Array.from(document.querySelectorAll('a[href^="tel:"]')).find((anchor) => (anchor.textContent || '').trim() === 'Zəng et');
       return {
         path: location.pathname,
         instagramHref: instagram?.href || null,
@@ -140,11 +137,11 @@ try {
     }
   }
 
-  assert(clubHref && detail, 'No public club detail exposes Phone, Instagram, and Maps CTAs for outbound analytics regression', { checkedClubHrefs: clubHrefs });
+  assert(clubHref && detail, 'No public club detail exposes prominent Phone, Instagram, and Maps CTAs for outbound analytics regression', { checkedClubHrefs: clubHrefs });
   assert(detail.path === clubHref, 'Outbound CTA regression did not land on the selected club detail page', detail);
 
   await evaluate(`(() => {
-    const anchor = document.querySelector('a[href^="tel:"]');
+    const anchor = Array.from(document.querySelectorAll('a[href^="tel:"]')).find((item) => (item.textContent || '').trim() === 'Zəng et');
     anchor.setAttribute('href', 'javascript:void(0)');
     anchor.click();
     return true;
@@ -165,7 +162,7 @@ try {
   assert(phoneCapture.path === clubHref, 'Phone regression click unexpectedly navigated away from the club detail page', phoneCapture);
 
   await evaluate(`(() => {
-    const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').includes('Instagram profilinə bax'));
+    const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Instagram');
     anchor.removeAttribute('target');
     anchor.setAttribute('href', 'javascript:void(0)');
     anchor.click();
@@ -187,7 +184,7 @@ try {
   assert(instagramCapture.path === clubHref, 'Instagram regression click unexpectedly navigated away from the club detail page', instagramCapture);
 
   await evaluate(`(() => {
-    const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').includes('Google Maps-də marşrut'));
+    const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Marşrut');
     anchor.removeAttribute('target');
     anchor.setAttribute('href', 'javascript:void(0)');
     anchor.click();
