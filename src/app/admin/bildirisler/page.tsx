@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
-import { markAllNotificationsRead, markNotificationRead } from './actions';
+import { markAllNotificationsRead, markNotificationRead, openSubmissionNotification } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,16 +27,23 @@ function formatDate(value: string) {
 
 export default async function AdminNotificationsPage() {
   const { supabase } = await requireAdmin();
-  const { data, error } = await supabase
-    .from('admin_notifications')
-    .select('id,type,submission_id,title,message,read_at,created_at')
-    .order('created_at', { ascending: false })
-    .limit(100);
+  const [notificationsResult, unreadResult] = await Promise.all([
+    supabase
+      .from('admin_notifications')
+      .select('id,type,submission_id,title,message,read_at,created_at')
+      .order('created_at', { ascending: false })
+      .limit(100),
+    supabase
+      .from('admin_notifications')
+      .select('id', { count: 'exact', head: true })
+      .is('read_at', null),
+  ]);
 
-  if (error) throw new Error(error.message);
+  if (notificationsResult.error) throw new Error(notificationsResult.error.message);
+  if (unreadResult.error) throw new Error(unreadResult.error.message);
 
-  const notifications = (data ?? []) as AdminNotification[];
-  const unreadCount = notifications.filter((item) => !item.read_at).length;
+  const notifications = (notificationsResult.data ?? []) as AdminNotification[];
+  const unreadCount = unreadResult.count ?? 0;
 
   return (
     <div>
@@ -94,9 +101,12 @@ export default async function AdminNotificationsPage() {
 
                   <div className="flex shrink-0 flex-wrap gap-2">
                     {item.submission_id ? (
-                      <Link href="/admin/muracietler" className="inline-flex h-9 items-center rounded-lg bg-[#7C5CFC] px-3 text-sm font-semibold text-white hover:bg-[#6A47F0]">
-                        Müraciətlərə bax
-                      </Link>
+                      <form action={openSubmissionNotification}>
+                        <input type="hidden" name="id" value={item.id} />
+                        <button type="submit" className="inline-flex h-9 items-center rounded-lg bg-[#7C5CFC] px-3 text-sm font-semibold text-white hover:bg-[#6A47F0]">
+                          Müraciəti aç
+                        </button>
+                      </form>
                     ) : null}
                     {unread ? (
                       <form action={markNotificationRead}>
