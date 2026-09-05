@@ -26,6 +26,9 @@ export default defineConfig([
   },
   globalIgnores([
     '.next/**',
+    '.vinext/**',
+    '.wrangler/**',
+    'dist/**',
     'out/**',
     'build/**',
     'next-env.d.ts',

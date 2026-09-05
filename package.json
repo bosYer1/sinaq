@@ -8,31 +8,44 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/meta-pixel.test.ts src/lib/google-analytics.test.ts && node scripts/submission-regression.mjs && node scripts/admin-security-regression.mjs && node scripts/analytics-parity-regression.mjs && node scripts/search-console-opportunities-regression.mjs && node scripts/search-input-regression.mjs && node scripts/revenue-migration-regression.mjs && node scripts/club-back-navigation-regression.mjs && node scripts/location-feedback-regression.mjs && node scripts/club-card-selection-cta-regression.mjs && node scripts/owner-claim-new-club-regression.mjs && node scripts/founder-supply-control-tower-regression.mjs && node scripts/admin-notifications-ui-regression.mjs"
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/meta-pixel.test.ts src/lib/google-analytics.test.ts src/lib/cloudflare-standby.test.ts && node scripts/cloudflare-standby-regression.mjs && node scripts/submission-regression.mjs && node scripts/admin-security-regression.mjs && node scripts/analytics-parity-regression.mjs && node scripts/search-console-opportunities-regression.mjs && node scripts/search-input-regression.mjs && node scripts/revenue-migration-regression.mjs && node scripts/club-back-navigation-regression.mjs && node scripts/location-feedback-regression.mjs && node scripts/club-card-selection-cta-regression.mjs && node scripts/owner-claim-new-club-regression.mjs && node scripts/founder-supply-control-tower-regression.mjs && node scripts/admin-notifications-ui-regression.mjs",
+    "dev:vinext": "vinext dev --port 3001",
+    "build:vinext": "vinext build",
+    "start:vinext": "wrangler dev --config dist/server/wrangler.json",
+    "deploy:vinext": "vinext-cloudflare deploy --config dist/server/wrangler.json"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.45.4",
+    "@vinext/cloudflare": "^1.0.0-beta.7",
+    "clsx": "^2.1.1",
+    "leaflet": "^1.9.4",
     "next": "16.3.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "@supabase/supabase-js": "^2.45.4",
-    "@supabase/ssr": "^0.12.4",
-    "leaflet": "^1.9.4",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^2.5.2"
+    "react-server-dom-webpack": "^19.2.8",
+    "tailwind-merge": "^2.5.2",
+    "vinext": "^1.0.0-beta.9"
   },
   "devDependencies": {
-    "typescript": "^5.5.4",
-    "eslint": "^9.0.0",
-    "eslint-config-next": "16.3.3",
+    "@cloudflare/vite-plugin": "^1.54.4",
+    "@types/leaflet": "^1.9.15",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@types/leaflet": "^1.9.15",
-    "tailwindcss": "^3.4.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitejs/plugin-rsc": "^0.5.34",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.3.3",
     "postcss": "^8.5.23",
-    "autoprefixer": "^10.4.19"
+    "tailwindcss": "^3.4.7",
+    "typescript": "^5.5.4",
+    "vite": "^8.2.2",
+    "wrangler": "^4.129.0"
   },
   "engines": {
     "node": "24.x"
-  }
+  },
+  "type": "module"
 }
