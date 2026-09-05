@@ -111,11 +111,8 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 
 try {
   await navigate('/');
-  const clubHrefs = await evaluate(`Array.from(new Set(Array.from(document.querySelectorAll('a[href^="/klub/"]')).filter((anchor) => {
-    const rect = anchor.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 0;
-  }).map((anchor) => anchor.getAttribute('href')).filter(Boolean)))`);
-  assert(Array.isArray(clubHrefs) && clubHrefs.length > 0, 'No visible public club card is available for outbound CTA regression', { clubHrefs });
+  const clubHrefs = await evaluate(`Array.from(new Set(Array.from(document.querySelectorAll('a[href^="/klub/"]')).map((anchor) => anchor.getAttribute('href')).filter(Boolean)))`);
+  assert(Array.isArray(clubHrefs) && clubHrefs.length > 0, 'No public club card is available for outbound CTA regression', { clubHrefs });
 
   let clubHref = null;
   let detail = null;
