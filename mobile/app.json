@@ -1,0 +1,76 @@
+{
+  "expo": {
+    "name": "GameYer",
+    "slug": "gameyer",
+    "description": "Azərbaycan üzrə gaming klublarını kəşf etmək üçün GameYer mobil tətbiqi.",
+    "version": "1.0.0",
+    "backgroundColor": "#F7F8FC",
+    "primaryColor": "#7C5CFC",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "gameyer",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "az.gameyer.app",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "az.gameyer.app",
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#7C5CFC",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
+      },
+      "predictiveBackGestureEnabled": true
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Yaxın klubları məsafəyə görə göstərmək üçün mövqeyiniz istifadə olunur.",
+          "locationAlwaysPermission": false,
+          "locationAlwaysAndWhenInUsePermission": false,
+          "motionUsagePermission": false,
+          "isAndroidMotionActivityEnabled": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#7C5CFC",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
+        }
+      ],
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "nativeMapEnabled": false,
+      "router": {},
+      "eas": {
+        "projectId": "ffae1b38-40d8-4a29-affe-21f782979fad"
+      }
+    }
+  }
+}
