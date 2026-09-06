@@ -125,7 +125,8 @@ try {
   })()`);
   assert(clubViewCapture.event === 'club_view', 'Club detail did not emit club_view', clubViewCapture);
   assert(clubViewCapture.properties?.club_slug === clubViewCapture.path.split('/').filter(Boolean).pop(), 'club_view slug attribution does not match the opened detail page', clubViewCapture);
-  assert(clubViewCapture.properties?.gameyer_traffic_scope === 'public', 'club_view must keep the public analytics scope marker', clubViewCapture);
+  assert(clubViewCapture.properties?.gameyer_traffic_scope === 'test', 'club_view on localhost must keep the test analytics scope marker', clubViewCapture);
+  assert(clubViewCapture.properties?.gameyer_analytics_test === true, 'club_view on localhost must keep the analytics test marker', clubViewCapture);
 
   await navigate('/');
   await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input after club view regression');

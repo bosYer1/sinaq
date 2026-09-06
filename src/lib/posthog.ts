@@ -37,6 +37,12 @@ export function isTestAnalyticsHostname(hostname: string | null | undefined) {
     || normalizedHostname.endsWith('.vercel.app');
 }
 
+export function getAnalyticsTrafficScope(hostname: string | null | undefined): 'public' | 'test' | null {
+  if (isPublicAnalyticsHostname(hostname)) return 'public';
+  if (isTestAnalyticsHostname(hostname)) return 'test';
+  return null;
+}
+
 export function trackPostHogEvent(
   event: string,
   properties?: Record<string, unknown>,
@@ -44,17 +50,16 @@ export function trackPostHogEvent(
 ) {
   if (typeof window === 'undefined') return;
 
-  const isPublicHost = isPublicAnalyticsHostname(window.location.hostname);
-  const isTestHost = isTestAnalyticsHostname(window.location.hostname);
-  if (!isPublicHost && !isTestHost) return;
+  const trafficScope = getAnalyticsTrafficScope(window.location.hostname);
+  if (!trafficScope) return;
   if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/api')) return;
 
   const payload: Record<string, unknown> = {
     ...properties,
-    gameyer_traffic_scope: 'public',
+    gameyer_traffic_scope: trafficScope,
   };
 
-  if (isTestHost) {
+  if (trafficScope === 'test') {
     payload.gameyer_analytics_test = true;
   }
 
