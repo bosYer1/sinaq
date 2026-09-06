@@ -74,12 +74,12 @@ async function main() {
   const repo = path.join(work, `sinaq-${sourceCommit}`);
   const env = { ...process.env, CI: 'true', WRANGLER_SEND_METRICS: 'false',
     WRANGLER_LOG: 'info', NEXT_TELEMETRY_DISABLED: '1',
-    CLOUDFLARE_STANDBY: '1', NEXT_PUBLIC_SITE_URL: 'https://gameyer.az',
-    VERCEL_ENV: 'production' };
+    NEXT_PUBLIC_SITE_URL: 'https://gameyer.az', VERCEL_ENV: 'production' };
   // The isolated source has no local .env files. Also exclude inherited app secrets.
   for (const key of Object.keys(env)) {
     if (/^(SUPABASE_|DATABASE_URL$|POSTGRES_|DR_|NEXT_PUBLIC_)/.test(key)) delete env[key];
   }
+  delete env.CLOUDFLARE_STANDBY;
   env.NEXT_PUBLIC_SITE_URL = 'https://gameyer.az';
   // Only the public read configuration already committed in the reviewed source is used.
   const publicConfig = await readFile(path.join(repo, 'src/lib/supabase/public-config.ts'), 'utf8');
@@ -105,6 +105,7 @@ async function main() {
   await npm(['run', 'lint']);
   await npm(['audit', '--omit=dev', '--audit-level=high']);
   guardConfig(JSON.parse(await readFile(path.join(repo, 'wrangler.jsonc'), 'utf8')));
+  env.CLOUDFLARE_STANDBY = '1';
   await npm(['run', 'build:vinext']);
   const configFile = path.join(repo, 'dist/server/wrangler.json');
   const config = JSON.parse(await readFile(configFile, 'utf8'));
