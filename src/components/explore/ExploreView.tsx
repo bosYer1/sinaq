@@ -336,26 +336,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
         {view === 'list' ? (
           <section>
-            <div
-              data-mobile-list-map-container="true"
-              className="relative mb-3 h-[260px] overflow-hidden rounded-[18px] sm:h-[320px]"
-            >
-              {isDesktop === false ? (
-                mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />
-              ) : (
-                <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />
-              )}
-              {!mobileListMapActive ? (
-                <button
-                  type="button"
-                  aria-label="Xəritəni aktiv et"
-                  onClick={() => setMobileListMapActive(true)}
-                  className="absolute inset-0 z-[600] rounded-[18px] bg-transparent"
-                >
-                  <span className="sr-only">Xəritəni hərəkət etdirmək üçün toxun</span>
-                </button>
-              ) : null}
-            </div>
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
@@ -387,6 +367,26 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - 4})`}
               </button>
             ) : null}
+            <div
+              data-mobile-list-map-container="true"
+              className="relative mt-3 h-[260px] overflow-hidden rounded-[18px] sm:h-[320px]"
+            >
+              {isDesktop === false ? (
+                mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />
+              ) : (
+                <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />
+              )}
+              {!mobileListMapActive ? (
+                <button
+                  type="button"
+                  aria-label="Xəritəni aktiv et"
+                  onClick={() => setMobileListMapActive(true)}
+                  className="absolute inset-0 z-[600] rounded-[18px] bg-transparent"
+                >
+                  <span className="sr-only">Xəritəni hərəkət etdirmək üçün toxun</span>
+                </button>
+              ) : null}
+            </div>
           </section>
         ) : null}
       </div>
