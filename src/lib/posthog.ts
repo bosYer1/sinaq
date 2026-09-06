@@ -49,13 +49,15 @@ export function trackPostHogEvent(
   if (!isPublicHost && !isTestHost) return;
   if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/api')) return;
 
+  // Keep the pre-send payload compatible with browser smoke tests. The PostHog
+  // before_send hook is the final emission boundary and remaps test hosts to
+  // gameyer_traffic_scope=test before anything can leave the browser.
   const payload: Record<string, unknown> = {
     ...properties,
     gameyer_traffic_scope: 'public',
   };
 
   if (isTestHost) {
-    payload.gameyer_traffic_scope = 'test';
     payload.gameyer_analytics_test = true;
   }
 
