@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getDatabaseHealth } from '@/lib/health';
 import { createClient } from '@/lib/supabase/server';
 import {
   getAnalyticsWriteMode,
@@ -29,41 +30,31 @@ function healthResponse(
 export async function GET(request: Request) {
   const analyticsWrite = getAnalyticsWriteMode(requestVercelOidcToken(request));
 
-  try {
+  const database = await getDatabaseHealth(async () => {
     const supabase = await createClient();
-    const { error } = await supabase
+    return supabase
       .from('clubs')
       .select('id')
       .eq('is_active', true)
       .limit(1);
+  });
 
-    if (error) {
-      return healthResponse(
-        {
-          ok: false,
-          service: 'gameyer',
-          database: 'error',
-          analytics_write: analyticsWrite,
-        },
-        503
-      );
-    }
-
-    return healthResponse({
-      ok: true,
-      service: 'gameyer',
-      database: 'ok',
-      analytics_write: analyticsWrite,
-    });
-  } catch {
+  if (database !== 'ok') {
     return healthResponse(
       {
         ok: false,
         service: 'gameyer',
-        database: 'unavailable',
+        database,
         analytics_write: analyticsWrite,
       },
       503
     );
   }
+
+  return healthResponse({
+    ok: true,
+    service: 'gameyer',
+    database: 'ok',
+    analytics_write: analyticsWrite,
+  });
 }

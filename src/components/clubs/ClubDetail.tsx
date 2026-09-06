@@ -22,6 +22,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
   const statusLabel = !hasHours ? 'İş saatları məlum deyil' : openNow ? 'Hazırda açıqdır' : 'Hazırda bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
   const phoneNumbers = (club.phone ?? '').split(/\s*\/\s*|\s*,\s*|\s*;\s*/).map((phone) => phone.trim()).filter(Boolean);
+  const primaryPhone = phoneNumbers[0] ?? null;
   const updatedAt = new Date(club.updated_at);
   const updatedLabel = Number.isNaN(updatedAt.getTime()) ? null : BAKU_DATE_FORMATTER.format(updatedAt);
   const sortedHours = [...club.opening_hours].filter((hours) => hours.day_of_week >= 0 && hours.day_of_week <= 6).sort((a, b) => a.day_of_week - b.day_of_week);
@@ -74,8 +75,15 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
               </div>
             </div>
           </div>
-          {googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-11 shrink-0 items-center justify-center rounded-control px-5 text-sm font-semibold no-underline transition hover:opacity-90">Google Maps-də marşrut</TrackedClubLink> : null}
         </div>
+
+        {(primaryPhone || club.instagram_url || googleMapsUrl) ? (
+          <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {primaryPhone ? <TrackedClubLink href={`tel:${primaryPhone.replace(/[^+\d]/g, '')}`} eventType="phone_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="inline-flex h-12 items-center justify-center rounded-control bg-primary px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Zəng et</TrackedClubLink> : <div />}
+            {club.instagram_url ? <TrackedClubLink href={club.instagram_url} eventType="instagram_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-semibold text-ink no-underline transition hover:bg-surface-alt">Instagram</TrackedClubLink> : <div />}
+            {googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-12 items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut</TrackedClubLink> : <div />}
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-8 py-6 lg:grid-cols-[1fr_320px]">
