@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSiteUrl } from '@/lib/site-url';
+import { isCloudflareStandby } from '@/lib/cloudflare-standby';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
@@ -14,6 +15,7 @@ const bodyFont = Inter({ subsets: ['latin'], variable: '--font-body', display: '
 const displayFont = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
 const monoFont = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 const siteUrl = getSiteUrl();
+const cloudflareStandby = isCloudflareStandby();
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
 const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
@@ -81,7 +83,9 @@ export const metadata: Metadata = {
     apple: [{ url: '/gameyer-logo.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
   },
   ...(googleVerification ? { verification: { google: googleVerification } } : {}),
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
+  robots: cloudflareStandby
+    ? { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false, noimageindex: true } }
+    : { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   appleWebApp: { capable: true, title: 'GameYer', statusBarStyle: 'default' },
   alternates: { canonical: '/' },
   openGraph: { type: 'website', locale: 'az_AZ', url: '/', siteName: 'GameYer', title: 'GameYer — Bakıda gaming, PC və PlayStation klubları', description: 'Bakıda PC, kompüter, internet və PlayStation klublarını ünvan, rayon və xəritə ilə tap; mövcud qiymət və iş saatlarına profillərdə bax.', images: [{ url: socialImage, width: 1200, height: 630, alt: 'GameYer — Bakıda gaming klubu tap' }] },

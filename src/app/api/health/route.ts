@@ -5,6 +5,7 @@ import {
   requestVercelOidcToken,
   type AnalyticsWriteMode,
 } from '@/lib/supabase/analytics-server';
+import { classifyPublicClubRead, type PublicDataStatus } from '@/lib/dr-health';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,7 @@ function healthResponse(
     ok: boolean;
     service: 'gameyer';
     database: 'ok' | 'error' | 'unavailable';
+    public_data: PublicDataStatus;
     analytics_write: AnalyticsWriteMode;
   },
   status = 200
@@ -31,18 +33,20 @@ export async function GET(request: Request) {
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('clubs')
       .select('id')
       .eq('is_active', true)
       .limit(1);
+    const publicData = classifyPublicClubRead(data, error);
 
-    if (error) {
+    if (publicData !== 'ok') {
       return healthResponse(
         {
           ok: false,
           service: 'gameyer',
-          database: 'error',
+          database: error ? 'error' : 'ok',
+          public_data: publicData,
           analytics_write: analyticsWrite,
         },
         503
@@ -53,6 +57,7 @@ export async function GET(request: Request) {
       ok: true,
       service: 'gameyer',
       database: 'ok',
+      public_data: 'ok',
       analytics_write: analyticsWrite,
     });
   } catch {
@@ -61,6 +66,7 @@ export async function GET(request: Request) {
         ok: false,
         service: 'gameyer',
         database: 'unavailable',
+        public_data: 'unavailable',
         analytics_write: analyticsWrite,
       },
       503

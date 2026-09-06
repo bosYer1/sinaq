@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const isCloudflareStandby = process.env.CLOUDFLARE_STANDBY?.trim() === '1';
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -38,6 +40,9 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   images: {
+    // The standby intentionally avoids Cloudflare Images because it can incur
+    // additional cost. Vercel keeps its existing optimizer behavior.
+    unoptimized: isCloudflareStandby,
     remotePatterns: [
       {
         protocol: 'https',
@@ -79,6 +84,12 @@ const nextConfig = {
   },
   async headers() {
     return [
+      ...(isCloudflareStandby
+        ? [{
+            source: '/',
+            headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }],
+          }]
+        : []),
       ...utilityQueryNoindexHeaders,
       {
         source: '/:path*',
@@ -93,6 +104,9 @@ const nextConfig = {
           { key: 'Origin-Agent-Cluster', value: '?1' },
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          ...(isCloudflareStandby
+            ? [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }]
+            : []),
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(self), browsing-topics=()',
@@ -103,4 +117,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
