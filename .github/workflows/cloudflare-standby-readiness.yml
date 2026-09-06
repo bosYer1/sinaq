@@ -1,0 +1,63 @@
+name: Cloudflare standby readiness
+
+on:
+  push:
+    branches: [codex/cloudflare-standby]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-standby-readiness
+  cancel-in-progress: true
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DR_BASE_URL: https://gameyer-standby.gameyer.workers.dev
+      DR_EXPECT_STANDBY: '1'
+      DR_EXPECT_ANALYTICS_WRITE: disabled
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Run read-only readiness suite
+        run: node scripts/dr-readiness-check.mjs
+
+      - name: Verify canonical and noindex metadata
+        run: |
+          node <<'NODE'
+          import assert from 'node:assert/strict';
+
+          const base = process.env.DR_BASE_URL;
+          const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
+          const clubPath = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
+            .map((match) => new URL(match[1]))
+            .find((url) => url.origin === 'https://gameyer.az' && url.pathname.startsWith('/klub/'))
+            ?.pathname;
+          assert.ok(clubPath, 'No canonical real club path found in sitemap');
+
+          for (const pathname of ['/', clubPath]) {
+            const response = await fetch(new URL(pathname, base));
+            assert.equal(response.status, 200, `${pathname} returned ${response.status}`);
+            assert.match(response.headers.get('x-robots-tag') ?? '', /noindex/i,
+              `${pathname} is missing X-Robots-Tag noindex`);
+            const html = await response.text();
+            const canonical = [...html.matchAll(/<link\b[^>]*>/gi)]
+              .find((tag) => /\brel=["']canonical["']/i.test(tag[0]))?.[0] ?? '';
+            const expected = new URL(pathname, 'https://gameyer.az').href;
+            assert.ok(canonical.includes(`href="${expected}"`) || canonical.includes(`href='${expected}'`),
+              `${pathname} canonical is not ${expected}`);
+            assert.ok([...html.matchAll(/<meta\b[^>]*>/gi)].some((tag) =>
+              /\bname=["']robots["']/i.test(tag[0]) && /noindex/i.test(tag[0])),
+            `${pathname} is missing metadata noindex`);
+          }
+
+          console.log(`Canonical/noindex checks passed for / and ${clubPath}`);
+          NODE
