@@ -9,6 +9,15 @@ import { pathToFileURL } from 'node:url';
 
 export const sourceCommit = '2d30a09e0393eeb52f676c1c26ccbb11a6d75358';
 
+function isEmptyConfigValue(value) {
+  if (value == null) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === 'object') {
+    return Object.values(value).every(isEmptyConfigValue);
+  }
+  return false;
+}
+
 export function guardConfig(config) {
   assert.equal(config.name, 'gameyer-standby', 'Unexpected Worker name');
   assert.equal(config.vars?.CLOUDFLARE_STANDBY, '1', 'Standby flag must remain enabled');
@@ -18,8 +27,7 @@ export function guardConfig(config) {
     'containers', 'email', 'send_email', 'pipelines', 'secrets_store_secrets',
     'services', 'dispatch_namespaces', 'unsafe', 'env', 'build']) {
     const value = config[key];
-    assert.ok(value == null || (typeof value === 'object' && Object.keys(value).length === 0),
-      `Refusing deployment with ${key}`);
+    assert.ok(isEmptyConfigValue(value), `Refusing deployment with ${key}`);
   }
   assert.ok(!config.usage_model, 'Refusing an explicit billing model');
   assert.ok(config.workers_dev !== false, 'workers.dev must be enabled');
