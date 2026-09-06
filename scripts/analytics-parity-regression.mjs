@@ -35,7 +35,7 @@ assert.ok(link.includes('cta_surface'), 'Club action analytics must keep CTA sur
 assert.ok(link.includes("closest('aside')"), 'Maps CTA attribution must distinguish header and contact-card surfaces without visual selectors or text');
 assert.ok(link.includes("'inline-flex min-h-11 items-center rounded-md px-2'"), 'Phone and Instagram links must preserve a 44px minimum tap target');
 assert.ok(link.includes('focus-visible:ring-2') && link.includes('focus-visible:ring-offset-2'), 'Tracked club links must preserve visible keyboard focus treatment');
-for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(detail.includes(`eventType="${event}"`), `ClubDetail must keep ${event} conversion wiring`);
+for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(detail.includes(`eventType=\"${event}\"`), `ClubDetail must keep ${event} conversion wiring`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(eventRoute.includes(`'${event}'`), `Analytics API must accept ${event}`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(correctionAnalyticsMigration.includes(`'${event}'`), `Analytics DB migration must accept ${event}`);
 assert.ok(correctionAnalyticsMigration.includes('analytics_events_type_valid'), 'Analytics DB event CHECK constraint must stay aligned');
@@ -43,13 +43,16 @@ assert.ok(correctionAnalyticsMigration.includes('anon_insert_analytics_events'),
 assert.ok(correctionAnalyticsMigration.includes('authenticated_insert_analytics_events'), 'Historical correction migration must keep its rollout authenticated insert policy');
 assert.ok(correctionAnalyticsMigration.includes('enforce_analytics_event_rate_limit'), 'Analytics DB abuse backstop must stay aligned');
 assert.ok(correctionAnalyticsMigration.includes('session_count >= 30') && correctionAnalyticsMigration.includes('global_count >= 1500'), 'Analytics DB rate limits must not be weakened while adding correction parity');
-assert.ok((detail.match(/eventType="maps_click"/g) ?? []).length >= 2, 'ClubDetail must keep both route CTA surfaces tracked');
+assert.ok((detail.match(/eventType=\"maps_click\"/g) ?? []).length >= 2, 'ClubDetail must keep both route CTA surfaces tracked');
 assert.ok(!detail.includes('Bu klubun sahibisiniz?'), 'Premature club-owner claim CTA must remain hidden until the owner flow is ready');
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
 assert.ok(errorPage.includes('runtime_error'), 'runtime_error observability must stay wired');
 assert.ok(notFound.includes('not_found'), 'not_found observability must stay wired');
 assert.ok(posthog.includes('/admin') && posthog.includes('/api'), 'PostHog must keep admin/API exclusions');
-assert.ok(posthog.includes("gameyer_traffic_scope: 'public'"), 'PostHog custom events must keep the reusable public traffic scope marker');
+assert.ok(posthog.includes('getAnalyticsTrafficScope'), 'PostHog custom events must classify the current hostname before capture');
+assert.ok(posthog.includes("if (isPublicAnalyticsHostname(hostname)) return 'public';"), 'Canonical GameYer hosts must keep the reusable public traffic scope');
+assert.ok(posthog.includes("if (isTestAnalyticsHostname(hostname)) return 'test';"), 'Local and preview hosts must keep the reusable test traffic scope');
+assert.ok(posthog.includes('gameyer_traffic_scope: trafficScope'), 'PostHog custom events must use the classified traffic scope instead of hard-coding public');
 assert.ok(posthog.includes('captureWhenReady'), 'PostHog custom events must retry while the afterInteractive SDK initializes');
 assert.ok(posthog.includes('POSTHOG_INIT_MAX_ATTEMPTS') && posthog.includes('window.setTimeout'), 'PostHog initialization retry must remain bounded and asynchronous');
 assert.ok(posthog.includes('client?.__loaded === true'), 'PostHog custom events must wait for the real SDK instead of calling the bootstrap stub');
