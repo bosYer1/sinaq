@@ -19,12 +19,18 @@ declare global {
 const POSTHOG_INIT_RETRY_MS = 100;
 const POSTHOG_INIT_MAX_ATTEMPTS = 50;
 
+export function isPublicAnalyticsHostname(hostname: string | null | undefined) {
+  const normalizedHostname = (hostname ?? '').trim().toLowerCase();
+  return normalizedHostname === 'gameyer.az' || normalizedHostname === 'www.gameyer.az';
+}
+
 export function trackPostHogEvent(
   event: string,
   properties?: Record<string, unknown>,
   options?: PostHogCaptureOptions,
 ) {
   if (typeof window === 'undefined') return;
+  if (!isPublicAnalyticsHostname(window.location.hostname)) return;
   if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/api')) return;
 
   const payload = {
