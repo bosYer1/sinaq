@@ -117,15 +117,16 @@ It never submits a form or writes to Supabase. A missing active club, RLS read f
 
 Perform this only while Vercel and the registrar are healthy, in a scheduled maintenance window:
 
-1. In Vercel, record the exact current apex and `www` values shown by `vercel domains inspect`; do not rely on generic example values.
-2. Export/inventory every DNS record: apex/`www`, MX, TXT, CAA, DKIM/DMARC, verification and any subdomain. Save a dated before-state outside the repository.
-3. Add the zone to the intended Cloudflare account and compare imported records line by line. Keep the Vercel web records **DNS only** (grey cloud), set their TTL to 60 seconds, and do not modify mail records.
-4. Resolve DNSSEC/DS migration exactly as instructed by the registrar and Cloudflare. Do not change nameservers until the record audit passes.
-5. With explicit approval, change the registrar nameservers once, then wait for Cloudflare zone activation and full propagation. Verify Vercel still serves apex and `www`, mail records resolve, redirects work and Vercel TLS remains valid.
-6. Wait until Cloudflare Universal SSL is Active. Cloudflare documents a 15-minute to 24-hour provisioning window after zone activation and provisions it even for DNS-only records.
-7. Deploy the noindexed Worker to the permanent Cloudflare account and a separate standby hostname. Do not use the temporary `workers.dev` account as the durable DR control plane.
-8. Run with `DR_EXPECT_STANDBY=1` and `DR_EXPECT_ANALYTICS_WRITE=disabled`, then run the browser regression suite and mobile/desktop smoke tests. Record the Worker version, Git commit and timestamp.
-9. Conduct a scheduled canonical failover-and-rollback rehearsal. Until this succeeds, the <=60-minute objective is **not verified**.
+1. Capture a read-only public baseline with `npm run dr:dns:snapshot`. Save its JSON outside Git with the incident records. This is not a complete zone export and wildcard answers can look like exact records: authenticated DNS inventory remains mandatory.
+2. In Vercel, record the exact current apex and `www` values shown by `vercel domains inspect`; do not rely on generic example values.
+3. Export/inventory every DNS record: apex/`www`, MX, TXT, CAA, DKIM/DMARC, verification and any subdomain. Save a dated before-state outside the repository.
+4. Add the zone to the intended Cloudflare account and compare imported records line by line. Keep the Vercel web records **DNS only** (grey cloud), set their TTL to 60 seconds, and do not modify mail records.
+5. Resolve DNSSEC/DS migration exactly as instructed by the registrar and Cloudflare. Do not change nameservers until the record audit passes.
+6. With explicit approval, change the registrar nameservers once, then wait for Cloudflare zone activation and full propagation. Verify Vercel still serves apex and `www`, mail records resolve, redirects work and Vercel TLS remains valid.
+7. Wait until Cloudflare Universal SSL is Active. Cloudflare documents a 15-minute to 24-hour provisioning window after zone activation and provisions it even for DNS-only records.
+8. Deploy the noindexed Worker to the permanent Cloudflare account and a separate standby hostname. Do not use the temporary `workers.dev` account as the durable DR control plane.
+9. Run with `DR_EXPECT_STANDBY=1` and `DR_EXPECT_ANALYTICS_WRITE=disabled`, then run the browser regression suite and mobile/desktop smoke tests. Record the Worker version, Git commit and timestamp.
+10. Conduct a scheduled canonical failover-and-rollback rehearsal. Until this succeeds, the <=60-minute objective is **not verified**.
 
 No production route or DNS mutation is encoded in `wrangler.jsonc`; canonical attachment remains an explicit dashboard action.
 
