@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { isPublicAnalyticsHostname, isTestAnalyticsHostname } from './posthog.ts';
+import {
+  getAnalyticsTrafficScope,
+  isPublicAnalyticsHostname,
+  isTestAnalyticsHostname,
+} from './posthog.ts';
 
 test('only canonical GameYer hosts are classified as public analytics traffic', () => {
   assert.equal(isPublicAnalyticsHostname('gameyer.az'), true);
@@ -23,6 +27,18 @@ test('local and Vercel preview hosts are classified as analytics test hosts', ()
   assert.equal(isTestAnalyticsHostname('sinaq-xi.vercel.app'), true);
   assert.equal(isTestAnalyticsHostname('gameyer.az'), false);
   assert.equal(isTestAnalyticsHostname('example.com'), false);
+});
+
+test('analytics traffic scope never marks local or preview hosts as public', () => {
+  assert.equal(getAnalyticsTrafficScope('gameyer.az'), 'public');
+  assert.equal(getAnalyticsTrafficScope('www.gameyer.az'), 'public');
+  assert.equal(getAnalyticsTrafficScope('localhost'), 'test');
+  assert.equal(getAnalyticsTrafficScope('127.0.0.1'), 'test');
+  assert.equal(getAnalyticsTrafficScope('::1'), 'test');
+  assert.equal(getAnalyticsTrafficScope('app.localhost'), 'test');
+  assert.equal(getAnalyticsTrafficScope('gameyer-git-test.vercel.app'), 'test');
+  assert.equal(getAnalyticsTrafficScope('example.com'), null);
+  assert.equal(getAnalyticsTrafficScope(undefined), null);
 });
 
 test('PostHog emission boundary remaps test hosts before assigning traffic scope', () => {
