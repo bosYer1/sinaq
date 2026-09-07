@@ -11,11 +11,7 @@ import { cn, DAY_NAMES_AZ, formatTime, isClubOpenNow, isPremiumActive } from '@/
 
 const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', year: 'numeric', month: 'long', day: 'numeric' });
 
-type ClubWithVerification = ClubWithRelations & { is_verified?: boolean; verified_at?: string | null };
-
 export function ClubDetail({ club }: { club: ClubWithRelations }) {
-  const verifiedClub = club as ClubWithVerification;
-  const isVerified = verifiedClub.is_verified === true;
   const hasHours = club.opening_hours.length > 0;
   const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
   const premiumActive = isPremiumActive(club);
@@ -65,7 +61,6 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">{club.name}</h1>
-                {isVerified ? <Badge tone="verified">✓ Təsdiqlənib</Badge> : null}
                 {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
                 {typeSlugs.map((slug) => <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>{slug === 'pc' ? 'PC' : 'PlayStation'}</Badge>)}
               </div>
@@ -107,7 +102,6 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           </div>
           <div className="mt-5 border-t border-border pt-4">
             {updatedLabel ? <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p> : null}
-            {isVerified ? <p className="mt-2 text-xs leading-5 text-primary">✓ Klubun sahibi və ya rəsmi nümayəndəsi GameYer tərəfindən təsdiqlənib.</p> : null}
             <div className="mt-3 flex flex-col gap-2"><TrackedClubLink href={correctionHref} eventType="club_correction_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</TrackedClubLink></div>
           </div>
         </aside>
