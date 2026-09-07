@@ -6,6 +6,10 @@ const CHROME_BIN = process.env.CHROME_BIN;
 const PORT = Number(process.env.DISCOVERY_CDP_PORT || 9333);
 if (!CHROME_BIN) throw new Error('CHROME_BIN is required');
 
+const baseHostname = new URL(BASE_URL).hostname.toLowerCase();
+const isCanonicalProductionHost = baseHostname === 'gameyer.az' || baseHostname === 'www.gameyer.az';
+const expectedTrafficScope = isCanonicalProductionHost ? 'public' : 'test';
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const assert = (condition, message, context) => { if (!condition) throw new Error(`${message}\n${JSON.stringify(context ?? {}, null, 2)}`); };
 
@@ -125,8 +129,12 @@ try {
   })()`);
   assert(clubViewCapture.event === 'club_view', 'Club detail did not emit club_view', clubViewCapture);
   assert(clubViewCapture.properties?.club_slug === clubViewCapture.path.split('/').filter(Boolean).pop(), 'club_view slug attribution does not match the opened detail page', clubViewCapture);
-  assert(clubViewCapture.properties?.gameyer_traffic_scope === 'test', 'club_view on localhost must keep the test analytics scope marker', clubViewCapture);
-  assert(clubViewCapture.properties?.gameyer_analytics_test === true, 'club_view on localhost must keep the analytics test marker', clubViewCapture);
+  assert(clubViewCapture.properties?.gameyer_traffic_scope === expectedTrafficScope, `club_view must use ${expectedTrafficScope} analytics scope for ${baseHostname}`, clubViewCapture);
+  if (isCanonicalProductionHost) {
+    assert(clubViewCapture.properties?.gameyer_analytics_test !== true, 'club_view on production must not carry the analytics test marker', clubViewCapture);
+  } else {
+    assert(clubViewCapture.properties?.gameyer_analytics_test === true, 'club_view off production must keep the analytics test marker', clubViewCapture);
+  }
 
   await navigate('/');
   await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input after club view regression');
