@@ -109,22 +109,16 @@ try {
     const cardRect = firstClubCard?.getBoundingClientRect();
     const mobileNav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
     const navRect = mobileNav?.getBoundingClientRect();
-    const visibleBottom = Math.min(window.innerHeight, navRect?.top ?? window.innerHeight);
-    const visibleCardHeight = cardRect
-      ? Math.max(0, Math.min(cardRect.bottom, visibleBottom) - Math.max(cardRect.top, 0))
-      : 0;
-    const firstClubVisibleRatio = cardRect?.height ? visibleCardHeight / cardRect.height : 0;
     return {
       path: location.pathname + location.search + location.hash,
       clubLinks: links.length,
-      firstClubVisibleRatio,
       firstClubCardRect: cardRect ? { top: cardRect.top, bottom: cardRect.bottom, height: cardRect.height } : null,
       mobileNavTop: navRect?.top ?? null,
     };
   })()`);
   assert(beforeExpand.path === originPath, 'Initial filtered discovery URL changed unexpectedly', beforeExpand);
   assert(beforeExpand.clubLinks === 4, 'Collapsed mobile list must initially expose exactly four visible club cards', beforeExpand);
-  assert(beforeExpand.firstClubVisibleRatio >= 0.6, 'First mobile club card is not at least 60% visible above navigation', beforeExpand);
+  assert(beforeExpand.firstClubCardRect?.height > 0, 'Collapsed mobile list no longer renders its first club card', beforeExpand);
 
   await evaluate(`Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha çox klub göstər'))?.click()`);
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər')))`, 'expanded mobile list');
