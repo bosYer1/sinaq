@@ -153,11 +153,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </footer>
 
         <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-surface/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] backdrop-blur md:hidden" aria-label="Mobil naviqasiya">
-          <Link href="/" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary"><span className="text-lg leading-none">⌖</span><span>Klublar</span></Link>
-          <Link href="/rayon" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">▦</span><span>Rayonlar</span></Link>
-          <Link href="/#club-search" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xl text-white shadow-[0_5px_16px_rgba(124,92,252,0.3)]">⌕</span><span>Axtar</span></Link>
-          <Link href="/elaqe" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">◌</span><span>Əlaqə</span></Link>
-          <Link href="/tip" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted"><span className="text-lg leading-none">☰</span><span>Menyu</span></Link>
+          <Link href="/" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7.5 8h9a4 4 0 0 1 3.7 5.5l-1.3 3.2a2 2 0 0 1-3.2.7L14 16h-4l-1.7 1.4a2 2 0 0 1-3.2-.7l-1.3-3.2A4 4 0 0 1 7.5 8Z"/><path d="M8 11v4M6 13h4M16.5 12h.01M18 14h.01"/></svg>
+            <span>Klublar</span>
+          </Link>
+          <Link href="/rayon" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m3.5 6.5 5-2 7 2 5-2v13l-5 2-7-2-5 2v-13Z"/><path d="M8.5 4.5v13M15.5 6.5v13"/><path d="M12 8.2a2.4 2.4 0 0 1 2.4 2.4c0 1.8-2.4 4.3-2.4 4.3s-2.4-2.5-2.4-4.3A2.4 2.4 0 0 1 12 8.2Z"/><circle cx="12" cy="10.6" r=".7"/></svg>
+            <span>Rayonlar</span>
+          </Link>
+          <Link href="/#club-search" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-[0_5px_16px_rgba(124,92,252,0.3)]">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+            </span>
+            <span>Axtar</span>
+          </Link>
+          <Link href="/elaqe" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.7 7.4L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8.7 8.8c.4 2.5 2 4.1 4.5 4.5M13.6 13.4l1.2-1.2c.3-.3.8-.3 1.1 0l1.1.9M8.5 10.4l1-1.1c.3-.3.3-.8 0-1.1l-.9-1"/></svg>
+            <span>Əlaqə</span>
+          </Link>
+          <Link href="/tip" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <span>Menyu</span>
+          </Link>
         </nav>
       </body>
     </html>
