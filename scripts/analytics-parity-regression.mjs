@@ -43,7 +43,9 @@ assert.ok(correctionAnalyticsMigration.includes('anon_insert_analytics_events'),
 assert.ok(correctionAnalyticsMigration.includes('authenticated_insert_analytics_events'), 'Historical correction migration must keep its rollout authenticated insert policy');
 assert.ok(correctionAnalyticsMigration.includes('enforce_analytics_event_rate_limit'), 'Analytics DB abuse backstop must stay aligned');
 assert.ok(correctionAnalyticsMigration.includes('session_count >= 30') && correctionAnalyticsMigration.includes('global_count >= 1500'), 'Analytics DB rate limits must not be weakened while adding correction parity');
-assert.ok((detail.match(/eventType=\"maps_click\"/g) ?? []).length >= 2, 'ClubDetail must keep both route CTA surfaces tracked');
+assert.equal((detail.match(/eventType=\"phone_click\"/g) ?? []).length, 1, 'ClubDetail must expose one phone CTA surface');
+assert.equal((detail.match(/eventType=\"instagram_click\"/g) ?? []).length, 1, 'ClubDetail must expose one Instagram CTA surface');
+assert.equal((detail.match(/eventType=\"maps_click\"/g) ?? []).length, 1, 'ClubDetail must expose one route CTA surface');
 assert.ok(!detail.includes('Bu klubun sahibisiniz?'), 'Premature club-owner claim CTA must remain hidden until the owner flow is ready');
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
 assert.ok(errorPage.includes('runtime_error'), 'runtime_error observability must stay wired');
