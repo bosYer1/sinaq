@@ -29,8 +29,8 @@ export function buildCeoSignals(posthog: PostHogMetrics, supabase: SupabaseMetri
     if (lastEventAge > 24 * 60 * 60 * 1000) {
       signals.push({ severity: 'critical', title: 'Tracking axını dayanıb', detail: 'Son public event 24 saatdan köhnədir.', action: 'Production tracking və CSP-ni dərhal yoxla.' });
     }
-    if (posthog.tracking.publicEvents > 0 && rate(posthog.tracking.missingSessionAttribution, posthog.tracking.publicEvents) > 10) {
-      signals.push({ severity: 'attention', title: 'Attribution boşluğu var', detail: 'Eventlərin 10%-dən çoxunda session landing məlumatı yoxdur.', action: 'Campaign linkləri və PostHog bootstrap ardıcıllığını yoxla.' });
+    if (posthog.sessions.current > 0 && posthog.tracking.attributionCompleteness < 90) {
+      signals.push({ severity: 'attention', title: 'Attribution boşluğu var', detail: `Public pageview sessiyalarının ${posthog.tracking.attributionCompleteness}%-də session attribution tamdır.`, action: 'Campaign linkləri və PostHog bootstrap ardıcıllığını yoxla.' });
     }
     if (posthog.searchQueries.current >= 5 && rate(posthog.tracking.noResultSearches, posthog.searchQueries.current) >= 20) {
       signals.push({ severity: 'attention', title: 'Axtarışda nəticəsizlik yüksəkdir', detail: 'Axtarışların ən azı beşdə biri nəticə vermir.', action: 'No-result sorğularına görə klub təklifini və sinonimləri prioritetləşdir.' });
@@ -39,7 +39,7 @@ export function buildCeoSignals(posthog: PostHogMetrics, supabase: SupabaseMetri
       signals.push({ severity: 'positive', title: 'Klub niyyəti artır', detail: `CTA klikləri əvvəlki dövrlə müqayisədə ${posthog.ctaClicks.changePercent}% artıb.`, action: 'Artımı gətirən kampaniya və klubları gücləndir.' });
     }
     if (posthog.visitors.current >= 20 && posthog.returningRate < 10) {
-      signals.push({ severity: 'attention', title: 'Təkrar istifadə zəifdir', detail: `İki və daha çox sessiyası olan istifadəçilərin payı ${posthog.returningRate}%-dir.`, action: 'Returning istifadəçi motivlərini və yenidən giriş kanallarını araşdır.' });
+      signals.push({ severity: 'attention', title: 'Təkrar istifadə zəifdir', detail: `Cari intervalda aktiv olub daha əvvəl də public sessiyası olan istifadəçilərin payı ${posthog.returningRate}%-dir.`, action: 'Returning istifadəçi motivlərini və yenidən giriş kanallarını araşdır.' });
     }
     const paidCampaigns = posthog.campaigns.filter((campaign) => campaign.medium.toLowerCase().includes('paid'));
     const paidSessions = paidCampaigns.reduce((sum, campaign) => sum + campaign.sessions, 0);
