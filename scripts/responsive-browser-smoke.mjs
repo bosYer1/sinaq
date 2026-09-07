@@ -225,11 +225,11 @@ async function assertHomepage(client, viewport) {
     assert(Number.isFinite(Number(listView.previewZoom)), `${viewport.name}: preview shared viewport zoom is missing`, listView);
     assert(listView.previewAttribution, `${viewport.name}: preview OpenStreetMap attribution is missing`, listView);
     assert(listView.activationVisible, `${viewport.name}: map activation control is missing`, listView);
-    assert(listView.activationText === 'Xəritəni hərəkət etdirmək üçün toxun', `${viewport.name}: map activation accessibility text regressed`, listView);
+    assert(listView.activationText === 'Xəritəyə toxunun', `${viewport.name}: visible map activation hint regressed`, listView);
     assert(listView.mapActive === 'false', `${viewport.name}: list map is interactive before activation`, listView);
     assert(listView.clubsVisible, `${viewport.name}: club list heading is missing`, listView);
-    assert(listView.mapContainerHeight >= 250 && listView.mapContainerHeight <= 330, `${viewport.name}: list-view map height regressed`, listView);
-    assert(listView.firstClubVisibleRatio >= 0.6, `${viewport.name}: first club card is not at least 60% visible above the mobile navigation`, listView);
+    assert(listView.mapContainerHeight >= 335 && listView.mapContainerHeight <= 410, `${viewport.name}: enlarged list-view map height regressed`, listView);
+    assert(listView.firstClubVisibleRatio >= 0.05, `${viewport.name}: first club card no longer peeks above the mobile navigation`, listView);
     await capture(client, `${viewport.name}-home-list`);
     await evaluate(client, `document.querySelector('[aria-label="Xəritəni aktiv et"]')?.click()`);
     await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');

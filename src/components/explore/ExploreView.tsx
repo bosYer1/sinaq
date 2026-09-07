@@ -338,7 +338,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
           <section>
             <div
               data-mobile-list-map-container="true"
-              className="relative mb-3 h-[260px] overflow-hidden rounded-[18px] sm:h-[320px]"
+              className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px]"
             >
               {isDesktop === false ? (
                 mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />
@@ -350,9 +350,9 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                   type="button"
                   aria-label="Xəritəni aktiv et"
                   onClick={() => setMobileListMapActive(true)}
-                  className="absolute inset-0 z-[600] rounded-[18px] bg-transparent"
+                  className="absolute inset-0 z-[600] flex items-center justify-center rounded-[18px] bg-transparent"
                 >
-                  <span className="sr-only">Xəritəni hərəkət etdirmək üçün toxun</span>
+                  <span className="rounded-full border border-border bg-surface/95 px-4 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">Xəritəyə toxunun</span>
                 </button>
               ) : null}
             </div>
