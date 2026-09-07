@@ -11,11 +11,7 @@ import { cn, DAY_NAMES_AZ, formatTime, isClubOpenNow, isPremiumActive } from '@/
 
 const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', year: 'numeric', month: 'long', day: 'numeric' });
 
-type ClubWithVerification = ClubWithRelations & { is_verified?: boolean; verified_at?: string | null };
-
 export function ClubDetail({ club }: { club: ClubWithRelations }) {
-  const verifiedClub = club as ClubWithVerification;
-  const isVerified = verifiedClub.is_verified === true;
   const hasHours = club.opening_hours.length > 0;
   const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
   const premiumActive = isPremiumActive(club);
@@ -65,7 +61,6 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">{club.name}</h1>
-                {isVerified ? <Badge tone="verified">✓ Məlumat yoxlanılıb</Badge> : null}
                 {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
                 {typeSlugs.map((slug) => <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>{slug === 'pc' ? 'PC' : 'PlayStation'}</Badge>)}
               </div>
