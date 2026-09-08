@@ -47,3 +47,12 @@ test('PostHog emission boundary remaps test hosts before assigning traffic scope
   assert.match(source, /if\(isTestHost\)\{props\.gameyer_analytics_test=true;props\.gameyer_traffic_scope=['"]test['"];/);
   assert.match(source, /else\{[^}]*props\.gameyer_traffic_scope=['"]public['"]/);
 });
+
+test('PostHog normalizes Meta paid medium without rewriting placement source', () => {
+  const source = readFileSync(new URL('../components/analytics/PostHogAnalytics.tsx', import.meta.url), 'utf8');
+  assert.match(source, /metaSource===['"]fb['"]\|\|metaSource===['"]ig['"]\|\|metaSource===['"]msg['"]\|\|metaSource===['"]an['"]/);
+  assert.match(source, /props\.utm_medium=['"]paid_social['"]/);
+  assert.match(source, /utmMedium===['"]paid['"]&&\(utmSource===['"]fb['"]\|\|utmSource===['"]ig['"]\|\|utmSource===['"]msg['"]\|\|utmSource===['"]an['"]\)/);
+  assert.doesNotMatch(source, /props\.utm_source=['"]ig['"]/);
+  assert.doesNotMatch(source, /utmSource=['"]ig['"]/);
+});
