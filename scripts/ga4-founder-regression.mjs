@@ -12,7 +12,8 @@ assert.match(ga4, /GOOGLE_ANALYTICS_CLIENT_EMAIL/, 'GA4 service account email mu
 assert.match(ga4, /GOOGLE_ANALYTICS_PRIVATE_KEY/, 'GA4 private key must come from private server env');
 assert.doesNotMatch(ga4, /NEXT_PUBLIC_[A-Z0-9_]*(PRIVATE|SECRET|API_KEY)/, 'GA4 credentials must never be public env vars');
 assert.match(ga4, /properties\/\$\{propertyId\}:runReport/, 'GA4 adapter must query the Data API');
-assert.match(ga4, /replace\(\/\\\\n\/g, '\\n'\)/, 'escaped private-key newlines must be normalized');
+assert.match(ga4, /function normalizePrivateKey/, 'private-key normalization must remain explicit');
+assert.match(ga4, /replace\(\/\\\\n\/g/, 'escaped private-key newlines must be normalized');
 assert.match(dashboard, /getGa4Metrics\(range\)/, 'Founder dashboard must execute the GA4 adapter');
 assert.match(dashboard, /ga4\.status/, 'Founder provider status must use the live GA4 adapter result');
 assert.match(types, /ga4: Ga4Metrics/, 'Founder dashboard contract must expose GA4 metrics');
