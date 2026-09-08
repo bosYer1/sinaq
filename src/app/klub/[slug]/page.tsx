@@ -68,14 +68,11 @@ export async function generateMetadata({ params }: ClubPageProps): Promise<Metad
   const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
   const hasOpeningHours = openingHours.some((item) => !item.is_closed && Boolean(item.open_time) && Boolean(item.close_time));
   const locationText = districtName ? `${districtName} rayonunda` : 'Bakıda';
-  const titleDetail = minPrice != null ? `qiymətlər ${minPrice} AZN-dən və ünvan` : 'ünvan və xəritə';
-  const title = `${club.name} — ${districtName ? `${districtName}, ` : ''}${category} ${titleDetail}`;
+  const titleDetail = minPrice != null ? `${minPrice} AZN-dən` : category;
+  const title = `${club.name} — ${districtName ?? 'Bakı'}, ${titleDetail}`;
   const detailParts = [
-    minPrice != null ? `Saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : null,
-    club.address ? `Ünvan: ${club.address}.` : null,
-    hasOpeningHours ? 'İş saatlarına bax.' : null,
-    club.phone ? 'Telefon məlumatı mövcuddur.' : null,
-    club.latitude != null && club.longitude != null ? 'Xəritədə yerini gör.' : null,
+    minPrice != null ? `Qiymət ${minPrice} AZN-dən.` : null,
+    hasOpeningHours ? 'İş saatları, ünvan və xəritəyə GameYer-də bax.' : 'Ünvan, xəritə və əlaqə məlumatlarına GameYer-də bax.',
   ].filter((value): value is string => Boolean(value));
   const description = `${club.name} ${locationText} ${category.toLowerCase()}. ${detailParts.join(' ')}`.trim();
   const canonical = `/klub/${club.slug}`;
@@ -183,7 +180,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'GameYer', item: siteUrl },
           ...(club.district?.slug ? [{ '@type': 'ListItem', position: 2, name: `${club.district.name} klubları`, item: `${siteUrl}/rayon/${club.district.slug}` }] : []),
-          { '@type': 'ListItem', position: club.district?.slug ? 3 : 2, name: club.name, item: clubUrl },
+          { '@type': 'ListItem', position: club.district?.slug ? 3 : 2, name: club.district?.name ? `${club.name} — ${club.district.name}` : club.name, item: clubUrl },
         ],
       },
     ],
