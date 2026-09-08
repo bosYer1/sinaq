@@ -135,9 +135,13 @@ async function requestInsights(
     const pageRows = Array.isArray(body.data) ? body.data : [];
     rows.push(...pageRows);
     after = body.paging?.cursors?.after;
-    if (!after || pageRows.length === 0) break;
+    if (!after || pageRows.length === 0) {
+      after = undefined;
+      break;
+    }
   }
 
+  if (after) throw new Error('Meta Ads Insights pagination exceeded safe page limit');
   return rows;
 }
 
