@@ -103,6 +103,20 @@ export type PostHogMetrics = {
   retention: { d1: number | null; d3: number | null; d7: number | null; cohortUsers: number };
 };
 
+export type Ga4Metrics = {
+  status: ProviderStatus;
+  sessions: Metric;
+  activeUsers: Metric;
+  totalUsers: Metric;
+  newUsers: Metric;
+  pageviews: Metric;
+  engagementRate: Metric;
+  bounceRate: Metric;
+  averageSessionDuration: Metric;
+  eventCount: Metric;
+  keyEvents: Metric;
+};
+
 export type SupabaseMetrics = {
   status: ProviderStatus;
   activeClubs: number;
@@ -129,6 +143,7 @@ export type CeoSignal = {
 export type FounderDashboard = {
   range: DateRange;
   posthog: PostHogMetrics;
+  ga4: Ga4Metrics;
   supabase: SupabaseMetrics;
   providers: ProviderStatus[];
   signals: CeoSignal[];
