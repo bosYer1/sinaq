@@ -117,6 +117,24 @@ export type Ga4Metrics = {
   keyEvents: Metric;
 };
 
+export type GscSearchRow = {
+  key: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+};
+
+export type GscMetrics = {
+  status: ProviderStatus;
+  clicks: Metric;
+  impressions: Metric;
+  ctr: Metric;
+  averagePosition: Metric;
+  topQueries: GscSearchRow[];
+  topPages: GscSearchRow[];
+};
+
 export type SupabaseMetrics = {
   status: ProviderStatus;
   activeClubs: number;
@@ -144,6 +162,7 @@ export type FounderDashboard = {
   range: DateRange;
   posthog: PostHogMetrics;
   ga4: Ga4Metrics;
+  gsc: GscMetrics;
   supabase: SupabaseMetrics;
   providers: ProviderStatus[];
   signals: CeoSignal[];

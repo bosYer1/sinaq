@@ -3,6 +3,7 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { buildCeoSignals } from './calculations';
 import { getGa4Metrics } from './ga4-server';
+import { getGscMetrics } from './gsc-server';
 import { getPostHogMetrics } from './posthog-server';
 import { configuredProviderStatus } from './providers';
 import { getSupabaseMetrics } from './supabase-server';
@@ -13,9 +14,10 @@ export async function getFounderDashboard(
   range: DateRange,
   supabase: SupabaseClient<Database>,
 ): Promise<FounderDashboard> {
-  const [posthog, ga4, operational] = await Promise.all([
+  const [posthog, ga4, gsc, operational] = await Promise.all([
     getPostHogMetrics(range),
     getGa4Metrics(range),
+    getGscMetrics(range),
     getSupabaseMetrics(supabase),
   ]);
   const providers = [
@@ -23,12 +25,13 @@ export async function getFounderDashboard(
     operational.status,
     configuredProviderStatus('meta'),
     ga4.status,
-    configuredProviderStatus('gsc'),
+    gsc.status,
   ];
   return {
     range,
     posthog,
     ga4,
+    gsc,
     supabase: operational,
     providers,
     signals: buildCeoSignals(posthog, operational),
