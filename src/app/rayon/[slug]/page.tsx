@@ -38,8 +38,8 @@ export async function generateMetadata({ params }: DistrictPageProps): Promise<M
 
   const canonical = `/rayon/${data.district.slug}`;
   if (data.clubs.length === 0) {
-    const title = `${data.district.name} rayonunda gaming klubları — məlumat hazırlanır`;
-    const description = `${data.district.name} rayonunda hazırda GameYer-də aktiv və təsdiqlənmiş gaming klubu yoxdur. Yeni təsdiqlənmiş məkanlar əlavə olunduqca bu səhifədə görünəcək.`;
+    const title = `${data.district.name} rayonunda gaming klubları`;
+    const description = `${data.district.name} rayonunda aktiv gaming klubları əlavə olunduqca GameYer-də görünəcək.`;
     return {
       title,
       description,
@@ -53,8 +53,8 @@ export async function generateMetadata({ params }: DistrictPageProps): Promise<M
   const pcMin = minHourlyPrice(data.clubs, 'pc');
   const psMin = minHourlyPrice(data.clubs, 'playstation');
   const priceParts = [pcMin != null ? `PC ${pcMin} AZN-dən` : null, psMin != null ? `PlayStation ${psMin} AZN-dən` : null].filter(Boolean).join(', ');
-  const title = `${data.district.name} rayonunda PC və PlayStation klubları — qiymətlər`;
-  const description = `${data.district.name} rayonundakı ${data.clubs.length} aktiv gaming klubunu müqayisə et.${priceParts ? ` Saatlıq qiymətlər: ${priceParts}.` : ''} Ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.`;
+  const title = `${data.district.name} gaming klubları — PC və PlayStation`;
+  const description = `${data.district.name} rayonunda ${data.clubs.length} aktiv gaming klubu.${priceParts ? ` ${priceParts}.` : ''} Ünvan, iş saatları və xəritəyə GameYer-də bax.`;
   return {
     title,
     description,
