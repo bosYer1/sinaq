@@ -47,3 +47,10 @@ test('PostHog emission boundary remaps test hosts before assigning traffic scope
   assert.match(source, /if\(isTestHost\)\{props\.gameyer_analytics_test=true;props\.gameyer_traffic_scope=['"]test['"];/);
   assert.match(source, /else\{[^}]*props\.gameyer_traffic_scope=['"]public['"]/);
 });
+
+test('PostHog normalizes only the known Meta an/paid attribution pair', () => {
+  const source = readFileSync(new URL('../components/analytics/PostHogAnalytics.tsx', import.meta.url), 'utf8');
+  assert.match(source, /params\.get\(['"]utm_source['"]\)===['"]an['"]&&params\.get\(['"]utm_medium['"]\)===['"]paid['"]/);
+  assert.match(source, /props\.utm_source=['"]ig['"];props\.utm_medium=['"]paid_social['"]/);
+  assert.match(source, /if\(utmSource===['"]an['"]&&utmMedium===['"]paid['"]\)\{utmSource=['"]ig['"];utmMedium=['"]paid_social['"];/);
+});
