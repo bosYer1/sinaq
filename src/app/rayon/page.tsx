@@ -78,7 +78,7 @@ export default async function DistrictIndexPage() {
               </div>
               <div className="rounded-xl border border-border bg-pc-tint px-3 py-2 text-center">
                 <div className="text-lg font-bold text-primary">{coveredDistrictCount}</div>
-                <div className="text-[10px] text-muted">aktiv məlumat</div>
+                <div className="text-[10px] text-muted">aktiv rayon</div>
               </div>
             </div>
           </div>
