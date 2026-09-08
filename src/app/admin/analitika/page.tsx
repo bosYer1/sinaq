@@ -1,44 +1,63 @@
 import Link from 'next/link';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
+import { getFounderDashboard } from '@/lib/founder-analytics/dashboard';
+import { resolveDateRange } from '@/lib/founder-analytics/range';
+import type { Metric, ProviderStatus } from '@/lib/founder-analytics/types';
+import { ExtendedAnalyticsSections } from './ExtendedAnalyticsSections';
 
-const POSTHOG_DASHBOARD_URL = 'https://us.posthog.com/project/585472/dashboard/2048439';
+export const dynamic = 'force-dynamic';
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export default function FounderAnalyticsPage() {
-  return (
-    <div>
-      <div className="max-w-3xl">
-        <h1 className="text-3xl font-bold tracking-tight">Founder analitikası</h1>
-        <p className="mt-2 text-sm leading-6 text-gray-500">
-          GameYer trafikini iki müstəqil mənbədən yoxla: Supabase operativ statistika və PostHog public davranış/conversion analitikası.
-        </p>
-      </div>
+function first(value: string | string[] | undefined) { return Array.isArray(value) ? value[0] : value; }
+function format(value: number, suffix = '') { return `${new Intl.NumberFormat('az-AZ', { maximumFractionDigits: 2 }).format(value)}${suffix}`; }
 
-      <div className="mt-8 grid gap-5 lg:grid-cols-2">
-        <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Supabase</p>
-          <h2 className="mt-2 text-xl font-bold">Operativ trafik</h2>
-          <p className="mt-2 text-sm leading-6 text-gray-500">
-            24 saat/7 gün/30 gün baxışlar, anonim ziyarətlər, mənbələr, cihazlar və klub CTA statistikası.
-          </p>
-          <Link href="/admin/statistika" className="mt-5 inline-flex rounded-lg bg-[#7C5CFC] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#6A47F0]">
-            Supabase statistikasını aç
-          </Link>
-        </section>
+function Delta({ value }: { value: Metric }) {
+  if (value.changePercent == null) return <span className="text-xs font-bold text-blue-700">Yeni</span>;
+  const tone = value.changePercent > 0 ? 'text-emerald-700' : value.changePercent < 0 ? 'text-red-700' : 'text-gray-500';
+  return <span className={`text-xs font-bold ${tone}`}>{value.changePercent > 0 ? '↑ ' : value.changePercent < 0 ? '↓ ' : ''}{Math.abs(value.changePercent)}%</span>;
+}
 
-        <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <p className="text-xs font-bold uppercase tracking-wide text-gray-400">PostHog</p>
-          <h2 className="mt-2 text-xl font-bold">Real public davranış</h2>
-          <p className="mt-2 text-sm leading-6 text-gray-500">
-            Public pageview, unikal user/session, klub kartı klikləri, telefon/Instagram/Maps conversion-ları, Web Vitals və public error siqnalları.
-          </p>
-          <a href={POSTHOG_DASHBOARD_URL} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50">
-            PostHog Founder Dashboard ↗
-          </a>
-        </section>
-      </div>
+function MetricCard({ label, metric, value, suffix = '', detail }: { label: string; metric?: Metric; value?: number; suffix?: string; detail: string }) {
+  return <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><div className="flex justify-between gap-3"><p className="text-sm font-medium text-gray-500">{label}</p>{metric ? <Delta value={metric} /> : null}</div><p className="mt-3 text-3xl font-bold tracking-tight">{format(value ?? metric?.current ?? 0, suffix)}</p><p className="mt-2 text-xs leading-5 text-gray-500">{detail}</p></article>;
+}
 
-      <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
-        <strong>Data quality:</strong> PostHog public trafik scope-u admin/API və məlum test trafiki xaric edir. Supabase ziyarət/visitor göstəriciləri browser identifikatorlarıdır və real insan sayı kimi təqdim edilmir.
-      </div>
-    </div>
-  );
+function ProviderBadge({ provider }: { provider: ProviderStatus }) {
+  const ready = provider.status === 'ready';
+  const error = provider.status === 'error';
+  return <div className={`rounded-xl border px-3 py-2 ${ready ? 'border-emerald-200 bg-emerald-50' : error ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-gray-50'}`} title={provider.detail}><div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${ready ? 'bg-emerald-500' : error ? 'bg-red-500' : 'bg-gray-400'}`} /><span className="text-xs font-bold">{provider.label}</span></div><p className="mt-1 truncate text-[11px] text-gray-500">{provider.detail}</p></div>;
+}
+
+export default async function FounderAnalyticsPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const range = resolveDateRange(first(params.range), first(params.from), first(params.to));
+  const { supabase } = await requireAdmin();
+  const data = await getFounderDashboard(range, supabase);
+  const maxTrend = Math.max(1, ...data.posthog.trend.map((point) => point.pageviews));
+  const quality = data.supabase.completeness;
+  const missingTotal = quality.missingImage + quality.missingPhone + quality.missingInstagram + quality.missingCoordinates + quality.missingType;
+
+  return <div className="mx-auto max-w-[1380px]">
+    <header className="flex flex-wrap items-start justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6A47F0]">Founder command center</p><h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Biznesin real vəziyyəti</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">PostHog davranış və conversion datası ilə Supabase əməliyyat datasının vahid, yalnız admin üçün görünüşü.</p></div><div className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-right text-xs text-gray-500"><p className="font-semibold text-gray-900">{range.label}</p><p className="mt-1">Yenilənib: {new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', dateStyle: 'short', timeStyle: 'short' }).format(new Date(data.generatedAt))}</p></div></header>
+
+    <form className="mt-6 rounded-2xl border border-gray-200 bg-white p-4" method="get"><div className="flex flex-wrap items-end gap-3"><div className="flex flex-wrap gap-2" aria-label="Tarix intervalı">{[['today', 'Bu gün'], ['24h', '24 saat'], ['7d', '7 gün'], ['30d', '30 gün']].map(([value, label]) => <Link key={value} href={`/admin/analitika?range=${value}`} className={`rounded-lg px-3 py-2 text-sm font-semibold ${range.preset === value ? 'bg-[#7C5CFC] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{label}</Link>)}</div><input type="hidden" name="range" value="custom" /><label className="text-xs font-semibold text-gray-600">Başlanğıc<input name="from" type="date" defaultValue={first(params.from)} className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm" /></label><label className="text-xs font-semibold text-gray-600">Son<input name="to" type="date" defaultValue={first(params.to)} className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm" /></label><button className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold hover:bg-gray-50">Tətbiq et</button></div></form>
+
+    <section className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-5" aria-label="Provider statusları">{data.providers.map((provider) => <ProviderBadge key={provider.key} provider={provider} />)}</section>
+    {data.posthog.status.status !== 'ready' ? <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900"><strong>PostHog datası göstərilmir:</strong> {data.posthog.status.detail} Supabase göstəriciləri işləməyə davam edir.</div> : null}
+
+    <ExtendedAnalyticsSections posthog={data.posthog} />
+
+    <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="İcraçı göstəricilər"><MetricCard label="Unikal ziyarətçi" metric={data.posthog.visitors} detail="PostHog person_id · əvvəlki eyni müddətlə müqayisə" /><MetricCard label="Sessiya" metric={data.posthog.sessions} detail="PostHog session ID · public trafik" /><MetricCard label="Səhifə baxışı" metric={data.posthog.pageviews} detail="Public $pageview eventləri" /><MetricCard label="Klub niyyət dərəcəsi" metric={data.posthog.conversionRate} suffix="%" detail="Telefon + Instagram + istiqamət / klub baxışı" /><MetricCard label="Klub baxışı" metric={data.posthog.clubViews} detail="Klub detail səhifəsinin real açılışı" /><MetricCard label="Klub CTA klikləri" metric={data.posthog.ctaClicks} detail="Telefon, Instagram və istiqamət klikləri" /><MetricCard label="Aktiv klub" value={data.supabase.activeClubs} detail={`${data.supabase.verifiedClubs} klub verified statusundadır`} /><MetricCard label="Açıq müraciət" value={data.supabase.pendingSubmissions} detail={`${data.supabase.staleSubmissions} müraciət 72 saatdan köhnədir`} /></section>
+
+    <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="text-xl font-bold">CEO Signals</h2><p className="mt-1 text-sm text-gray-500">Məlumatdan avtomatik çıxarılan deterministik qərar siqnalları.</p></div><span className="h-fit rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold">{data.signals.length} siqnal</span></div><div className="mt-5 grid gap-4 lg:grid-cols-2">{data.signals.map((signal) => <article key={`${signal.title}-${signal.detail}`} className={`rounded-xl border p-4 ${signal.severity === 'critical' ? 'border-red-200 bg-red-50' : signal.severity === 'attention' ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}><p className="text-sm font-bold">{signal.title}</p><p className="mt-1 text-sm text-gray-700">{signal.detail}</p><p className="mt-3 text-xs font-semibold text-gray-600">Növbəti addım: {signal.action}</p></article>)}</div></section>
+
+    <div className="mt-8 grid gap-6 xl:grid-cols-[1.3fr_0.7fr]"><section className="rounded-2xl border border-gray-200 bg-white p-6"><h2 className="text-xl font-bold">Davranış trendi</h2><p className="mt-1 text-sm text-gray-500">Günlük pageview / ziyarətçi / CTA.</p><div className="mt-6 space-y-3">{data.posthog.trend.length === 0 ? <p className="text-sm text-gray-500">Bu interval üçün trend datası yoxdur.</p> : data.posthog.trend.map((point) => <div key={point.date} className="grid grid-cols-[82px_1fr_120px] items-center gap-3 text-xs"><span className="text-gray-500">{point.date}</span><div className="h-3 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-[#7C5CFC]" style={{ width: `${Math.max(2, (point.pageviews / maxTrend) * 100)}%` }} /></div><span className="text-right font-semibold">{point.pageviews} / {point.visitors} / {point.ctaClicks}</span></div>)}</div></section><section className="rounded-2xl border border-gray-200 bg-white p-6"><h2 className="text-xl font-bold">Məhsul davranışı</h2><p className="mt-1 text-sm text-gray-500">Kəşf etmə alətlərindən istifadə.</p><div className="mt-5 space-y-4"><MetricCard label="Axtarış" metric={data.posthog.searchQueries} detail={`${data.posthog.tracking.noResultSearches} nəticəsiz sorğu`} /><MetricCard label="Filter dəyişikliyi" metric={data.posthog.filterChanges} detail="Rayon, tip və digər filter seçimləri" /></div></section></div>
+
+    <section className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white"><div className="border-b border-gray-100 p-6"><h2 className="text-xl font-bold">Campaign comparison</h2><p className="mt-1 text-sm text-gray-500">First-touch UTM/click attribution əsasında keyfiyyət müqayisəsi.</p></div><div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-gray-50 text-xs uppercase text-gray-500"><tr><th className="px-5 py-3">Source / campaign</th><th className="px-5 py-3">Ziyarətçi</th><th className="px-5 py-3">Sessiya</th><th className="px-5 py-3">Pageview</th><th className="px-5 py-3">Klub</th><th className="px-5 py-3">CTA</th><th className="px-5 py-3">Intent</th></tr></thead><tbody className="divide-y divide-gray-100">{data.posthog.campaigns.length === 0 ? <tr><td colSpan={7} className="px-5 py-8 text-gray-500">Kampaniya datası yoxdur və ya PostHog əlçatan deyil.</td></tr> : data.posthog.campaigns.map((row) => <tr key={row.key}><td className="px-5 py-3"><p className="font-semibold">{row.campaign}</p><p className="text-xs text-gray-500">{row.source} · {row.medium}</p></td><td className="px-5 py-3">{row.visitors}</td><td className="px-5 py-3">{row.sessions}</td><td className="px-5 py-3">{row.pageviews}</td><td className="px-5 py-3">{row.clubViews}</td><td className="px-5 py-3 font-semibold">{row.ctaClicks}</td><td className="px-5 py-3 font-semibold">{row.conversionRate}%</td></tr>)}</tbody></table></div></section>
+
+    <section className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white"><div className="border-b border-gray-100 p-6"><h2 className="text-xl font-bold">Klub performansı</h2><p className="mt-1 text-sm text-gray-500">Real detail baxışı və əlaqə niyyətinə görə sıralanıb.</p></div><div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-gray-50 text-xs uppercase text-gray-500"><tr><th className="px-5 py-3">Klub</th><th className="px-5 py-3">Detail</th><th className="px-5 py-3">Kart</th><th className="px-5 py-3">Telefon</th><th className="px-5 py-3">Instagram</th><th className="px-5 py-3">İstiqamət</th><th className="px-5 py-3">Intent</th></tr></thead><tbody className="divide-y divide-gray-100">{data.posthog.clubs.length === 0 ? <tr><td colSpan={7} className="px-5 py-8 text-gray-500">Klub event datası yoxdur.</td></tr> : data.posthog.clubs.map((club) => <tr key={`${club.slug}-${club.name}`}><td className="px-5 py-3"><Link href={`/klub/${club.slug}`} target="_blank" className="font-semibold text-[#6A47F0] hover:underline">{club.name}</Link><p className="text-xs text-gray-400">{club.slug}</p></td><td className="px-5 py-3">{club.views}</td><td className="px-5 py-3">{club.cardClicks}</td><td className="px-5 py-3">{club.phoneClicks}</td><td className="px-5 py-3">{club.instagramClicks}</td><td className="px-5 py-3">{club.mapsClicks}</td><td className="px-5 py-3 font-semibold">{club.intentRate}%</td></tr>)}</tbody></table></div></section>
+
+    <div className="mt-8 grid gap-6 xl:grid-cols-2"><section className="rounded-2xl border border-gray-200 bg-white p-6"><h2 className="text-xl font-bold">Data Quality</h2><p className="mt-1 text-sm text-gray-500">{quality.total} aktiv klubda real profil tamlığı.</p><div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">{[['Şəkil', quality.missingImage], ['Telefon', quality.missingPhone], ['Instagram', quality.missingInstagram], ['Koordinat', quality.missingCoordinates], ['Klub tipi', quality.missingType], ['Cəmi sahə', missingTotal]].map(([label, value]) => <div key={String(label)} className="rounded-xl bg-gray-50 p-4"><p className="text-xs text-gray-500">{label} çatmır</p><p className="mt-2 text-2xl font-bold">{value}</p></div>)}</div></section><section className="rounded-2xl border border-gray-200 bg-white p-6"><h2 className="text-xl font-bold">Tracking Health</h2><p className="mt-1 text-sm text-gray-500">Event axını və attribution tamlığı.</p><dl className="mt-5 divide-y divide-gray-100 text-sm"><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Son public event</dt><dd className="font-semibold">{data.posthog.tracking.latestEventAt ? new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', dateStyle: 'short', timeStyle: 'short' }).format(new Date(data.posthog.tracking.latestEventAt)) : 'Yoxdur'}</dd></div><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Public event</dt><dd className="font-semibold">{data.posthog.tracking.publicEvents}</dd></div><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Test event</dt><dd className="font-semibold">{data.posthog.tracking.testEvents}</dd></div><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Session attribution boşluğu</dt><dd className="font-semibold">{data.posthog.tracking.missingSessionAttribution}</dd></div><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Paid campaign boşluğu</dt><dd className="font-semibold">{data.posthog.tracking.missingCampaignAttribution}</dd></div></dl></section></div>
+
+    <footer className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-5 text-xs leading-5 text-gray-600"><strong className="text-gray-900">Source of truth:</strong> davranış, funnel, kampaniya və klub niyyəti PostHog; klub və müraciət vəziyyəti Supabase. Meta Ads, GA4 və GSC adapterləri fail-closed status göstərir və konfiqurasiya olmadan rəqəm uydurmur.</footer>
+  </div>;
 }
