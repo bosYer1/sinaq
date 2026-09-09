@@ -63,12 +63,15 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
   }
 
   const now = Date.now();
-  return (data ?? [])
-    .filter((item) => {
-      const endsAt = new Date(item.ends_at).getTime();
-      return Number.isFinite(endsAt) && endsAt > now;
-    })
-    .map((item) => ({
+  return (data ?? []).flatMap((item) => {
+    const endsAt = new Date(item.ends_at).getTime();
+    if (!Number.isFinite(endsAt) || endsAt <= now) return [];
+
+    const club = item.club[0];
+    if (!club) return [];
+    const district = club.district[0] ?? null;
+
+    return [{
       id: item.id,
       club_id: item.club_id,
       kind: item.kind as ClubUpdateKind,
@@ -80,14 +83,13 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
       source_url: item.source_url,
       verified_at: item.verified_at,
       club: {
-        id: item.club.id,
-        name: item.club.name,
-        slug: item.club.slug,
-        district: item.club.district
-          ? { name: item.club.district.name, slug: item.club.district.slug }
-          : null,
+        id: club.id,
+        name: club.name,
+        slug: club.slug,
+        district: district ? { name: district.name, slug: district.slug } : null,
       },
-    }));
+    }];
+  });
 }
 
 const getCachedActiveClubUpdates = unstable_cache(
