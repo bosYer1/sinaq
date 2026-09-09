@@ -60,10 +60,10 @@ export function SearchFilter() {
       focusSearch();
     };
 
-    document.addEventListener('click', handleMobileSearchNavigation);
+    document.addEventListener('click', handleMobileSearchNavigation, true);
     if (window.location.hash === '#club-search') focusSearch();
 
-    return () => document.removeEventListener('click', handleMobileSearchNavigation);
+    return () => document.removeEventListener('click', handleMobileSearchNavigation, true);
   }, []);
 
   useEffect(() => {
