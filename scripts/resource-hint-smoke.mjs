@@ -1,4 +1,5 @@
-const BASE_URL = 'http://127.0.0.1:3000';
+import { get } from 'node:http';
+
 const OSM_TILE_ORIGIN = 'https://tile.openstreetmap.org';
 
 function assert(condition, message, context = undefined) {
@@ -39,12 +40,38 @@ function hasHeaderHint(linkHeader, rel) {
   });
 }
 
-const response = await fetch(`${BASE_URL}/`, { redirect: 'manual' });
-const html = await response.text();
-const linkHeader = response.headers.get('link') || '';
+function readHomepage() {
+  return new Promise((resolve, reject) => {
+    const request = get(
+      {
+        hostname: '127.0.0.1',
+        port: 3000,
+        path: '/',
+        method: 'GET',
+      },
+      (response) => {
+        response.setEncoding('utf8');
+        let html = '';
+        response.on('data', (chunk) => {
+          html += chunk;
+        });
+        response.on('end', () => {
+          resolve({
+            status: response.statusCode ?? 0,
+            html,
+            linkHeader: String(response.headers.link ?? ''),
+          });
+        });
+      },
+    );
+    request.on('error', reject);
+  });
+}
+
+const { status, html, linkHeader } = await readHomepage();
 const hints = htmlLinkHints(html);
 
-assert(response.status === 200, 'Homepage must return HTTP 200 before resource hints are checked', { status: response.status });
+assert(status === 200, 'Homepage must return HTTP 200 before resource hints are checked', { status });
 
 const dnsPrefetch = hasHtmlHint(hints, 'dns-prefetch') || hasHeaderHint(linkHeader, 'dns-prefetch');
 const preconnect = hasHtmlHint(hints, 'preconnect') || hasHeaderHint(linkHeader, 'preconnect');
