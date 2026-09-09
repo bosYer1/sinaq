@@ -74,6 +74,11 @@ for delete
 to authenticated
 using (is_admin());
 
+create trigger set_club_updates_updated_at
+before update on public.club_updates
+for each row
+execute function public.set_updated_at();
+
 create index if not exists idx_club_updates_active_expiry
   on public.club_updates (is_active, ends_at)
   where is_active = true;
