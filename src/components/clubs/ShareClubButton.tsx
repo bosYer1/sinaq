@@ -11,6 +11,28 @@ interface ShareClubButtonProps {
 type ShareStatus = 'idle' | 'copied' | 'error';
 type ShareMethod = 'native' | 'copy';
 
+const SHARE_ATTRIBUTION = {
+  utm_source: 'gameyer_share',
+  utm_medium: 'referral',
+  utm_campaign: 'club_share',
+} as const;
+
+function buildAttributedShareUrl(value: string) {
+  try {
+    const attributedUrl = new URL(value, window.location.origin);
+    attributedUrl.search = '';
+    attributedUrl.hash = '';
+
+    for (const [key, parameter] of Object.entries(SHARE_ATTRIBUTION)) {
+      attributedUrl.searchParams.set(key, parameter);
+    }
+
+    return attributedUrl.toString();
+  } catch {
+    return value;
+  }
+}
+
 export function ShareClubButton({ name, url }: ShareClubButtonProps) {
   const [status, setStatus] = useState<ShareStatus>('idle');
 
@@ -46,28 +68,30 @@ export function ShareClubButton({ name, url }: ShareClubButtonProps) {
     return copied;
   }
 
-  async function copyUrl() {
+  async function copyUrl(value: string) {
     if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(value);
       return true;
     }
 
-    return legacyCopy(url);
+    return legacyCopy(value);
   }
 
   async function handleShare() {
     try {
+      const shareUrl = buildAttributedShareUrl(url);
+
       if (typeof navigator !== 'undefined' && navigator.share) {
         await navigator.share({
           title: `${name} | GameYer`,
           text: `${name} klub məlumatlarına GameYer-də bax.`,
-          url,
+          url: shareUrl,
         });
         trackSuccessfulShare('native');
         return;
       }
 
-      const copied = await copyUrl();
+      const copied = await copyUrl(shareUrl);
       if (copied) trackSuccessfulShare('copy');
       setStatus(copied ? 'copied' : 'error');
       resetStatus();
