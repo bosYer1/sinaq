@@ -95,7 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="bg-bg font-body text-ink antialiased">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, '\\u003c') }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, '\u003c') }} />
         <MetaPixel pixelId={metaPixelId} />
         <GoogleAnalytics measurementId={gaMeasurementId} />
         <PostHogAnalytics />
@@ -119,6 +119,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/" className="font-semibold text-primary">Klublar</Link>
               <Link href="/rayon" className="transition hover:text-ink">Rayonlar</Link>
               <Link href="/tip" className="transition hover:text-ink">PC / PS</Link>
+              <Link href="/yenilikler" className="transition hover:text-ink">Yeniliklər</Link>
               <Link href="/haqqimizda" className="transition hover:text-ink">Haqqımızda</Link>
               <Link href="/elaqe" className="transition hover:text-ink">Əlaqə</Link>
             </nav>
@@ -144,6 +145,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/bakida-ucuz-pc-klublari" className="hover:text-ink">Ucuz PC</Link>
             <Link href="/bakida-ucuz-playstation-klublari" className="hover:text-ink">Ucuz PlayStation</Link>
             <Link href="/bakida-24-saat-gaming-klublari" className="hover:text-ink">24/7</Link>
+            <Link href="/yenilikler" className="hover:text-ink">Yeniliklər</Link>
             <Link href="/haqqimizda" className="hover:text-ink">Haqqımızda</Link>
             <Link href="/melumat-metodologiyasi" className="hover:text-ink">Metodologiya</Link>
             <Link href="/mexfilik" className="hover:text-ink">Məxfilik</Link>
@@ -167,9 +169,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </span>
             <span>Axtar</span>
           </Link>
-          <Link href="/elaqe" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.7 7.4L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8.7 8.8c.4 2.5 2 4.1 4.5 4.5M13.6 13.4l1.2-1.2c.3-.3.8-.3 1.1 0l1.1.9M8.5 10.4l1-1.1c.3-.3.3-.8 0-1.1l-.9-1"/></svg>
-            <span>Əlaqə</span>
+          <Link href="/yenilikler" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+            <span>Yeniliklər</span>
           </Link>
           <Link href="/tip" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted">
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
