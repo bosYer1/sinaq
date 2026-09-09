@@ -3,7 +3,9 @@ import { readFile } from 'node:fs/promises';
 
 const page = await readFile(new URL('../src/app/admin/analitika/page.tsx', import.meta.url), 'utf8');
 const extended = await readFile(new URL('../src/app/admin/analitika/ExtendedAnalyticsSections.tsx', import.meta.url), 'utf8');
+const metaSection = await readFile(new URL('../src/app/admin/analitika/MetaAdsAnalyticsSection.tsx', import.meta.url), 'utf8');
 const posthog = await readFile(new URL('../src/lib/founder-analytics/posthog-server.ts', import.meta.url), 'utf8');
+const meta = await readFile(new URL('../src/lib/founder-analytics/meta-server.ts', import.meta.url), 'utf8');
 const ga4 = await readFile(new URL('../src/lib/founder-analytics/ga4-server.ts', import.meta.url), 'utf8');
 const gsc = await readFile(new URL('../src/lib/founder-analytics/gsc-server.ts', import.meta.url), 'utf8');
 const dashboard = await readFile(new URL('../src/lib/founder-analytics/dashboard.ts', import.meta.url), 'utf8');
@@ -11,10 +13,24 @@ const calculations = await readFile(new URL('../src/lib/founder-analytics/calcul
 
 assert.match(page, /await requireAdmin\(\)/, 'Founder analytics must enforce admin and MFA authorization in the page.');
 assert.match(posthog, /^import 'server-only';/m, 'PostHog private API adapter must remain server-only.');
+assert.match(meta, /^import 'server-only';/m, 'Meta Ads private API adapter must remain server-only.');
 assert.match(ga4, /^import 'server-only';/m, 'GA4 private API adapter must remain server-only.');
 assert.match(gsc, /^import 'server-only';/m, 'GSC private API adapter must remain server-only.');
-assert.doesNotMatch(page, /POSTHOG_PERSONAL_API_KEY|META_ACCESS_TOKEN|PRIVATE_KEY/, 'Client-rendered dashboard must not reference provider secrets.');
-assert.match(dashboard, /configuredProviderStatus\('meta'\)/, 'Meta provider must expose an explicit unavailable state.');
+assert.doesNotMatch(page, /POSTHOG_PERSONAL_API_KEY|META_ACCESS_TOKEN|PRIVATE_KEY/, 'Dashboard page must not reference provider secrets.');
+assert.doesNotMatch(metaSection, /META_ACCESS_TOKEN|META_AD_ACCOUNT_ID|process\.env/, 'Meta UI section must never read server credentials.');
+
+assert.match(dashboard, /getMetaAdsMetrics\(range\)/, 'Meta provider must execute the real server-side adapter.');
+assert.match(dashboard, /meta\.status/, 'Meta provider badge must reflect the real adapter state.');
+assert.match(meta, /META_API_VERSION = 'v26\.0'/, 'Meta Marketing API must be pinned to the reviewed v26.0 contract.');
+assert.match(meta, /authorization: `Bearer \$\{accessToken\}`/, 'Meta access token must be sent in a server-side Authorization header.');
+assert.doesNotMatch(meta, /access_token=/, 'Meta access token must not be placed in request URLs.');
+assert.match(meta, /Meta Ads Insights request failed/, 'Meta adapter must fail closed when the API request fails.');
+assert.match(meta, /revalidate: 300/, 'Meta provider must use bounded caching.');
+assert.match(meta, /'spend'.*'impressions'.*'reach'.*'clicks'.*'ctr'.*'cpc'.*'cpm'/s, 'Meta adapter must request the core paid-media metrics.');
+assert.match(metaSection, /Meta campaign → onsite behavior/, 'Meta campaign delivery must be comparable with onsite behavior.');
+assert.match(metaSection, /paid_social/, 'Onsite Meta matching must require paid-social attribution.');
+assert.match(metaSection, /campaign\.campaignId.*campaign\.campaignName/s, 'Campaign matching must support both Meta campaign id and name.');
+
 assert.match(dashboard, /getGa4Metrics\(range\)/, 'GA4 provider must execute the real server-side adapter.');
 assert.match(dashboard, /ga4\.status/, 'GA4 provider badge must reflect the real adapter state.');
 assert.match(dashboard, /getGscMetrics\(range\)/, 'GSC provider must execute the real server-side adapter.');

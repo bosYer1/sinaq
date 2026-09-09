@@ -135,6 +135,32 @@ export type GscMetrics = {
   topPages: GscSearchRow[];
 };
 
+export type MetaCampaignRow = {
+  campaignId: string;
+  campaignName: string;
+  spend: number;
+  impressions: number;
+  reach: number;
+  clicks: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+};
+
+export type MetaAdsMetrics = {
+  status: ProviderStatus;
+  currency: string | null;
+  spend: Metric;
+  impressions: Metric;
+  reach: Metric;
+  clicks: Metric;
+  ctr: Metric;
+  cpc: Metric;
+  cpm: Metric;
+  campaigns: MetaCampaignRow[];
+  reportingNote: string;
+};
+
 export type SupabaseMetrics = {
   status: ProviderStatus;
   activeClubs: number;
@@ -161,6 +187,7 @@ export type CeoSignal = {
 export type FounderDashboard = {
   range: DateRange;
   posthog: PostHogMetrics;
+  meta: MetaAdsMetrics;
   ga4: Ga4Metrics;
   gsc: GscMetrics;
   supabase: SupabaseMetrics;
