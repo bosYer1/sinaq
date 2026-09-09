@@ -70,6 +70,9 @@ jobs:
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
           "$CHROME_BIN" --version
 
+      - name: Mobile search focus browser regression
+        run: node scripts/mobile-search-focus-browser-smoke.mjs
+
       - name: Mobile and desktop browser regression
         run: node scripts/responsive-browser-smoke.mjs
 
