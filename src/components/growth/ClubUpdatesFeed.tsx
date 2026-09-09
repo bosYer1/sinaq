@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { trackPostHogEvent } from '@/lib/posthog';
 import type { ClubUpdateItem } from '@/lib/queries/club-updates';
 
@@ -24,8 +24,6 @@ function kindLabel(kind: ClubUpdateItem['kind']) {
 }
 
 export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[]; context: 'discovery' | 'club_detail' }) {
-  const updateIds = useMemo(() => updates.map((item) => item.id).join(','), [updates]);
-
   useEffect(() => {
     for (const update of updates) {
       trackPostHogEvent('club_update_impression', {
@@ -36,7 +34,7 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
         context,
       });
     }
-  }, [context, updateIds, updates]);
+  }, [context, updates]);
 
   if (updates.length === 0) return null;
 
@@ -63,19 +61,21 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
             </div>
 
             <div className="mt-auto flex flex-wrap gap-2 pt-4">
-              <Link
-                href={`/klub/${update.club.slug}`}
-                onClick={() => trackPostHogEvent('club_update_club_click', {
-                  update_id: update.id,
-                  update_kind: update.kind,
-                  club_id: update.club_id,
-                  club_slug: update.club.slug,
-                  context,
-                })}
-                className="rounded-control bg-primary px-3 py-2 text-xs font-semibold text-white no-underline transition hover:opacity-90"
-              >
-                Kluba bax
-              </Link>
+              {context === 'discovery' ? (
+                <Link
+                  href={`/klub/${update.club.slug}`}
+                  onClick={() => trackPostHogEvent('club_update_club_click', {
+                    update_id: update.id,
+                    update_kind: update.kind,
+                    club_id: update.club_id,
+                    club_slug: update.club.slug,
+                    context,
+                  })}
+                  className="rounded-control bg-primary px-3 py-2 text-xs font-semibold text-white no-underline transition hover:opacity-90"
+                >
+                  Kluba bax
+                </Link>
+              ) : null}
               <a
                 href={update.source_url}
                 target="_blank"
@@ -88,7 +88,9 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
                   source_type: update.source_type,
                   context,
                 })}
-                className="rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink no-underline transition hover:border-primary"
+                className={context === 'club_detail'
+                  ? 'rounded-control bg-primary px-3 py-2 text-xs font-semibold text-white no-underline transition hover:opacity-90'
+                  : 'rounded-control border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink no-underline transition hover:border-primary'}
               >
                 Rəsmi mənbə
               </a>
