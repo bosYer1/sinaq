@@ -64,6 +64,20 @@ export type ClubPerformanceRow = {
 
 export type TrendPoint = { date: string; pageviews: number; visitors: number; ctaClicks: number };
 
+export type ReturnLoopMetrics = {
+  updateImpressions: number;
+  updateClubClicks: number;
+  updateSourceClicks: number;
+  updateUsers: number;
+  updateSessions: number;
+  downstreamClubViewSessions: number;
+  downstreamCtaSessions: number;
+  returningUpdateUsers: number;
+  returningUpdateRate: number;
+  clubViewReachRate: number;
+  ctaReachRate: number;
+};
+
 export type PostHogMetrics = {
   status: ProviderStatus;
   pageviews: Metric;
@@ -101,6 +115,7 @@ export type PostHogMetrics = {
   };
   funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number };
   retention: { d1: number | null; d3: number | null; d7: number | null; cohortUsers: number };
+  returnLoop: ReturnLoopMetrics;
 };
 
 export type Ga4Metrics = {
