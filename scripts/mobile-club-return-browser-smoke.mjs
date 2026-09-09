@@ -117,21 +117,21 @@ try {
     };
   })()`);
   assert(beforeExpand.path === originPath, 'Initial filtered discovery URL changed unexpectedly', beforeExpand);
-  assert(beforeExpand.clubLinks === 4, 'Collapsed mobile list must initially expose exactly four visible club cards', beforeExpand);
+  assert(beforeExpand.clubLinks === 8, 'Collapsed mobile list must initially expose exactly eight visible club cards', beforeExpand);
   assert(beforeExpand.firstClubCardRect?.height > 0, 'Collapsed mobile list no longer renders its first club card', beforeExpand);
 
   await evaluate(`Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha çox klub göstər'))?.click()`);
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər')))`, 'expanded mobile list');
-  await wait(`(${visibleClubLinks}).length > 4`, 'additional visible club cards after expand');
+  await wait(`(${visibleClubLinks}).length > 8`, 'additional visible club cards after expand');
 
   const expanded = await evaluate(`(() => {
     const links = ${visibleClubLinks};
-    const target = links[Math.min(8, links.length - 1)];
+    const target = links[Math.min(12, links.length - 1)];
     target?.scrollIntoView({ block: 'center' });
     window.__gameyerTestClubHref = target?.getAttribute('href') || null;
     return { count: links.length, href: window.__gameyerTestClubHref };
   })()`);
-  assert(expanded.count > 4 && expanded.href?.startsWith('/klub/'), 'Expanded list did not provide a lower visible club destination', expanded);
+  assert(expanded.count > 8 && expanded.href?.startsWith('/klub/'), 'Expanded list did not provide a lower visible club destination', expanded);
   await sleep(300);
 
   const savedScrollY = await evaluate('window.scrollY');
@@ -153,7 +153,7 @@ try {
   await evaluate(`Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt'))?.click()`);
   await wait(`location.pathname === '/' && location.search === '?type=pc'`, 'clean return to exact filtered discovery URL');
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər')))`, 'expanded state restored after return');
-  await wait(`(${visibleClubLinks}).length > 4`, 'expanded visible club cards restored after return');
+  await wait(`(${visibleClubLinks}).length > 8`, 'expanded visible club cards restored after return');
   await sleep(500);
 
   const restored = await evaluate(`({
@@ -163,12 +163,12 @@ try {
     expandedState: sessionStorage.getItem('gameyer:mobile-expanded-state'),
   })`);
   assert(restored.path === originPath, 'Search/filter query parameters were lost on return', restored);
-  assert(restored.clubLinks > 4, 'Returned visible list collapsed back to the first four clubs', restored);
+  assert(restored.clubLinks > 8, 'Returned visible list collapsed back to the first eight clubs', restored);
   assert(Math.abs(restored.scrollY - savedScrollY) <= 180, 'Scroll position was not restored close enough to the pre-navigation position', { savedScrollY, ...restored });
 
   await evaluate(`Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər'))?.click()`);
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha çox klub göstər')))`, 'collapse after restored return');
-  await wait(`(${visibleClubLinks}).length === 4`, 'four-card visible collapsed list after restored return');
+  await wait(`(${visibleClubLinks}).length === 8`, 'eight-card visible collapsed list after restored return');
   assert(await evaluate(`sessionStorage.getItem('gameyer:mobile-expanded-state') === null`), 'Collapse left stale expanded-list restoration state behind');
 
   const firstHref = await evaluate(`(${visibleClubLinks})[0]?.getAttribute('href') || null`);

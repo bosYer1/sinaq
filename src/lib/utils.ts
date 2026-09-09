@@ -105,6 +105,12 @@ function timeToMinutes(time: string): number {
   return hours * 60 + minutes;
 }
 
+/** 00:00–23:59(:59) və 00:00–00:00 public UI-da tam gün kimi qəbul edilir. */
+export function isFullDayOpeningHours(openTime: string | null, closeTime: string | null): boolean {
+  if (!openTime || !closeTime) return false;
+  return openTime.startsWith('00:00') && (closeTime.startsWith('23:59') || closeTime.startsWith('00:00'));
+}
+
 function getBakuDayAndMinutes(date = new Date()) {
   const parts = BAKU_DATE_TIME_FORMATTER.formatToParts(date);
   const weekday = parts.find((part) => part.type === 'weekday')?.value ?? 'Mon';
@@ -121,8 +127,8 @@ function getBakuDayAndMinutes(date = new Date()) {
  * Bakı vaxtına görə klubun hazırda açıq olub-olmadığını hesablayır.
  * `openingHours` — həmin klubun bütün həftə sətirləri (club_opening_hours).
  *
- * Eyni açılış və bağlanış saatı (məs. 00:00–00:00) 24 saat açıq qrafik
- * kimi qəbul edilir. Gecə yarısını keçən qrafikdə (məs. Cümə 18:00–02:00)
+ * 00:00–23:59(:59) və 00:00–00:00 tam gün qrafik kimi qəbul edilir.
+ * Gecə yarısını keçən qrafikdə (məs. Cümə 18:00–02:00)
  * şənbə 01:00 hələ cümə növbəsinin davamıdır.
  */
 export function isClubOpenNow(openingHours: OpeningHour[]): boolean {
@@ -133,10 +139,11 @@ export function isClubOpenNow(openingHours: OpeningHour[]): boolean {
 
   const today = openingHours.find((h) => h.day_of_week === dayOfWeek);
   if (today && !today.is_closed && today.open_time && today.close_time) {
+    if (isFullDayOpeningHours(today.open_time, today.close_time)) return true;
+
     const openMinutes = timeToMinutes(today.open_time);
     const closeMinutes = timeToMinutes(today.close_time);
 
-    // Admin panelində 00:00–00:00 kimi saxlanılan qrafik 24/7 deməkdir.
     if (closeMinutes === openMinutes) return true;
 
     if (closeMinutes > openMinutes) {
@@ -163,4 +170,10 @@ export function isClubOpenNow(openingHours: OpeningHour[]): boolean {
 export function formatTime(time: string | null): string {
   if (!time) return '—';
   return time.slice(0, 5);
+}
+
+/** İş saatını istifadəçi üçün qısa və insan-oxunaqlı formada göstərir. */
+export function formatOpeningHoursLabel(openTime: string | null, closeTime: string | null): string {
+  if (isFullDayOpeningHours(openTime, closeTime)) return '24 saat açıq';
+  return `${formatTime(openTime)} – ${formatTime(closeTime)}`;
 }

@@ -11,6 +11,7 @@ import { useFilters } from '@/hooks/useFilters';
 import { formatDistance, haversineDistanceKm } from '@/lib/geo';
 
 const MOBILE_EXPANDED_STATE_KEY = 'gameyer:mobile-expanded-state';
+const MOBILE_INITIAL_CLUB_COUNT = 8;
 
 type MobileExpandedState = {
   origin: string;
@@ -165,7 +166,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity))[0] ?? null;
   }, [clubsWithDistance, location]);
 
-  const mobileClubs = mobileExpanded ? clubsWithDistance : clubsWithDistance.slice(0, 4);
+  const mobileClubs = mobileExpanded ? clubsWithDistance : clubsWithDistance.slice(0, MOBILE_INITIAL_CLUB_COUNT);
 
   function handleLocationSort() {
     if (location) {
@@ -378,13 +379,13 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
               searchActive={searchActive}
               onClearFilters={hasActiveFilters ? clearAll : undefined}
             />
-            {clubsWithDistance.length > 4 ? (
+            {clubsWithDistance.length > MOBILE_INITIAL_CLUB_COUNT ? (
               <button
                 type="button"
                 onClick={handleMobileExpandedToggle}
                 className="mt-3 h-12 w-full rounded-xl border border-border bg-surface text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
               >
-                {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - 4})`}
+                {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT})`}
               </button>
             ) : null}
           </section>

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
 import { ClubPricingDisplay } from '@/components/clubs/ClubPricingDisplay';
 import { inferClubTypeSlugs } from '@/lib/clubType';
-import { cn, DAY_NAMES_AZ, formatTime, isClubOpenNow, isPremiumActive } from '@/lib/utils';
+import { cn, DAY_NAMES_AZ, formatOpeningHoursLabel, isClubOpenNow, isPremiumActive } from '@/lib/utils';
 
 const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -90,7 +90,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           </section>
           <section>
             <h2 className="mb-3 font-display text-base font-semibold text-ink">İş saatları</h2>
-            {sortedHours.length > 0 ? <div className="overflow-hidden rounded-xl border border-border bg-surface">{sortedHours.map((hours) => <div key={hours.id} className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 text-sm last:border-b-0"><span className="font-display font-semibold tracking-tight text-ink">{DAY_NAMES_AZ[hours.day_of_week]}</span><span className={hours.is_closed ? 'font-display font-semibold tracking-tight tabular-nums text-muted' : 'font-display font-semibold tracking-tight tabular-nums text-ink'}>{hours.is_closed ? 'Bağlıdır' : `${formatTime(hours.open_time)} – ${formatTime(hours.close_time)}`}</span></div>)}</div> : <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">İş saatları hələ təsdiqlənməyib.</div>}
+            {sortedHours.length > 0 ? <div className="overflow-hidden rounded-xl border border-border bg-surface">{sortedHours.map((hours) => <div key={hours.id} className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 text-sm last:border-b-0"><span className="font-display font-semibold tracking-tight text-ink">{DAY_NAMES_AZ[hours.day_of_week]}</span><span className={hours.is_closed ? 'font-display font-semibold tracking-tight tabular-nums text-muted' : 'font-display font-semibold tracking-tight tabular-nums text-ink'}>{hours.is_closed ? 'Bağlıdır' : formatOpeningHoursLabel(hours.open_time, hours.close_time)}</span></div>)}</div> : <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">İş saatları hələ təsdiqlənməyib.</div>}
           </section>
           <p className="mt-4 text-xs leading-5 text-muted">Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl mümkün olduqda klubun rəsmi əlaqə kanalından məlumatı dəqiqləşdirin.</p>
         </div>
