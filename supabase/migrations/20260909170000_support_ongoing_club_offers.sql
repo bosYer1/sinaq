@@ -26,7 +26,13 @@ alter table public.club_updates
 
 alter table public.club_updates
   add constraint club_updates_reverify_after_check
-  check (reverify_after is null or reverify_after > verified_at);
+  check (
+    reverify_after is null
+    or (
+      reverify_after > verified_at
+      and reverify_after <= verified_at + interval '7 days'
+    )
+  );
 
 drop policy if exists public_read_active_club_updates on public.club_updates;
 
