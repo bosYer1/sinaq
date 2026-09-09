@@ -2,6 +2,7 @@ import process from 'node:process';
 
 const BASE_URL = (process.env.TEST_BASE_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
 const EXPECTED_CANONICAL_ORIGIN = (process.env.EXPECTED_CANONICAL_ORIGIN || 'https://gameyer.az').replace(/\/$/, '');
+const OSM_TILE_ORIGIN = 'https://tile.openstreetmap.org';
 
 function assert(condition, message, context = undefined) {
   if (!condition) {
@@ -49,6 +50,13 @@ function canonicalHref(html) {
   const reverseOrder = [...html.matchAll(/<link[^>]+href=["']([^"']+)["'][^>]*rel=["']canonical["'][^>]*>/gi)];
   const combined = [...matches, ...reverseOrder];
   return { count: combined.length, href: combined[0]?.[1] || null };
+}
+
+function hasLinkRelHref(html, rel, href) {
+  const escapedRel = rel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escapedHref = href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`<link[^>]+rel=["']${escapedRel}["'][^>]*href=["']${escapedHref}["'][^>]*>`, 'i').test(html)
+    || new RegExp(`<link[^>]+href=["']${escapedHref}["'][^>]*rel=["']${escapedRel}["'][^>]*>`, 'i').test(html);
 }
 
 function metaRobots(html) {
@@ -218,6 +226,11 @@ function checkHomepageClubCount(homeHtml, sitemapUrls) {
   assert(rendered.lists.every((count) => count === expected), 'Every homepage club list count must match public sitemap clubs', { expected, rendered });
 }
 
+function checkHomepageMapResourceHints(homeHtml) {
+  assert(hasLinkRelHref(homeHtml, 'dns-prefetch', OSM_TILE_ORIGIN), 'Homepage must DNS-prefetch the OpenStreetMap tile origin');
+  assert(hasLinkRelHref(homeHtml, 'preconnect', OSM_TILE_ORIGIN), 'Homepage must preconnect to the OpenStreetMap tile origin');
+}
+
 await checkHealth();
 const sitemapUrls = await checkRobotsAndSitemap();
 
@@ -235,6 +248,7 @@ if (!homeHtml) {
   pageHtmlByPath.set('/', homeHtml);
 }
 checkHomepageClubCount(homeHtml, sitemapUrls);
+checkHomepageMapResourceHints(homeHtml);
 await checkInternalLinks(pageHtmlByPath);
 await checkParameterizedHomeIsNotIndexable();
 await checkParameterizedClubOwnerIsNotIndexable();
