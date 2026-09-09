@@ -43,6 +43,7 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
       {updates.map((update) => {
         const startsAt = formatDate(update.starts_at);
         const endsAt = formatDate(update.ends_at);
+        const isOngoingOffer = update.kind === 'offer' && update.ends_at === null;
         return (
           <article key={update.id} className="flex h-full flex-col rounded-2xl border border-border bg-surface p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
@@ -57,6 +58,7 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
             <div className="mt-3 space-y-1 text-xs text-muted">
               {startsAt ? <p>Başlayır: <span className="font-medium text-ink">{startsAt}</span></p> : null}
               {endsAt ? <p>Bitir: <span className="font-medium text-ink">{endsAt}</span></p> : null}
+              {isOngoingOffer ? <p>Vəziyyət: <span className="font-medium text-ink">Davam edən təklif</span></p> : null}
               <p>Klub: <span className="font-medium text-ink">{update.club.name}{update.club.district?.name ? ` · ${update.club.district.name}` : ''}</span></p>
             </div>
 
