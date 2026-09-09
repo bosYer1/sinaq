@@ -1,5 +1,6 @@
 'use client';
 
+import ReactDOM from 'react-dom';
 import type { District, ClubType } from '@/types/database';
 import { SearchFilter } from './SearchFilter';
 import { DistrictFilter } from './DistrictFilter';
@@ -8,12 +9,17 @@ import { PriceFilter } from './PriceFilter';
 import { ViewToggle } from './ViewToggle';
 import { useFilters } from '@/hooks/useFilters';
 
+const OSM_TILE_ORIGIN = 'https://tile.openstreetmap.org';
+
 interface FilterBarProps {
   districts: District[];
   types: ClubType[];
 }
 
 export function FilterBar({ districts, types }: FilterBarProps) {
+  ReactDOM.prefetchDNS(OSM_TILE_ORIGIN);
+  ReactDOM.preconnect(OSM_TILE_ORIGIN);
+
   const { hasActiveFilters, clearAll } = useFilters();
 
   return (
