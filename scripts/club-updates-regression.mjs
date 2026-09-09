@@ -14,6 +14,7 @@ const checks = [
   [ongoingMigration.includes('alter column ends_at drop not null'), 'offers may omit a fabricated business expiry'],
   [ongoingMigration.includes("kind = 'tournament' and ends_at is not null"), 'tournaments still require a real end date'],
   [ongoingMigration.includes('reverify_after > verified_at'), 'ongoing verification TTL must follow the verification time'],
+  [ongoingMigration.includes("reverify_after <= verified_at + interval '7 days'"), 'ongoing offers cannot be marked fresh for more than seven days'],
   [ongoingMigration.includes('reverify_after > now()'), 'public policy hides stale ongoing offers'],
   [query.includes(".eq('is_active', true)"), 'public query requests only active updates'],
   [query.includes('ends_at.gt.${nowIso}'), 'public query keeps non-expired dated updates'],
