@@ -227,7 +227,7 @@ function checkHomepageClubCount(homeHtml, sitemapUrls) {
 }
 
 function checkHomepageMapResourceHints(homeHtml) {
-  assert(hasLinkRelHref(homeHtml, 'dns-prefetch', OSM_TILE_ORIGIN), 'Homepage must DNS-prefetch the OpenStreetMap tile origin');
+  assert(hasLinkRelHref(homeHtml, 'prefetch-dns', OSM_TILE_ORIGIN), 'Homepage must DNS-prefetch the OpenStreetMap tile origin');
   assert(hasLinkRelHref(homeHtml, 'preconnect', OSM_TILE_ORIGIN), 'Homepage must preconnect to the OpenStreetMap tile origin');
 }
 
