@@ -1,4 +1,4 @@
-const BASE_URL = (process.env.TEST_BASE_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
+const BASE_URL = 'http://127.0.0.1:3000';
 const OSM_TILE_ORIGIN = 'https://tile.openstreetmap.org';
 
 function assert(condition, message, context = undefined) {
