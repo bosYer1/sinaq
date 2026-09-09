@@ -9,7 +9,9 @@ import type { DateRange, Ga4Metrics } from './types';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GA4_SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
 const GA4_API_ROOT = 'https://analyticsdata.googleapis.com/v1beta';
-const REQUEST_TIMEOUT_MS = 15_000;
+const REQUEST_TIMEOUT_MS = 12_000;
+const REQUEST_ATTEMPTS = 2;
+const RETRY_DELAY_MS = 350;
 
 const METRICS = [
   'sessions', 'activeUsers', 'totalUsers', 'newUsers', 'screenPageViews',
@@ -29,6 +31,7 @@ function emptyReport(): Ga4Report {
 
 function encodeBase64Url(value: string | Buffer) { return Buffer.from(value).toString('base64url'); }
 function normalizePrivateKey(value: string) { return value.replace(/\\n/g, '\n').trim(); }
+function sleep(ms: number) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 function createServiceAccountAssertion(clientEmail: string, privateKey: string) {
   const now = Math.floor(Date.now() / 1000);
@@ -41,18 +44,42 @@ function createServiceAccountAssertion(clientEmail: string, privateKey: string) 
   return `${unsigned}.${signer.sign(normalizePrivateKey(privateKey)).toString('base64url')}`;
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  try { return await fetch(url, { ...init, signal: controller.signal, cache: 'no-store' }); }
-  finally { clearTimeout(timer); }
+function isAbortError(error: unknown) {
+  return error instanceof Error && error.name === 'AbortError';
+}
+
+async function fetchGoogle(url: string, init: RequestInit, label: string) {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= REQUEST_ATTEMPTS; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, { ...init, signal: controller.signal, cache: 'no-store' });
+      const retryableStatus = response.status === 429 || response.status >= 500;
+      if (!retryableStatus || attempt === REQUEST_ATTEMPTS) return response;
+    } catch (error) {
+      lastError = error;
+      if (attempt === REQUEST_ATTEMPTS) {
+        if (isAbortError(error)) throw new Error(`${label} timeout (${REQUEST_TIMEOUT_MS / 1000}s, ${REQUEST_ATTEMPTS} cəhd)`);
+        throw error;
+      }
+    } finally {
+      clearTimeout(timer);
+    }
+
+    await sleep(RETRY_DELAY_MS * attempt);
+  }
+
+  throw lastError instanceof Error ? lastError : new Error(`${label} sorğusu uğursuz oldu`);
 }
 
 async function getAccessToken(clientEmail: string, privateKey: string) {
-  const response = await fetchWithTimeout(GOOGLE_TOKEN_URL, {
+  const response = await fetchGoogle(GOOGLE_TOKEN_URL, {
     method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: createServiceAccountAssertion(clientEmail, privateKey) }),
-  });
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: createServiceAccountAssertion(clientEmail, privateKey) }).toString(),
+  }, 'Google OAuth');
   if (!response.ok) throw new Error(`Google OAuth token request failed (${response.status})`);
   const body = await response.json() as { access_token?: string };
   if (!body.access_token) throw new Error('Google OAuth token response did not include an access token');
@@ -79,11 +106,11 @@ function parseReport(body: Ga4ApiResponse): Ga4Report {
 
 async function runReport(propertyId: string, accessToken: string, from: string, to: string): Promise<Ga4Report> {
   if (!/^\d+$/.test(propertyId)) throw new Error('GA4 property configuration is invalid');
-  const response = await fetchWithTimeout(`${GA4_API_ROOT}/properties/${propertyId}:runReport`, {
+  const response = await fetchGoogle(`${GA4_API_ROOT}/properties/${propertyId}:runReport`, {
     method: 'POST',
     headers: { authorization: `Bearer ${accessToken}`, 'content-type': 'application/json' },
     body: JSON.stringify({ dateRanges: [{ startDate: bakuDate(from), endDate: bakuDate(to, true) }], metrics: METRICS.map((name) => ({ name })), keepEmptyRows: true }),
-  });
+  }, 'GA4 Data API');
   if (!response.ok) throw new Error(`GA4 Data API request failed (${response.status})`);
   return parseReport(await response.json() as Ga4ApiResponse);
 }
@@ -108,31 +135,33 @@ async function loadGa4Metrics(range: DateRange): Promise<Ga4Metrics> {
     .filter(([, value]) => !value).map(([name]) => name);
   if (missing.length > 0) return unavailableGa4(`Konfiqurasiya yoxdur: ${missing.join(', ')}`);
 
+  const accessToken = await getAccessToken(clientEmail!, privateKey!);
+  const [current, previous] = await Promise.all([
+    runReport(propertyId!, accessToken, range.from, range.to),
+    runReport(propertyId!, accessToken, range.previousFrom, range.previousTo),
+  ]);
+  return {
+    status: providerStatus('ga4', 'ready', `GA4 read-only · ${Math.round(current.sessions)} sessiya · ${Math.round(current.activeUsers)} aktiv user · ${Math.round(current.screenPageViews)} pageview`),
+    sessions: metric(current.sessions, previous.sessions), activeUsers: metric(current.activeUsers, previous.activeUsers),
+    totalUsers: metric(current.totalUsers, previous.totalUsers), newUsers: metric(current.newUsers, previous.newUsers),
+    pageviews: metric(current.screenPageViews, previous.screenPageViews),
+    engagementRate: metric(percent(current.engagementRate), percent(previous.engagementRate)),
+    bounceRate: metric(percent(current.bounceRate), percent(previous.bounceRate)),
+    averageSessionDuration: metric(seconds(current.averageSessionDuration), seconds(previous.averageSessionDuration)),
+    eventCount: metric(current.eventCount, previous.eventCount), keyEvents: metric(current.keyEvents, previous.keyEvents),
+  };
+}
+
+const cachedGa4Metrics = unstable_cache(
+  async (serializedRange: string) => loadGa4Metrics(JSON.parse(serializedRange) as DateRange),
+  ['founder-analytics-ga4-v2'], { revalidate: 300 },
+);
+
+export async function getGa4Metrics(range: DateRange) {
   try {
-    const accessToken = await getAccessToken(clientEmail!, privateKey!);
-    const [current, previous] = await Promise.all([
-      runReport(propertyId!, accessToken, range.from, range.to),
-      runReport(propertyId!, accessToken, range.previousFrom, range.previousTo),
-    ]);
-    return {
-      status: providerStatus('ga4', 'ready', `GA4 read-only · ${Math.round(current.sessions)} sessiya · ${Math.round(current.activeUsers)} aktiv user · ${Math.round(current.screenPageViews)} pageview`),
-      sessions: metric(current.sessions, previous.sessions), activeUsers: metric(current.activeUsers, previous.activeUsers),
-      totalUsers: metric(current.totalUsers, previous.totalUsers), newUsers: metric(current.newUsers, previous.newUsers),
-      pageviews: metric(current.screenPageViews, previous.screenPageViews),
-      engagementRate: metric(percent(current.engagementRate), percent(previous.engagementRate)),
-      bounceRate: metric(percent(current.bounceRate), percent(previous.bounceRate)),
-      averageSessionDuration: metric(seconds(current.averageSessionDuration), seconds(previous.averageSessionDuration)),
-      eventCount: metric(current.eventCount, previous.eventCount), keyEvents: metric(current.keyEvents, previous.keyEvents),
-    };
+    return await cachedGa4Metrics(JSON.stringify(range));
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'GA4 Data API sorğusu uğursuz oldu';
     return { ...unavailableGa4(detail), status: providerStatus('ga4', 'error', detail) };
   }
 }
-
-const cachedGa4Metrics = unstable_cache(
-  async (serializedRange: string) => loadGa4Metrics(JSON.parse(serializedRange) as DateRange),
-  ['founder-analytics-ga4-v1'], { revalidate: 300 },
-);
-
-export async function getGa4Metrics(range: DateRange) { return cachedGa4Metrics(JSON.stringify(range)); }
