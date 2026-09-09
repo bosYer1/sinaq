@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { preconnect, prefetchDNS } from 'react-dom';
 import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts, getClubTypes } from '@/lib/queries/districts';
 import { isSupabaseConfigured } from '@/lib/config';
@@ -12,8 +11,6 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import type { ClubFilters } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
-
-const OSM_TILE_ORIGIN = 'https://tile.openstreetmap.org';
 
 type HomeSearchParams = { district?: string; type?: string; price_max?: string; q?: string; view?: string };
 interface PageProps { searchParams: Promise<HomeSearchParams> }
@@ -39,9 +36,6 @@ function parsePositiveNumber(value?: string) {
 }
 
 export default async function HomePage({ searchParams }: PageProps) {
-  prefetchDNS(OSM_TILE_ORIGIN);
-  preconnect(OSM_TILE_ORIGIN);
-
   const resolvedSearchParams = await searchParams;
   const filters: ClubFilters = {
     district: resolvedSearchParams.district?.trim() || undefined,
