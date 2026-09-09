@@ -35,6 +35,11 @@ function createClubUpdatesClient() {
   });
 }
 
+function firstRelatedRow<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
 async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]> {
   const supabase = createClubUpdatesClient();
   const nowIso = new Date().toISOString();
@@ -76,9 +81,9 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
 
     if (!hasLiveExpiry && !hasFreshOngoingVerification) return [];
 
-    const club = item.club[0];
+    const club = firstRelatedRow(item.club);
     if (!club) return [];
-    const district = club.district[0] ?? null;
+    const district = firstRelatedRow(club.district);
 
     return [{
       id: item.id,
@@ -104,7 +109,7 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
 
 const getCachedActiveClubUpdates = unstable_cache(
   async (clubId?: string) => queryActiveClubUpdates(clubId),
-  ['gameyer-active-club-updates-v2'],
+  ['gameyer-active-club-updates-v3'],
   { revalidate: 60, tags: ['club-updates'] },
 );
 
