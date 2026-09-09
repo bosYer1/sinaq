@@ -61,3 +61,4 @@
 20260904192424_fix_owner_claim_image_url_validation
 20260909122500_add_club_updates
 20260909170000_support_ongoing_club_offers
+20260909192500_normalize_pricing_units
