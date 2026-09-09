@@ -11,7 +11,8 @@ export interface ClubUpdateItem {
   title: string;
   description: string | null;
   starts_at: string | null;
-  ends_at: string;
+  ends_at: string | null;
+  reverify_after: string | null;
   source_type: 'official_instagram' | 'official_website' | 'owner_submission' | 'other';
   source_url: string;
   verified_at: string;
@@ -41,7 +42,7 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
   let query = supabase
     .from('club_updates')
     .select(`
-      id, club_id, kind, title, description, starts_at, ends_at,
+      id, club_id, kind, title, description, starts_at, ends_at, reverify_after,
       source_type, source_url, verified_at,
       club:clubs!inner (
         id, name, slug,
@@ -49,9 +50,9 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
       )
     `)
     .eq('is_active', true)
-    .gt('ends_at', nowIso)
+    .or(`ends_at.gt.${nowIso},and(kind.eq.offer,ends_at.is.null,reverify_after.gt.${nowIso})`)
     .order('starts_at', { ascending: true, nullsFirst: false })
-    .order('ends_at', { ascending: true })
+    .order('ends_at', { ascending: true, nullsFirst: false })
     .limit(24);
 
   if (clubId) query = query.eq('club_id', clubId);
@@ -64,8 +65,16 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
 
   const now = Date.now();
   return (data ?? []).flatMap((item) => {
-    const endsAt = new Date(item.ends_at).getTime();
-    if (!Number.isFinite(endsAt) || endsAt <= now) return [];
+    const endsAt = item.ends_at ? new Date(item.ends_at).getTime() : null;
+    const reverifyAfter = item.reverify_after ? new Date(item.reverify_after).getTime() : null;
+    const hasLiveExpiry = endsAt !== null && Number.isFinite(endsAt) && endsAt > now;
+    const hasFreshOngoingVerification = item.kind === 'offer'
+      && endsAt === null
+      && reverifyAfter !== null
+      && Number.isFinite(reverifyAfter)
+      && reverifyAfter > now;
+
+    if (!hasLiveExpiry && !hasFreshOngoingVerification) return [];
 
     const club = item.club[0];
     if (!club) return [];
@@ -79,6 +88,7 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
       description: item.description,
       starts_at: item.starts_at,
       ends_at: item.ends_at,
+      reverify_after: item.reverify_after,
       source_type: item.source_type as ClubUpdateItem['source_type'],
       source_url: item.source_url,
       verified_at: item.verified_at,
@@ -94,7 +104,7 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
 
 const getCachedActiveClubUpdates = unstable_cache(
   async (clubId?: string) => queryActiveClubUpdates(clubId),
-  ['gameyer-active-club-updates-v1'],
+  ['gameyer-active-club-updates-v2'],
   { revalidate: 60, tags: ['club-updates'] },
 );
 

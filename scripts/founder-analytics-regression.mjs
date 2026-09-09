@@ -47,6 +47,16 @@ assert.ok(posthog.includes("uniqIf(properties.$session_id, ${publicScope} AND ev
 assert.ok(posthog.includes('attributionCompleteness: rate(publicPageviewSessions - missingSessionAttribution, publicPageviewSessions)'), 'Attribution completeness must be calculated at session level.');
 assert.match(extended, />Stage reach</, 'Independent discovery stages must be labeled as Stage reach.');
 assert.doesNotMatch(extended, /dropoff|OR-funnel|Landing-dən conversion/, 'Independent stage counts must not claim ordered funnel conversion or dropoff.');
+
+assert.match(posthog, /event = 'club_update_impression'/, 'Return-loop impressions must be measured from the dedicated update event.');
+assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club transitions must be measured from the dedicated update event.');
+assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
+assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN (SELECT properties.$session_id, properties.club_id FROM events'), 'Downstream return-loop reach must stay on the same session and club.');
+assert.ok(posthog.includes("returningUpdateRate: rate(returningUpdateUsers, updateUsers)"), 'Return-loop returning rate must use users with prior public visits.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v2']"), 'PostHog cache key must be bumped when return-loop response semantics change.');
+assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
+assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
+
 assert.match(calculations, /posthog\.tracking\.attributionCompleteness < 90/, 'CEO attribution warning must use session-level completeness.');
 assert.doesNotMatch(calculations, /İki və daha çox sessiyası olan istifadəçilərin payı/, 'CEO returning signal must not equate repeat same-period sessions with returning users.');
 
