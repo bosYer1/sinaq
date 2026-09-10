@@ -73,7 +73,11 @@ jobs:
           echo "CHROME_BIN=$chrome" >> "$GITHUB_ENV"
 
       - name: Verify mobile club card analytics before hard navigation
-        run: node scripts/mobile-card-click-browser-smoke.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          port=$((20000 + RANDOM % 20000))
+          MOBILE_CARD_ANALYTICS_CDP_PORT="$port" node scripts/mobile-card-click-browser-smoke.mjs
 
       - name: Stop production server
         if: always()
