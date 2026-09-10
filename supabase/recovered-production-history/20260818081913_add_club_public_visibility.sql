@@ -1,0 +1,1 @@
+alter table public.clubs add column if not exists is_public boolean not null default true; comment on column public.clubs.is_public is 'Controls whether an active club is exposed on public GameYer pages. Operational activity remains in is_active.';
