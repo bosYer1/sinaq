@@ -162,6 +162,15 @@ try {
   assert(home.hasClubCardMarker === true, 'Selected link is not a ClubCard anchor', home);
 
   const expectedSlug = decodeURIComponent(home.href.split('/').filter(Boolean).pop());
+  await wait(`(() => {
+    try {
+      const captures = JSON.parse(sessionStorage.getItem(${JSON.stringify(CAPTURE_KEY)}) || '[]');
+      return captures.some((entry) => entry.event === 'club_impression' && entry.properties?.club_slug === ${JSON.stringify(expectedSlug)});
+    } catch {
+      return false;
+    }
+  })()`, 'selected ClubCard hydration analytics readiness');
+
   const clicked = await evaluate(`(() => {
     const card = (${clubCardAnchors}).find((a) => a.getAttribute('href') === ${JSON.stringify(home.href)});
     if (!card) return false;
