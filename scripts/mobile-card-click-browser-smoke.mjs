@@ -68,9 +68,16 @@ const evaluate = async (expression) => {
   return result.result?.value;
 };
 
+const isExpectedNavigationTransitionError = (error) => error instanceof Error
+  && /Inspected target navigated or closed|Execution context was destroyed|Cannot find context with specified id/i.test(error.message);
+
 const wait = async (expression, label, attempts = 120) => {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
-    if (await evaluate(expression)) return;
+    try {
+      if (await evaluate(expression)) return;
+    } catch (error) {
+      if (!isExpectedNavigationTransitionError(error)) throw error;
+    }
     await sleep(100);
   }
   throw new Error(`Timed out: ${label}`);
@@ -155,13 +162,22 @@ try {
   assert(home.hasClubCardMarker === true, 'Selected link is not a ClubCard anchor', home);
 
   const expectedSlug = decodeURIComponent(home.href.split('/').filter(Boolean).pop());
+  await wait(`(() => {
+    try {
+      const captures = JSON.parse(sessionStorage.getItem(${JSON.stringify(CAPTURE_KEY)}) || '[]');
+      return captures.some((entry) => entry.event === 'club_impression' && entry.properties?.club_slug === ${JSON.stringify(expectedSlug)});
+    } catch {
+      return false;
+    }
+  })()`, 'selected ClubCard hydration analytics readiness');
+
   const clicked = await evaluate(`(() => {
     const card = (${clubCardAnchors}).find((a) => a.getAttribute('href') === ${JSON.stringify(home.href)});
     if (!card) return false;
-    card.click();
+    setTimeout(() => card.click(), 50);
     return true;
   })()`);
-  assert(clicked, 'Unable to click the mobile ClubCard anchor', home);
+  assert(clicked, 'Unable to schedule the mobile ClubCard click', home);
 
   await wait(`location.pathname === ${JSON.stringify(home.href)}`, 'mobile hard navigation to club detail');
   await wait(`document.readyState === 'complete'`, 'club detail load');
