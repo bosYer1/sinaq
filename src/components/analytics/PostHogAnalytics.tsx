@@ -3,6 +3,7 @@
 import Script from 'next/script';
 import { useEffect } from 'react';
 import { trackPostHogEvent } from '@/lib/posthog';
+import { PwaInstallAnalytics } from '@/components/analytics/PwaInstallAnalytics';
 
 const POSTHOG_PROJECT_TOKEN = 'phc_rxBVsU3nYRqYaMAUCoGd5nE7YgcAJKcdCaaSRawE964p';
 const POSTHOG_HOST = 'https://us.i.posthog.com';
@@ -77,8 +78,11 @@ export function PostHogAnalytics() {
   }, []);
 
   return (
-    <Script id="posthog-analytics" strategy="afterInteractive">
-      {postHogInitScript}
-    </Script>
+    <>
+      <PwaInstallAnalytics />
+      <Script id="posthog-analytics" strategy="afterInteractive">
+        {postHogInitScript}
+      </Script>
+    </>
   );
 }
