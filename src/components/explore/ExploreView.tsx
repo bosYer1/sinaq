@@ -359,6 +359,15 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
               searchActive={searchActive}
               onClearFilters={hasActiveFilters ? clearAll : undefined}
             />
+            {clubsWithDistance.length > MOBILE_INITIAL_CLUB_COUNT ? (
+              <button
+                type="button"
+                onClick={handleMobileExpandedToggle}
+                className="mt-3 h-12 w-full rounded-xl border border-border bg-surface text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
+              >
+                {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT})`}
+              </button>
+            ) : null}
             <div
               data-mobile-list-map-container="true"
               className="relative mb-3 mt-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px]"
@@ -379,15 +388,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 </button>
               ) : null}
             </div>
-            {clubsWithDistance.length > MOBILE_INITIAL_CLUB_COUNT ? (
-              <button
-                type="button"
-                onClick={handleMobileExpandedToggle}
-                className="mt-3 h-12 w-full rounded-xl border border-border bg-surface text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
-              >
-                {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT})`}
-              </button>
-            ) : null}
           </section>
         ) : null}
       </div>
