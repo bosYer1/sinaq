@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -15,6 +16,21 @@ const parseId = (id) => {
   assert.ok(match, `Invalid migration identifier: ${id}`);
   return { id, version: match[1], name: match[2] };
 };
+
+const normalizedMd5 = (relativePath) =>
+  crypto
+    .createHash('md5')
+    .update(fs.readFileSync(path.join(root, relativePath), 'utf8').trim())
+    .digest('hex');
+
+const recoveredChecksums = new Map([
+  ['20260818081913_add_club_public_visibility', 'd0828477186d1aedd9137da3574e43cc'],
+  ['20260818081945_remove_unused_club_public_visibility', 'c1abedfd1b539cb6114823200a3e9d0a'],
+  ['20260902191350_activate_moon_club_20260902_v2', 'af123a49a2489d3f3c6e24a6f789481b'],
+  ['20260904184157_add_admin_submission_notifications', '8815975968f0866af3f6e24f8b8c91cd'],
+  ['20260904184536_harden_and_realtime_admin_notifications', 'e700a3d1bf4b0356e01b356143751827'],
+  ['20260904184937_activate_linked_club_on_submission_approval', '9d3584bae4ae8976019278dc83a1c884'],
+]);
 
 const activeIds = fs
   .readdirSync(path.join(root, 'supabase/migrations'))
@@ -84,7 +100,20 @@ for (const entry of repoOnly) {
 for (const entry of recovered) {
   assert.ok(liveIdsSet.has(entry.id), `Recovered history file ${entry.id} is not present in the production history snapshot.`);
   assert.ok(!activeNames.has(entry.name), `Recovered history file ${entry.id} duplicates an active migration name.`);
+  const expectedHash = recoveredChecksums.get(entry.id);
+  assert.ok(expectedHash, `Recovered history file ${entry.id} is missing its audited live SQL checksum.`);
+  assert.equal(
+    normalizedMd5(`supabase/recovered-production-history/${entry.id}.sql`),
+    expectedHash,
+    `Recovered history SQL ${entry.id} does not match the audited live production statement.`,
+  );
 }
+
+assert.deepEqual(
+  [...recoveredChecksums.keys()].sort(),
+  recoveredIds,
+  'Recovered-history checksum inventory must exactly match recovered SQL files.',
+);
 
 const timestampDrift = live.filter((entry) => {
   const activeEntry = activeNames.get(entry.name);
