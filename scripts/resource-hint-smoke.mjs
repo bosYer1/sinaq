@@ -77,7 +77,7 @@ const dnsPrefetch = hasHtmlHint(hints, 'dns-prefetch') || hasHeaderHint(linkHead
 const preconnect = hasHtmlHint(hints, 'preconnect') || hasHeaderHint(linkHeader, 'preconnect');
 const context = {
   linkHeader,
-  osmHtmlHints: hints.filter((hint) => hint.href?.includes('tile.openstreetmap.org')),
+  osmHtmlHints: hints.filter((hint) => hint.href?.replace(/\/$/, '') === OSM_TILE_ORIGIN),
 };
 
 assert(dnsPrefetch, 'Homepage response must DNS-prefetch the OpenStreetMap tile origin', context);
