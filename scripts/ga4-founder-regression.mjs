@@ -13,7 +13,7 @@ assert.ok(ga4.includes('analyticsdata.googleapis.com') && ga4.includes('runRepor
 assert.ok(ga4.includes('REQUEST_ATTEMPTS = 2') && ga4.includes('response.status === 429 || response.status >= 500'), 'GA4 adapter must retry transient timeout/rate/server failures');
 assert.ok(ga4.includes("error.name === 'AbortError'") && ga4.includes('timeout ('), 'GA4 timeout failures must be normalized instead of exposing generic AbortError');
 assert.ok(ga4.includes("['founder-analytics-ga4-v2']"), 'GA4 cache version must be bumped after retry hardening');
-assert.ok(ga4.indexOf('try {\n    return await cachedGa4Metrics') > ga4.indexOf('const cachedGa4Metrics'), 'GA4 transient provider errors must be handled outside the cached loader');
+assert.ok(ga4.search(/try \{\r?\n    return await cachedGa4Metrics/) > ga4.indexOf('const cachedGa4Metrics'), 'GA4 transient provider errors must be handled outside the cached loader');
 assert.ok(dashboard.includes('getGa4Metrics(range)') && dashboard.includes('ga4.status'), 'Founder dashboard must execute and surface GA4');
 assert.ok(types.includes('ga4: Ga4Metrics'), 'Founder dashboard contract must expose GA4 metrics');
 

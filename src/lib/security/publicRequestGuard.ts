@@ -1,4 +1,5 @@
-type Bucket = { startedAt: number; count: number };
+type Bucket = { expiresAt: number; count: number };
+const MAX_BUCKETS = 1000;
 
 type GuardOptions = {
   keyPrefix: string;
@@ -41,18 +42,20 @@ function consumeRateLimit(request: Request, prefix: string, limit: number, windo
   const key = `${prefix}:${clientKey(request)}`;
   const current = buckets.get(key);
 
-  if (!current || now - current.startedAt >= windowMs) {
-    buckets.set(key, { startedAt: now, count: 1 });
+  if (!current || now >= current.expiresAt) {
+    // Clean up on new identities too; otherwise one-shot clients accumulate forever.
+    if (buckets.size >= MAX_BUCKETS) {
+      for (const [bucketKey, bucket] of buckets) {
+        if (now >= bucket.expiresAt) buckets.delete(bucketKey);
+      }
+    }
+    // Preserve active limits rather than evicting them under identity churn.
+    if (!buckets.has(key) && buckets.size >= MAX_BUCKETS) return true;
+    buckets.set(key, { expiresAt: now + windowMs, count: 1 });
     return false;
   }
 
   current.count += 1;
-
-  if (buckets.size > 1000) {
-    for (const [bucketKey, bucket] of buckets) {
-      if (now - bucket.startedAt >= Math.max(windowMs, 60_000)) buckets.delete(bucketKey);
-    }
-  }
 
   return current.count > limit;
 }
