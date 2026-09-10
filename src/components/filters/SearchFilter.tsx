@@ -42,6 +42,31 @@ export function SearchFilter() {
   const paramsStringRef = useRef(paramsString);
 
   useEffect(() => {
+    const focusSearch = () => {
+      const searchContainer = document.getElementById('club-search');
+      if (!searchContainer) return;
+
+      searchContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+    };
+
+    const handleMobileSearchNavigation = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const searchLink = target?.closest<HTMLAnchorElement>('a[href="/#club-search"]');
+      if (!searchLink || window.location.pathname !== '/') return;
+
+      event.preventDefault();
+      window.history.replaceState(window.history.state, '', '#club-search');
+      focusSearch();
+    };
+
+    document.addEventListener('click', handleMobileSearchNavigation, true);
+    if (window.location.hash === '#club-search') focusSearch();
+
+    return () => document.removeEventListener('click', handleMobileSearchNavigation, true);
+  }, []);
+
+  useEffect(() => {
     currentQueryRef.current = currentQuery;
     paramsStringRef.current = paramsString;
 

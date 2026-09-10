@@ -172,7 +172,16 @@ export function ClubPricingEditor({ types, enabledTypeIds, pricing }: Props) {
                       </label>
                       <label className="text-xs font-medium text-gray-600">
                         Vahid
-                        <input value={row.unit} onChange={(event) => updateRow(index, { unit: event.target.value })} maxLength={30} className={inputClass} />
+                        <input
+                          value={row.unit}
+                          onChange={(event) => updateRow(index, { unit: event.target.value })}
+                          maxLength={30}
+                          placeholder="saat, 3 saat paket..."
+                          className={inputClass}
+                        />
+                        <span className="mt-1 block text-[11px] font-normal leading-4 text-gray-500">
+                          AZN və ₼ vahid sahəsinə yazılmır; valyuta qiymətin yanında avtomatik göstərilir.
+                        </span>
                       </label>
                       <label className="text-xs font-medium text-gray-600">
                         Qiymət — dan
