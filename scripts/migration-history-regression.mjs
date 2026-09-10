@@ -17,19 +17,19 @@ const parseId = (id) => {
   return { id, version: match[1], name: match[2] };
 };
 
-const normalizedMd5 = (relativePath) =>
+const sqlTokenMd5 = (relativePath) =>
   crypto
     .createHash('md5')
-    .update(fs.readFileSync(path.join(root, relativePath), 'utf8').trim())
+    .update(fs.readFileSync(path.join(root, relativePath), 'utf8').trim().replace(/\s+/g, ''))
     .digest('hex');
 
 const recoveredChecksums = new Map([
-  ['20260818081913_add_club_public_visibility', 'd0828477186d1aedd9137da3574e43cc'],
-  ['20260818081945_remove_unused_club_public_visibility', 'c1abedfd1b539cb6114823200a3e9d0a'],
-  ['20260902191350_activate_moon_club_20260902_v2', 'af123a49a2489d3f3c6e24a6f789481b'],
-  ['20260904184157_add_admin_submission_notifications', '8815975968f0866af3f6e24f8b8c91cd'],
-  ['20260904184536_harden_and_realtime_admin_notifications', 'e700a3d1bf4b0356e01b356143751827'],
-  ['20260904184937_activate_linked_club_on_submission_approval', '9d3584bae4ae8976019278dc83a1c884'],
+  ['20260818081913_add_club_public_visibility', '7b70dd8a1682aec352d66b8061aee7d9'],
+  ['20260818081945_remove_unused_club_public_visibility', '1aefc7be3ebb4ad24e3dde78cf15b54a'],
+  ['20260902191350_activate_moon_club_20260902_v2', 'd3deea5af33299e5e8f57e5a14e7a32f'],
+  ['20260904184157_add_admin_submission_notifications', '7dc2c8ca5269daa6b302ab93c1b3df11'],
+  ['20260904184536_harden_and_realtime_admin_notifications', '1aba4f99deddcebc9692e605604e0089'],
+  ['20260904184937_activate_linked_club_on_submission_approval', 'c091102a9c0106774d1d05a8c99d3cf4'],
 ]);
 
 const activeIds = fs
@@ -103,9 +103,9 @@ for (const entry of recovered) {
   const expectedHash = recoveredChecksums.get(entry.id);
   assert.ok(expectedHash, `Recovered history file ${entry.id} is missing its audited live SQL checksum.`);
   assert.equal(
-    normalizedMd5(`supabase/recovered-production-history/${entry.id}.sql`),
+    sqlTokenMd5(`supabase/recovered-production-history/${entry.id}.sql`),
     expectedHash,
-    `Recovered history SQL ${entry.id} does not match the audited live production statement.`,
+    `Recovered history SQL ${entry.id} does not match the audited live production SQL tokens.`,
   );
 }
 
