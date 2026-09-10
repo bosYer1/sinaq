@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, open } from 'node:fs/promises';
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 const CHROME_BIN = process.env.CHROME_BIN;
@@ -161,7 +161,12 @@ try {
   assert(repeatedFocus.inputFocused, 'Repeated same-hash mobile search tap did not refocus the input', repeatedFocus);
 
   const screenshot = await client.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
-  await writeFile(`${ARTIFACT_DIR}/mobile-search-focus.png`, Buffer.from(screenshot.data, 'base64'));
+  const screenshotFile = await open(`${ARTIFACT_DIR}/mobile-search-focus.png`, 'wx', 0o600);
+  try {
+    await screenshotFile.writeFile(Buffer.from(screenshot.data, 'base64'));
+  } finally {
+    await screenshotFile.close();
+  }
 
   console.log('Mobile search focus browser regression passed: cross-page and repeated same-hash taps focus the input.');
 } finally {
