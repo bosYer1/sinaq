@@ -5,6 +5,9 @@ const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 const CHROME_BIN = process.env.CHROME_BIN;
 const PORT = Number(process.env.MOBILE_CARD_ANALYTICS_CDP_PORT || 9451);
 const CAPTURE_KEY = '__gameyer:mobile-card-click-captures';
+const clubCardAnchors = `Array.from(document.querySelectorAll('[data-club-card-cta="true"]'))
+  .map((cta) => cta.closest('a[href^="/klub/"]'))
+  .filter(Boolean)`;
 
 if (!CHROME_BIN) throw new Error('CHROME_BIN is required');
 
@@ -128,13 +131,13 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 try {
   await send('Page.navigate', { url: `${BASE_URL}/` });
   await wait(`document.readyState === 'complete'`, 'homepage load');
-  await wait(`Boolean(Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((a) => {
+  await wait(`Boolean((${clubCardAnchors}).find((a) => {
     const rect = a.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;
-  }))`, 'visible club card');
+  }))`, 'visible ClubCard anchor');
 
   const home = await evaluate(`(() => {
-    const card = Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((a) => {
+    const card = (${clubCardAnchors}).find((a) => {
       const rect = a.getBoundingClientRect();
       return rect.width > 0 && rect.height > 0;
     });
@@ -142,21 +145,23 @@ try {
       viewportWidth: innerWidth,
       mobileMedia: matchMedia('(max-width: 1023px)').matches,
       href: card?.getAttribute('href') || null,
+      hasClubCardMarker: Boolean(card?.querySelector('[data-club-card-cta="true"]')),
     };
   })()`);
 
   assert(home.viewportWidth === 390, 'Browser smoke did not run at the intended mobile viewport', home);
   assert(home.mobileMedia === true, 'ClubCard mobile hard-navigation media query is not active', home);
-  assert(home.href?.startsWith('/klub/'), 'No visible club destination found', home);
+  assert(home.href?.startsWith('/klub/'), 'No visible ClubCard destination found', home);
+  assert(home.hasClubCardMarker === true, 'Selected link is not a ClubCard anchor', home);
 
   const expectedSlug = decodeURIComponent(home.href.split('/').filter(Boolean).pop());
   const clicked = await evaluate(`(() => {
-    const card = Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((a) => a.getAttribute('href') === ${JSON.stringify(home.href)});
+    const card = (${clubCardAnchors}).find((a) => a.getAttribute('href') === ${JSON.stringify(home.href)});
     if (!card) return false;
     card.click();
     return true;
   })()`);
-  assert(clicked, 'Unable to click the mobile club card', home);
+  assert(clicked, 'Unable to click the mobile ClubCard anchor', home);
 
   await wait(`location.pathname === ${JSON.stringify(home.href)}`, 'mobile hard navigation to club detail');
   await wait(`document.readyState === 'complete'`, 'club detail load');
@@ -172,9 +177,9 @@ try {
     };
   })()`);
 
-  assert(state.path === home.href, 'Mobile club click did not complete a full detail navigation', state);
+  assert(state.path === home.href, 'Mobile ClubCard click did not complete a full detail navigation', state);
   assert(state.matched?.event === 'club_card_click', 'Mobile hard navigation did not call PostHog club_card_click before unload', state);
-  assert(state.matched?.properties?.club_slug === expectedSlug, 'Captured club slug does not match the clicked card', state.matched);
+  assert(state.matched?.properties?.club_slug === expectedSlug, 'Captured club slug does not match the clicked ClubCard', state.matched);
   assert(state.matched?.properties?.gameyer_traffic_scope === 'test', 'Local browser smoke must retain test analytics scope', state.matched);
   assert(state.matched?.options?.send_instantly === true, 'Mobile club click must bypass the PostHog batch queue before unload', state.matched);
   assert(state.matched?.options?.transport === 'sendBeacon', 'Mobile club click must use unload-safe sendBeacon transport', state.matched);
