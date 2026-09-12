@@ -23,6 +23,12 @@ assert(searchFilter.includes('const currentQueryAtDispatch = currentQueryRef.cur
 assert(searchFilter.includes('nextQuery === lastRequestedQueryRef.current'), 'Search dispatch must deduplicate an already requested final query.');
 assert(searchFilter.includes('const SEARCH_NAVIGATION_DEBOUNCE_MS = 300;'), 'Search result navigation must keep the responsive 300ms debounce.');
 assert(searchFilter.includes('const SEARCH_ANALYTICS_SETTLE_MS = 1200;'), 'Search intent analytics must wait for a settled query instead of mirroring navigation debounce.');
+assert(searchFilter.includes('const SEARCH_RESULT_READ_INTERVAL_MS = 100;'), 'Committed search-result polling must use a bounded low-frequency retry interval.');
+assert(searchFilter.includes('const SEARCH_RESULT_READ_TIMEOUT_MS = 10_000;'), 'Committed search-result polling must tolerate slow route/data commits before giving up.');
+assert(searchFilter.includes('Date.now() - startedAt < SEARCH_RESULT_READ_TIMEOUT_MS'), 'Search analytics retry must be time-bounded rather than frame-count bounded.');
+assert(searchFilter.includes('window.setTimeout(captureCommittedSearch, SEARCH_RESULT_READ_INTERVAL_MS)'), 'Search analytics must retry result reads while the committed UI is still settling.');
+assert(searchFilter.includes('window.clearTimeout(retryTimer)'), 'Search analytics retry timer must be cleaned up on effect cancellation.');
+assert(!searchFilter.includes('SEARCH_RESULT_READ_ATTEMPTS'), 'Search analytics must not use the old ~30-frame retry budget.');
 assert(searchFilter.includes('}, SEARCH_NAVIGATION_DEBOUNCE_MS);'), 'URL navigation must use the dedicated navigation debounce.');
 assert(searchFilter.includes('}, SEARCH_ANALYTICS_SETTLE_MS);'), 'Search analytics must use the slower settled-query timer.');
 assert(searchFilter.includes("trackPostHogEvent('search_query'"), 'Committed settled queries must emit search_query analytics.');
