@@ -32,7 +32,7 @@ export default async function UpdatesPage() {
         ) : (
           <section className="rounded-2xl border border-border bg-surface px-5 py-10 text-center sm:px-8">
             <h2 className="font-display text-lg font-bold text-ink">Hazırda aktiv yenilik yoxdur</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted">Təsdiqlənmiş turnir və ya təklif əlavə ediləndə burada görünəcək. GameYer məlumat uydurmur və vaxtı keçmiş kampaniyaları aktiv kimi göstərmir.</p>
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted">Yeni turnir və ya təklif təsdiqlənəndə burada görünəcək. Yalnız aktual və yoxlanmış məlumatları göstəririk.</p>
             <Link href="/" className="mt-5 inline-flex rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white no-underline">Klubları kəşf et</Link>
           </section>
         )}
