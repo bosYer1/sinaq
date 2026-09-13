@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts, getClubTypes } from '@/lib/queries/districts';
+import { getActiveClubUpdates } from '@/lib/queries/club-updates';
 import { isSupabaseConfigured } from '@/lib/config';
 import { getSiteUrl } from '@/lib/site-url';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { ExploreView } from '@/components/explore/ExploreView';
+import { ClubUpdatesFeed } from '@/components/growth/ClubUpdatesFeed';
 import { Skeleton } from '@/components/ui/Skeleton';
 import type { ClubFilters } from '@/types/database';
 
@@ -48,7 +50,13 @@ export default async function HomePage({ searchParams }: PageProps) {
   const allClubsPromise = getClubs();
   const filteredClubsPromise = hasDataFilter ? getClubs(filters) : allClubsPromise;
 
-  const [clubs, discoveryClubs, districts, types] = await Promise.all([filteredClubsPromise, allClubsPromise, getDistricts(), getClubTypes()]);
+  const [clubs, discoveryClubs, districts, types, activeUpdates] = await Promise.all([
+    filteredClubsPromise,
+    allClubsPromise,
+    getDistricts(),
+    getClubTypes(),
+    getActiveClubUpdates(),
+  ]);
   const activeDistrictSlugs = new Set(discoveryClubs.map((club) => club.district?.slug).filter((slug): slug is string => Boolean(slug)));
   const activeDistricts = districts.filter((district) => activeDistrictSlugs.has(district.slug));
   const siteUrl = getSiteUrl();
@@ -109,6 +117,21 @@ export default async function HomePage({ searchParams }: PageProps) {
         </section>
 
         <Suspense fallback={<div className="mb-3 rounded-2xl border border-border bg-surface p-3 sm:mb-4 sm:p-4"><Skeleton className="h-11 w-full rounded-control" /></div>}><FilterBar districts={activeDistricts} types={types} /></Suspense>
+
+        {activeUpdates.length > 0 ? (
+          <section className="mb-3 rounded-2xl border border-primary/15 bg-primary/5 px-3 py-4 sm:mb-4 sm:px-5 sm:py-5" aria-labelledby="home-updates-heading">
+            <div className="mb-3 flex items-end justify-between gap-3 sm:mb-4">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-primary sm:text-xs">GameYer yenilikləri</p>
+                <h2 id="home-updates-heading" className="mt-1 font-display text-xl font-bold tracking-tight text-ink sm:text-2xl">Aktiv təkliflər və turnirlər</h2>
+                <p className="mt-1 text-xs leading-5 text-muted sm:text-sm">Klubların aktual turnir və təkliflərini bir yerdə kəşf et.</p>
+              </div>
+              <Link href="/yenilikler" className="shrink-0 rounded-control border border-primary/25 bg-surface px-3 py-2 text-xs font-semibold text-primary no-underline transition hover:border-primary sm:px-4">Hamısına bax →</Link>
+            </div>
+            <ClubUpdatesFeed updates={activeUpdates.slice(0, 3)} context="discovery" />
+          </section>
+        ) : null}
+
         <section className="overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:p-4" aria-label="Klub siyahısı və xəritə"><ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} /></section>
 
         <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:mt-7 lg:grid-cols-4" aria-label="GameYer üstünlükləri">
