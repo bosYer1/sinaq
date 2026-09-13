@@ -15,7 +15,8 @@ type PendingSearchAnalytics = {
 
 const SEARCH_NAVIGATION_DEBOUNCE_MS = 300;
 const SEARCH_ANALYTICS_SETTLE_MS = 1200;
-const SEARCH_RESULT_READ_ATTEMPTS = 30;
+const SEARCH_RESULT_READ_INTERVAL_MS = 100;
+const SEARCH_RESULT_READ_TIMEOUT_MS = 10_000;
 
 function readRenderedResultCount() {
   const exploreText = document.querySelector('[data-explore-view]')?.textContent ?? '';
@@ -127,9 +128,9 @@ export function SearchFilter() {
     const pending = pendingSearchAnalytics;
     if (!pending || currentQuery !== pending.query) return;
 
-    let frame = 0;
-    let attempts = 0;
+    let retryTimer = 0;
     let cancelled = false;
+    const startedAt = Date.now();
 
     const captureCommittedSearch = () => {
       if (cancelled || currentQueryRef.current !== pending.query) return;
@@ -150,9 +151,8 @@ export function SearchFilter() {
 
       const resultCount = readRenderedResultCount();
       if (resultCount == null) {
-        if (attempts < SEARCH_RESULT_READ_ATTEMPTS) {
-          attempts += 1;
-          frame = window.requestAnimationFrame(captureCommittedSearch);
+        if (Date.now() - startedAt < SEARCH_RESULT_READ_TIMEOUT_MS) {
+          retryTimer = window.setTimeout(captureCommittedSearch, SEARCH_RESULT_READ_INTERVAL_MS);
         }
         return;
       }
@@ -171,10 +171,10 @@ export function SearchFilter() {
       });
     };
 
-    frame = window.requestAnimationFrame(captureCommittedSearch);
+    retryTimer = window.setTimeout(captureCommittedSearch, 0);
     return () => {
       cancelled = true;
-      if (frame) window.cancelAnimationFrame(frame);
+      if (retryTimer) window.clearTimeout(retryTimer);
     };
   }, [currentQuery, pendingSearchAnalytics]);
 
