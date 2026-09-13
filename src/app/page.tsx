@@ -119,14 +119,14 @@ export default async function HomePage({ searchParams }: PageProps) {
         <Suspense fallback={<div className="mb-3 rounded-2xl border border-border bg-surface p-3 sm:mb-4 sm:p-4"><Skeleton className="h-11 w-full rounded-control" /></div>}><FilterBar districts={activeDistricts} types={types} /></Suspense>
 
         {activeUpdates.length > 0 ? (
-          <section className="mb-3 rounded-2xl border border-primary/15 bg-primary/5 px-3 py-4 sm:mb-4 sm:px-5 sm:py-5" aria-labelledby="home-updates-heading">
-            <div className="mb-3 flex items-end justify-between gap-3 sm:mb-4">
+          <section className="mb-4 hidden rounded-2xl border border-primary/15 bg-primary/5 px-5 py-5 sm:block" aria-labelledby="home-updates-heading">
+            <div className="mb-4 flex items-end justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-primary sm:text-xs">GameYer yenilikləri</p>
-                <h2 id="home-updates-heading" className="mt-1 font-display text-xl font-bold tracking-tight text-ink sm:text-2xl">Aktiv təkliflər və turnirlər</h2>
-                <p className="mt-1 text-xs leading-5 text-muted sm:text-sm">Klubların aktual turnir və təkliflərini bir yerdə kəşf et.</p>
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">GameYer yenilikləri</p>
+                <h2 id="home-updates-heading" className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">Aktiv təkliflər və turnirlər</h2>
+                <p className="mt-1 text-sm leading-5 text-muted">Klubların aktual turnir və təkliflərini bir yerdə kəşf et.</p>
               </div>
-              <Link href="/yenilikler" className="shrink-0 rounded-control border border-primary/25 bg-surface px-3 py-2 text-xs font-semibold text-primary no-underline transition hover:border-primary sm:px-4">Hamısına bax →</Link>
+              <Link href="/yenilikler" className="shrink-0 rounded-control border border-primary/25 bg-surface px-4 py-2 text-xs font-semibold text-primary no-underline transition hover:border-primary">Hamısına bax →</Link>
             </div>
             <ClubUpdatesFeed updates={activeUpdates.slice(0, 3)} context="discovery" />
           </section>
