@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { notFound } from 'next/navigation';
 import { ClubUpdatesFeed } from '@/components/growth/ClubUpdatesFeed';
 import { getClubBySlug } from '@/lib/queries/clubs';
 import { getActiveClubUpdatesByClubId } from '@/lib/queries/club-updates';
@@ -12,7 +13,7 @@ export default async function ClubDetailLayout({ children, params }: ClubDetailL
   const { slug } = await params;
   const club = await getClubBySlug(slug);
 
-  if (!club) return children;
+  if (!club) notFound();
 
   const updates = await getActiveClubUpdatesByClubId(club.id);
 
