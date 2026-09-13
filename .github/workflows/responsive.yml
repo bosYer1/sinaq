@@ -91,6 +91,9 @@ jobs:
       - name: Sitemap and public route integrity
         run: node scripts/site-integrity-smoke.mjs
 
+      - name: Inactive club hard-404 regression
+        run: node scripts/inactive-club-404-smoke.mjs
+
       - name: Known district route regression
         run: node scripts/known-district-route-smoke.mjs
 
