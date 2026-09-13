@@ -29,6 +29,9 @@ const checks = [
   [feed.includes("trackPostHogEvent('club_update_impression'"), 'update impressions are measured'],
   [feed.includes("trackPostHogEvent('club_update_club_click'"), 'update-to-club transitions are measured'],
   [feed.includes("trackPostHogEvent('club_update_source_click'"), 'official-source clicks are measured'],
+  [page.includes("description: 'GameYer-də klubların aktual turnir və təkliflərini bir yerdə kəşf et.'"), 'updates metadata uses natural customer-facing wording'],
+  [page.includes('Klubların aktual turnir və təkliflərini bir yerdə kəşf et.'), 'updates hero uses natural customer-facing wording'],
+  [!page.includes('Yalnız real klub və yoxlanmış mənbə ilə təsdiqlənmiş'), 'updates hero does not expose implementation-style verification caveats'],
   [page.includes('Yalnız aktual və yoxlanmış məlumatları göstəririk.'), 'empty state preserves truthful data wording without implementation-style copy'],
 ];
 
