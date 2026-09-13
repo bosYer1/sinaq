@@ -118,21 +118,23 @@ export default async function HomePage({ searchParams }: PageProps) {
 
         <Suspense fallback={<div className="mb-3 rounded-2xl border border-border bg-surface p-3 sm:mb-4 sm:p-4"><Skeleton className="h-11 w-full rounded-control" /></div>}><FilterBar districts={activeDistricts} types={types} /></Suspense>
 
-        {activeUpdates.length > 0 ? (
-          <section className="mb-4 hidden rounded-2xl border border-primary/15 bg-primary/5 px-5 py-5 sm:block" aria-labelledby="home-updates-heading">
-            <div className="mb-4 flex items-end justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">GameYer yenilikləri</p>
-                <h2 id="home-updates-heading" className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">Aktiv təkliflər və turnirlər</h2>
-                <p className="mt-1 text-sm leading-5 text-muted">Klubların aktual turnir və təkliflərini bir yerdə kəşf et.</p>
-              </div>
-              <Link href="/yenilikler" className="shrink-0 rounded-control border border-primary/25 bg-surface px-4 py-2 text-xs font-semibold text-primary no-underline transition hover:border-primary">Hamısına bax →</Link>
-            </div>
-            <ClubUpdatesFeed updates={activeUpdates.slice(0, 3)} context="discovery" />
-          </section>
-        ) : null}
+        <div className="flex flex-col">
+          <section className="order-2 overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:p-4" aria-label="Klub siyahısı və xəritə"><ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} /></section>
 
-        <section className="overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:p-4" aria-label="Klub siyahısı və xəritə"><ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} /></section>
+          {activeUpdates.length > 0 ? (
+            <section className="order-1 mb-4 hidden rounded-2xl border border-primary/15 bg-primary/5 px-5 py-5 sm:block" aria-labelledby="home-updates-heading">
+              <div className="mb-4 flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">GameYer yenilikləri</p>
+                  <h2 id="home-updates-heading" className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">Aktiv təkliflər və turnirlər</h2>
+                  <p className="mt-1 text-sm leading-5 text-muted">Klubların aktual turnir və təkliflərini bir yerdə kəşf et.</p>
+                </div>
+                <Link href="/yenilikler" className="shrink-0 rounded-control border border-primary/25 bg-surface px-4 py-2 text-xs font-semibold text-primary no-underline transition hover:border-primary">Hamısına bax →</Link>
+              </div>
+              <ClubUpdatesFeed updates={activeUpdates.slice(0, 3)} context="discovery" />
+            </section>
+          ) : null}
+        </div>
 
         <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:mt-7 lg:grid-cols-4" aria-label="GameYer üstünlükləri">
           <div className="rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-live-tint text-lg">✓</span><div><h2 className="text-sm font-bold text-ink">Klub lokasiyaları</h2><p className="mt-0.5 text-xs text-muted">Xəritədə mövcud klub nöqtələri</p></div></div></div>
