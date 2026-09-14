@@ -138,7 +138,7 @@ try {
   assert(await evaluate(`sessionStorage.getItem('gameyer:mobile-expanded-state') === null`), 'Collapse left stale expanded-list restoration state behind');
 
   const browserBackScenario = await expandAndOpenLowerClub(originPath);
-  await send('Page.goBack');
+  await evaluate('history.back()');
   await assertReturnedDiscovery(originPath, browserBackScenario.savedScrollY, 'browser Back');
 
   const firstHref = await evaluate(`(${visibleClubLinks})[0]?.getAttribute('href') || null`);
