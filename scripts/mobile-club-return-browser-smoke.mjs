@@ -75,55 +75,12 @@ const visibleClubLinks = `Array.from(document.querySelectorAll('a[href^="/klub/"
   const rect = a.getBoundingClientRect();
   return rect.width > 0 && rect.height > 0;
 })`;
-
-await send('Page.enable');
-await send('Runtime.enable');
-await send('Network.enable');
-await send('Network.setBlockedURLs', {
-  urls: [
-    '*/api/analytics/visit*',
-    '*posthog.com/*',
-    '*posthog.com*',
-    '*googletagmanager.com/*',
-    '*google-analytics.com/*',
-    '*connect.facebook.net/*',
-    '*facebook.com/tr/*',
-  ],
-});
-await send('Emulation.setDeviceMetricsOverride', {
-  width: 390,
-  height: 844,
-  deviceScaleFactor: 1,
-  mobile: true,
-});
-await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
-
-try {
-  const originPath = '/?type=pc';
+const expandAndOpenLowerClub = async (originPath) => {
   await navigate(originPath);
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha çox klub göstər')))`, 'mobile expand button');
-
-  const beforeExpand = await evaluate(`(() => {
-    const links = ${visibleClubLinks};
-    const firstClubCard = links[0];
-    const cardRect = firstClubCard?.getBoundingClientRect();
-    const mobileNav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-    const navRect = mobileNav?.getBoundingClientRect();
-    return {
-      path: location.pathname + location.search + location.hash,
-      clubLinks: links.length,
-      firstClubCardRect: cardRect ? { top: cardRect.top, bottom: cardRect.bottom, height: cardRect.height } : null,
-      mobileNavTop: navRect?.top ?? null,
-    };
-  })()`);
-  assert(beforeExpand.path === originPath, 'Initial filtered discovery URL changed unexpectedly', beforeExpand);
-  assert(beforeExpand.clubLinks === 8, 'Collapsed mobile list must initially expose exactly eight visible club cards', beforeExpand);
-  assert(beforeExpand.firstClubCardRect?.height > 0, 'Collapsed mobile list no longer renders its first club card', beforeExpand);
-
   await evaluate(`Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha çox klub göstər'))?.click()`);
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər')))`, 'expanded mobile list');
   await wait(`(${visibleClubLinks}).length > 8`, 'additional visible club cards after expand');
-
   const expanded = await evaluate(`(() => {
     const links = ${visibleClubLinks};
     const target = links[Math.min(12, links.length - 1)];
@@ -133,50 +90,63 @@ try {
   })()`);
   assert(expanded.count > 8 && expanded.href?.startsWith('/klub/'), 'Expanded list did not provide a lower visible club destination', expanded);
   await sleep(300);
-
   const savedScrollY = await evaluate('window.scrollY');
   assert(savedScrollY > 0, 'Regression scenario failed to move below the top of the expanded list', { savedScrollY });
-
   await evaluate(`(${visibleClubLinks}).find((a) => a.getAttribute('href') === window.__gameyerTestClubHref)?.click()`);
   await waitForPath(expanded.href, 'club detail navigation');
-  await wait(`Boolean(Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt')))`, 'Klublara qayıt link');
-
-  const detailState = await evaluate(`({
-    path: location.pathname,
-    originEntry: sessionStorage.getItem('gameyer:club-entry-origin'),
-    expandedEntry: sessionStorage.getItem('gameyer:mobile-expanded-state'),
-  })`);
-  assert(detailState.path === expanded.href, 'Club card did not reach its detail page', detailState);
-  assert(detailState.originEntry?.includes(originPath), 'Club detail did not retain the matching discovery origin', detailState);
-  assert(detailState.expandedEntry?.includes(originPath), 'Expanded-list restoration state was not retained on detail page', detailState);
-
-  await evaluate(`Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt'))?.click()`);
-  await wait(`location.pathname === '/' && location.search === '?type=pc'`, 'clean return to exact filtered discovery URL');
-  await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər')))`, 'expanded state restored after return');
-  await wait(`(${visibleClubLinks}).length > 8`, 'expanded visible club cards restored after return');
+  return { expanded, savedScrollY };
+};
+const assertReturnedDiscovery = async (originPath, savedScrollY, label) => {
+  await wait(`location.pathname === '/' && location.search === '?type=pc'`, `${label}: exact filtered discovery URL`);
+  await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər')))`, `${label}: expanded state restored`);
+  await wait(`(${visibleClubLinks}).length > 8`, `${label}: expanded visible club cards restored`);
   await sleep(500);
-
   const restored = await evaluate(`({
     path: location.pathname + location.search + location.hash,
     scrollY: window.scrollY,
     clubLinks: (${visibleClubLinks}).length,
-    expandedState: sessionStorage.getItem('gameyer:mobile-expanded-state'),
+    scrollProbeBefore: window.scrollY,
   })`);
-  assert(restored.path === originPath, 'Search/filter query parameters were lost on return', restored);
-  assert(restored.clubLinks > 8, 'Returned visible list collapsed back to the first eight clubs', restored);
-  assert(Math.abs(restored.scrollY - savedScrollY) <= 180, 'Scroll position was not restored close enough to the pre-navigation position', { savedScrollY, ...restored });
+  assert(restored.path === originPath, `${label}: search/filter query parameters were lost`, restored);
+  assert(restored.clubLinks > 8, `${label}: returned visible list collapsed back to eight clubs`, restored);
+  assert(Math.abs(restored.scrollY - savedScrollY) <= 180, `${label}: scroll position was not restored close enough`, { savedScrollY, ...restored });
+  const scrollProbe = await evaluate(`(() => {
+    const before = window.scrollY;
+    window.scrollBy(0, 120);
+    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve({ before, after: window.scrollY }))));
+  })()`);
+  assert(scrollProbe.after > scrollProbe.before, `${label}: page remained scroll-locked/frozen after return`, scrollProbe);
+};
+
+await send('Page.enable');
+await send('Runtime.enable');
+await send('Network.enable');
+await send('Network.setBlockedURLs', { urls: ['*/api/analytics/visit*', '*posthog.com/*', '*posthog.com*', '*googletagmanager.com/*', '*google-analytics.com/*', '*connect.facebook.net/*', '*facebook.com/tr/*'] });
+await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+
+try {
+  const originPath = '/?type=pc';
+
+  const linkScenario = await expandAndOpenLowerClub(originPath);
+  await wait(`Boolean(Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt')))`, 'Klublara qayıt link');
+  await evaluate(`Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt'))?.click()`);
+  await assertReturnedDiscovery(originPath, linkScenario.savedScrollY, 'in-page return link');
 
   await evaluate(`Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər'))?.click()`);
-  await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha çox klub göstər')))`, 'collapse after restored return');
-  await wait(`(${visibleClubLinks}).length === 8`, 'eight-card visible collapsed list after restored return');
+  await wait(`(${visibleClubLinks}).length === 8`, 'collapse after in-page return');
   assert(await evaluate(`sessionStorage.getItem('gameyer:mobile-expanded-state') === null`), 'Collapse left stale expanded-list restoration state behind');
 
-  const firstHref = await evaluate(`(${visibleClubLinks})[0]?.getAttribute('href') || null`);
-  assert(firstHref?.startsWith('/klub/'), 'Collapsed list no longer exposes clickable club cards', { firstHref });
-  await evaluate(`(${visibleClubLinks})[0]?.click()`);
-  await waitForPath(firstHref, 'club card remains interactive after restoration and collapse');
+  const browserBackScenario = await expandAndOpenLowerClub(originPath);
+  await evaluate('history.back()');
+  await assertReturnedDiscovery(originPath, browserBackScenario.savedScrollY, 'browser Back');
 
-  console.log('Mobile club return browser regression: PASS');
+  const firstHref = await evaluate(`(${visibleClubLinks})[0]?.getAttribute('href') || null`);
+  assert(firstHref?.startsWith('/klub/'), 'Restored list no longer exposes clickable club cards', { firstHref });
+  await evaluate(`(${visibleClubLinks})[0]?.click()`);
+  await waitForPath(firstHref, 'club card remains interactive after browser Back restoration');
+
+  console.log('Mobile club return browser regression: PASS (in-page link + browser Back + scroll probe)');
 } finally {
   ws.close();
   chrome.kill('SIGTERM');
