@@ -153,7 +153,7 @@ export function MapPreview({ clubs }: MapPreviewProps) {
       data-map-preview="current-clubs"
       data-map-preview-marker-count={layout.coordinateCount}
       data-map-preview-zoom={layout.viewport.zoom}
-      className="gameyer-map-preview relative h-full w-full overflow-hidden rounded-[18px] border border-border bg-surface-alt"
+      className="gameyer-map-preview relative h-full w-full overflow-hidden rounded-[18px] border border-border bg-surface-alt [contain:layout_paint_style] will-change-transform"
     >
       <div className="gameyer-map-preview-tiles absolute inset-0" aria-hidden="true">
         {layout.tiles.map(({ x, y, left, top }) => (

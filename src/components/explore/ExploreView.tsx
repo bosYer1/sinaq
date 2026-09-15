@@ -67,7 +67,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const restoredScrollYRef = useRef<number | null>(null);
-  const restoringScrollRef = useRef(false);
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');
@@ -80,7 +79,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   useEffect(() => {
     if (view !== 'list' || window.matchMedia('(min-width: 1024px)').matches) return;
 
-    let restoreTimer: number | null = null;
+    let restoreFrame = 0;
     try {
       const rawState = window.sessionStorage.getItem(MOBILE_EXPANDED_STATE_KEY);
       if (!rawState) return;
@@ -94,18 +93,14 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         return;
       }
 
-      const restoredScrollY = Math.max(0, savedState.scrollY);
-      restoreTimer = window.setTimeout(() => {
-        restoringScrollRef.current = true;
-        restoredScrollYRef.current = restoredScrollY;
-        setMobileExpanded(true);
-      }, 0);
+      restoredScrollYRef.current = Math.max(0, savedState.scrollY);
+      restoreFrame = window.requestAnimationFrame(() => setMobileExpanded(true));
     } catch {
       // Ignore malformed or unavailable session state.
     }
 
     return () => {
-      if (restoreTimer != null) window.clearTimeout(restoreTimer);
+      if (restoreFrame) window.cancelAnimationFrame(restoreFrame);
     };
   }, [view]);
 
@@ -115,45 +110,17 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
     restoredScrollYRef.current = null;
     let secondFrame = 0;
-    let settleTimer = 0;
-    let finalTimer = 0;
-    const restore = () => window.scrollTo({ top: restoredScrollY, left: 0, behavior: 'auto' });
     const firstFrame = window.requestAnimationFrame(() => {
       secondFrame = window.requestAnimationFrame(() => {
-        restore();
-        settleTimer = window.setTimeout(restore, 120);
-        finalTimer = window.setTimeout(() => {
-          restore();
-          restoringScrollRef.current = false;
-        }, 360);
+        window.scrollTo({ top: restoredScrollY, left: 0, behavior: 'auto' });
       });
     });
 
     return () => {
       window.cancelAnimationFrame(firstFrame);
       if (secondFrame) window.cancelAnimationFrame(secondFrame);
-      if (settleTimer) window.clearTimeout(settleTimer);
-      if (finalTimer) window.clearTimeout(finalTimer);
-      restoringScrollRef.current = false;
     };
   }, [mobileExpanded]);
-
-  useEffect(() => {
-    if (view !== 'list' || !mobileExpanded) return;
-
-    let frame = 0;
-    const persistScroll = () => {
-      if (restoringScrollRef.current) return;
-      if (frame) window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => saveMobileExpandedState(window.scrollY));
-    };
-
-    window.addEventListener('scroll', persistScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', persistScroll);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, [mobileExpanded, view]);
 
   const clubsWithDistance = useMemo(() => {
     const enriched = clubs.map((club) => ({
@@ -211,7 +178,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   }
 
   function handleMobileExpandedToggle() {
-    restoringScrollRef.current = false;
     const nextExpanded = !mobileExpanded;
     setMobileExpanded(nextExpanded);
     if (nextExpanded) saveMobileExpandedState(window.scrollY);
@@ -252,7 +218,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
   function renderMapPanel() {
     return (
-      <div className="relative h-full min-h-0 overflow-hidden rounded-[18px] border border-border bg-surface-alt shadow-[0_8px_24px_rgba(31,35,48,0.05)]">
+      <div className="relative h-full min-h-0 overflow-hidden rounded-[18px] border border-border bg-surface-alt shadow-[0_8px_24px_rgba(31,35,48,0.05)] [contain:layout_paint_style]">
         <MapErrorBoundary>
           <MapWrapper
             clubs={clubsWithDistance}
@@ -310,24 +276,24 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       data-mobile-map-active={view === 'map' || mobileListMapActive}
     >
       {isDesktop ? (
-        <div className="h-[clamp(590px,68vh,660px)] min-h-0 grid grid-cols-[360px_minmax(0,1fr)] gap-3 xl:grid-cols-[420px_minmax(0,1fr)] xl:gap-4 2xl:grid-cols-[450px_minmax(0,1fr)]">
+        <div className="grid h-[clamp(590px,68vh,660px)] min-h-0 grid-cols-[390px_minmax(0,1fr)] gap-4">
           <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-border bg-bg-elevated">
-            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-3.5 py-3 xl:gap-3 xl:px-4">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-ink xl:text-base">Klublar ({clubsWithDistance.length})</p>
-                <p className="mt-0.5 hidden text-[11px] text-muted xl:block">Klubu seç, xəritədə yerini gör</p>
+                <p className="truncate text-base font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
+                <p className="mt-0.5 text-[11px] text-muted">Klubu seç, xəritədə yerini gör</p>
               </div>
               <button
                 type="button"
                 onClick={handleLocationSort}
                 disabled={status === 'loading' || status === 'unsupported'}
-                className={`shrink-0 whitespace-nowrap rounded-xl border px-2.5 py-2 text-[11px] font-semibold transition disabled:opacity-50 xl:px-3 xl:text-xs ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted hover:border-primary hover:text-primary'}`}
+                className={`shrink-0 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition disabled:opacity-50 ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted hover:border-primary hover:text-primary'}`}
               >
                 {locationButtonLabel}
               </button>
             </div>
             {locationMessage ? <div className="mx-3 mt-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
-            <div className="min-h-0 flex-1 overflow-y-auto p-3 pr-2 [scrollbar-gutter:stable]">
+            <div className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-gutter:stable]">
               <ClubList
                 clubs={clubsWithDistance}
                 activeClubId={activeClubId}
@@ -346,7 +312,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       ) : (
         <div>
           {view === 'map' ? (
-            <section className="h-[430px] overflow-hidden rounded-[18px] sm:h-[500px]">
+            <section className="h-[430px] overflow-hidden rounded-[18px] sm:h-[500px] [contain:layout_paint_style]">
               {renderMapPanel()}
             </section>
           ) : null}
@@ -355,7 +321,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <section>
               <div
                 data-mobile-list-map-container="true"
-                className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px]"
+                className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px] [contain:layout_paint_style]"
               >
                 {mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />}
                 {!mobileListMapActive ? (
@@ -363,7 +329,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                     type="button"
                     aria-label="Xəritəni aktiv et"
                     onClick={() => setMobileListMapActive(true)}
-                    className="absolute inset-0 z-[600] flex items-center justify-center rounded-[18px] bg-transparent"
+                    className="absolute inset-0 z-[600] flex touch-pan-y items-center justify-center rounded-[18px] bg-transparent"
                   >
                     <span className="rounded-full border border-border bg-surface/95 px-4 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">Xəritəyə toxunun</span>
                   </button>
@@ -395,7 +361,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 <button
                   type="button"
                   onClick={handleMobileExpandedToggle}
-                  className="mt-3 h-12 w-full rounded-xl border border-border bg-surface text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
+                  className="mt-3 h-12 w-full rounded-xl border border-border bg-surface text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
                 >
                   {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT})`}
                 </button>

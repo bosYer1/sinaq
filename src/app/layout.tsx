@@ -84,7 +84,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   appleWebApp: { capable: true, title: 'GameYer', statusBarStyle: 'default' },
   alternates: { canonical: '/' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/', siteName: 'GameYer', title: 'GameYer — Bakıda gaming, PC və PlayStation klubları', description: 'Bakıda PC, kompüter, internet və PlayStation klublarını ünvan, rayon və xəritə ilə tap; mövcud qiymət və iş saatlarına profillərdə bax.', images: [{ url: socialImage, width: 1200, height: 630, alt: 'GameYer — Bakıda gaming klubu tap' }] },
+  openGraph: { type: 'website', locale: 'az_AZ', url: '/', siteName: 'GameYer', title: 'GameYer — Bakıda gaming, PC və PlayStation klubları', description: 'Bakıda PC, kompüter, internet və PlayStation klublarını xəritə və rayon üzrə tap; mövcud qiymət və iş saatlarına profillərdə bax.', images: [{ url: socialImage, width: 1200, height: 630, alt: 'GameYer — Bakıda gaming klubu tap' }] },
   twitter: { card: 'summary_large_image', title: 'GameYer — Bakıda gaming klubu tap', description: 'PC, internet və PlayStation klublarını xəritə və rayon üzrə tap; mövcud qiymət məlumatlarını müqayisə et.', images: [socialImage] },
 };
 
@@ -101,7 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PostHogAnalytics />
         <PageViewTracker />
 
-        <header className="sticky top-0 z-30 border-b border-border/80 bg-surface/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-border/80 bg-surface md:bg-surface/95 md:backdrop-blur">
           <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link href="/" className="flex items-center gap-2.5" aria-label="GameYer ana səhifə">
               <Image
@@ -154,7 +154,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </footer>
 
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-surface/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] backdrop-blur md:hidden" aria-label="Mobil naviqasiya">
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] md:hidden" aria-label="Mobil naviqasiya">
           <Link href="/" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary">
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7.5 8h9a4 4 0 0 1 3.7 5.5l-1.3 3.2a2 2 0 0 1-3.2.7L14 16h-4l-1.7 1.4a2 2 0 0 1-3.2-.7l-1.3-3.2A4 4 0 0 1 7.5 8Z"/><path d="M8 11v4M6 13h4M16.5 12h.01M18 14h.01"/></svg>
             <span>Klublar</span>

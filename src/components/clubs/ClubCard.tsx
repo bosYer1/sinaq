@@ -1,7 +1,8 @@
 'use client';
 
-import { forwardRef, useEffect, useRef, type MouseEvent } from 'react';
+import { forwardRef, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { ClubWithDistance } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
@@ -34,10 +35,6 @@ type DiscoveryContext = {
   price_max_filter: number | null;
 };
 
-function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>) {
-  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-}
-
 function currentDiscoveryContext(): DiscoveryContext {
   const params = new URLSearchParams(window.location.search);
   const searchActive = Boolean(params.get('q')?.trim());
@@ -59,6 +56,7 @@ function currentDiscoveryContext(): DiscoveryContext {
 }
 
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, listPosition, active, onMouseEnter, imagePriority = false }, ref) {
+  const router = useRouter();
   const isVerified = club.is_verified;
   const hasHours = club.opening_hours.length > 0;
   const cardElementRef = useRef<HTMLAnchorElement | null>(null);
@@ -105,7 +103,14 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     else if (ref) ref.current = element;
   }
 
-  function trackClubCardClick(event: MouseEvent<HTMLAnchorElement>) {
+  function prepareDesktopNavigation() {
+    onMouseEnter?.();
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      router.prefetch(clubHref);
+    }
+  }
+
+  function trackClubCardClick() {
     rememberClubEntryOrigin(club.slug);
 
     const eventProperties = {
@@ -116,7 +121,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       list_position: listPosition,
       ...currentDiscoveryContext(),
     };
-    const isMobileHardNavigation = isPlainLeftClick(event) && window.matchMedia('(max-width: 1023px)').matches;
+    const isMobileNavigation = window.matchMedia('(max-width: 1023px)').matches;
 
     trackMetaCustomEvent(clubCardClickEvent({
       clubId: club.id,
@@ -128,30 +133,26 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     trackPostHogEvent(
       'club_card_click',
       eventProperties,
-      isMobileHardNavigation ? { send_instantly: true, transport: 'sendBeacon' } : undefined,
+      isMobileNavigation ? { send_instantly: true, transport: 'sendBeacon' } : undefined,
     );
-
-    if (isMobileHardNavigation) {
-      event.preventDefault();
-      window.location.assign(clubHref);
-    }
   }
 
   return (
     <Link
       ref={setCardRef}
       href={clubHref}
-      onMouseEnter={onMouseEnter}
-      onFocus={onMouseEnter}
+      prefetch={false}
+      onMouseEnter={prepareDesktopNavigation}
+      onFocus={prepareDesktopNavigation}
       onClick={trackClubCardClick}
       className={cn(
-        'group flex min-h-[112px] gap-3 rounded-xl border bg-surface p-3 transition-all duration-150',
+        'group flex min-h-[112px] touch-pan-y gap-3 rounded-xl border bg-surface p-3 [contain:layout_paint_style] [contain-intrinsic-size:112px] [content-visibility:auto] transition-[border-color,box-shadow] duration-150',
         active
           ? 'border-primary shadow-[0_8px_22px_rgba(124,92,252,0.12)] ring-1 ring-primary/10'
           : 'border-border shadow-[0_4px_14px_rgba(31,35,48,0.04)] hover:border-primary/35 hover:shadow-[0_8px_22px_rgba(31,35,48,0.08)]',
       )}
     >
-      <div className="relative h-[88px] w-[104px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pc-tint to-ps-tint ring-1 ring-border sm:w-[112px]">
+      <div className="relative h-[88px] w-[104px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pc-tint to-ps-tint ring-1 ring-border">
         <ClubLogo
           slug={club.slug}
           name={club.name}
@@ -166,7 +167,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex min-w-0 items-start gap-2">
-          <h3 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold tracking-[-0.01em] text-ink transition group-hover:text-primary">{club.name}</h3>
+          <h3 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold tracking-[-0.01em] text-ink transition-colors group-hover:text-primary">{club.name}</h3>
           <div className="flex shrink-0 items-center gap-1">
             {isVerified ? <Badge tone="verified">✓</Badge> : null}
             {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
@@ -199,7 +200,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
           <div className="shrink-0 text-right">
             {club.distanceKm != null ? <div className="text-[10px] font-medium text-primary">{formatDistance(club.distanceKm)}</div> : null}
             <div className={cn('mt-0.5 text-[10px] font-semibold', !hasHours ? 'text-muted' : openNow ? 'text-live' : 'text-red-500')}>{statusLabel}</div>
-            <span data-club-card-cta="true" aria-hidden="true" className="mt-1 inline-flex items-center text-[11px] font-bold text-primary transition group-hover:text-primary-dark">Kluba bax →</span>
+            <span data-club-card-cta="true" aria-hidden="true" className="mt-1 inline-flex items-center text-[11px] font-bold text-primary transition-colors group-hover:text-primary-dark">Kluba bax →</span>
           </div>
         </div>
       </div>
