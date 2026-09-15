@@ -79,6 +79,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   useEffect(() => {
     if (view !== 'list' || window.matchMedia('(min-width: 1024px)').matches) return;
 
+    let restoreFrame = 0;
     try {
       const rawState = window.sessionStorage.getItem(MOBILE_EXPANDED_STATE_KEY);
       if (!rawState) return;
@@ -93,10 +94,14 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       }
 
       restoredScrollYRef.current = Math.max(0, savedState.scrollY);
-      setMobileExpanded(true);
+      restoreFrame = window.requestAnimationFrame(() => setMobileExpanded(true));
     } catch {
       // Ignore malformed or unavailable session state.
     }
+
+    return () => {
+      if (restoreFrame) window.cancelAnimationFrame(restoreFrame);
+    };
   }, [view]);
 
   useEffect(() => {
