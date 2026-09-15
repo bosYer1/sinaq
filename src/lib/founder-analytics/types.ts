@@ -62,6 +62,21 @@ export type ClubPerformanceRow = {
   intentRate: number;
 };
 
+export type ClubDataQualityRow = {
+  slug: string;
+  name: string;
+  completenessScore: number;
+  missingFields: Array<'image' | 'phone' | 'instagram' | 'coordinates' | 'type'>;
+  lastEvidenceCheckedAt: string | null;
+  evidenceState: 'fresh' | 'stale' | 'missing';
+};
+
+export type ClubDataPriorityRow = ClubDataQualityRow & {
+  views: number;
+  ctaClicks: number;
+  priorityScore: number;
+};
+
 export type TrendPoint = { date: string; pageviews: number; visitors: number; ctaClicks: number };
 
 export type ReturnLoopMetrics = {
@@ -76,6 +91,22 @@ export type ReturnLoopMetrics = {
   returningUpdateRate: number;
   clubViewReachRate: number;
   ctaReachRate: number;
+};
+
+export type RetentionMetrics = {
+  d1: number | null;
+  d3: number | null;
+  d7: number | null;
+  d1CohortUsers: number;
+  d3CohortUsers: number;
+  d7CohortUsers: number;
+  cohortUsers: number;
+};
+
+export type PwaMetrics = {
+  installAvailable: number;
+  installed: number;
+  standaloneOpened: number;
 };
 
 export type PostHogMetrics = {
@@ -114,7 +145,8 @@ export type PostHogMetrics = {
     attributionCompleteness: number;
   };
   funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number };
-  retention: { d1: number | null; d3: number | null; d7: number | null; cohortUsers: number };
+  retention: RetentionMetrics;
+  pwa: PwaMetrics;
   returnLoop: ReturnLoopMetrics;
 };
 
@@ -190,6 +222,7 @@ export type SupabaseMetrics = {
     missingCoordinates: number;
     missingType: number;
   };
+  qualityBacklog: ClubDataQualityRow[];
 };
 
 export type CeoSignal = {
@@ -206,6 +239,7 @@ export type FounderDashboard = {
   ga4: Ga4Metrics;
   gsc: GscMetrics;
   supabase: SupabaseMetrics;
+  clubDataPriorities: ClubDataPriorityRow[];
   providers: ProviderStatus[];
   signals: CeoSignal[];
   generatedAt: string;

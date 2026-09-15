@@ -65,3 +65,4 @@
 20260909124918_add_club_updates
 20260909133620_support_ongoing_club_offers
 20260910102312_normalize_pricing_units
+20260915172136_optimize_founder_absence_db_health
