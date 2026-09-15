@@ -54,9 +54,15 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
     };
 
     if (!('IntersectionObserver' in window)) {
+      const viewportHeight = document.documentElement.clientHeight;
+      const viewportWidth = document.documentElement.clientWidth;
       for (const element of elements) {
         const rect = element.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight) capture(element);
+        if (
+          rect.width > 0 && rect.height > 0
+          && rect.bottom > 0 && rect.top < viewportHeight
+          && rect.right > 0 && rect.left < viewportWidth
+        ) capture(element);
       }
       return;
     }
