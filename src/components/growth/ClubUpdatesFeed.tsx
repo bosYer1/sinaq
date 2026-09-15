@@ -86,7 +86,7 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
     return (
       <div
         ref={rootRef}
-        className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-1 pb-1 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3"
+        className="-mx-4 flex snap-x snap-proximity gap-2.5 overflow-x-auto overscroll-x-contain px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0 sm:[scrollbar-width:auto] lg:grid-cols-3"
       >
         {updates.map((update) => (
           <Link
@@ -100,24 +100,25 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
               club_slug: update.club.slug,
               context: 'home_preview',
             })}
-            className="group grid min-h-[132px] w-[min(88vw,360px)] shrink-0 snap-start grid-cols-[88px_minmax(0,1fr)] gap-3 rounded-2xl border border-border/80 bg-surface p-3 text-left no-underline shadow-[0_5px_18px_rgba(31,35,48,0.04)] transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_8px_24px_rgba(31,35,48,0.08)] sm:min-h-[138px] sm:w-auto sm:shrink sm:snap-none sm:grid-cols-[96px_minmax(0,1fr)] xl:grid-cols-[108px_minmax(0,1fr)]"
+            className="group grid min-h-[94px] w-[228px] shrink-0 snap-start grid-cols-[68px_minmax(0,1fr)] gap-2.5 rounded-xl border border-border/80 bg-surface p-2.5 text-left no-underline shadow-[0_3px_12px_rgba(31,35,48,0.04)] transition hover:border-primary/30 sm:min-h-[138px] sm:w-auto sm:shrink sm:snap-none sm:grid-cols-[96px_minmax(0,1fr)] sm:gap-3 sm:rounded-2xl sm:p-3 sm:shadow-[0_5px_18px_rgba(31,35,48,0.04)] sm:hover:-translate-y-0.5 sm:hover:shadow-[0_8px_24px_rgba(31,35,48,0.08)] xl:grid-cols-[108px_minmax(0,1fr)]"
           >
             <ClubLogo
               slug={update.club.slug}
               name={update.club.name}
-              className="h-[104px] w-[88px] rounded-xl border border-border bg-bg sm:h-[112px] sm:w-24 xl:w-[108px]"
+              profileImageUrl={update.club.profile_image_url}
+              className="h-[68px] w-[68px] self-center rounded-lg border border-border bg-bg sm:h-[112px] sm:w-24 sm:rounded-xl xl:w-[108px]"
               imageClassName="object-cover p-0"
             />
-            <div className="min-w-0 py-0.5">
-              <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-primary">
+            <div className="min-w-0 self-center sm:self-auto sm:py-0.5">
+              <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.07em] text-primary sm:px-2.5 sm:py-1 sm:text-[10px] sm:tracking-[0.08em]">
                 {kindLabel(update.kind)}
               </span>
-              <h3 className="mt-1.5 line-clamp-2 font-display text-sm font-bold leading-snug text-ink sm:line-clamp-1 xl:text-[15px]">{update.title}</h3>
-              {update.description ? <p className="mt-1 line-clamp-2 text-xs leading-[1.45] text-muted">{update.description}</p> : null}
-              <p className="mt-2 line-clamp-1 text-[11px] font-semibold text-ink">
+              <h3 className="mt-1 line-clamp-2 font-display text-[13px] font-bold leading-[1.25] text-ink sm:mt-1.5 sm:line-clamp-1 sm:text-sm sm:leading-snug xl:text-[15px]">{update.title}</h3>
+              {update.description ? <p className="mt-1 hidden line-clamp-2 text-xs leading-[1.45] text-muted sm:block">{update.description}</p> : null}
+              <p className="mt-1.5 line-clamp-1 text-[10px] font-semibold text-muted sm:mt-2 sm:text-[11px] sm:text-ink">
                 {update.club.name}{update.club.district?.name ? ` · ${update.club.district.name}` : ''}
               </p>
-              <p className="mt-1 text-[11px] font-bold text-primary">Kluba bax →</p>
+              <p className="mt-1 hidden text-[11px] font-bold text-primary sm:block">Kluba bax →</p>
             </div>
           </Link>
         ))}

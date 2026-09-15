@@ -20,6 +20,7 @@ export interface ClubUpdateItem {
     id: string;
     name: string;
     slug: string;
+    profile_image_url: string | null;
     district: { name: string; slug: string } | null;
   };
 }
@@ -50,7 +51,7 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
       id, club_id, kind, title, description, starts_at, ends_at, reverify_after,
       source_type, source_url, verified_at,
       club:clubs!inner (
-        id, name, slug,
+        id, name, slug, profile_image_url,
         district:districts ( name, slug )
       )
     `)
@@ -101,6 +102,7 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
         id: club.id,
         name: club.name,
         slug: club.slug,
+        profile_image_url: typeof club.profile_image_url === 'string' ? club.profile_image_url : null,
         district: district ? { name: district.name, slug: district.slug } : null,
       },
     }];
@@ -109,7 +111,7 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
 
 const getCachedActiveClubUpdates = unstable_cache(
   async (clubId?: string) => queryActiveClubUpdates(clubId),
-  ['gameyer-active-club-updates-v3'],
+  ['gameyer-active-club-updates-v4'],
   { revalidate: 60, tags: ['club-updates'] },
 );
 
