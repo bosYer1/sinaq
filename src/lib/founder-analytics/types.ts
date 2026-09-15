@@ -78,6 +78,22 @@ export type ReturnLoopMetrics = {
   ctaReachRate: number;
 };
 
+export type RetentionMetrics = {
+  d1: number | null;
+  d3: number | null;
+  d7: number | null;
+  d1CohortUsers: number;
+  d3CohortUsers: number;
+  d7CohortUsers: number;
+  cohortUsers: number;
+};
+
+export type PwaMetrics = {
+  installAvailable: number;
+  installed: number;
+  standaloneOpened: number;
+};
+
 export type PostHogMetrics = {
   status: ProviderStatus;
   pageviews: Metric;
@@ -114,7 +130,8 @@ export type PostHogMetrics = {
     attributionCompleteness: number;
   };
   funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number };
-  retention: { d1: number | null; d3: number | null; d7: number | null; cohortUsers: number };
+  retention: RetentionMetrics;
+  pwa: PwaMetrics;
   returnLoop: ReturnLoopMetrics;
 };
 
