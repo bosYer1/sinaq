@@ -25,6 +25,10 @@ function kindLabel(kind: ClubUpdateItem['kind']) {
   return kind === 'tournament' ? 'Turnir' : 'Təklif';
 }
 
+function updateAnchor(updateId: string) {
+  return `teklif-${updateId}`;
+}
+
 export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[]; context: 'discovery' | 'club_detail' }) {
   const pathname = usePathname();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -92,8 +96,8 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
           <Link
             key={update.id}
             data-update-impression-id={update.id}
-            href={`/klub/${update.club.slug}`}
-            onClick={() => trackPostHogEvent('club_update_club_click', {
+            href={`/yenilikler#${updateAnchor(update.id)}`}
+            onClick={() => trackPostHogEvent('club_update_detail_click', {
               update_id: update.id,
               update_kind: update.kind,
               club_id: update.club_id,
@@ -131,7 +135,12 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
         const endsAt = formatDate(update.ends_at);
         const isOngoingOffer = update.kind === 'offer' && update.ends_at === null;
         return (
-          <article key={update.id} data-update-impression-id={update.id} className="flex h-full flex-col rounded-2xl border border-border bg-surface p-4 shadow-sm">
+          <article
+            key={update.id}
+            id={updateAnchor(update.id)}
+            data-update-impression-id={update.id}
+            className="scroll-mt-24 flex h-full flex-col rounded-2xl border border-border bg-surface p-4 shadow-sm target:border-primary target:ring-2 target:ring-primary/15"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-primary">{kindLabel(update.kind)}</span>
