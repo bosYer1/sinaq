@@ -36,12 +36,22 @@ assert.match(dashboard, /ga4\.status/, 'GA4 provider badge must reflect the real
 assert.match(dashboard, /getGscMetrics\(range\)/, 'GSC provider must execute the real server-side adapter.');
 assert.match(dashboard, /gsc\.status/, 'GSC provider badge must reflect the real adapter state.');
 assert.match(posthog, /gameyer_traffic_scope = 'public'/, 'Behavior queries must exclude test traffic.');
+assert.match(posthog, /properties\.\$host = 'gameyer\.az'/, 'Founder behavior metrics must be restricted to the canonical production host.');
+assert.match(posthog, /\$virt_is_bot != true OR isNull\(properties\.\$virt_is_bot\)/, 'Known bot traffic must be excluded from human behavior metrics.');
+assert.match(posthog, /PRODUCT_TIME_ZONE = 'Asia\/Baku'/, 'Calendar-based analytics must use the product timezone.');
+assert.match(posthog, /toDate\(toTimeZone\(timestamp, '\$\{PRODUCT_TIME_ZONE\}'\)\)/, 'Retention and trend day boundaries must be derived in Baku time.');
+assert.match(posthog, /d1_cohort_users/, 'D1 retention must have its own mature cohort denominator.');
+assert.match(posthog, /d3_cohort_users/, 'D3 retention must have its own mature cohort denominator.');
+assert.match(posthog, /d7_cohort_users/, 'D7 retention must have its own mature cohort denominator.');
+assert.match(posthog, /event = 'pwa_install_available'/, 'PWA install availability must be measured separately from completed installs.');
+assert.match(posthog, /event = 'pwa_installed'/, 'Completed PWA installs must use the dedicated appinstalled-backed event.');
+assert.match(posthog, /event = 'pwa_standalone_opened'/, 'Standalone PWA opens must be measured separately for installed-app evidence.');
 assert.match(posthog, /revalidate: 300/, 'PostHog provider must use bounded caching.');
 assert.match(ga4, /revalidate: 300/, 'GA4 provider must use bounded caching.');
 assert.match(gsc, /revalidate: 300/, 'GSC provider must use bounded caching.');
 
 assert.ok(posthog.includes("countIf(first_seen < toDateTime('${from}')) AS returning_users"), 'Returning users must have a public visit before the selected interval.');
-assert.ok(posthog.includes('countIf(person_id IN (SELECT person_id FROM events'), 'Campaign returning users must use a prior-visit person set.');
+assert.ok(posthog.includes('countIf(person_id IN ('), 'Campaign returning users must use a prior-visit person set.');
 assert.ok(posthog.includes("timestamp < toDateTime('${from}')"), 'Prior-visit queries must end before the selected interval starts.');
 assert.ok(posthog.includes("uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions"), 'Attribution denominator must deduplicate public pageview sessions.');
 assert.ok(posthog.includes('attributionCompleteness: rate(publicPageviewSessions - missingSessionAttribution, publicPageviewSessions)'), 'Attribution completeness must be calculated at session level.');
@@ -51,9 +61,9 @@ assert.doesNotMatch(extended, /dropoff|OR-funnel|Landing-dən conversion/, 'Inde
 assert.match(posthog, /event = 'club_update_impression'/, 'Return-loop impressions must be measured from the dedicated update event.');
 assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club transitions must be measured from the dedicated update event.');
 assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
-assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN (SELECT properties.$session_id, properties.club_id FROM events'), 'Downstream return-loop reach must stay on the same session and club.');
-assert.ok(posthog.includes("returningUpdateRate: rate(returningUpdateUsers, updateUsers)"), 'Return-loop returning rate must use users with prior public visits.');
-assert.ok(posthog.includes("['founder-analytics-posthog-v2']"), 'PostHog cache key must be bumped when return-loop response semantics change.');
+assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
+assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v3']"), 'PostHog cache key must be bumped when production and retention semantics change.');
 assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
