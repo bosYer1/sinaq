@@ -162,6 +162,19 @@ try {
   assert(home.hasClubCardMarker === true, 'Selected link is not a ClubCard anchor', home);
 
   const expectedSlug = decodeURIComponent(home.href.split('/').filter(Boolean).pop());
+  const revealed = await evaluate(`(() => {
+    const card = (${clubCardAnchors}).find((a) => a.getAttribute('href') === ${JSON.stringify(home.href)});
+    if (!card) return false;
+    card.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+    return true;
+  })()`);
+  assert(revealed, 'Unable to reveal the selected ClubCard for impression measurement', home);
+  await wait(`(() => {
+    const card = (${clubCardAnchors}).find((a) => a.getAttribute('href') === ${JSON.stringify(home.href)});
+    if (!card) return false;
+    const rect = card.getBoundingClientRect();
+    return rect.top >= 0 && rect.bottom <= innerHeight;
+  })()`, 'selected ClubCard viewport visibility');
   await wait(`(() => {
     try {
       const captures = JSON.parse(sessionStorage.getItem(${JSON.stringify(CAPTURE_KEY)}) || '[]');

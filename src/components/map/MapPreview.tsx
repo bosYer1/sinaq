@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ClubWithRelations } from '@/types/database';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import {
@@ -82,7 +82,7 @@ export function MapPreview({ clubs }: MapPreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<PreviewSize>(INITIAL_PREVIEW_SIZE);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -96,10 +96,13 @@ export function MapPreview({ clubs }: MapPreviewProps) {
       ));
     };
 
-    syncSize();
+    const frame = window.requestAnimationFrame(syncSize);
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(syncSize) : null;
     observer?.observe(container);
-    return () => observer?.disconnect();
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+    };
   }, []);
 
   const layout = useMemo(() => {

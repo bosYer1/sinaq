@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useRef, useState, type MouseEvent } from 'react';
+import { forwardRef, useEffect, useRef, type MouseEvent } from 'react';
 import Link from 'next/link';
 import type { ClubWithDistance } from '@/types/database';
 import { Badge } from '@/components/ui/Badge';
@@ -22,11 +22,6 @@ interface ClubCardProps {
   onMouseEnter?: () => void;
   imagePriority?: boolean;
 }
-
-type LiveState = {
-  openNow: boolean;
-  premiumActive: boolean;
-};
 
 type DiscoverySurface = 'explore_list' | 'search_results' | 'filtered_list';
 
@@ -66,21 +61,8 @@ function currentDiscoveryContext(): DiscoveryContext {
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, listPosition, active, onMouseEnter, imagePriority = false }, ref) {
   const isVerified = club.is_verified;
   const hasHours = club.opening_hours.length > 0;
-  const [liveState, setLiveState] = useState<LiveState | null>(null);
   const cardElementRef = useRef<HTMLAnchorElement | null>(null);
   const clubHref = `/klub/${encodeURIComponent(club.slug)}`;
-
-  useEffect(() => {
-    const refreshLiveState = () => {
-      setLiveState({
-        openNow: hasHours ? isClubOpenNow(club.opening_hours) : false,
-        premiumActive: isPremiumActive(club),
-      });
-    };
-    refreshLiveState();
-    const timer = window.setInterval(refreshLiveState, 60_000);
-    return () => window.clearInterval(timer);
-  }, [club, hasHours]);
 
   useEffect(() => {
     const element = cardElementRef.current;
@@ -111,9 +93,9 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
     return () => observer.disconnect();
   }, [club.district?.name, club.id, club.images.length, club.is_verified, club.name, club.pricing.length, club.profile_image_url, club.slug, hasHours, listPosition]);
 
-  const openNow = liveState?.openNow ?? false;
-  const premiumActive = liveState?.premiumActive ?? false;
-  const statusLabel = !hasHours ? 'Saat məlum deyil' : liveState === null ? 'Yoxlanılır' : openNow ? 'Açıqdır' : 'Bağlıdır';
+  const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
+  const premiumActive = isPremiumActive(club);
+  const statusLabel = !hasHours ? 'Saat məlum deyil' : openNow ? 'Açıqdır' : 'Bağlıdır';
   const typeSlugs = inferClubTypeSlugs(club);
   const startingPrices = getPlatformStartingPrices(club.pricing);
 
@@ -149,10 +131,6 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
       isMobileHardNavigation ? { send_instantly: true, transport: 'sendBeacon' } : undefined,
     );
 
-    // Mobile browser Back can restore a stale App Router snapshot after opening
-    // a club from the expanded list. Use a real document navigation on mobile
-    // so returning restores a clean interactive page. ExploreView persists the
-    // expanded-list state and scroll position separately.
     if (isMobileHardNavigation) {
       event.preventDefault();
       window.location.assign(clubHref);
@@ -181,7 +159,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
           className="h-full w-full rounded-lg border-0 bg-transparent text-3xl"
           priority={imagePriority}
         />
-        {hasHours && liveState !== null ? (
+        {hasHours ? (
           <span className={cn('absolute left-2 top-2 h-2.5 w-2.5 rounded-full ring-2 ring-white', openNow ? 'bg-live' : 'bg-red-500')} title={statusLabel} />
         ) : null}
       </div>
@@ -191,7 +169,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
           <h3 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold tracking-[-0.01em] text-ink transition group-hover:text-primary">{club.name}</h3>
           <div className="flex shrink-0 items-center gap-1">
             {isVerified ? <Badge tone="verified">✓</Badge> : null}
-            {liveState !== null && premiumActive ? <Badge tone="premium">VIP</Badge> : null}
+            {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
           </div>
         </div>
 
@@ -220,7 +198,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
           </div>
           <div className="shrink-0 text-right">
             {club.distanceKm != null ? <div className="text-[10px] font-medium text-primary">{formatDistance(club.distanceKm)}</div> : null}
-            <div className={cn('mt-0.5 text-[10px] font-semibold', !hasHours || liveState === null ? 'text-muted' : openNow ? 'text-live' : 'text-red-500')}>{statusLabel}</div>
+            <div className={cn('mt-0.5 text-[10px] font-semibold', !hasHours ? 'text-muted' : openNow ? 'text-live' : 'text-red-500')}>{statusLabel}</div>
             <span data-club-card-cta="true" aria-hidden="true" className="mt-1 inline-flex items-center text-[11px] font-bold text-primary transition group-hover:text-primary-dark">Kluba bax →</span>
           </div>
         </div>
