@@ -5,6 +5,7 @@ const ongoingMigration = fs.readFileSync('supabase/migrations/20260909170000_sup
 const query = fs.readFileSync('src/lib/queries/club-updates.ts', 'utf8');
 const feed = fs.readFileSync('src/components/growth/ClubUpdatesFeed.tsx', 'utf8');
 const page = fs.readFileSync('src/app/yenilikler/page.tsx', 'utf8');
+const home = fs.readFileSync('src/app/page.tsx', 'utf8');
 
 const checks = [
   [baseMigration.includes("kind in ('tournament', 'offer')"), 'club updates are limited to tournament and offer kinds'],
@@ -27,8 +28,13 @@ const checks = [
   [feed.includes("update.kind === 'offer' && update.ends_at === null"), 'UI detects ongoing offers explicitly'],
   [feed.includes('Davam edən təklif'), 'UI does not invent an offer expiry'],
   [feed.includes("trackPostHogEvent('club_update_impression'"), 'update impressions are measured'],
+  [feed.includes('IntersectionObserver'), 'update impressions require viewport visibility instead of component mount'],
+  [feed.includes("data-update-impression-id"), 'update cards expose an observation target for truthful impressions'],
+  [feed.includes("index === 0 ? 'grid' : 'hidden sm:grid'"), 'mobile home preview keeps one update visible without crowding discovery'],
   [feed.includes("trackPostHogEvent('club_update_club_click'"), 'update-to-club transitions are measured'],
   [feed.includes("trackPostHogEvent('club_update_source_click'"), 'official-source clicks are measured'],
+  [!home.includes('mb-4 hidden rounded-2xl border border-primary/15'), 'home return-loop section is no longer hidden from mobile users'],
+  [home.includes('activeUpdates.slice(0, 3)'), 'desktop still receives the bounded three-item update preview'],
   [page.includes("description: 'GameYer-də klubların aktual turnir və təkliflərini bir yerdə kəşf et.'"), 'updates metadata uses natural customer-facing wording'],
   [page.includes('Klubların aktual turnir və təkliflərini bir yerdə kəşf et.'), 'updates hero uses natural customer-facing wording'],
   [!page.includes('Yalnız real klub və yoxlanmış mənbə ilə təsdiqlənmiş'), 'updates hero does not expose implementation-style verification caveats'],
