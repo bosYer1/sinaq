@@ -61,6 +61,12 @@ export interface Database {
         Update: { id?: string; club_id?: string; url?: string; position?: number; is_cover?: boolean };
         Relationships: [{ foreignKeyName: 'club_images_club_id_fkey'; columns: ['club_id']; isOneToOne: false; referencedRelation: 'clubs'; referencedColumns: ['id'] }];
       };
+      club_data_evidence: {
+        Row: { id: string; club_id: string; field_name: string; source_type: string; source_url: string | null; evidence_value: string | null; confidence: string; is_current: boolean; checked_at: string; created_by: string | null; created_at: string };
+        Insert: { id?: string; club_id: string; field_name: string; source_type: string; source_url?: string | null; evidence_value?: string | null; confidence: string; is_current?: boolean; checked_at?: string; created_by?: string | null; created_at?: string };
+        Update: { id?: string; club_id?: string; field_name?: string; source_type?: string; source_url?: string | null; evidence_value?: string | null; confidence?: string; is_current?: boolean; checked_at?: string; created_by?: string | null; created_at?: string };
+        Relationships: [{ foreignKeyName: 'club_data_evidence_club_id_fkey'; columns: ['club_id']; isOneToOne: false; referencedRelation: 'clubs'; referencedColumns: ['id'] }];
+      };
       page_views: {
         Row: { id: number; session_id: string; visit_id: string | null; path: string; referrer_host: string | null; user_agent: string | null; ip_address: string | null; created_at: string };
         Insert: { id?: number; session_id: string; visit_id?: string | null; path: string; referrer_host?: string | null; user_agent?: string | null; ip_address?: string | null; created_at?: string };
@@ -148,6 +154,7 @@ export type ClubTypeAssignment = Database['public']['Tables']['club_type_assignm
 export type ClubPricing = Database['public']['Tables']['club_pricing']['Row'];
 export type ClubOpeningHours = Database['public']['Tables']['club_opening_hours']['Row'];
 export type ClubImage = Database['public']['Tables']['club_images']['Row'];
+export type ClubDataEvidence = Database['public']['Tables']['club_data_evidence']['Row'];
 export type ClubSubmission = Database['public']['Tables']['club_submissions']['Row'];
 export type PageView = Database['public']['Tables']['page_views']['Row'];
 export type AdminNotification = Database['public']['Tables']['admin_notifications']['Row'];
