@@ -64,7 +64,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState(false);
   const [mobileListMapActive, setMobileListMapActive] = useState(false);
-  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const restoredScrollYRef = useRef<number | null>(null);
   const restoringScrollRef = useRef(false);
@@ -301,10 +301,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
         ) : null}
       </div>
     );
-  }
-
-  if (isDesktop === null) {
-    return <div className="h-[340px] animate-pulse rounded-[18px] bg-surface-alt sm:h-[400px] lg:h-[620px]" aria-hidden="true" />;
   }
 
   return (
