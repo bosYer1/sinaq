@@ -8,7 +8,10 @@ assert.ok(card.includes('data-club-card-cta="true"'), 'Club cards must keep an e
 assert.ok(card.includes('Kluba bax →'), 'Club card CTA copy must stay visible.');
 assert.ok(card.includes('aria-hidden="true"'), 'Decorative CTA cue must not duplicate the anchor accessible name.');
 assert.match(card, /trackPostHogEvent\(\s*'club_card_click'/, 'Selection cue must not bypass club_card_click tracking.');
-assert.ok(card.includes('window.location.assign(clubHref)'), 'Mobile hard navigation behavior must remain intact.');
+assert.ok(card.includes('href={clubHref}'), 'Club cards must keep direct navigable club detail URLs.');
+assert.ok(card.includes('prefetch={false}'), 'Club cards must avoid viewport-driven prefetch work during mobile scrolling.');
+assert.ok(card.includes("send_instantly: true") && card.includes("transport: 'sendBeacon'"), 'Mobile club click analytics must remain unload-safe.');
+assert.ok(!card.includes('window.location.assign(clubHref)'), 'Club cards must not force a full document navigation.');
 
 assert.ok(share.includes("utm_source: 'gameyer_share'"), 'Shared club URLs must identify GameYer sharing as the source.');
 assert.ok(share.includes("utm_medium: 'referral'"), 'Shared club URLs must enter the Referral acquisition channel.');
