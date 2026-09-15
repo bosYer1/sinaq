@@ -119,10 +119,10 @@ export default async function HomePage({ searchParams }: PageProps) {
         <Suspense fallback={<div className="mb-3 rounded-2xl border border-border bg-surface p-3 sm:mb-4 sm:p-4"><Skeleton className="h-11 w-full rounded-control" /></div>}><FilterBar districts={activeDistricts} types={types} /></Suspense>
 
         <div className="flex flex-col">
-          <section className="order-2 overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:p-4" aria-label="Klub siyahısı və xəritə"><ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} /></section>
+          <section className="order-1 overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:order-2 sm:p-4" aria-label="Klub siyahısı və xəritə"><ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} /></section>
 
           {activeUpdates.length > 0 ? (
-            <section className="order-1 mb-4 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-4 sm:px-5 sm:py-5" aria-labelledby="home-updates-heading">
+            <section className="order-2 mt-4 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-4 sm:order-1 sm:mb-4 sm:mt-0 sm:px-5 sm:py-5" aria-labelledby="home-updates-heading">
               <div className="mb-4 flex items-end justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">GameYer yenilikləri</p>
