@@ -62,6 +62,21 @@ export type ClubPerformanceRow = {
   intentRate: number;
 };
 
+export type ClubDataQualityRow = {
+  slug: string;
+  name: string;
+  completenessScore: number;
+  missingFields: Array<'image' | 'phone' | 'instagram' | 'coordinates' | 'type'>;
+  lastEvidenceCheckedAt: string | null;
+  evidenceState: 'fresh' | 'stale' | 'missing';
+};
+
+export type ClubDataPriorityRow = ClubDataQualityRow & {
+  views: number;
+  ctaClicks: number;
+  priorityScore: number;
+};
+
 export type TrendPoint = { date: string; pageviews: number; visitors: number; ctaClicks: number };
 
 export type ReturnLoopMetrics = {
@@ -207,6 +222,7 @@ export type SupabaseMetrics = {
     missingCoordinates: number;
     missingType: number;
   };
+  qualityBacklog: ClubDataQualityRow[];
 };
 
 export type CeoSignal = {
@@ -223,6 +239,7 @@ export type FounderDashboard = {
   ga4: Ga4Metrics;
   gsc: GscMetrics;
   supabase: SupabaseMetrics;
+  clubDataPriorities: ClubDataPriorityRow[];
   providers: ProviderStatus[];
   signals: CeoSignal[];
   generatedAt: string;
