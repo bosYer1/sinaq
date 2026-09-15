@@ -288,109 +288,111 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     );
   }
 
+  if (isDesktop === null) {
+    return <div className="h-[340px] animate-pulse rounded-[18px] bg-surface-alt sm:h-[400px] lg:h-[620px]" aria-hidden="true" />;
+  }
+
   return (
     <div
       className="bg-surface"
       data-explore-view={view}
       data-mobile-map-active={view === 'map' || mobileListMapActive}
     >
-      <div className="hidden h-[clamp(590px,68vh,660px)] min-h-0 grid-cols-[360px_minmax(0,1fr)] gap-3 lg:grid xl:grid-cols-[420px_minmax(0,1fr)] xl:gap-4 2xl:grid-cols-[450px_minmax(0,1fr)]">
-        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-border bg-bg-elevated">
-          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-3.5 py-3 xl:gap-3 xl:px-4">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-ink xl:text-base">Klublar ({clubsWithDistance.length})</p>
-              <p className="mt-0.5 hidden text-[11px] text-muted xl:block">Klubu seç, xəritədə yerini gör</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleLocationSort}
-              disabled={status === 'loading' || status === 'unsupported'}
-              className={`shrink-0 whitespace-nowrap rounded-xl border px-2.5 py-2 text-[11px] font-semibold transition disabled:opacity-50 xl:px-3 xl:text-xs ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted hover:border-primary hover:text-primary'}`}
-            >
-              {locationButtonLabel}
-            </button>
-          </div>
-          {locationMessage ? <div className="mx-3 mt-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
-          <div className="min-h-0 flex-1 overflow-y-auto p-3 pr-2 [scrollbar-gutter:stable]">
-            <ClubList
-              clubs={clubsWithDistance}
-              activeClubId={activeClubId}
-              onHoverClub={handleHoverCard}
-              cardRefs={cardRefs}
-              searchActive={searchActive}
-              onClearFilters={hasActiveFilters ? clearAll : undefined}
-            />
-          </div>
-        </section>
-
-        <section className="min-h-0 min-w-0 overflow-hidden rounded-[18px] bg-bg-elevated">
-          {isDesktop === true ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
-        </section>
-      </div>
-
-      <div className="lg:hidden">
-        {view === 'map' ? (
-          <section className="h-[430px] overflow-hidden rounded-[18px] sm:h-[500px]">
-            {isDesktop === false ? renderMapPanel() : <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />}
-          </section>
-        ) : null}
-
-        {view === 'list' ? (
-          <section>
-            <div
-              data-mobile-list-map-container="true"
-              className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px]"
-            >
-              {isDesktop === false ? (
-                mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />
-              ) : (
-                <div className="h-full animate-pulse rounded-[18px] bg-surface-alt" />
-              )}
-              {!mobileListMapActive ? (
-                <button
-                  type="button"
-                  aria-label="Xəritəni aktiv et"
-                  onClick={() => setMobileListMapActive(true)}
-                  className="absolute inset-0 z-[600] flex items-center justify-center rounded-[18px] bg-transparent"
-                >
-                  <span className="rounded-full border border-border bg-surface/95 px-4 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">Xəritəyə toxunun</span>
-                </button>
-              ) : null}
-            </div>
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
-                <p className="text-xs text-muted">Klubları müqayisə et</p>
+      {isDesktop ? (
+        <div className="h-[clamp(590px,68vh,660px)] min-h-0 grid grid-cols-[360px_minmax(0,1fr)] gap-3 xl:grid-cols-[420px_minmax(0,1fr)] xl:gap-4 2xl:grid-cols-[450px_minmax(0,1fr)]">
+          <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-border bg-bg-elevated">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-3.5 py-3 xl:gap-3 xl:px-4">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-ink xl:text-base">Klublar ({clubsWithDistance.length})</p>
+                <p className="mt-0.5 hidden text-[11px] text-muted xl:block">Klubu seç, xəritədə yerini gör</p>
               </div>
               <button
                 type="button"
                 onClick={handleLocationSort}
                 disabled={status === 'loading' || status === 'unsupported'}
-                className={`rounded-xl border px-3 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted'}`}
+                className={`shrink-0 whitespace-nowrap rounded-xl border px-2.5 py-2 text-[11px] font-semibold transition disabled:opacity-50 xl:px-3 xl:text-xs ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted hover:border-primary hover:text-primary'}`}
               >
                 {locationButtonLabel}
               </button>
             </div>
-            {locationMessage ? <div className="mb-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
-            <ClubList
-              clubs={mobileClubs}
-              activeClubId={activeClubId}
-              onHoverClub={handleHoverCard}
-              searchActive={searchActive}
-              onClearFilters={hasActiveFilters ? clearAll : undefined}
-            />
-            {clubsWithDistance.length > MOBILE_INITIAL_CLUB_COUNT ? (
-              <button
-                type="button"
-                onClick={handleMobileExpandedToggle}
-                className="mt-3 h-12 w-full rounded-xl border border-border bg-surface text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
-              >
-                {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT})`}
-              </button>
-            ) : null}
+            {locationMessage ? <div className="mx-3 mt-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
+            <div className="min-h-0 flex-1 overflow-y-auto p-3 pr-2 [scrollbar-gutter:stable]">
+              <ClubList
+                clubs={clubsWithDistance}
+                activeClubId={activeClubId}
+                onHoverClub={handleHoverCard}
+                cardRefs={cardRefs}
+                searchActive={searchActive}
+                onClearFilters={hasActiveFilters ? clearAll : undefined}
+              />
+            </div>
           </section>
-        ) : null}
-      </div>
+
+          <section className="min-h-0 min-w-0 overflow-hidden rounded-[18px] bg-bg-elevated">
+            {renderMapPanel()}
+          </section>
+        </div>
+      ) : (
+        <div>
+          {view === 'map' ? (
+            <section className="h-[430px] overflow-hidden rounded-[18px] sm:h-[500px]">
+              {renderMapPanel()}
+            </section>
+          ) : null}
+
+          {view === 'list' ? (
+            <section>
+              <div
+                data-mobile-list-map-container="true"
+                className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px]"
+              >
+                {mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />}
+                {!mobileListMapActive ? (
+                  <button
+                    type="button"
+                    aria-label="Xəritəni aktiv et"
+                    onClick={() => setMobileListMapActive(true)}
+                    className="absolute inset-0 z-[600] flex items-center justify-center rounded-[18px] bg-transparent"
+                  >
+                    <span className="rounded-full border border-border bg-surface/95 px-4 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">Xəritəyə toxunun</span>
+                  </button>
+                ) : null}
+              </div>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
+                  <p className="text-xs text-muted">Klubları müqayisə et</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLocationSort}
+                  disabled={status === 'loading' || status === 'unsupported'}
+                  className={`rounded-xl border px-3 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted'}`}
+                >
+                  {locationButtonLabel}
+                </button>
+              </div>
+              {locationMessage ? <div className="mb-3 rounded-xl border border-warn/30 bg-warn-tint px-3 py-2 text-xs text-ink">{locationMessage}</div> : null}
+              <ClubList
+                clubs={mobileClubs}
+                activeClubId={activeClubId}
+                onHoverClub={handleHoverCard}
+                searchActive={searchActive}
+                onClearFilters={hasActiveFilters ? clearAll : undefined}
+              />
+              {clubsWithDistance.length > MOBILE_INITIAL_CLUB_COUNT ? (
+                <button
+                  type="button"
+                  onClick={handleMobileExpandedToggle}
+                  className="mt-3 h-12 w-full rounded-xl border border-border bg-surface text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
+                >
+                  {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT})`}
+                </button>
+              ) : null}
+            </section>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
