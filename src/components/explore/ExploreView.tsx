@@ -67,6 +67,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const restoredScrollYRef = useRef<number | null>(null);
+  const restoringScrollRef = useRef(false);
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');
@@ -95,6 +96,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
       const restoredScrollY = Math.max(0, savedState.scrollY);
       restoreTimer = window.setTimeout(() => {
+        restoringScrollRef.current = true;
         restoredScrollYRef.current = restoredScrollY;
         setMobileExpanded(true);
       }, 0);
@@ -113,15 +115,26 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
     restoredScrollYRef.current = null;
     let secondFrame = 0;
+    let settleTimer = 0;
+    let finalTimer = 0;
+    const restore = () => window.scrollTo({ top: restoredScrollY, left: 0, behavior: 'auto' });
     const firstFrame = window.requestAnimationFrame(() => {
       secondFrame = window.requestAnimationFrame(() => {
-        window.scrollTo({ top: restoredScrollY, left: 0, behavior: 'auto' });
+        restore();
+        settleTimer = window.setTimeout(restore, 120);
+        finalTimer = window.setTimeout(() => {
+          restore();
+          restoringScrollRef.current = false;
+        }, 360);
       });
     });
 
     return () => {
       window.cancelAnimationFrame(firstFrame);
       if (secondFrame) window.cancelAnimationFrame(secondFrame);
+      if (settleTimer) window.clearTimeout(settleTimer);
+      if (finalTimer) window.clearTimeout(finalTimer);
+      restoringScrollRef.current = false;
     };
   }, [mobileExpanded]);
 
@@ -130,6 +143,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
     let frame = 0;
     const persistScroll = () => {
+      if (restoringScrollRef.current) return;
       if (frame) window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => saveMobileExpandedState(window.scrollY));
     };
@@ -197,6 +211,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   }
 
   function handleMobileExpandedToggle() {
+    restoringScrollRef.current = false;
     const nextExpanded = !mobileExpanded;
     setMobileExpanded(nextExpanded);
     if (nextExpanded) saveMobileExpandedState(window.scrollY);
