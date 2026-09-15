@@ -71,7 +71,7 @@ const navigate = async (path) => {
   await wait(`document.readyState === 'complete'`, `navigate ${path}`);
   await sleep(500);
 };
-const visibleClubLinks = `Array.from(document.querySelectorAll('a[href^="/klub/"]')).filter((a) => {
+const visibleClubLinks = `Array.from(document.querySelectorAll('[data-explore-view="list"] a[href^="/klub/"]')).filter((a) => {
   const rect = a.getBoundingClientRect();
   return rect.width > 0 && rect.height > 0;
 })`;
