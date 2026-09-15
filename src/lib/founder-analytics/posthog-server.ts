@@ -10,6 +10,7 @@ type HogQLResponse = { columns?: string[]; results?: unknown[][] };
 type Row = Record<string, unknown>;
 
 const ALLOWED_HOSTS = new Set(['https://us.posthog.com', 'https://eu.posthog.com']);
+const PRODUCT_TIME_ZONE = 'Asia/Baku';
 
 function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogMetrics {
   const zero = metric(0, 0);
@@ -22,7 +23,8 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     conversionRate: zero, acquisition: [], campaigns: [], clubs: [], trend: [],
     tracking: { latestEventAt: null, publicEvents: 0, testEvents: 0, missingSessionAttribution: 0, missingCampaignAttribution: 0, noResultSearches: 0, botEvents: 0, sourceMissingSessions: 0, attributionCompleteness: 0 },
     funnel: { landingSessions: 0, discoverySessions: 0, clubViewSessions: 0, ctaSessions: 0 },
-    retention: { d1: null, d3: null, d7: null, cohortUsers: 0 },
+    retention: { d1: null, d3: null, d7: null, d1CohortUsers: 0, d3CohortUsers: 0, d7CohortUsers: 0, cohortUsers: 0 },
+    pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
     returnLoop: { updateImpressions: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
   };
 }
@@ -65,18 +67,220 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   if (!/^\d+$/.test(projectId) || !ALLOWED_HOSTS.has(host)) return emptyMetrics('PostHog project ID və ya API host təhlükəsiz deyil.', 'error');
 
   const { from, to, previousFrom } = periodClause(range);
-  const publicScope = "properties.gameyer_traffic_scope = 'public'";
+  const productionPublicScope = "properties.gameyer_traffic_scope = 'public' AND properties.$host = 'gameyer.az'";
+  const publicScope = `${productionPublicScope} AND (properties.$virt_is_bot != true OR isNull(properties.$virt_is_bot))`;
+  const fromDay = `toDate(toTimeZone(toDateTime('${from}'), '${PRODUCT_TIME_ZONE}'))`;
+  const toDay = `toDate(toTimeZone(toDateTime('${to}'), '${PRODUCT_TIME_ZONE}'))`;
+
   try {
     const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows] = await Promise.all([
-      queryHogQL(host, projectId, apiKey, `SELECT if(timestamp >= toDateTime('${from}'), 'current', 'previous') AS period, countIf(event = '$pageview') AS pageviews, uniqIf(person_id, event = '$pageview') AS visitors, uniqIf(properties.$session_id, event = '$pageview') AS sessions, countIf(event = 'club_view') AS club_views, countIf(event = 'club_card_click') AS club_clicks, countIf(event = 'phone_click') AS phone_clicks, countIf(event = 'instagram_click') AS instagram_clicks, countIf(event = 'maps_click') AS maps_clicks, countIf(event IN ('map_location_clicked','location_sort_clicked')) AS map_usage, countIf(event = 'search_query') AS searches, countIf(event = 'filter_changed') AS filters, countIf(event = 'explore_view_changed') AS explore_changes FROM events WHERE timestamp >= toDateTime('${previousFrom}') AND timestamp < toDateTime('${to}') AND ${publicScope} GROUP BY period`),
-      queryHogQL(host, projectId, apiKey, `SELECT source, medium, campaign, count() AS visitors, sum(person_sessions) AS sessions, countIf(person_id IN (SELECT person_id FROM events WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY AND timestamp < toDateTime('${from}') AND ${publicScope} AND event = '$pageview' GROUP BY person_id)) AS returning_users, sum(pageviews) AS pageviews, sum(club_views) AS club_views, sum(club_clicks) AS club_clicks, sum(cta_clicks) AS cta_clicks FROM (SELECT coalesce(nullIf(properties.gameyer_first_utm_source, ''), if(notEmpty(properties.gameyer_first_fbclid), 'facebook', 'direct')) AS source, coalesce(nullIf(properties.gameyer_first_utm_medium, ''), '—') AS medium, coalesce(nullIf(properties.gameyer_first_utm_campaign, ''), '(kampaniyasız)') AS campaign, person_id, uniq(properties.$session_id) AS person_sessions, countIf(event = '$pageview') AS pageviews, countIf(event = 'club_view') AS club_views, countIf(event = 'club_card_click') AS club_clicks, countIf(event IN ('phone_click','instagram_click','maps_click')) AS cta_clicks FROM events WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} GROUP BY source, medium, campaign, person_id) GROUP BY source, medium, campaign ORDER BY cta_clicks DESC, visitors DESC LIMIT 20`),
-      queryHogQL(host, projectId, apiKey, `SELECT coalesce(nullIf(properties.club_slug, ''), '(slug yoxdur)') AS slug, coalesce(nullIf(properties.club_name, ''), slug) AS name, coalesce(nullIf(anyIf(properties.district, notEmpty(properties.district)), ''), 'Məlum deyil') AS district, countIf(event = 'club_impression') AS impressions, countIf(event = 'club_view') AS views, countIf(event = 'club_card_click') AS card_clicks, countIf(event = 'phone_click') AS phone_clicks, countIf(event = 'instagram_click') AS instagram_clicks, countIf(event = 'maps_click') AS maps_clicks FROM events WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} AND event IN ('club_impression','club_view','club_card_click','phone_click','instagram_click','maps_click') GROUP BY slug, name ORDER BY views DESC, card_clicks DESC LIMIT 20`),
-      queryHogQL(host, projectId, apiKey, `SELECT toString(toDate(timestamp)) AS date, countIf(event = '$pageview') AS pageviews, uniqIf(person_id, event = '$pageview') AS visitors, countIf(event IN ('phone_click','instagram_click','maps_click')) AS cta_clicks FROM events WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} GROUP BY date ORDER BY date`),
-      queryHogQL(host, projectId, apiKey, `SELECT maxIf(timestamp, ${publicScope}) AS latest_event_at, countIf(${publicScope}) AS public_events, countIf(properties.gameyer_traffic_scope = 'test') AS test_events, uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview' AND empty(properties.gameyer_session_landing_path)) AS missing_session, uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview' AND (notEmpty(properties.gameyer_first_fbclid) OR notEmpty(properties.gameyer_session_fbclid) OR notEmpty(properties.fbclid)) AND empty(properties.gameyer_first_utm_campaign) AND empty(properties.gameyer_session_utm_campaign) AND empty(properties.utm_campaign)) AS missing_campaign, countIf(${publicScope} AND event = 'search_query' AND properties.no_results = true) AS no_result_searches, countIf(${publicScope} AND properties.$virt_is_bot = true) AS bot_events, uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview' AND empty(properties.gameyer_first_referrer) AND empty(properties.gameyer_session_referrer) AND empty(properties.gameyer_first_utm_source) AND empty(properties.gameyer_session_utm_source) AND empty(properties.utm_source) AND empty(properties.gameyer_first_fbclid) AND empty(properties.gameyer_session_fbclid) AND empty(properties.fbclid)) AS source_missing_sessions, uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions FROM events WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')`),
-      queryHogQL(host, projectId, apiKey, `SELECT count() AS users, countIf(first_seen < toDateTime('${from}')) AS returning_users, countIf(current_sessions >= 3) AS three_session_users, round(avg(current_sessions), 2) AS sessions_per_user FROM (SELECT person_id, min(timestamp) AS first_seen, uniqIf(properties.$session_id, timestamp >= toDateTime('${from}')) AS current_sessions FROM events WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY AND timestamp < toDateTime('${to}') AND ${publicScope} AND event = '$pageview' GROUP BY person_id) WHERE current_sessions > 0`),
-      queryHogQL(host, projectId, apiKey, `SELECT uniqIf(properties.$session_id, event = '$pageview') AS landing_sessions, uniqIf(properties.$session_id, event IN ('club_card_click','club_view')) AS discovery_sessions, uniqIf(properties.$session_id, event = 'club_view') AS club_view_sessions, uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click')) AS cta_sessions FROM events WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}`),
-      queryHogQL(host, projectId, apiKey, `SELECT count() AS cohort_users, countIf(has(active_days, addDays(first_day, 1))) AS d1_users, countIf(has(active_days, addDays(first_day, 3))) AS d3_users, countIf(has(active_days, addDays(first_day, 7))) AS d7_users FROM (SELECT person_id, min(toDate(timestamp)) AS first_day, groupUniqArray(toDate(timestamp)) AS active_days FROM events WHERE timestamp >= toDateTime('${previousFrom}') - INTERVAL 90 DAY AND timestamp < toDateTime('${to}') AND ${publicScope} AND event = '$pageview' GROUP BY person_id) WHERE first_day >= toDate(toDateTime('${from}')) AND first_day < addDays(toDate(toDateTime('${to}')), -7)`),
-      queryHogQL(host, projectId, apiKey, `SELECT countIf(event = 'club_update_impression') AS update_impressions, countIf(event = 'club_update_club_click') AS update_club_clicks, countIf(event = 'club_update_source_click') AS update_source_clicks, uniqIf(person_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click')) AS update_users, uniqIf(properties.$session_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions, uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id) AND (properties.$session_id, properties.club_id) IN (SELECT properties.$session_id, properties.club_id FROM events WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} AND event = 'club_update_club_click' AND notEmpty(properties.$session_id) AND notEmpty(properties.club_id))) AS downstream_club_view_sessions, uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click') AND notEmpty(properties.$session_id) AND (properties.$session_id, properties.club_id) IN (SELECT properties.$session_id, properties.club_id FROM events WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} AND event = 'club_update_club_click' AND notEmpty(properties.$session_id) AND notEmpty(properties.club_id))) AS downstream_cta_sessions, uniqIf(person_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click') AND person_id IN (SELECT person_id FROM events WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY AND timestamp < toDateTime('${from}') AND ${publicScope} AND event = '$pageview' GROUP BY person_id)) AS returning_update_users FROM events WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}`),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          if(timestamp >= toDateTime('${from}'), 'current', 'previous') AS period,
+          countIf(event = '$pageview') AS pageviews,
+          uniqIf(person_id, event = '$pageview') AS visitors,
+          uniqIf(properties.$session_id, event = '$pageview') AS sessions,
+          countIf(event = 'club_view') AS club_views,
+          countIf(event = 'club_card_click') AS club_clicks,
+          countIf(event = 'phone_click') AS phone_clicks,
+          countIf(event = 'instagram_click') AS instagram_clicks,
+          countIf(event = 'maps_click') AS maps_clicks,
+          countIf(event IN ('map_location_clicked','location_sort_clicked')) AS map_usage,
+          countIf(event = 'search_query') AS searches,
+          countIf(event = 'filter_changed') AS filters,
+          countIf(event = 'explore_view_changed') AS explore_changes,
+          countIf(event = 'pwa_install_available') AS pwa_install_available,
+          countIf(event = 'pwa_installed') AS pwa_installed,
+          countIf(event = 'pwa_standalone_opened') AS pwa_standalone_opened
+        FROM events
+        WHERE timestamp >= toDateTime('${previousFrom}') AND timestamp < toDateTime('${to}') AND ${publicScope}
+        GROUP BY period
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          source,
+          medium,
+          campaign,
+          count() AS visitors,
+          sum(person_sessions) AS sessions,
+          countIf(person_id IN (
+            SELECT person_id
+            FROM events
+            WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
+              AND timestamp < toDateTime('${from}')
+              AND ${publicScope}
+              AND event = '$pageview'
+            GROUP BY person_id
+          )) AS returning_users,
+          sum(pageviews) AS pageviews,
+          sum(club_views) AS club_views,
+          sum(club_clicks) AS club_clicks,
+          sum(cta_clicks) AS cta_clicks
+        FROM (
+          SELECT
+            coalesce(nullIf(properties.gameyer_first_utm_source, ''), if(notEmpty(properties.gameyer_first_fbclid), 'facebook', 'direct')) AS source,
+            coalesce(nullIf(properties.gameyer_first_utm_medium, ''), '—') AS medium,
+            coalesce(nullIf(properties.gameyer_first_utm_campaign, ''), '(kampaniyasız)') AS campaign,
+            person_id,
+            uniq(properties.$session_id) AS person_sessions,
+            countIf(event = '$pageview') AS pageviews,
+            countIf(event = 'club_view') AS club_views,
+            countIf(event = 'club_card_click') AS club_clicks,
+            countIf(event IN ('phone_click','instagram_click','maps_click')) AS cta_clicks
+          FROM events
+          WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
+          GROUP BY source, medium, campaign, person_id
+        )
+        GROUP BY source, medium, campaign
+        ORDER BY cta_clicks DESC, visitors DESC
+        LIMIT 20
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          coalesce(nullIf(properties.club_slug, ''), '(slug yoxdur)') AS slug,
+          coalesce(nullIf(properties.club_name, ''), slug) AS name,
+          coalesce(nullIf(anyIf(properties.district, notEmpty(properties.district)), ''), 'Məlum deyil') AS district,
+          countIf(event = 'club_impression') AS impressions,
+          countIf(event = 'club_view') AS views,
+          countIf(event = 'club_card_click') AS card_clicks,
+          countIf(event = 'phone_click') AS phone_clicks,
+          countIf(event = 'instagram_click') AS instagram_clicks,
+          countIf(event = 'maps_click') AS maps_clicks
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
+          AND ${publicScope}
+          AND event IN ('club_impression','club_view','club_card_click','phone_click','instagram_click','maps_click')
+        GROUP BY slug, name
+        ORDER BY views DESC, card_clicks DESC
+        LIMIT 20
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          toString(toDate(toTimeZone(timestamp, '${PRODUCT_TIME_ZONE}'))) AS date,
+          countIf(event = '$pageview') AS pageviews,
+          uniqIf(person_id, event = '$pageview') AS visitors,
+          countIf(event IN ('phone_click','instagram_click','maps_click')) AS cta_clicks
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
+        GROUP BY date
+        ORDER BY date
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          maxIf(timestamp, ${publicScope}) AS latest_event_at,
+          countIf(${publicScope}) AS public_events,
+          countIf(properties.gameyer_traffic_scope = 'test' AND properties.$host = 'gameyer.az') AS test_events,
+          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview' AND empty(properties.gameyer_session_landing_path)) AS missing_session,
+          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview'
+            AND (notEmpty(properties.gameyer_first_fbclid) OR notEmpty(properties.gameyer_session_fbclid) OR notEmpty(properties.fbclid))
+            AND empty(properties.gameyer_first_utm_campaign)
+            AND empty(properties.gameyer_session_utm_campaign)
+            AND empty(properties.utm_campaign)) AS missing_campaign,
+          countIf(${publicScope} AND event = 'search_query' AND properties.no_results = true) AS no_result_searches,
+          countIf(${productionPublicScope} AND properties.$virt_is_bot = true) AS bot_events,
+          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview'
+            AND empty(properties.gameyer_first_referrer)
+            AND empty(properties.gameyer_session_referrer)
+            AND empty(properties.gameyer_first_utm_source)
+            AND empty(properties.gameyer_session_utm_source)
+            AND empty(properties.utm_source)
+            AND empty(properties.gameyer_first_fbclid)
+            AND empty(properties.gameyer_session_fbclid)
+            AND empty(properties.fbclid)) AS source_missing_sessions,
+          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          count() AS users,
+          countIf(first_seen < toDateTime('${from}')) AS returning_users,
+          countIf(current_sessions >= 3) AS three_session_users,
+          round(avg(current_sessions), 2) AS sessions_per_user
+        FROM (
+          SELECT
+            person_id,
+            min(timestamp) AS first_seen,
+            uniqIf(properties.$session_id, timestamp >= toDateTime('${from}')) AS current_sessions
+          FROM events
+          WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
+            AND timestamp < toDateTime('${to}')
+            AND ${publicScope}
+            AND event = '$pageview'
+          GROUP BY person_id
+        )
+        WHERE current_sessions > 0
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          uniqIf(properties.$session_id, event = '$pageview') AS landing_sessions,
+          uniqIf(properties.$session_id, event IN ('club_card_click','club_view')) AS discovery_sessions,
+          uniqIf(properties.$session_id, event = 'club_view') AS club_view_sessions,
+          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click')) AS cta_sessions
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          countIf(first_day >= ${fromDay} AND first_day < addDays(${toDay}, -1)) AS d1_cohort_users,
+          countIf(first_day >= ${fromDay} AND first_day < addDays(${toDay}, -1) AND has(active_days, addDays(first_day, 1))) AS d1_users,
+          countIf(first_day >= ${fromDay} AND first_day < addDays(${toDay}, -3)) AS d3_cohort_users,
+          countIf(first_day >= ${fromDay} AND first_day < addDays(${toDay}, -3) AND has(active_days, addDays(first_day, 3))) AS d3_users,
+          countIf(first_day >= ${fromDay} AND first_day < addDays(${toDay}, -7)) AS d7_cohort_users,
+          countIf(first_day >= ${fromDay} AND first_day < addDays(${toDay}, -7) AND has(active_days, addDays(first_day, 7))) AS d7_users
+        FROM (
+          SELECT
+            person_id,
+            min(toDate(toTimeZone(timestamp, '${PRODUCT_TIME_ZONE}'))) AS first_day,
+            groupUniqArray(toDate(toTimeZone(timestamp, '${PRODUCT_TIME_ZONE}'))) AS active_days
+          FROM events
+          WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
+            AND timestamp < toDateTime('${to}')
+            AND ${publicScope}
+            AND event = '$pageview'
+          GROUP BY person_id
+        )
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          countIf(event = 'club_update_impression') AS update_impressions,
+          countIf(event = 'club_update_club_click') AS update_club_clicks,
+          countIf(event = 'club_update_source_click') AS update_source_clicks,
+          uniqIf(person_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click')) AS update_users,
+          uniqIf(properties.$session_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions,
+          uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)
+            AND (properties.$session_id, properties.club_id) IN (
+              SELECT properties.$session_id, properties.club_id
+              FROM events
+              WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
+                AND ${publicScope}
+                AND event = 'club_update_club_click'
+                AND notEmpty(properties.$session_id)
+                AND notEmpty(properties.club_id)
+            )) AS downstream_club_view_sessions,
+          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click') AND notEmpty(properties.$session_id)
+            AND (properties.$session_id, properties.club_id) IN (
+              SELECT properties.$session_id, properties.club_id
+              FROM events
+              WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
+                AND ${publicScope}
+                AND event = 'club_update_club_click'
+                AND notEmpty(properties.$session_id)
+                AND notEmpty(properties.club_id)
+            )) AS downstream_cta_sessions,
+          uniqIf(person_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click')
+            AND person_id IN (
+              SELECT person_id
+              FROM events
+              WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
+                AND timestamp < toDateTime('${from}')
+                AND ${publicScope}
+                AND event = '$pageview'
+              GROUP BY person_id
+            )) AS returning_update_users
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
+      `),
     ]);
 
     const current = overviewRows.find((row) => row.period === 'current') ?? {};
@@ -93,7 +297,12 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
 
     const campaigns = campaignRows.map(normalizeCampaign);
     const clubs = clubRows.map(normalizeClubPerformance);
-    const trend: TrendPoint[] = trendRows.map((row) => ({ date: stringValue(row.date), pageviews: numberValue(row.pageviews), visitors: numberValue(row.visitors), ctaClicks: numberValue(row.cta_clicks) }));
+    const trend: TrendPoint[] = trendRows.map((row) => ({
+      date: stringValue(row.date),
+      pageviews: numberValue(row.pageviews),
+      visitors: numberValue(row.visitors),
+      ctaClicks: numberValue(row.cta_clicks),
+    }));
     const publicPageviewSessions = numberValue(health.public_pageview_sessions);
     const missingSessionAttribution = numberValue(health.missing_session);
     const updateUsers = numberValue(returnLoop.update_users);
@@ -101,9 +310,12 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
     const returningUpdateUsers = numberValue(returnLoop.returning_update_users);
     const downstreamClubViewSessions = numberValue(returnLoop.downstream_club_view_sessions);
     const downstreamCtaSessions = numberValue(returnLoop.downstream_cta_sessions);
+    const d1CohortUsers = numberValue(cohort.d1_cohort_users);
+    const d3CohortUsers = numberValue(cohort.d3_cohort_users);
+    const d7CohortUsers = numberValue(cohort.d7_cohort_users);
 
     return {
-      status: providerStatus('posthog', 'ready', 'Real public event datası server-side PostHog API-dən oxundu.'),
+      status: providerStatus('posthog', 'ready', 'Real production public event datası server-side PostHog API-dən oxundu; məlum botlar çıxarıldı.'),
       pageviews: metric(numberValue(current.pageviews), numberValue(previous.pageviews)),
       visitors: metric(numberValue(current.visitors), numberValue(previous.visitors)),
       sessions: metric(numberValue(current.sessions), numberValue(previous.sessions)),
@@ -122,10 +334,41 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       sessionsPerUser: numberValue(retention.sessions_per_user),
       usersWithThreeSessions: numberValue(retention.three_session_users),
       conversionRate: metric(rate(currentCta, currentViews), rate(previousCta, previousViews)),
-      acquisition: aggregateAcquisition(campaigns), campaigns, clubs, trend,
-      tracking: { latestEventAt: typeof health.latest_event_at === 'string' ? health.latest_event_at : null, publicEvents: numberValue(health.public_events), testEvents: numberValue(health.test_events), missingSessionAttribution, missingCampaignAttribution: numberValue(health.missing_campaign), noResultSearches: numberValue(health.no_result_searches), botEvents: numberValue(health.bot_events), sourceMissingSessions: numberValue(health.source_missing_sessions), attributionCompleteness: rate(publicPageviewSessions - missingSessionAttribution, publicPageviewSessions) },
-      funnel: { landingSessions: numberValue(funnel.landing_sessions), discoverySessions: numberValue(funnel.discovery_sessions), clubViewSessions: numberValue(funnel.club_view_sessions), ctaSessions: numberValue(funnel.cta_sessions) },
-      retention: { d1: numberValue(cohort.cohort_users) > 0 ? rate(numberValue(cohort.d1_users), numberValue(cohort.cohort_users)) : null, d3: numberValue(cohort.cohort_users) > 0 ? rate(numberValue(cohort.d3_users), numberValue(cohort.cohort_users)) : null, d7: numberValue(cohort.cohort_users) > 0 ? rate(numberValue(cohort.d7_users), numberValue(cohort.cohort_users)) : null, cohortUsers: numberValue(cohort.cohort_users) },
+      acquisition: aggregateAcquisition(campaigns),
+      campaigns,
+      clubs,
+      trend,
+      tracking: {
+        latestEventAt: typeof health.latest_event_at === 'string' ? health.latest_event_at : null,
+        publicEvents: numberValue(health.public_events),
+        testEvents: numberValue(health.test_events),
+        missingSessionAttribution,
+        missingCampaignAttribution: numberValue(health.missing_campaign),
+        noResultSearches: numberValue(health.no_result_searches),
+        botEvents: numberValue(health.bot_events),
+        sourceMissingSessions: numberValue(health.source_missing_sessions),
+        attributionCompleteness: rate(publicPageviewSessions - missingSessionAttribution, publicPageviewSessions),
+      },
+      funnel: {
+        landingSessions: numberValue(funnel.landing_sessions),
+        discoverySessions: numberValue(funnel.discovery_sessions),
+        clubViewSessions: numberValue(funnel.club_view_sessions),
+        ctaSessions: numberValue(funnel.cta_sessions),
+      },
+      retention: {
+        d1: d1CohortUsers > 0 ? rate(numberValue(cohort.d1_users), d1CohortUsers) : null,
+        d3: d3CohortUsers > 0 ? rate(numberValue(cohort.d3_users), d3CohortUsers) : null,
+        d7: d7CohortUsers > 0 ? rate(numberValue(cohort.d7_users), d7CohortUsers) : null,
+        d1CohortUsers,
+        d3CohortUsers,
+        d7CohortUsers,
+        cohortUsers: d7CohortUsers,
+      },
+      pwa: {
+        installAvailable: numberValue(current.pwa_install_available),
+        installed: numberValue(current.pwa_installed),
+        standaloneOpened: numberValue(current.pwa_standalone_opened),
+      },
       returnLoop: {
         updateImpressions: numberValue(returnLoop.update_impressions),
         updateClubClicks: numberValue(returnLoop.update_club_clicks),
@@ -148,6 +391,6 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
 
 export const getPostHogMetrics = unstable_cache(
   fetchPostHogMetrics,
-  ['founder-analytics-posthog-v2'],
+  ['founder-analytics-posthog-v3'],
   { revalidate: 300, tags: ['founder-analytics'] },
 );
