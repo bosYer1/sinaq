@@ -163,8 +163,8 @@ export function MapPreview({ clubs }: MapPreviewProps) {
             alt=""
             width={MAP_TILE_SIZE}
             height={MAP_TILE_SIZE}
-            loading="lazy"
-            fetchPriority="low"
+            loading="eager"
+            fetchPriority="high"
             decoding="async"
             draggable={false}
             className="absolute max-w-none"
