@@ -54,7 +54,7 @@ export default async function FounderAnalyticsPage({ searchParams }: { searchPar
 
     <GscAnalyticsSection gsc={data.gsc} />
 
-    <ExtendedAnalyticsSections posthog={data.posthog} />
+    <ExtendedAnalyticsSections posthog={data.posthog} clubDataPriorities={data.clubDataPriorities} />
 
     <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="İcraçı göstəricilər"><MetricCard label="Unikal ziyarətçi" metric={data.posthog.visitors} detail="PostHog person_id · əvvəlki eyni müddətlə müqayisə" /><MetricCard label="Sessiya" metric={data.posthog.sessions} detail="PostHog session ID · public trafik" /><MetricCard label="Səhifə baxışı" metric={data.posthog.pageviews} detail="Public $pageview eventləri" /><MetricCard label="Klub niyyət dərəcəsi" metric={data.posthog.conversionRate} suffix="%" detail="Telefon + Instagram + istiqamət / klub baxışı" /><MetricCard label="Klub baxışı" metric={data.posthog.clubViews} detail="Klub detail səhifəsinin real açılışı" /><MetricCard label="Klub CTA klikləri" metric={data.posthog.ctaClicks} detail="Telefon, Instagram və istiqamət klikləri" /><MetricCard label="Aktiv klub" value={data.supabase.activeClubs} detail={`${data.supabase.verifiedClubs} klub verified statusundadır`} /><MetricCard label="Açıq müraciət" value={data.supabase.pendingSubmissions} detail={`${data.supabase.staleSubmissions} müraciət 72 saatdan köhnədir`} /></section>
 

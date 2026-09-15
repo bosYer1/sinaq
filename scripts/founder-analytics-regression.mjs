@@ -67,6 +67,16 @@ assert.ok(posthog.includes("['founder-analytics-posthog-v3']"), 'PostHog cache k
 assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
+assert.match(extended, /d1CohortUsers/, 'Founder Analytics must render the dedicated D1 mature cohort denominator.');
+assert.match(extended, /d3CohortUsers/, 'Founder Analytics must render the dedicated D3 mature cohort denominator.');
+assert.match(extended, /d7CohortUsers/, 'Founder Analytics must render the dedicated D7 mature cohort denominator.');
+assert.doesNotMatch(extended, /yalnız yeddi günlük müşahidə pəncərəsi tamamlanan kohort/, 'Retention UI must not imply one shared seven-day cohort for D1/D3/D7.');
+assert.match(extended, />PWA install siqnalları</, 'Founder Analytics must surface PWA install evidence.');
+assert.match(extended, /Quraşdırma imkanı.*download deyil/s, 'PWA availability must not be presented as a download or completed install.');
+assert.match(extended, /posthog\.pwa\.installed/, 'Founder Analytics must surface confirmed appinstalled evidence.');
+assert.match(extended, />Klub data prioritetləri</, 'Founder Analytics must surface demand-weighted club data priorities.');
+assert.match(page, /clubDataPriorities=\{data\.clubDataPriorities\}/, 'Founder page must pass calculated club data priorities to the analytics UI.');
+
 assert.match(calculations, /posthog\.tracking\.attributionCompleteness < 90/, 'CEO attribution warning must use session-level completeness.');
 assert.doesNotMatch(calculations, /İki və daha çox sessiyası olan istifadəçilərin payı/, 'CEO returning signal must not equate repeat same-period sessions with returning users.');
 
