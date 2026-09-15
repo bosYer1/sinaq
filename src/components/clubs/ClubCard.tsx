@@ -67,7 +67,6 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
   useEffect(() => {
     const element = cardElementRef.current;
     if (!element || typeof IntersectionObserver === 'undefined') return;
-    if (element.offsetParent === null) return;
 
     let captured = false;
     const observer = new IntersectionObserver((entries) => {
