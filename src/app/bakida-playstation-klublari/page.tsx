@@ -2,14 +2,15 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
+import { getStartingPrice } from '@/lib/pricing';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
 const description = 'Bakıda PlayStation, PS5 və PS4 klub axtarırsan? Aktiv PS klublarını ünvan, rayon və xəritə ilə GameYer-də müqayisə et.';
 
 function landingSignals(clubs: Awaited<ReturnType<typeof getClubs>>) {
-  const hourlyPrices = clubs.flatMap((club) => club.pricing ?? []).filter((price) => price.unit === 'saat' && price.price_from > 0).map((price) => price.price_from);
+  const minimumPrice = getStartingPrice(clubs.flatMap((club) => club.pricing ?? []), 'playstation')?.price_from ?? null;
   return {
-    minimumPrice: hourlyPrices.length > 0 ? Math.min(...hourlyPrices) : null,
+    minimumPrice,
     hasHours: clubs.some((club) => (club.opening_hours ?? []).some((hours) => Boolean(hours.open_time) && !hours.is_closed)),
   };
 }

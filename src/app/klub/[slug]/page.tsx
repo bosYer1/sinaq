@@ -5,6 +5,7 @@ import { getClubBySlug, getClubs } from '@/lib/queries/clubs';
 import { ClubDetail } from '@/components/clubs/ClubDetail';
 import { ShareClubButton } from '@/components/clubs/ShareClubButton';
 import { getSiteUrl } from '@/lib/site-url';
+import { getHourlyPriceRange, getHourlyPricing, getPlatformStartingPrices } from '@/lib/pricing';
 
 interface ClubPageProps { params: Promise<{ slug: string }> }
 
@@ -64,14 +65,13 @@ export async function generateMetadata({ params }: ClubPageProps): Promise<Metad
   const category = clubCategory(typeSlugs);
   const pricing = Array.isArray(club.pricing) ? club.pricing : [];
   const openingHours = Array.isArray(club.opening_hours) ? club.opening_hours : [];
-  const validPrices = pricing.flatMap((item) => [item.price_from, item.price_to]).filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0);
-  const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
+  const { min: minPrice } = getHourlyPriceRange(pricing);
   const hasOpeningHours = openingHours.some((item) => !item.is_closed && Boolean(item.open_time) && Boolean(item.close_time));
   const locationText = districtName ? `${districtName} rayonunda` : 'Bakıda';
   const titleDetail = minPrice != null ? `${minPrice} AZN-dən` : category;
   const title = `${club.name} — ${districtName ?? 'Bakı'}, ${titleDetail}`;
   const detailParts = [
-    minPrice != null ? `Qiymət ${minPrice} AZN-dən.` : null,
+    minPrice != null ? `Saatlıq qiymət ${minPrice} AZN-dən.` : null,
     hasOpeningHours ? 'İş saatları, ünvan və xəritəyə GameYer-də bax.' : 'Ünvan, xəritə və əlaqə məlumatlarına GameYer-də bax.',
   ].filter((value): value is string => Boolean(value));
   const description = `${club.name} ${locationText} ${category.toLowerCase()}. ${detailParts.join(' ')}`.trim();
@@ -114,20 +114,18 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const allBusinessImages = Array.from(new Set([club.profile_image_url, ...sortedImages.map((image) => image.url)].filter((url): url is string => Boolean(url))));
   const openingHoursSpecification = openingHours.filter((hours) => !hours.is_closed && hours.open_time && hours.close_time && hours.day_of_week >= 0 && hours.day_of_week <= 6).map((hours) => ({ '@type': 'OpeningHoursSpecification', dayOfWeek: SCHEMA_DAY_NAMES[hours.day_of_week], opens: hours.open_time!.slice(0, 5), closes: hours.close_time!.slice(0, 5) }));
 
-  const validPrices = pricing.flatMap((item) => [item.price_from, item.price_to].filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0));
-  const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
-  const maxPrice = validPrices.length > 0 ? Math.max(...validPrices) : null;
+  const hourlyPricing = getHourlyPricing(pricing);
+  const { min: minPrice, max: maxPrice } = getHourlyPriceRange(pricing);
   const priceRange = minPrice != null && maxPrice != null ? (minPrice === maxPrice ? `${minPrice} AZN` : `${minPrice}–${maxPrice} AZN`) : undefined;
-  const pcPrices = pricing.filter((item) => item.club_type?.slug === 'pc' && item.unit === 'saat' && item.price_from > 0).map((item) => item.price_from);
-  const playStationPrices = pricing.filter((item) => item.club_type?.slug === 'playstation' && item.unit === 'saat' && item.price_from > 0).map((item) => item.price_from);
-  const minPcPrice = pcPrices.length > 0 ? Math.min(...pcPrices) : null;
-  const minPlayStationPrice = playStationPrices.length > 0 ? Math.min(...playStationPrices) : null;
+  const startingPrices = getPlatformStartingPrices(pricing);
+  const minPcPrice = startingPrices.pc?.price_from ?? null;
+  const minPlayStationPrice = startingPrices.playstation?.price_from ?? null;
   const open24Hours = isOpen24HoursEveryDay(openingHours);
   const hasMap = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}` : undefined;
-  const offerCatalog = pricing.length > 0 ? {
+  const offerCatalog = hourlyPricing.length > 0 ? {
     '@type': 'OfferCatalog',
     name: `${club.name} saatlıq oyun qiymətləri`,
-    itemListElement: pricing.filter((item) => item.price_from > 0).map((item) => ({ '@type': 'Offer', priceCurrency: 'AZN', price: item.price_from, category: item.club_type?.name || 'Gaming', description: `${item.club_type?.name || 'Gaming'} — ${item.price_from} AZN-dən / ${item.unit}`, url: clubUrl })),
+    itemListElement: hourlyPricing.map((item) => ({ '@type': 'Offer', priceCurrency: 'AZN', price: item.price_from, category: item.club_type?.name || 'Gaming', description: `${item.club_type?.name || 'Gaming'} — ${item.price_from} AZN-dən / ${item.unit}`, url: clubUrl })),
   } : undefined;
   const category = clubCategory(typeSlugs);
   const hasOpeningHours = openingHoursSpecification.length > 0;

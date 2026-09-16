@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ClubWithRelations } from '@/types/database';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { getPlatformStartingPrices } from '@/lib/pricing';
 
 export function SeoClubList({ clubs }: { clubs: ClubWithRelations[] }) {
   if (clubs.length === 0) {
@@ -18,12 +19,15 @@ export function SeoClubList({ clubs }: { clubs: ClubWithRelations[] }) {
         const typeLabel = typeSlugs
           .map((slug) => (slug === 'pc' ? 'PC' : 'PlayStation'))
           .join(' + ');
-        const minPrice = club.pricing
-          .filter((item) => item.price_from > 0)
-          .sort((a, b) => a.price_from - b.price_from)[0]?.price_from;
+        const startingPrices = getPlatformStartingPrices(club.pricing);
+        const priceParts = [
+          startingPrices.pc ? `PC ${startingPrices.pc.price_from} AZN-dən` : null,
+          startingPrices.playstation ? `PS ${startingPrices.playstation.price_from} AZN-dən` : null,
+        ].filter((value): value is string => Boolean(value));
+        const priceSummary = priceParts.length > 0 ? priceParts.join(' · ') : null;
         const hasHours = club.opening_hours.some((item) => !item.is_closed && Boolean(item.open_time) && Boolean(item.close_time));
         const knownDetails = [
-          minPrice != null ? `qiymət ${minPrice} AZN-dən` : null,
+          priceSummary ? `qiymət ${priceSummary}` : null,
           hasHours ? 'iş saatları mövcuddur' : null,
           club.phone ? 'telefon mövcuddur' : null,
         ].filter((value): value is string => Boolean(value));
@@ -53,7 +57,7 @@ export function SeoClubList({ clubs }: { clubs: ClubWithRelations[] }) {
             <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted">
               <span>{club.description || fallbackDescription}</span>
               <span className="shrink-0 font-mono font-semibold text-ink">
-                {minPrice != null ? `${minPrice} AZN-dən` : 'Qiymət məlum deyil'}
+                {priceSummary ?? 'Qiymət məlum deyil'}
               </span>
             </div>
           </Link>
