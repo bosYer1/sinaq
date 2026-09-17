@@ -133,8 +133,8 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
               slug={update.club.slug}
               name={update.club.name}
               profileImageUrl={update.club.profile_image_url}
-              className="h-[68px] w-[68px] self-center rounded-lg border border-border bg-bg"
-              imageClassName="object-cover p-0"
+              className="h-[68px] w-[68px] self-center rounded-xl border border-border/80 bg-bg shadow-[inset_0_0_0_1px_rgba(255,255,255,0.55)]"
+              imageClassName="object-contain p-1.5"
             />
             <div className="min-w-0 self-center">
               <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.07em] text-primary">
@@ -189,15 +189,14 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
                   data-update-impression-id={update.id}
                   className="group scroll-mt-28 grid grid-cols-[112px_minmax(0,1fr)] gap-3 rounded-[24px] border border-border/80 bg-surface p-3 shadow-[0_8px_28px_rgba(31,35,48,0.06)] transition-[border-color,box-shadow,transform] target:border-primary target:ring-2 target:ring-primary/15 hover:border-primary/20 hover:shadow-[0_14px_36px_rgba(31,35,48,0.09)] sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-5 sm:p-4"
                 >
-                  <div className="relative min-h-[196px] overflow-hidden rounded-[18px] border border-border/70 bg-primary/5 sm:min-h-[220px]">
+                  <div className="relative aspect-square self-start overflow-hidden rounded-[18px] border border-border/70 bg-bg p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.65)] sm:p-4">
                     <ClubLogo
                       slug={update.club.slug}
                       name={update.club.name}
                       profileImageUrl={update.club.profile_image_url}
-                      className="h-full min-h-[196px] w-full rounded-none border-0 bg-bg sm:min-h-[220px]"
-                      imageClassName="h-full w-full object-cover p-0 transition-transform duration-300 group-hover:scale-[1.02]"
+                      className="h-full w-full rounded-[14px] border-0 bg-transparent"
+                      imageClassName="h-full w-full object-contain p-1 sm:p-2"
                     />
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/20 to-transparent" />
                   </div>
 
                   <div className="flex min-w-0 flex-col py-0.5">
@@ -213,7 +212,7 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
                         name={update.club.name}
                         profileImageUrl={update.club.profile_image_url}
                         className="h-8 w-8 shrink-0 rounded-lg border border-border bg-bg sm:h-9 sm:w-9"
-                        imageClassName="object-cover p-0"
+                        imageClassName="object-contain p-1"
                       />
                       <div className="min-w-0">
                         <p className="line-clamp-1 text-[11px] font-bold text-ink sm:text-xs">{update.club.name}</p>
@@ -238,7 +237,7 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
                           club_slug: update.club.slug,
                           context,
                         })}
-                        className="inline-flex min-h-10 items-center justify-center gap-1 rounded-control bg-primary px-2.5 py-2 text-center text-[11px] font-semibold text-white no-underline transition hover:opacity-90 sm:text-xs"
+                        className="inline-flex min-h-11 items-center justify-center gap-1 rounded-control bg-primary px-2.5 py-2 text-center text-xs font-semibold text-white no-underline transition hover:opacity-90"
                       >
                         <span aria-hidden="true">↗</span> Kluba bax
                       </Link>
@@ -254,7 +253,7 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
                           source_type: update.source_type,
                           context,
                         })}
-                        className="inline-flex min-h-10 items-center justify-center gap-1 rounded-control border border-border bg-bg px-2 py-2 text-center text-[11px] font-semibold text-ink no-underline transition hover:border-primary sm:text-xs"
+                        className="inline-flex min-h-11 items-center justify-center gap-1 rounded-control border border-border bg-bg px-2 py-2 text-center text-xs font-semibold text-ink no-underline transition hover:border-primary"
                       >
                         <span aria-hidden="true">↗</span> Rəsmi mənbə
                       </a>
