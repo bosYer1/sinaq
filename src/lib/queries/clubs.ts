@@ -86,9 +86,11 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
   const searchQuery = filters.q?.trim();
   if (searchQuery) {
     const sanitized = searchQuery.replace(/[%_,()]/g, ' ').trim();
-    if (sanitized) {
+    const searchTerms = sanitized.split(/\s+/).filter(Boolean).slice(0, 6);
+
+    for (const term of searchTerms) {
       query = query.or(
-        `name.ilike.%${sanitized}%,address.ilike.%${sanitized}%,slug.ilike.%${sanitized}%`
+        `name.ilike.%${term}%,address.ilike.%${term}%,slug.ilike.%${term}%`
       );
     }
   }
@@ -130,7 +132,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v3'],
+  ['gameyer-public-clubs-v4'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
