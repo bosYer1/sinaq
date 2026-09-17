@@ -1,8 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
-const [filterBar, searchFilter] = await Promise.all([
+const [filterBar, searchFilter, clubsQuery] = await Promise.all([
   readFile(new URL('../src/components/filters/FilterBar.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/filters/SearchFilter.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/queries/clubs.ts', import.meta.url), 'utf8'),
 ]);
 
 function assert(condition, message) {
@@ -36,5 +37,11 @@ assert(searchFilter.includes("trackPostHogEvent('search_cleared'"), 'Settled cle
 assert(searchFilter.includes('lastTrackedQueryRef.current = currentQuery;'), 'External query synchronization must not be misclassified as fresh user search intent.');
 assert(searchFilter.includes('}, [value, pathname, router]);'), 'Typing debounce must not restart when stale server search params arrive.');
 assert(searchFilter.includes('setValue(currentQuery)'), 'SearchFilter must still sync genuine external query changes such as clear-all/back navigation.');
+
+assert(clubsQuery.includes("const searchTerms = sanitized.split(/\\s+/).filter(Boolean).slice(0, 6);"), 'Club search must tokenize settled multi-word queries with a bounded term count.');
+assert(clubsQuery.includes('for (const term of searchTerms)'), 'Club search must apply every sanitized search term.');
+assert(clubsQuery.includes('`name.ilike.%${term}%,address.ilike.%${term}%,slug.ilike.%${term}%`'), 'Each search token must match club name, address, or slug.');
+assert(!clubsQuery.includes('`name.ilike.%${sanitized}%,address.ilike.%${sanitized}%,slug.ilike.%${sanitized}%`'), 'Club search must not require a spaced partial query to exist as one literal phrase.');
+assert(clubsQuery.includes("['gameyer-public-clubs-v4']"), 'Public club query cache must be bumped after search matching changes.');
 
 console.log('Search input regression checks passed.');
