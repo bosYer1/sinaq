@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
 import { trackPostHogEvent } from '@/lib/posthog';
 import type { ClubUpdateItem } from '@/lib/queries/club-updates';
@@ -14,6 +14,8 @@ const BAKU_DATE_TIME = new Intl.DateTimeFormat('az-AZ', {
   hour: '2-digit',
   minute: '2-digit',
 });
+
+type UpdatesFilter = 'all' | ClubUpdateItem['kind'] | 'active';
 
 function formatDate(value: string | null) {
   if (!value) return null;
@@ -29,14 +31,35 @@ function updateAnchor(updateId: string) {
   return `teklif-${updateId}`;
 }
 
+function updateStatus(update: ClubUpdateItem, startsAt: string | null, endsAt: string | null) {
+  if (update.kind === 'offer' && update.ends_at === null) return 'Davam edən təklif';
+  if (update.kind === 'tournament' && startsAt) return `Başlayır: ${startsAt}`;
+  if (endsAt) return `Bitir: ${endsAt}`;
+  return 'Aktiv yenilik';
+}
+
+const FILTERS: Array<{ value: UpdatesFilter; label: string; icon?: string }> = [
+  { value: 'all', label: 'Hamısı' },
+  { value: 'offer', label: 'Təkliflər', icon: '🔥' },
+  { value: 'tournament', label: 'Turnirlər', icon: '🏆' },
+  { value: 'active', label: 'Aktiv', icon: '●' },
+];
+
 export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[]; context: 'discovery' | 'club_detail' }) {
   const pathname = usePathname();
   const rootRef = useRef<HTMLDivElement>(null);
+  const [filter, setFilter] = useState<UpdatesFilter>('all');
   const isHomePreview = pathname === '/' && context === 'discovery';
+  const isUpdatesPage = pathname === '/yenilikler' && context === 'discovery';
+  const visibleUpdates = useMemo(() => {
+    if (!isUpdatesPage || filter === 'all') return updates;
+    if (filter === 'active') return updates.filter((update) => update.kind === 'offer' && update.ends_at === null);
+    return updates.filter((update) => update.kind === filter);
+  }, [filter, isUpdatesPage, updates]);
 
   useEffect(() => {
     const root = rootRef.current;
-    if (!root || updates.length === 0) return;
+    if (!root || visibleUpdates.length === 0) return;
 
     const updatesById = new Map(updates.map((update) => [update.id, update]));
     const seen = new Set<string>();
@@ -82,7 +105,7 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
 
     for (const element of elements) observer.observe(element);
     return () => observer.disconnect();
-  }, [context, isHomePreview, updates]);
+  }, [context, isHomePreview, updates, visibleUpdates]);
 
   if (updates.length === 0) return null;
 
@@ -124,6 +147,129 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
             </div>
           </Link>
         ))}
+      </div>
+    );
+  }
+
+  if (isUpdatesPage) {
+    return (
+      <div ref={rootRef}>
+        <div className="-mx-1 mb-5 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Yenilik filtrləri">
+          {FILTERS.map((item) => {
+            const selected = filter === item.value;
+            return (
+              <button
+                key={item.value}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => setFilter(item.value)}
+                className={selected
+                  ? 'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(112,78,255,0.18)] transition'
+                  : 'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-semibold text-ink transition hover:border-primary/40'}
+              >
+                {item.icon ? <span aria-hidden="true" className={item.value === 'active' ? 'text-emerald-500' : ''}>{item.icon}</span> : null}
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {visibleUpdates.length > 0 ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {visibleUpdates.map((update) => {
+              const startsAt = formatDate(update.starts_at);
+              const endsAt = formatDate(update.ends_at);
+              const isOngoingOffer = update.kind === 'offer' && update.ends_at === null;
+              const status = updateStatus(update, startsAt, endsAt);
+
+              return (
+                <article
+                  key={update.id}
+                  id={updateAnchor(update.id)}
+                  data-update-impression-id={update.id}
+                  className="group scroll-mt-28 grid grid-cols-[112px_minmax(0,1fr)] gap-3 rounded-[24px] border border-border/80 bg-surface p-3 shadow-[0_8px_28px_rgba(31,35,48,0.06)] transition-[border-color,box-shadow,transform] target:border-primary target:ring-2 target:ring-primary/15 hover:border-primary/20 hover:shadow-[0_14px_36px_rgba(31,35,48,0.09)] sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-5 sm:p-4"
+                >
+                  <div className="relative min-h-[196px] overflow-hidden rounded-[18px] border border-border/70 bg-primary/5 sm:min-h-[220px]">
+                    <ClubLogo
+                      slug={update.club.slug}
+                      name={update.club.name}
+                      profileImageUrl={update.club.profile_image_url}
+                      className="h-full min-h-[196px] w-full rounded-none border-0 bg-bg sm:min-h-[220px]"
+                      imageClassName="h-full w-full object-cover p-0 transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/20 to-transparent" />
+                  </div>
+
+                  <div className="flex min-w-0 flex-col py-0.5">
+                    <span className="inline-flex w-fit rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-primary sm:text-[11px]">
+                      {kindLabel(update.kind)}
+                    </span>
+                    <h3 className="mt-2 line-clamp-2 font-display text-[15px] font-bold leading-[1.25] text-ink sm:text-lg">{update.title}</h3>
+                    {update.description ? <p className="mt-1.5 line-clamp-2 text-[12px] leading-5 text-muted sm:text-sm">{update.description}</p> : null}
+
+                    <div className="mt-3 flex min-w-0 items-center gap-2">
+                      <ClubLogo
+                        slug={update.club.slug}
+                        name={update.club.name}
+                        profileImageUrl={update.club.profile_image_url}
+                        className="h-8 w-8 shrink-0 rounded-lg border border-border bg-bg sm:h-9 sm:w-9"
+                        imageClassName="object-cover p-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="line-clamp-1 text-[11px] font-bold text-ink sm:text-xs">{update.club.name}</p>
+                        {update.club.district?.name ? <p className="mt-0.5 line-clamp-1 text-[10px] text-muted sm:text-[11px]">⌖ {update.club.district.name}</p> : null}
+                      </div>
+                    </div>
+
+                    <div className={isOngoingOffer
+                      ? 'mt-2.5 inline-flex w-fit max-w-full items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 sm:text-[11px]'
+                      : 'mt-2.5 inline-flex w-fit max-w-full items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary sm:text-[11px]'}>
+                      <span className={isOngoingOffer ? 'h-2 w-2 shrink-0 rounded-full bg-emerald-500' : 'h-2 w-2 shrink-0 rounded-full bg-primary'} aria-hidden="true" />
+                      <span className="line-clamp-1">{status}</span>
+                    </div>
+
+                    <div className="mt-auto grid grid-cols-2 gap-2 pt-3">
+                      <Link
+                        href={`/klub/${update.club.slug}`}
+                        onClick={() => trackPostHogEvent('club_update_club_click', {
+                          update_id: update.id,
+                          update_kind: update.kind,
+                          club_id: update.club_id,
+                          club_slug: update.club.slug,
+                          context,
+                        })}
+                        className="inline-flex min-h-10 items-center justify-center gap-1 rounded-control bg-primary px-2.5 py-2 text-center text-[11px] font-semibold text-white no-underline transition hover:opacity-90 sm:text-xs"
+                      >
+                        <span aria-hidden="true">↗</span> Kluba bax
+                      </Link>
+                      <a
+                        href={update.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => trackPostHogEvent('club_update_source_click', {
+                          update_id: update.id,
+                          update_kind: update.kind,
+                          club_id: update.club_id,
+                          club_slug: update.club.slug,
+                          source_type: update.source_type,
+                          context,
+                        })}
+                        className="inline-flex min-h-10 items-center justify-center gap-1 rounded-control border border-border bg-bg px-2 py-2 text-center text-[11px] font-semibold text-ink no-underline transition hover:border-primary sm:text-xs"
+                      >
+                        <span aria-hidden="true">↗</span> Rəsmi mənbə
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-[24px] border border-dashed border-border bg-surface px-5 py-10 text-center">
+            <p className="font-display text-base font-bold text-ink">Bu filtr üzrə aktiv yenilik yoxdur</p>
+            <p className="mt-1 text-sm text-muted">Digər kateqoriyanı seçərək aktiv təklif və turnirlərə bax.</p>
+          </div>
+        )}
       </div>
     );
   }
