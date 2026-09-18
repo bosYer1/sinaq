@@ -15,7 +15,7 @@ const BAKU_DATE_TIME = new Intl.DateTimeFormat('az-AZ', {
   minute: '2-digit',
 });
 
-type UpdatesFilter = 'all' | ClubUpdateItem['kind'] | 'active';
+type UpdatesFilter = 'all' | ClubUpdateItem['kind'];
 
 function formatDate(value: string | null) {
   if (!value) return null;
@@ -42,7 +42,6 @@ const FILTERS: Array<{ value: UpdatesFilter; label: string; icon?: string }> = [
   { value: 'all', label: 'Hamısı' },
   { value: 'offer', label: 'Təkliflər', icon: '🔥' },
   { value: 'tournament', label: 'Turnirlər', icon: '🏆' },
-  { value: 'active', label: 'Aktiv', icon: '●' },
 ];
 
 export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[]; context: 'discovery' | 'club_detail' }) {
@@ -53,7 +52,6 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
   const isUpdatesPage = pathname === '/yenilikler' && context === 'discovery';
   const visibleUpdates = useMemo(() => {
     if (!isUpdatesPage || filter === 'all') return updates;
-    if (filter === 'active') return updates.filter((update) => update.kind === 'offer' && update.ends_at === null);
     return updates.filter((update) => update.kind === filter);
   }, [filter, isUpdatesPage, updates]);
 
@@ -167,7 +165,7 @@ export function ClubUpdatesFeed({ updates, context }: { updates: ClubUpdateItem[
                   ? 'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(112,78,255,0.18)] transition'
                   : 'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-semibold text-ink transition hover:border-primary/40'}
               >
-                {item.icon ? <span aria-hidden="true" className={item.value === 'active' ? 'text-emerald-500' : ''}>{item.icon}</span> : null}
+                {item.icon ? <span aria-hidden="true">{item.icon}</span> : null}
                 {item.label}
               </button>
             );
