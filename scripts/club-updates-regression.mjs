@@ -42,7 +42,7 @@ const checks = [
   [feed.includes('aria-label="Yenilik filtrləri"'), 'updates page exposes accessible filter controls'],
   [feed.includes("{ value: 'offer', label: 'Təkliflər'"), 'updates page can filter offers'],
   [feed.includes("{ value: 'tournament', label: 'Turnirlər'"), 'updates page can filter tournaments'],
-  [feed.includes("{ value: 'active', label: 'Aktiv'"), 'updates page exposes ongoing active offers'],
+  [!feed.includes("{ value: 'active', label: 'Aktiv'"), 'updates page omits the redundant Active filter'],
   [feed.includes('grid-cols-[112px_minmax(0,1fr)]'), 'updates cards keep a visual-first mobile layout'],
   [feed.includes('line-clamp-2'), 'updates cards keep long customer copy visually bounded'],
   [feed.includes('shadow-[0_8px_28px_rgba(31,35,48,0.06)]'), 'updates cards use the premium soft-elevation treatment'],
