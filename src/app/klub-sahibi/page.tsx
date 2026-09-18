@@ -39,6 +39,21 @@ export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps
   const params = await searchParams;
   const selectedClub = params.club?.trim().slice(0, 120) || null;
   const selectedSlug = params.slug?.trim().slice(0, 120) || null;
+  const ownerForm = (
+    <section className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
+      <h2 className="font-display text-xl font-bold text-ink">Təsdiq müraciəti göndər</h2>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
+        Klubla əlaqənizi və dəyişməli məlumatları qısa şəkildə yazın. Əlaqə məlumatınız açıq şəkildə göstərilməyəcək.
+      </p>
+      <SubmissionForm
+        kind="owner_claim"
+        clubName={selectedClub}
+        clubSlug={selectedSlug}
+        returnTo="/klub-sahibi"
+        submitLabel="Təsdiq müraciətini göndər"
+      />
+    </section>
+  );
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
@@ -85,6 +100,8 @@ export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps
         </div>
       ) : null}
 
+      {selectedClub ? ownerForm : null}
+
       <section className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Niyə təsdiqləmək faydalıdır?</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -101,8 +118,8 @@ export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps
             <p className="mt-2 text-sm leading-6 text-muted">Rəsmi nümayəndədən gələn düzəlişlər ayrıca yoxlanaraq prioritetləşdirilə bilər.</p>
           </div>
           <div className="rounded-xl border border-border bg-surface p-4">
-            <h2 className="font-display text-sm font-bold text-ink">Gələcək funksiyalara hazırlıq</h2>
-            <p className="mt-2 text-sm leading-6 text-muted">Klub sahibi axını gələcəkdə profil idarəetməsi və önə çıxarma funksiyalarına keçid üçün əsas yaradır.</p>
+            <h2 className="font-display text-sm font-bold text-ink">Rəsmi məlumat üçün birbaşa kanal</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Klubla bağlı dəqiq məlumatı birbaşa rəsmi nümayəndədən yoxlamaq üçün müraciət kanalı yaradır.</p>
           </div>
         </div>
       </section>
@@ -149,19 +166,7 @@ export default async function ClubOwnerPage({ searchParams }: ClubOwnerPageProps
         </p>
       </section>
 
-      <section className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
-        <h2 className="font-display text-xl font-bold text-ink">Təsdiq müraciəti göndər</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-          Klubla əlaqənizi və dəyişməli məlumatları qısa şəkildə yazın. Əlaqə məlumatınız public göstərilməyəcək.
-        </p>
-        <SubmissionForm
-          kind="owner_claim"
-          clubName={selectedClub}
-          clubSlug={selectedSlug}
-          returnTo="/klub-sahibi"
-          submitLabel="Təsdiq müraciətini göndər"
-        />
-      </section>
+      {selectedClub ? null : ownerForm}
 
       <div className="mt-6 rounded-xl border border-border bg-surface p-5 sm:p-6">
         <h2 className="font-display text-base font-bold text-ink">Alternativ əlaqə</h2>
