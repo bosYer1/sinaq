@@ -37,78 +37,21 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
 
       {sortedImages.length > 0 ? (
         <div className="mb-6 grid grid-cols-4 gap-1.5 overflow-hidden rounded-card bg-surface-alt">
-          <div className="relative col-span-4 aspect-video sm:col-span-2 sm:row-span-2 sm:aspect-square">
-            <Image src={sortedImages[0].url} alt={`${club.name} — əsas şəkil`} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" priority />
-          </div>
-          {sortedImages.slice(1, 5).map((img, index) => (
-            <div key={img.id} className="relative col-span-2 aspect-square sm:col-span-1"><Image src={img.url} alt={`${club.name} — şəkil ${index + 2}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" /></div>
-          ))}
+          <div className="relative col-span-4 aspect-video sm:col-span-2 sm:row-span-2 sm:aspect-square"><Image src={sortedImages[0].url} alt={`${club.name} — əsas şəkil`} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" priority /></div>
+          {sortedImages.slice(1, 5).map((img, index) => <div key={img.id} className="relative col-span-2 aspect-square sm:col-span-1"><Image src={img.url} alt={`${club.name} — şəkil ${index + 2}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" /></div>)}
         </div>
       ) : (
-        <div className={cn('mb-6 flex min-h-[250px] items-center justify-center overflow-hidden rounded-card border border-border bg-gradient-to-br via-surface to-surface-alt px-5 py-7 sm:aspect-[16/7] sm:min-h-0 sm:px-6 sm:py-6', fallbackTint)}>
-          <div className="w-full max-w-xl text-center">
-            <ClubLogo slug={club.slug} name={club.name} className="mx-auto h-16 w-16 rounded-2xl border border-border text-3xl shadow-card sm:h-20 sm:w-20 sm:text-4xl" priority />
-            <p className="mt-4 break-words font-display text-lg font-semibold leading-snug text-ink sm:text-xl">{club.name}</p>
-            <span className="mt-2 inline-flex max-w-full items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary sm:text-xs">{fallbackType}</span>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-5 text-muted">Real klub şəkilləri əlavə ediləndə burada görünəcək.</p>
-          </div>
-        </div>
+        <div className={cn('mb-6 flex min-h-[250px] items-center justify-center overflow-hidden rounded-card border border-border bg-gradient-to-br via-surface to-surface-alt px-5 py-7 sm:aspect-[16/7] sm:min-h-0 sm:px-6 sm:py-6', fallbackTint)}><div className="w-full max-w-xl text-center"><ClubLogo slug={club.slug} name={club.name} className="mx-auto h-16 w-16 rounded-2xl border border-border text-3xl shadow-card sm:h-20 sm:w-20 sm:text-4xl" priority /><p className="mt-4 break-words font-display text-lg font-semibold leading-snug text-ink sm:text-xl">{club.name}</p><span className="mt-2 inline-flex max-w-full items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary sm:text-xs">{fallbackType}</span><p className="mx-auto mt-3 max-w-md text-sm leading-5 text-muted">Real klub şəkilləri əlavə ediləndə burada görünəcək.</p></div></div>
       )}
 
       <div className="border-b border-border pb-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <ClubLogo slug={club.slug} name={club.name} className="h-11 w-11 rounded-xl border border-border text-xl shadow-sm sm:h-12 sm:w-12 sm:text-2xl" />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">{club.name}</h1>
-                {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
-                {typeSlugs.map((slug) => <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>{slug === 'pc' ? 'PC' : 'PlayStation'}</Badge>)}
-              </div>
-              <p className="mt-2 text-sm text-muted">{club.district?.name ?? 'Rayon göstərilməyib'}{club.address ? ` · ${club.address}` : ''}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-                <span className={openNow ? 'inline-flex items-center gap-1.5 text-sm font-medium text-live' : 'inline-flex items-center gap-1.5 text-sm font-medium text-muted'}><span className={openNow ? 'h-2 w-2 rounded-full bg-live' : 'h-2 w-2 rounded-full bg-muted'} />{statusLabel}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {(primaryPhone || club.instagram_url || googleMapsUrl) ? (
-          <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {primaryPhone ? <TrackedClubLink href={`tel:${primaryPhone.replace(/[^+\d]/g, '')}`} eventType="phone_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="inline-flex h-12 items-center justify-center rounded-control bg-primary px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Zəng et</TrackedClubLink> : <div />}
-            {club.instagram_url ? <TrackedClubLink href={club.instagram_url} eventType="instagram_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-[#E1306C] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Instagram</TrackedClubLink> : <div />}
-            {googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-12 items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut</TrackedClubLink> : <div />}
-          </div>
-        ) : null}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="flex min-w-0 items-start gap-3"><ClubLogo slug={club.slug} name={club.name} className="h-11 w-11 rounded-xl border border-border text-xl shadow-sm sm:h-12 sm:w-12 sm:text-2xl" /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">{club.name}</h1>{premiumActive ? <Badge tone="premium">VIP</Badge> : null}{typeSlugs.map((slug) => <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>{slug === 'pc' ? 'PC' : 'PlayStation'}</Badge>)}</div><p className="mt-2 text-sm text-muted">{club.district?.name ?? 'Rayon göstərilməyib'}{club.address ? ` · ${club.address}` : ''}</p><div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2"><span className={openNow ? 'inline-flex items-center gap-1.5 text-sm font-medium text-live' : 'inline-flex items-center gap-1.5 text-sm font-medium text-muted'}><span className={openNow ? 'h-2 w-2 rounded-full bg-live' : 'h-2 w-2 rounded-full bg-muted'} />{statusLabel}</span></div></div></div></div>
+        {(primaryPhone || club.instagram_url || googleMapsUrl) ? <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">{primaryPhone ? <TrackedClubLink href={`tel:${primaryPhone.replace(/[^+\d]/g, '')}`} eventType="phone_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="inline-flex h-12 items-center justify-center rounded-control bg-primary px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Zəng et</TrackedClubLink> : <div />}{club.instagram_url ? <TrackedClubLink href={club.instagram_url} eventType="instagram_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-[#E1306C] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Instagram</TrackedClubLink> : <div />}{googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-12 items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut</TrackedClubLink> : <div />}</div> : null}
       </div>
 
       <div className="grid gap-8 py-6 lg:grid-cols-[1fr_320px]">
-        <div>
-          {club.description ? <section className="mb-7"><h2 className="mb-2 font-display text-base font-semibold text-ink">Klub haqqında</h2><p className="text-sm leading-6 text-muted">{club.description}</p></section> : null}
-          <section className="mb-7">
-            <h2 className="mb-3 font-display text-base font-semibold text-ink">Qiymətlər</h2>
-            <ClubPricingDisplay pricing={club.pricing} />
-          </section>
-          <section>
-            <h2 className="mb-3 font-display text-base font-semibold text-ink">İş saatları</h2>
-            {sortedHours.length > 0 ? <div className="overflow-hidden rounded-xl border border-border bg-surface">{sortedHours.map((hours) => <div key={hours.id} className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 text-sm last:border-b-0"><span className="font-display font-semibold tracking-tight text-ink">{DAY_NAMES_AZ[hours.day_of_week]}</span><span className={hours.is_closed ? 'font-display font-semibold tracking-tight tabular-nums text-muted' : 'font-display font-semibold tracking-tight tabular-nums text-ink'}>{hours.is_closed ? 'Bağlıdır' : formatOpeningHoursLabel(hours.open_time, hours.close_time)}</span></div>)}</div> : <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">İş saatları hələ təsdiqlənməyib.</div>}
-          </section>
-          <p className="mt-4 text-xs leading-5 text-muted">Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl mümkün olduqda klubun rəsmi əlaqə kanalından məlumatı dəqiqləşdirin.</p>
-        </div>
-
-        <aside className="order-first h-fit rounded-xl border border-border bg-surface p-5 lg:order-none">
-          <h2 className="font-display text-base font-semibold text-ink">Əlaqə və ünvan</h2>
-          <div className="mt-4 space-y-4 text-sm">
-            <div><p className="text-xs font-medium uppercase tracking-wide text-muted">Ünvan</p><p className="mt-1 leading-5 text-ink">{club.address || 'Ünvan göstərilməyib'}</p></div>
-          </div>
-          <div className="mt-5 border-t border-border pt-4">
-            {updatedLabel ? <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p> : null}
-            <div className="mt-3 flex flex-col gap-2">
-              <TrackedClubLink href={ownerClaimHref} eventType="club_owner_claim_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="text-sm font-semibold text-primary hover:underline">Bu klub sizindir? Təsdiqlə</TrackedClubLink>
-              <TrackedClubLink href={correctionHref} eventType="club_correction_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</TrackedClubLink>
-            </div>
-          </div>
-        </aside>
+        <div>{club.description ? <section className="mb-7"><h2 className="mb-2 font-display text-base font-semibold text-ink">Klub haqqında</h2><p className="text-sm leading-6 text-muted">{club.description}</p></section> : null}<section className="mb-7"><h2 className="mb-3 font-display text-base font-semibold text-ink">Qiymətlər</h2><ClubPricingDisplay pricing={club.pricing} /></section><section><h2 className="mb-3 font-display text-base font-semibold text-ink">İş saatları</h2>{sortedHours.length > 0 ? <div className="overflow-hidden rounded-xl border border-border bg-surface">{sortedHours.map((hours) => <div key={hours.id} className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 text-sm last:border-b-0"><span className="font-display font-semibold tracking-tight text-ink">{DAY_NAMES_AZ[hours.day_of_week]}</span><span className={hours.is_closed ? 'font-display font-semibold tracking-tight tabular-nums text-muted' : 'font-display font-semibold tracking-tight tabular-nums text-ink'}>{hours.is_closed ? 'Bağlıdır' : formatOpeningHoursLabel(hours.open_time, hours.close_time)}</span></div>)}</div> : <div className="rounded-xl border border-border bg-surface-alt px-4 py-4 text-sm text-muted">İş saatları hələ təsdiqlənməyib.</div>}</section><p className="mt-4 text-xs leading-5 text-muted">Qiymət və iş saatları dəyişə bilər. Getməzdən əvvəl mümkün olduqda klubun rəsmi əlaqə kanalından məlumatı dəqiqləşdirin.</p></div>
+        <aside className="order-first h-fit rounded-xl border border-border bg-surface p-5 lg:order-none"><h2 className="font-display text-base font-semibold text-ink">Əlaqə və ünvan</h2><div className="mt-4 space-y-4 text-sm"><div><p className="text-xs font-medium uppercase tracking-wide text-muted">Ünvan</p><p className="mt-1 leading-5 text-ink">{club.address || 'Ünvan göstərilməyib'}</p></div></div><div className="mt-5 border-t border-border pt-4">{updatedLabel ? <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p> : null}<div className="mt-3 flex flex-col gap-2"><a href={ownerClaimHref} className="inline-flex min-h-10 items-center rounded-md px-2 text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">Bu klub sizindir? Təsdiqlə</a><TrackedClubLink href={correctionHref} eventType="club_correction_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</TrackedClubLink></div></div></aside>
       </div>
     </article>
   );
