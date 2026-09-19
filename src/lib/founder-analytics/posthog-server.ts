@@ -26,6 +26,7 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     retention: { d1: null, d3: null, d7: null, d1CohortUsers: 0, d3CohortUsers: 0, d7CohortUsers: 0, cohortUsers: 0 },
     pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
     returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
+    supplyFunnel: { ownerClaimViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
   };
 }
 
@@ -73,7 +74,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   const toDay = `toDate(toTimeZone(toDateTime('${to}'), '${PRODUCT_TIME_ZONE}'))`;
 
   try {
-    const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows] = await Promise.all([
+    const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows] = await Promise.all([
       queryHogQL(host, projectId, apiKey, `
         SELECT
           if(timestamp >= toDateTime('${from}'), 'current', 'previous') AS period,
@@ -282,6 +283,19 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
       `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          countIf(event = 'submission_form_viewed') AS owner_claim_views,
+          countIf(event = 'submission_form_started') AS owner_claim_starts,
+          countIf(event = 'submission_submit_attempt') AS owner_claim_attempts,
+          countIf(event = 'submission_result' AND properties.result = 'sent') AS owner_claim_sent,
+          countIf(event = 'submission_result' AND properties.result = 'error') AS owner_claim_errors,
+          countIf(event = 'submission_result' AND properties.result = 'rate_limited') AS owner_claim_rate_limited
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
+          AND ${publicScope}
+          AND properties.submission_kind = 'owner_claim'
+      `),
     ]);
 
     const current = overviewRows.find((row) => row.period === 'current') ?? {};
@@ -295,6 +309,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
     const funnel = funnelRows[0] ?? {};
     const cohort = cohortRows[0] ?? {};
     const returnLoop = returnLoopRows[0] ?? {};
+    const supplyFunnel = supplyFunnelRows[0] ?? {};
 
     const campaigns = campaignRows.map(normalizeCampaign);
     const clubs = clubRows.map(normalizeClubPerformance);
@@ -369,6 +384,16 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         installAvailable: numberValue(current.pwa_install_available),
         installed: numberValue(current.pwa_installed),
         standaloneOpened: numberValue(current.pwa_standalone_opened),
+      },
+      supplyFunnel: {
+        ownerClaimViews: numberValue(supplyFunnel.owner_claim_views),
+        ownerClaimStarts: numberValue(supplyFunnel.owner_claim_starts),
+        ownerClaimAttempts: numberValue(supplyFunnel.owner_claim_attempts),
+        ownerClaimSent: numberValue(supplyFunnel.owner_claim_sent),
+        ownerClaimErrors: numberValue(supplyFunnel.owner_claim_errors),
+        ownerClaimRateLimited: numberValue(supplyFunnel.owner_claim_rate_limited),
+        startRate: rate(numberValue(supplyFunnel.owner_claim_starts), numberValue(supplyFunnel.owner_claim_views)),
+        submitRate: rate(numberValue(supplyFunnel.owner_claim_sent), numberValue(supplyFunnel.owner_claim_attempts)),
       },
       returnLoop: {
         updateImpressions: numberValue(returnLoop.update_impressions),
