@@ -70,6 +70,7 @@ test('CEO signals expose provider unavailability instead of fake metrics', () =>
     phoneClicks: zero,
     instagramClicks: zero,
     mapsClicks: zero,
+    newUsers: 0,
     returningUsers: 0,
     returningRate: 0,
     sessionsPerUser: 0,
