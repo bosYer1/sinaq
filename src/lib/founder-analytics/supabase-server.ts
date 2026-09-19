@@ -13,6 +13,7 @@ function emptyMetrics(detail: string): SupabaseMetrics {
   return {
     status: providerStatus('supabase', 'error', detail), activeClubs: 0, verifiedClubs: 0,
     pendingSubmissions: 0, staleSubmissions: 0,
+    submissionBacklogByKind: { ownerClaim: 0, newClub: 0, correction: 0 },
     completeness: { total: 0, missingImage: 0, missingPhone: 0, missingInstagram: 0, missingCoordinates: 0, missingType: 0 },
     qualityBacklog: [],
   };
@@ -65,16 +66,19 @@ function buildQualityBacklog(
 
 export async function getSupabaseMetrics(supabase: SupabaseClient<Database>): Promise<SupabaseMetrics> {
   const staleCutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
-  const [clubsResult, verifiedResult, pendingResult, staleResult, imagesResult, typesResult, evidenceResult] = await Promise.all([
+  const [clubsResult, verifiedResult, pendingResult, staleResult, ownerClaimPendingResult, newClubPendingResult, correctionPendingResult, imagesResult, typesResult, evidenceResult] = await Promise.all([
     supabase.from('clubs').select('id,name,slug,phone,instagram_url,profile_image_url,latitude,longitude').eq('is_active', true),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_verified', true),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']).lt('created_at', staleCutoff),
+    supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']).eq('kind', 'owner_claim'),
+    supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']).eq('kind', 'new_club'),
+    supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']).eq('kind', 'correction'),
     supabase.from('club_images').select('club_id'),
     supabase.from('club_type_assignments').select('club_id'),
     supabase.from('club_data_evidence').select('club_id,checked_at').eq('is_current', true),
   ]);
-  const error = clubsResult.error || verifiedResult.error || pendingResult.error || staleResult.error || imagesResult.error || typesResult.error || evidenceResult.error;
+  const error = clubsResult.error || verifiedResult.error || pendingResult.error || staleResult.error || ownerClaimPendingResult.error || newClubPendingResult.error || correctionPendingResult.error || imagesResult.error || typesResult.error || evidenceResult.error;
   if (error) return emptyMetrics('Supabase əməliyyat datası oxunmadı.');
 
   const clubs = (clubsResult.data ?? []) as ClubQualityRow[];
@@ -87,6 +91,7 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>): Pr
     verifiedClubs: verifiedResult.count ?? 0,
     pendingSubmissions: pendingResult.count ?? 0,
     staleSubmissions: staleResult.count ?? 0,
+    submissionBacklogByKind: { ownerClaim: ownerClaimPendingResult.count ?? 0, newClub: newClubPendingResult.count ?? 0, correction: correctionPendingResult.count ?? 0 },
     completeness: calculateCompleteness(clubs, imageIds, typeIds),
     qualityBacklog: buildQualityBacklog(clubs, imageIds, typeIds, evidenceRows),
   };

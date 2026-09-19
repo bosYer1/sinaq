@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [analytics, explore] = await Promise.all([
+const [analytics, explore, clubMap] = await Promise.all([
   readFile(new URL('../src/components/analytics/PostHogAnalytics.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/explore/ExploreView.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/map/ClubMap.tsx', import.meta.url), 'utf8'),
 ]);
 
 for (const event of [
@@ -30,5 +31,11 @@ for (const uiContract of [
 ]) {
   assert.ok(explore.includes(uiContract), `ExploreView must keep analytics UI contract: ${uiContract}`);
 }
+
+assert.ok(clubMap.includes("isPlainLeftClick") && clubMap.includes("if (isPlainLeftClick) rememberClubEntryOrigin(club.slug)"), 'Map popup must preserve return origin only for same-tab plain-left navigation');
+assert.ok(clubMap.includes("trackPostHogEvent('club_card_click'"), 'Map popup club opens must stay measurable as club-card discovery clicks');
+assert.ok(clubMap.includes("discovery_surface: 'map_popup'"), 'Map popup clicks must preserve their discovery surface');
+assert.ok(clubMap.includes("transport: 'sendBeacon'"), 'Map popup navigation tracking must use unload-safe transport');
+assert.ok(clubMap.includes("map_popup_title") && clubMap.includes("map_popup_details"), 'Both map popup club links must remain instrumented');
 
 console.log('Discovery controls analytics regression: PASS');

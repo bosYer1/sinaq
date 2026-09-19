@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import type { ClubWithDistance } from '@/types/database';
+import { rememberClubEntryOrigin } from '@/components/clubs/BackToClubsLink';
 import type { UserLocation } from '@/hooks/useUserLocation';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { formatDistance } from '@/lib/geo';
@@ -16,6 +17,7 @@ import {
   getMappableCoordinates,
 } from '@/lib/mapViewport';
 import { formatPriceRange, isClubOpenNow, isPremiumActive } from '@/lib/utils';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 interface ClubMapProps {
   clubs: ClubWithDistance[];
@@ -65,8 +67,13 @@ function appendText(parent: HTMLElement, tag: keyof HTMLElementTagNameMap, class
 }
 
 function createPopupContent(club: ClubWithDistance) {
+  const trackClubOpen = (event: MouseEvent, surface: 'map_popup_title' | 'map_popup_details') => {
+    const isPlainLeftClick = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+    if (isPlainLeftClick) rememberClubEntryOrigin(club.slug);
+    trackPostHogEvent('club_card_click', { club_id: club.id, club_slug: club.slug, surface, discovery_surface: 'map_popup' }, { send_instantly: true, transport: 'sendBeacon' });
+  };
   const root = document.createElement('div'); root.className = 'min-w-[210px]';
-  const title = document.createElement('a'); title.href = `/klub/${encodeURIComponent(club.slug)}`; title.className = 'font-display text-sm font-semibold text-ink no-underline hover:text-primary'; title.textContent = club.name; root.appendChild(title);
+  const title = document.createElement('a'); title.href = `/klub/${encodeURIComponent(club.slug)}`; title.className = 'font-display text-sm font-semibold text-ink no-underline hover:text-primary'; title.textContent = club.name; title.addEventListener('click', (event) => trackClubOpen(event, 'map_popup_title')); root.appendChild(title);
   appendText(root, 'div', 'mt-1 text-xs text-muted', club.district?.name ?? 'Rayon göstərilməyib');
   if (club.address) appendText(root, 'div', 'mt-0.5 text-xs text-muted', club.address);
   if (club.distanceKm != null) appendText(root, 'div', 'mt-1 text-xs font-semibold text-primary', `Səndən ${formatDistance(club.distanceKm)}`);
@@ -78,7 +85,7 @@ function createPopupContent(club: ClubWithDistance) {
   appendText(meta, 'span', cheapest ? 'text-xs font-bold text-live' : 'text-xs text-muted', cheapest ? formatPriceRange(cheapest.price_from, cheapest.price_to, cheapest.unit) : 'Qiymət məlum deyil');
   appendText(meta, 'span', !hasHours ? 'text-xs font-medium text-muted' : openNow ? 'text-xs font-semibold text-live' : 'text-xs font-semibold text-red-500', statusLabel); root.appendChild(meta);
   const actions = document.createElement('div'); actions.className = 'mt-3 grid grid-cols-2 gap-2';
-  const detailsLink = document.createElement('a'); detailsLink.href = `/klub/${encodeURIComponent(club.slug)}`; detailsLink.className = 'flex h-9 items-center justify-center rounded-control border border-border bg-surface px-2 text-center text-xs font-semibold text-ink no-underline transition hover:border-primary hover:text-primary'; detailsLink.textContent = 'Kluba bax'; actions.appendChild(detailsLink);
+  const detailsLink = document.createElement('a'); detailsLink.href = `/klub/${encodeURIComponent(club.slug)}`; detailsLink.className = 'flex h-9 items-center justify-center rounded-control border border-border bg-surface px-2 text-center text-xs font-semibold text-ink no-underline transition hover:border-primary hover:text-primary'; detailsLink.textContent = 'Kluba bax'; detailsLink.addEventListener('click', (event) => trackClubOpen(event, 'map_popup_details')); actions.appendChild(detailsLink);
   const routeLink = document.createElement('a'); routeLink.href = `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}`; routeLink.target = '_blank'; routeLink.rel = 'noopener noreferrer'; routeLink.className = 'flex h-9 items-center justify-center rounded-control bg-[#1A73E8] px-2 text-center text-xs font-semibold no-underline transition hover:opacity-90'; routeLink.style.backgroundColor = '#1A73E8'; routeLink.style.color = '#ffffff'; routeLink.textContent = 'Google Maps'; actions.appendChild(routeLink); root.appendChild(actions); return root;
 }
 
