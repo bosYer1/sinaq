@@ -19,13 +19,16 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     pageviews: zero, visitors: zero, sessions: zero, clubViews: zero, clubClicks: zero,
     ctaClicks: zero, searchQueries: zero, filterChanges: zero, exploreViewChanges: zero,
     mapUsage: zero, phoneClicks: zero, instagramClicks: zero, mapsClicks: zero,
-    returningUsers: 0, returningRate: 0, sessionsPerUser: 0, usersWithThreeSessions: 0,
+    newUsers: 0, returningUsers: 0, returningRate: 0, sessionsPerUser: 0, usersWithThreeSessions: 0,
     conversionRate: zero, acquisition: [], campaigns: [], clubs: [], trend: [],
     tracking: { latestEventAt: null, publicEvents: 0, testEvents: 0, missingSessionAttribution: 0, missingCampaignAttribution: 0, noResultSearches: 0, botEvents: 0, sourceMissingSessions: 0, attributionCompleteness: 0 },
-    funnel: { landingSessions: 0, discoverySessions: 0, clubViewSessions: 0, ctaSessions: 0 },
+    funnel: { landingSessions: 0, discoverySessions: 0, clubViewSessions: 0, ctaSessions: 0, profileToLeadRate: 0 },
     retention: { d1: null, d3: null, d7: null, d1CohortUsers: 0, d3CohortUsers: 0, d7CohortUsers: 0, cohortUsers: 0 },
     pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
-    returnLoop: { updateImpressions: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
+    returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
+    supplyFunnel: { ownerClaimViews: 0, newClubViews: 0, correctionViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, newClubSent: 0, correctionSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
+    discoveryQuality: { searchSessions: 0, zeroResultSearchSessions: 0, zeroResultRate: 0, filterSessions: 0, filterAdoptionRate: 0, mapSessions: 0, mapAdoptionRate: 0, clubImpressionSessions: 0, clubClickSessions: 0, clubCtr: 0 },
+    webVitals: { lcpP75: null, lcpSamples: 0, inpP75: null, inpSamples: 0, clsP75: null, clsSamples: 0 },
   };
 }
 
@@ -73,7 +76,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   const toDay = `toDate(toTimeZone(toDateTime('${to}'), '${PRODUCT_TIME_ZONE}'))`;
 
   try {
-    const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows] = await Promise.all([
+    const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows] = await Promise.all([
       queryHogQL(host, projectId, apiKey, `
         SELECT
           if(timestamp >= toDateTime('${from}'), 'current', 'previous') AS period,
@@ -244,10 +247,11 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       queryHogQL(host, projectId, apiKey, `
         SELECT
           countIf(event = 'club_update_impression') AS update_impressions,
+          countIf(event = 'club_update_detail_click') AS update_detail_clicks,
           countIf(event = 'club_update_club_click') AS update_club_clicks,
           countIf(event = 'club_update_source_click') AS update_source_clicks,
-          uniqIf(person_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click')) AS update_users,
-          uniqIf(properties.$session_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions,
+          uniqIf(person_id, event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')) AS update_users,
+          uniqIf(properties.$session_id, event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions,
           uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)
             AND (properties.$session_id, properties.club_id) IN (
               SELECT properties.$session_id, properties.club_id
@@ -268,7 +272,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
                 AND notEmpty(properties.$session_id)
                 AND notEmpty(properties.club_id)
             )) AS downstream_cta_sessions,
-          uniqIf(person_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click')
+          uniqIf(person_id, event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')
             AND person_id IN (
               SELECT person_id
               FROM events
@@ -280,6 +284,44 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
             )) AS returning_update_users
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          countIf(event = 'submission_form_viewed' AND properties.submission_kind = 'owner_claim') AS owner_claim_views,
+          countIf(event = 'submission_form_viewed' AND properties.submission_kind = 'new_club') AS new_club_views,
+          countIf(event = 'submission_form_viewed' AND properties.submission_kind = 'correction') AS correction_views,
+          countIf(event = 'submission_form_started' AND properties.submission_kind = 'owner_claim') AS owner_claim_starts,
+          countIf(event = 'submission_submit_attempt' AND properties.submission_kind = 'owner_claim') AS owner_claim_attempts,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'owner_claim' AND properties.result = 'sent') AS owner_claim_sent,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'new_club' AND properties.result = 'sent') AS new_club_sent,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'correction' AND properties.result = 'sent') AS correction_sent,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'owner_claim' AND properties.result = 'error') AS owner_claim_errors,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'owner_claim' AND properties.result = 'rate_limited') AS owner_claim_rate_limited
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
+          AND ${publicScope}
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          uniqIf(properties.$session_id, event = 'search_query' AND notEmpty(properties.$session_id)) AS search_sessions,
+          uniqIf(properties.$session_id, event = 'search_query' AND properties.no_results = true AND notEmpty(properties.$session_id)) AS zero_result_search_sessions,
+          uniqIf(properties.$session_id, event = 'filter_changed' AND properties.filter_name IN ('district','club_type','price_max') AND notEmpty(properties.$session_id)) AS filter_sessions,
+          uniqIf(properties.$session_id, event IN ('map_location_clicked','location_sort_clicked') AND notEmpty(properties.$session_id)) AS map_sessions,
+          uniqIf(properties.$session_id, event = 'club_impression' AND notEmpty(properties.$session_id)) AS club_impression_sessions,
+          uniqIf(properties.$session_id, event = 'club_card_click' AND notEmpty(properties.$session_id)) AS club_click_sessions
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
+      `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'LCP') AS lcp_p75,
+          countIf(properties.metric_name = 'LCP') AS lcp_samples,
+          quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'INP') AS inp_p75,
+          countIf(properties.metric_name = 'INP') AS inp_samples,
+          quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'CLS') AS cls_p75,
+          countIf(properties.metric_name = 'CLS') AS cls_samples
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} AND event = 'web_vital'
       `),
     ]);
 
@@ -294,6 +336,9 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
     const funnel = funnelRows[0] ?? {};
     const cohort = cohortRows[0] ?? {};
     const returnLoop = returnLoopRows[0] ?? {};
+    const supplyFunnel = supplyFunnelRows[0] ?? {};
+    const discoveryQuality = discoveryQualityRows[0] ?? {};
+    const webVitals = webVitalRows[0] ?? {};
 
     const campaigns = campaignRows.map(normalizeCampaign);
     const clubs = clubRows.map(normalizeClubPerformance);
@@ -329,6 +374,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       searchQueries: metric(numberValue(current.searches), numberValue(previous.searches)),
       filterChanges: metric(numberValue(current.filters), numberValue(previous.filters)),
       exploreViewChanges: metric(numberValue(current.explore_changes), numberValue(previous.explore_changes)),
+      newUsers: Math.max(0, numberValue(retention.users) - numberValue(retention.returning_users)),
       returningUsers: numberValue(retention.returning_users),
       returningRate: rate(numberValue(retention.returning_users), numberValue(retention.users)),
       sessionsPerUser: numberValue(retention.sessions_per_user),
@@ -347,13 +393,14 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         noResultSearches: numberValue(health.no_result_searches),
         botEvents: numberValue(health.bot_events),
         sourceMissingSessions: numberValue(health.source_missing_sessions),
-        attributionCompleteness: rate(publicPageviewSessions - missingSessionAttribution, publicPageviewSessions),
+        attributionCompleteness: rate(publicPageviewSessions - numberValue(health.source_missing_sessions), publicPageviewSessions),
       },
       funnel: {
         landingSessions: numberValue(funnel.landing_sessions),
         discoverySessions: numberValue(funnel.discovery_sessions),
         clubViewSessions: numberValue(funnel.club_view_sessions),
         ctaSessions: numberValue(funnel.cta_sessions),
+        profileToLeadRate: rate(numberValue(funnel.cta_sessions), numberValue(funnel.club_view_sessions)),
       },
       retention: {
         d1: d1CohortUsers > 0 ? rate(numberValue(cohort.d1_users), d1CohortUsers) : null,
@@ -369,8 +416,43 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         installed: numberValue(current.pwa_installed),
         standaloneOpened: numberValue(current.pwa_standalone_opened),
       },
+      webVitals: {
+        lcpP75: numberValue(webVitals.lcp_samples) > 0 ? numberValue(webVitals.lcp_p75) : null,
+        lcpSamples: numberValue(webVitals.lcp_samples),
+        inpP75: numberValue(webVitals.inp_samples) > 0 ? numberValue(webVitals.inp_p75) : null,
+        inpSamples: numberValue(webVitals.inp_samples),
+        clsP75: numberValue(webVitals.cls_samples) > 0 ? numberValue(webVitals.cls_p75) : null,
+        clsSamples: numberValue(webVitals.cls_samples),
+      },
+      discoveryQuality: {
+        searchSessions: numberValue(discoveryQuality.search_sessions),
+        zeroResultSearchSessions: numberValue(discoveryQuality.zero_result_search_sessions),
+        zeroResultRate: rate(numberValue(discoveryQuality.zero_result_search_sessions), numberValue(discoveryQuality.search_sessions)),
+        filterSessions: numberValue(discoveryQuality.filter_sessions),
+        filterAdoptionRate: rate(numberValue(discoveryQuality.filter_sessions), numberValue(funnel.discovery_sessions)),
+        mapSessions: numberValue(discoveryQuality.map_sessions),
+        mapAdoptionRate: rate(numberValue(discoveryQuality.map_sessions), numberValue(funnel.discovery_sessions)),
+        clubImpressionSessions: numberValue(discoveryQuality.club_impression_sessions),
+        clubClickSessions: numberValue(discoveryQuality.club_click_sessions),
+        clubCtr: rate(numberValue(discoveryQuality.club_click_sessions), numberValue(discoveryQuality.club_impression_sessions)),
+      },
+      supplyFunnel: {
+        ownerClaimViews: numberValue(supplyFunnel.owner_claim_views),
+        newClubViews: numberValue(supplyFunnel.new_club_views),
+        correctionViews: numberValue(supplyFunnel.correction_views),
+        ownerClaimStarts: numberValue(supplyFunnel.owner_claim_starts),
+        ownerClaimAttempts: numberValue(supplyFunnel.owner_claim_attempts),
+        ownerClaimSent: numberValue(supplyFunnel.owner_claim_sent),
+        newClubSent: numberValue(supplyFunnel.new_club_sent),
+        correctionSent: numberValue(supplyFunnel.correction_sent),
+        ownerClaimErrors: numberValue(supplyFunnel.owner_claim_errors),
+        ownerClaimRateLimited: numberValue(supplyFunnel.owner_claim_rate_limited),
+        startRate: rate(numberValue(supplyFunnel.owner_claim_starts), numberValue(supplyFunnel.owner_claim_views)),
+        submitRate: rate(numberValue(supplyFunnel.owner_claim_sent), numberValue(supplyFunnel.owner_claim_attempts)),
+      },
       returnLoop: {
         updateImpressions: numberValue(returnLoop.update_impressions),
+        updateDetailClicks: numberValue(returnLoop.update_detail_clicks),
         updateClubClicks: numberValue(returnLoop.update_club_clicks),
         updateSourceClicks: numberValue(returnLoop.update_source_clicks),
         updateUsers,
