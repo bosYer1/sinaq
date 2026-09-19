@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [card, link, detail, clubView, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest] = await Promise.all([
+const [card, link, detail, clubView, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest, ownerPage] = await Promise.all([
   readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedClubLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
@@ -17,6 +17,7 @@ const [card, link, detail, clubView, pageview, errorPage, notFound, posthog, eve
   readFile(new URL('../src/lib/supabase/analytics-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/migrations/20260831183000_server_only_analytics_writes.sql', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/functions/gameyer-analytics-ingest/index.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/klub-sahibi/page.tsx', import.meta.url), 'utf8'),
 ]);
 
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(card.includes(token), `ClubCard must keep ${token}`);
@@ -36,6 +37,11 @@ assert.ok(link.includes("closest('aside')"), 'Maps CTA attribution must distingu
 assert.ok(link.includes("'inline-flex min-h-11 items-center rounded-md px-2'"), 'Phone and Instagram links must preserve a 44px minimum tap target');
 assert.ok(link.includes('focus-visible:ring-2') && link.includes('focus-visible:ring-offset-2'), 'Tracked club links must preserve visible keyboard focus treatment');
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(detail.includes(`eventType=\"${event}\"`), `ClubDetail must keep ${event} conversion wiring`);
+assert.ok(detail.includes('const ownerClaimHref = `/klub-sahibi?${clubContext}`'), 'Club detail must preserve the context-carrying owner-claim destination');
+assert.ok(detail.includes('href={ownerClaimHref}') && detail.includes('Bu klub sizindir? Təsdiqlə'), 'Club detail must expose the owner-claim fast-path CTA');
+assert.ok(ownerPage.includes("kind=\"owner_claim\""), 'Owner fast path must keep the owner_claim submission kind');
+assert.ok(ownerPage.includes('clubName={selectedClub}') && ownerPage.includes('clubSlug={selectedSlug}'), 'Owner fast path must preserve selected club context in the submission');
+assert.ok(ownerPage.includes('{selectedClub ? ownerForm : null}') && ownerPage.includes('{selectedClub ? null : ownerForm}'), 'Linked owner visits must prioritize the form while generic visits keep the explanatory-first flow');
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(eventRoute.includes(`'${event}'`), `Analytics API must accept ${event}`);
 for (const event of ['phone_click', 'instagram_click', 'maps_click', 'club_correction_click']) assert.ok(correctionAnalyticsMigration.includes(`'${event}'`), `Analytics DB migration must accept ${event}`);
 assert.ok(correctionAnalyticsMigration.includes('analytics_events_type_valid'), 'Analytics DB event CHECK constraint must stay aligned');
@@ -46,7 +52,6 @@ assert.ok(correctionAnalyticsMigration.includes('session_count >= 30') && correc
 assert.equal((detail.match(/eventType=\"phone_click\"/g) ?? []).length, 1, 'ClubDetail must expose one phone CTA surface');
 assert.equal((detail.match(/eventType=\"instagram_click\"/g) ?? []).length, 1, 'ClubDetail must expose one Instagram CTA surface');
 assert.equal((detail.match(/eventType=\"maps_click\"/g) ?? []).length, 1, 'ClubDetail must expose one route CTA surface');
-assert.ok(!detail.includes('Bu klubun sahibisiniz?'), 'Premature club-owner claim CTA must remain hidden until the owner flow is ready');
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
 assert.ok(errorPage.includes('runtime_error'), 'runtime_error observability must stay wired');
 assert.ok(notFound.includes('not_found'), 'not_found observability must stay wired');
@@ -100,7 +105,7 @@ assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, visi
 assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, path, event_type, club_slug)'), 'Server-only migration must revoke public analytics-event insert columns');
 assert.ok(serverOnlyAnalyticsMigration.includes('FROM anon, authenticated'), 'Server-only migration must revoke both public PostgREST roles');
 
-const combined = [card, link, detail, clubView, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest].join('\n');
+const combined = [card, link, detail, clubView, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest, ownerPage].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
 console.log('Analytics parity regression contract: PASS');
