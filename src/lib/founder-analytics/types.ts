@@ -96,9 +96,13 @@ export type ReturnLoopMetrics = {
 
 export type SupplyFunnelMetrics = {
   ownerClaimViews: number;
+  newClubViews: number;
+  correctionViews: number;
   ownerClaimStarts: number;
   ownerClaimAttempts: number;
   ownerClaimSent: number;
+  newClubSent: number;
+  correctionSent: number;
   ownerClaimErrors: number;
   ownerClaimRateLimited: number;
   startRate: number;
