@@ -161,7 +161,7 @@ export type PostHogMetrics = {
   pwa: PwaMetrics;
   returnLoop: ReturnLoopMetrics;
   supplyFunnel: SupplyFunnelMetrics;
-  discoveryQuality: { searchSessions: number; zeroResultSearchSessions: number; zeroResultRate: number; clubImpressionSessions: number; clubClickSessions: number; clubCtr: number };
+  discoveryQuality: { searchSessions: number; zeroResultSearchSessions: number; zeroResultRate: number; filterSessions: number; filterAdoptionRate: number; mapSessions: number; mapAdoptionRate: number; clubImpressionSessions: number; clubClickSessions: number; clubCtr: number };
 };
 
 export type Ga4Metrics = {
