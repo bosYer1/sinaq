@@ -319,11 +319,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'INP') AS inp_p75,
           countIf(properties.metric_name = 'INP') AS inp_samples,
           quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'CLS') AS cls_p75,
-          countIf(properties.metric_name = 'CLS') AS cls_samples,
-          quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'LCP' AND properties.path = '/') AS mobile_home_lcp_p75,
-          countIf(properties.metric_name = 'LCP' AND properties.path = '/' AND properties.device_type = 'mobile') AS mobile_home_lcp_samples,
-          quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'INP' AND properties.path = '/' AND properties.device_type = 'mobile') AS mobile_home_inp_p75,
-          countIf(properties.metric_name = 'INP' AND properties.path = '/' AND properties.device_type = 'mobile') AS mobile_home_inp_samples
+          countIf(properties.metric_name = 'CLS') AS cls_samples
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} AND event = 'web_vital'
       `),
