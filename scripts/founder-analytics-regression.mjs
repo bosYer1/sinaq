@@ -64,6 +64,10 @@ assert.match(posthog, /event = 'club_update_detail_click'/, 'Return-loop homepag
 assert.ok(types.includes('updateDetailClicks: number;'), 'Return-loop metric contract must expose homepage-to-updates detail clicks.');
 assert.ok(posthog.includes('updateDetailClicks: numberValue(returnLoop.update_detail_clicks)'), 'PostHog return-loop result must map homepage detail clicks.');
 assert.ok(extended.includes('returnLoop.updateDetailClicks'), 'Founder Analytics must surface homepage-to-updates engagement.');
+assert.ok(types.includes('supplyFunnel: SupplyFunnelMetrics;'), 'Founder Analytics contract must include the owner-claim supply funnel.');
+assert.ok(posthog.includes("properties.submission_kind = 'owner_claim'"), 'Owner-claim funnel query must remain scoped to owner claims.');
+for (const eventName of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) assert.ok(posthog.includes(eventName), `Owner-claim funnel must measure ${eventName}.`);
+assert.ok(extended.includes('posthog.supplyFunnel') && extended.includes('Klub sahibi funnel'), 'Founder Analytics must surface the owner-claim supply funnel.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')) AS update_users"), 'Return-loop users must include homepage-to-updates detail clickers.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions"), 'Return-loop sessions must include homepage-to-updates detail click sessions.');
 assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club transitions must be measured from the dedicated update event.');
