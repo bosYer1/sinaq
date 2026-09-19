@@ -114,3 +114,5 @@ console.log('founder analytics security, provider, and metric semantics regressi
 assert.ok(types.includes('submissionBacklogByKind:'), 'Supabase metrics must expose open submission backlog by business kind.');
 for (const kind of ['owner_claim', 'new_club', 'correction']) assert.ok(supabase.includes(`.eq('kind', '${kind}')`), `Operational backlog must count ${kind} independently.`);
 assert.ok(page.includes('submissionBacklogByKind.ownerClaim') && page.includes('submissionBacklogByKind.newClub') && page.includes('submissionBacklogByKind.correction'), 'Founder dashboard must surface the open supply backlog mix.');
+
+assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0') && calculations.includes('Klub sahibi müraciəti gözləyir'), 'CEO signals must elevate open owner claims as an operational supply priority.');
