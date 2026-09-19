@@ -12,7 +12,7 @@ import { cn, DAY_NAMES_AZ, formatOpeningHoursLabel, isClubOpenNow, isPremiumActi
 
 const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', year: 'numeric', month: 'long', day: 'numeric' });
 
-export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations; tiktokUrl?: string | null }) {
+export function ClubDetail({ club }: { club: ClubWithRelations }) {
   const hasHours = club.opening_hours.length > 0;
   const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
   const premiumActive = isPremiumActive(club);
@@ -29,8 +29,8 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
   const googleMapsUrl = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}` : null;
   const clubContext = `club=${encodeURIComponent(club.name)}&slug=${encodeURIComponent(club.slug)}`;
   const correctionHref = `/elaqe?${clubContext}`;
-  const socialHref = tiktokUrl || club.instagram_url;
-  const socialKind = tiktokUrl ? 'tiktok' : socialHref ? 'instagram' : null;
+  const socialHref = club.tiktok_url || club.instagram_url;
+  const socialKind = club.tiktok_url ? 'tiktok' : socialHref ? 'instagram' : null;
 
   return (
     <article className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
@@ -75,10 +75,10 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
           </div>
         </div>
 
-        {(primaryPhone || club.instagram_url || googleMapsUrl) ? (
+        {(primaryPhone || socialHref || googleMapsUrl) ? (
           <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {primaryPhone ? <TrackedClubLink href={`tel:${primaryPhone.replace(/[^+\d]/g, '')}`} eventType="phone_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="inline-flex h-12 items-center justify-center rounded-control bg-primary px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Zəng et</TrackedClubLink> : <div />}
-            {club.instagram_url ? <TrackedClubLink href={club.instagram_url} eventType="instagram_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-[#E1306C] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Instagram</TrackedClubLink> : <div />}
+            {socialHref ? (socialKind === 'tiktok' ? <TrackedTikTokLink href={socialHref} clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-black px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">TikTok</TrackedTikTokLink> : <TrackedClubLink href={socialHref} eventType="instagram_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-[#E1306C] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Instagram</TrackedClubLink>) : <div />}
             {googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-12 items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut</TrackedClubLink> : <div />}
           </div>
         ) : null}
