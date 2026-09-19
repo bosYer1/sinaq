@@ -166,6 +166,8 @@ export type PostHogMetrics = {
   returnLoop: ReturnLoopMetrics;
   supplyFunnel: SupplyFunnelMetrics;
   discoveryQuality: { searchSessions: number; zeroResultSearchSessions: number; zeroResultRate: number; filterSessions: number; filterAdoptionRate: number; mapSessions: number; mapAdoptionRate: number; clubImpressionSessions: number; clubClickSessions: number; clubCtr: number };
+  webVitals: { lcpP75: number | null; lcpSamples: number; inpP75: number | null; inpSamples: number; clsP75: number | null; clsSamples: number; mobileHomeLcpP75: number | null; mobileHomeLcpSamples: number; mobileHomeInpP75: number | null; mobileHomeInpSamples: number };
+};
 };
 
 export type Ga4Metrics = {
