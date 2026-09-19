@@ -65,9 +65,11 @@ assert.ok(types.includes('updateDetailClicks: number;'), 'Return-loop metric con
 assert.ok(posthog.includes('updateDetailClicks: numberValue(returnLoop.update_detail_clicks)'), 'PostHog return-loop result must map homepage detail clicks.');
 assert.ok(extended.includes('returnLoop.updateDetailClicks'), 'Founder Analytics must surface homepage-to-updates engagement.');
 assert.ok(types.includes('supplyFunnel: SupplyFunnelMetrics;'), 'Founder Analytics contract must include the owner-claim supply funnel.');
-assert.ok(posthog.includes("properties.submission_kind = 'owner_claim'"), 'Owner-claim funnel query must remain scoped to owner claims.');
+assert.ok(posthog.includes("properties.submission_kind = 'owner_claim'") && posthog.includes("properties.submission_kind = 'new_club'") && posthog.includes("properties.submission_kind = 'correction'"), 'Supply funnel must preserve submission-kind boundaries.');
 for (const eventName of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) assert.ok(posthog.includes(eventName), `Owner-claim funnel must measure ${eventName}.`);
 assert.ok(extended.includes('posthog.supplyFunnel') && extended.includes('Klub sahibi funnel'), 'Founder Analytics must surface the owner-claim supply funnel.');
+assert.ok(posthog.includes('newClubSent: numberValue(supplyFunnel.new_club_sent)') && posthog.includes('correctionSent: numberValue(supplyFunnel.correction_sent)'), 'Supply metrics must map new-club and correction sent signals.');
+assert.ok(extended.includes('supplyFunnel.newClubSent') && extended.includes('supplyFunnel.correctionSent'), 'Founder Analytics must surface new-club and correction signals.');
 assert.ok(types.includes('discoveryQuality:'), 'Founder Analytics contract must include discovery quality metrics.');
 assert.ok(posthog.includes("event = 'search_query' AND properties.no_results = true"), 'Discovery quality must measure zero-result search sessions.');
 assert.ok(posthog.includes("event = 'club_impression'") && posthog.includes("event = 'club_card_click'"), 'Discovery quality must measure visible-card and click sessions.');
