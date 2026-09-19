@@ -28,6 +28,7 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
   const googleMapsUrl = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}` : null;
   const clubContext = `club=${encodeURIComponent(club.name)}&slug=${encodeURIComponent(club.slug)}`;
   const correctionHref = `/elaqe?${clubContext}`;
+  const ownerClaimHref = `/klub-sahibi?${clubContext}`;
 
   return (
     <article className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
@@ -102,7 +103,10 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
           </div>
           <div className="mt-5 border-t border-border pt-4">
             {updatedLabel ? <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p> : null}
-            <div className="mt-3 flex flex-col gap-2"><TrackedClubLink href={correctionHref} eventType="club_correction_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</TrackedClubLink></div>
+            <div className="mt-3 flex flex-col gap-2">
+              <a href={ownerClaimHref} className="inline-flex min-h-10 items-center rounded-md px-2 text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">Bu klub sizindir? Təsdiqlə</a>
+              <TrackedClubLink href={correctionHref} eventType="club_correction_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</TrackedClubLink>
+            </div>
           </div>
         </aside>
       </div>
