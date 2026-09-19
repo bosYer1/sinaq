@@ -135,7 +135,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                 </div>
                 <Link href="/yenilikler" className="shrink-0 rounded-control border border-primary/25 bg-surface px-4 py-2 text-xs font-semibold text-primary no-underline transition hover:border-primary">Hamısına bax →</Link>
               </div>
-              <ClubUpdatesFeed updates={activeUpdates.slice(0, 3)} context="discovery" />
+              <ClubUpdatesFeed updates={activeUpdates} context="discovery" />
             </section>
           ) : null}
         </div>
