@@ -10,6 +10,7 @@ const ga4 = await readFile(new URL('../src/lib/founder-analytics/ga4-server.ts',
 const gsc = await readFile(new URL('../src/lib/founder-analytics/gsc-server.ts', import.meta.url), 'utf8');
 const dashboard = await readFile(new URL('../src/lib/founder-analytics/dashboard.ts', import.meta.url), 'utf8');
 const calculations = await readFile(new URL('../src/lib/founder-analytics/calculations.ts', import.meta.url), 'utf8');
+const types = await readFile(new URL('../src/lib/founder-analytics/types.ts', import.meta.url), 'utf8');
 
 assert.match(page, /await requireAdmin\(\)/, 'Founder analytics must enforce admin and MFA authorization in the page.');
 assert.match(posthog, /^import 'server-only';/m, 'PostHog private API adapter must remain server-only.');
