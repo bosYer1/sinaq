@@ -27,6 +27,7 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
     returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
     supplyFunnel: { ownerClaimViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
+    discoveryQuality: { searchSessions: 0, zeroResultSearchSessions: 0, zeroResultRate: 0, clubImpressionSessions: 0, clubClickSessions: 0, clubCtr: 0 },
   };
 }
 
@@ -74,7 +75,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   const toDay = `toDate(toTimeZone(toDateTime('${to}'), '${PRODUCT_TIME_ZONE}'))`;
 
   try {
-    const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows] = await Promise.all([
+    const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows] = await Promise.all([
       queryHogQL(host, projectId, apiKey, `
         SELECT
           if(timestamp >= toDateTime('${from}'), 'current', 'previous') AS period,
@@ -296,6 +297,15 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           AND ${publicScope}
           AND properties.submission_kind = 'owner_claim'
       `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          uniqIf(properties.$session_id, event = 'search_query' AND notEmpty(properties.$session_id)) AS search_sessions,
+          uniqIf(properties.$session_id, event = 'search_query' AND properties.no_results = true AND notEmpty(properties.$session_id)) AS zero_result_search_sessions,
+          uniqIf(properties.$session_id, event = 'club_impression' AND notEmpty(properties.$session_id)) AS club_impression_sessions,
+          uniqIf(properties.$session_id, event = 'club_card_click' AND notEmpty(properties.$session_id)) AS club_click_sessions
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
+      `),
     ]);
 
     const current = overviewRows.find((row) => row.period === 'current') ?? {};
@@ -310,6 +320,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
     const cohort = cohortRows[0] ?? {};
     const returnLoop = returnLoopRows[0] ?? {};
     const supplyFunnel = supplyFunnelRows[0] ?? {};
+    const discoveryQuality = discoveryQualityRows[0] ?? {};
 
     const campaigns = campaignRows.map(normalizeCampaign);
     const clubs = clubRows.map(normalizeClubPerformance);
@@ -384,6 +395,14 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         installAvailable: numberValue(current.pwa_install_available),
         installed: numberValue(current.pwa_installed),
         standaloneOpened: numberValue(current.pwa_standalone_opened),
+      },
+      discoveryQuality: {
+        searchSessions: numberValue(discoveryQuality.search_sessions),
+        zeroResultSearchSessions: numberValue(discoveryQuality.zero_result_search_sessions),
+        zeroResultRate: rate(numberValue(discoveryQuality.zero_result_search_sessions), numberValue(discoveryQuality.search_sessions)),
+        clubImpressionSessions: numberValue(discoveryQuality.club_impression_sessions),
+        clubClickSessions: numberValue(discoveryQuality.club_click_sessions),
+        clubCtr: rate(numberValue(discoveryQuality.club_click_sessions), numberValue(discoveryQuality.club_impression_sessions)),
       },
       supplyFunnel: {
         ownerClaimViews: numberValue(supplyFunnel.owner_claim_views),
