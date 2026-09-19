@@ -244,10 +244,11 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       queryHogQL(host, projectId, apiKey, `
         SELECT
           countIf(event = 'club_update_impression') AS update_impressions,
+          countIf(event = 'club_update_detail_click') AS update_detail_clicks,
           countIf(event = 'club_update_club_click') AS update_club_clicks,
           countIf(event = 'club_update_source_click') AS update_source_clicks,
-          uniqIf(person_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click')) AS update_users,
-          uniqIf(properties.$session_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions,
+          uniqIf(person_id, event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')) AS update_users,
+          uniqIf(properties.$session_id, event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions,
           uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)
             AND (properties.$session_id, properties.club_id) IN (
               SELECT properties.$session_id, properties.club_id
@@ -268,7 +269,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
                 AND notEmpty(properties.$session_id)
                 AND notEmpty(properties.club_id)
             )) AS downstream_cta_sessions,
-          uniqIf(person_id, event IN ('club_update_impression','club_update_club_click','club_update_source_click')
+          uniqIf(person_id, event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')
             AND person_id IN (
               SELECT person_id
               FROM events
