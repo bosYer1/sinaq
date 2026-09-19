@@ -140,6 +140,7 @@ export type PostHogMetrics = {
   phoneClicks: Metric;
   instagramClicks: Metric;
   mapsClicks: Metric;
+  newUsers: number;
   returningUsers: number;
   returningRate: number;
   sessionsPerUser: number;
