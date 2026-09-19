@@ -60,6 +60,12 @@ export function buildCeoSignals(posthog: PostHogMetrics, supabase: SupabaseMetri
     if (supabase.submissionBacklogByKind.ownerClaim > 0) {
       signals.push({ severity: 'attention', title: 'Klub sahibi müraciəti gözləyir', detail: `${supabase.submissionBacklogByKind.ownerClaim} açıq owner claim növbədədir.`, action: 'Owner claim-ləri supply və monetizasiya prioriteti kimi nəzərdən keçir.' });
     }
+    if (supabase.submissionBacklogByKind.newClub > 0) {
+      signals.push({ severity: 'attention', title: 'Yeni klub təklifləri növbədədir', detail: `${supabase.submissionBacklogByKind.newClub} açıq yeni-klub təklifi yoxlama gözləyir.`, action: 'Təklifləri verifikasiya et; yalnız təsdiqlənmiş real klubu kataloqa qəbul et.' });
+    }
+    if (supabase.submissionBacklogByKind.correction > 0) {
+      signals.push({ severity: 'attention', title: 'Klub data düzəlişləri növbədədir', detail: `${supabase.submissionBacklogByKind.correction} açıq düzəliş müraciəti var.`, action: 'Mövcud klub datası ilə tutuşdur və sübutlanan düzəlişləri prioritetləşdir.' });
+    }
   }
 
   if (signals.length === 0) {
