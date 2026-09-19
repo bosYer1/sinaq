@@ -25,7 +25,7 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     funnel: { landingSessions: 0, discoverySessions: 0, clubViewSessions: 0, ctaSessions: 0 },
     retention: { d1: null, d3: null, d7: null, d1CohortUsers: 0, d3CohortUsers: 0, d7CohortUsers: 0, cohortUsers: 0 },
     pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
-    returnLoop: { updateImpressions: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
+    returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
   };
 }
 
@@ -372,6 +372,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       },
       returnLoop: {
         updateImpressions: numberValue(returnLoop.update_impressions),
+        updateDetailClicks: numberValue(returnLoop.update_detail_clicks),
         updateClubClicks: numberValue(returnLoop.update_club_clicks),
         updateSourceClicks: numberValue(returnLoop.update_source_clicks),
         updateUsers,
