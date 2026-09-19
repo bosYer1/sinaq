@@ -57,6 +57,9 @@ export function buildCeoSignals(posthog: PostHogMetrics, supabase: SupabaseMetri
     if (supabase.staleSubmissions > 0) {
       signals.push({ severity: 'critical', title: 'Gecikmiş müraciətlər var', detail: `${supabase.staleSubmissions} müraciət 72 saatdan çoxdur gözləyir.`, action: 'Müraciət növbəsini bu gün təmizlə.' });
     }
+    if (supabase.submissionBacklogByKind.ownerClaim > 0) {
+      signals.push({ severity: 'attention', title: 'Klub sahibi müraciəti gözləyir', detail: `${supabase.submissionBacklogByKind.ownerClaim} açıq owner claim növbədədir.`, action: 'Owner claim-ləri supply və monetizasiya prioriteti kimi nəzərdən keçir.' });
+    }
   }
 
   if (signals.length === 0) {
