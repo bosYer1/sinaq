@@ -11,6 +11,7 @@ const gsc = await readFile(new URL('../src/lib/founder-analytics/gsc-server.ts',
 const dashboard = await readFile(new URL('../src/lib/founder-analytics/dashboard.ts', import.meta.url), 'utf8');
 const calculations = await readFile(new URL('../src/lib/founder-analytics/calculations.ts', import.meta.url), 'utf8');
 const types = await readFile(new URL('../src/lib/founder-analytics/types.ts', import.meta.url), 'utf8');
+const supabase = await readFile(new URL('../src/lib/founder-analytics/supabase-server.ts', import.meta.url), 'utf8');
 
 assert.match(page, /await requireAdmin\(\)/, 'Founder analytics must enforce admin and MFA authorization in the page.');
 assert.match(posthog, /^import 'server-only';/m, 'PostHog private API adapter must remain server-only.');
@@ -109,3 +110,7 @@ assert.match(calculations, /posthog\.tracking\.attributionCompleteness < 90/, 'C
 assert.doesNotMatch(calculations, /İki və daha çox sessiyası olan istifadəçilərin payı/, 'CEO returning signal must not equate repeat same-period sessions with returning users.');
 
 console.log('founder analytics security, provider, and metric semantics regression: PASS');
+
+assert.ok(types.includes('submissionBacklogByKind:'), 'Supabase metrics must expose open submission backlog by business kind.');
+for (const kind of ['owner_claim', 'new_club', 'correction']) assert.ok(supabase.includes(`.eq('kind', '${kind}')`), `Operational backlog must count ${kind} independently.`);
+assert.ok(page.includes('submissionBacklogByKind.ownerClaim') && page.includes('submissionBacklogByKind.newClub') && page.includes('submissionBacklogByKind.correction'), 'Founder dashboard must surface the open supply backlog mix.');
