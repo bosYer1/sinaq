@@ -28,6 +28,7 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
     supplyFunnel: { ownerClaimViews: 0, newClubViews: 0, correctionViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, newClubSent: 0, correctionSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
     discoveryQuality: { searchSessions: 0, zeroResultSearchSessions: 0, zeroResultRate: 0, filterSessions: 0, filterAdoptionRate: 0, mapSessions: 0, mapAdoptionRate: 0, clubImpressionSessions: 0, clubClickSessions: 0, clubCtr: 0 },
+    webVitals: { lcpP75: null, lcpSamples: 0, inpP75: null, inpSamples: 0, clsP75: null, clsSamples: 0, mobileHomeLcpP75: null, mobileHomeLcpSamples: 0, mobileHomeInpP75: null, mobileHomeInpSamples: 0 },
   };
 }
 
@@ -75,7 +76,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   const toDay = `toDate(toTimeZone(toDateTime('${to}'), '${PRODUCT_TIME_ZONE}'))`;
 
   try {
-    const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows] = await Promise.all([
+    const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows] = await Promise.all([
       queryHogQL(host, projectId, apiKey, `
         SELECT
           if(timestamp >= toDateTime('${from}'), 'current', 'previous') AS period,
@@ -311,6 +312,21 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
       `),
+      queryHogQL(host, projectId, apiKey, `
+        SELECT
+          quantileIf(0.75)(toFloat64OrZero(toString(properties.value)), properties.name = 'LCP') AS lcp_p75,
+          countIf(properties.name = 'LCP') AS lcp_samples,
+          quantileIf(0.75)(toFloat64OrZero(toString(properties.value)), properties.name = 'INP') AS inp_p75,
+          countIf(properties.name = 'INP') AS inp_samples,
+          quantileIf(0.75)(toFloat64OrZero(toString(properties.value)), properties.name = 'CLS') AS cls_p75,
+          countIf(properties.name = 'CLS') AS cls_samples,
+          quantileIf(0.75)(toFloat64OrZero(toString(properties.value)), properties.name = 'LCP' AND properties.path = '/' AND properties.device_type = 'mobile') AS mobile_home_lcp_p75,
+          countIf(properties.name = 'LCP' AND properties.path = '/' AND properties.device_type = 'mobile') AS mobile_home_lcp_samples,
+          quantileIf(0.75)(toFloat64OrZero(toString(properties.value)), properties.name = 'INP' AND properties.path = '/' AND properties.device_type = 'mobile') AS mobile_home_inp_p75,
+          countIf(properties.name = 'INP' AND properties.path = '/' AND properties.device_type = 'mobile') AS mobile_home_inp_samples
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} AND event = 'web_vital'
+      `),
     ]);
 
     const current = overviewRows.find((row) => row.period === 'current') ?? {};
@@ -326,6 +342,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
     const returnLoop = returnLoopRows[0] ?? {};
     const supplyFunnel = supplyFunnelRows[0] ?? {};
     const discoveryQuality = discoveryQualityRows[0] ?? {};
+    const webVitals = webVitalRows[0] ?? {};
 
     const campaigns = campaignRows.map(normalizeCampaign);
     const clubs = clubRows.map(normalizeClubPerformance);
@@ -400,6 +417,18 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         installAvailable: numberValue(current.pwa_install_available),
         installed: numberValue(current.pwa_installed),
         standaloneOpened: numberValue(current.pwa_standalone_opened),
+      },
+      webVitals: {
+        lcpP75: numberValue(webVitals.lcp_samples) > 0 ? numberValue(webVitals.lcp_p75) : null,
+        lcpSamples: numberValue(webVitals.lcp_samples),
+        inpP75: numberValue(webVitals.inp_samples) > 0 ? numberValue(webVitals.inp_p75) : null,
+        inpSamples: numberValue(webVitals.inp_samples),
+        clsP75: numberValue(webVitals.cls_samples) > 0 ? numberValue(webVitals.cls_p75) : null,
+        clsSamples: numberValue(webVitals.cls_samples),
+        mobileHomeLcpP75: numberValue(webVitals.mobile_home_lcp_samples) > 0 ? numberValue(webVitals.mobile_home_lcp_p75) : null,
+        mobileHomeLcpSamples: numberValue(webVitals.mobile_home_lcp_samples),
+        mobileHomeInpP75: numberValue(webVitals.mobile_home_inp_samples) > 0 ? numberValue(webVitals.mobile_home_inp_p75) : null,
+        mobileHomeInpSamples: numberValue(webVitals.mobile_home_inp_samples),
       },
       discoveryQuality: {
         searchSessions: numberValue(discoveryQuality.search_sessions),
