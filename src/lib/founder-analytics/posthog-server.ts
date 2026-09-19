@@ -26,7 +26,7 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     retention: { d1: null, d3: null, d7: null, d1CohortUsers: 0, d3CohortUsers: 0, d7CohortUsers: 0, cohortUsers: 0 },
     pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
     returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
-    supplyFunnel: { ownerClaimViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
+    supplyFunnel: { ownerClaimViews: 0, newClubViews: 0, correctionViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, newClubSent: 0, correctionSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
     discoveryQuality: { searchSessions: 0, zeroResultSearchSessions: 0, zeroResultRate: 0, filterSessions: 0, filterAdoptionRate: 0, mapSessions: 0, mapAdoptionRate: 0, clubImpressionSessions: 0, clubClickSessions: 0, clubCtr: 0 },
   };
 }
@@ -286,16 +286,19 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       `),
       queryHogQL(host, projectId, apiKey, `
         SELECT
-          countIf(event = 'submission_form_viewed') AS owner_claim_views,
-          countIf(event = 'submission_form_started') AS owner_claim_starts,
-          countIf(event = 'submission_submit_attempt') AS owner_claim_attempts,
-          countIf(event = 'submission_result' AND properties.result = 'sent') AS owner_claim_sent,
-          countIf(event = 'submission_result' AND properties.result = 'error') AS owner_claim_errors,
-          countIf(event = 'submission_result' AND properties.result = 'rate_limited') AS owner_claim_rate_limited
+          countIf(event = 'submission_form_viewed' AND properties.submission_kind = 'owner_claim') AS owner_claim_views,
+          countIf(event = 'submission_form_viewed' AND properties.submission_kind = 'new_club') AS new_club_views,
+          countIf(event = 'submission_form_viewed' AND properties.submission_kind = 'correction') AS correction_views,
+          countIf(event = 'submission_form_started' AND properties.submission_kind = 'owner_claim') AS owner_claim_starts,
+          countIf(event = 'submission_submit_attempt' AND properties.submission_kind = 'owner_claim') AS owner_claim_attempts,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'owner_claim' AND properties.result = 'sent') AS owner_claim_sent,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'new_club' AND properties.result = 'sent') AS new_club_sent,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'correction' AND properties.result = 'sent') AS correction_sent,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'owner_claim' AND properties.result = 'error') AS owner_claim_errors,
+          countIf(event = 'submission_result' AND properties.submission_kind = 'owner_claim' AND properties.result = 'rate_limited') AS owner_claim_rate_limited
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
           AND ${publicScope}
-          AND properties.submission_kind = 'owner_claim'
       `),
       queryHogQL(host, projectId, apiKey, `
         SELECT
@@ -412,9 +415,13 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       },
       supplyFunnel: {
         ownerClaimViews: numberValue(supplyFunnel.owner_claim_views),
+        newClubViews: numberValue(supplyFunnel.new_club_views),
+        correctionViews: numberValue(supplyFunnel.correction_views),
         ownerClaimStarts: numberValue(supplyFunnel.owner_claim_starts),
         ownerClaimAttempts: numberValue(supplyFunnel.owner_claim_attempts),
         ownerClaimSent: numberValue(supplyFunnel.owner_claim_sent),
+        newClubSent: numberValue(supplyFunnel.new_club_sent),
+        correctionSent: numberValue(supplyFunnel.correction_sent),
         ownerClaimErrors: numberValue(supplyFunnel.owner_claim_errors),
         ownerClaimRateLimited: numberValue(supplyFunnel.owner_claim_rate_limited),
         startRate: rate(numberValue(supplyFunnel.owner_claim_starts), numberValue(supplyFunnel.owner_claim_views)),
