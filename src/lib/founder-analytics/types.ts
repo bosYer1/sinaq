@@ -81,6 +81,7 @@ export type TrendPoint = { date: string; pageviews: number; visitors: number; ct
 
 export type ReturnLoopMetrics = {
   updateImpressions: number;
+  updateDetailClicks: number;
   updateClubClicks: number;
   updateSourceClicks: number;
   updateUsers: number;
