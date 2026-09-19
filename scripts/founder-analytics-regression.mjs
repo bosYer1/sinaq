@@ -83,6 +83,8 @@ assert.ok(posthog.includes("quantileIf(0.75)") && posthog.includes("event = 'web
 for (const metricName of ['LCP', 'INP', 'CLS']) assert.ok(posthog.includes(`properties.metric_name = '${metricName}'`), `Web-vital query must include ${metricName}.`);
 assert.ok(extended.includes('posthog.webVitals') && extended.includes('Real user performance'), 'Founder Analytics must surface real-user performance.');
 assert.ok(extended.includes('webVitals.lcpSamples') && extended.includes('webVitals.inpSamples') && extended.includes('webVitals.clsSamples'), 'Performance p75 must show sample counts.');
+assert.ok(posthog.includes('profileToLeadRate: rate(numberValue(funnel.cta_sessions), numberValue(funnel.club_view_sessions))'), 'Profile-to-lead must use unique CTA sessions over club-view sessions.');
+assert.ok(extended.includes('funnel.profileToLeadRate') && extended.includes('rezervasiya və ya satış sübutu deyil'), 'Founder Analytics must surface and qualify the behavioral lead proxy.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')) AS update_users"), 'Return-loop users must include homepage-to-updates detail clickers.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions"), 'Return-loop sessions must include homepage-to-updates detail click sessions.');
 assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club transitions must be measured from the dedicated update event.');
