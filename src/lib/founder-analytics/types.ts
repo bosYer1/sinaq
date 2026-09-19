@@ -233,6 +233,7 @@ export type SupabaseMetrics = {
   verifiedClubs: number;
   pendingSubmissions: number;
   staleSubmissions: number;
+  submissionBacklogByKind: { ownerClaim: number; newClub: number; correction: number };
   completeness: {
     total: number;
     missingImage: number;
