@@ -60,6 +60,9 @@ assert.doesNotMatch(extended, /dropoff|OR-funnel|Landing-dən conversion/, 'Inde
 
 assert.match(posthog, /event = 'club_update_impression'/, 'Return-loop impressions must be measured from the dedicated update event.');
 assert.match(posthog, /event = 'club_update_detail_click'/, 'Return-loop homepage detail transitions must be measured from the dedicated update event.');
+assert.ok(types.includes('updateDetailClicks: number;'), 'Return-loop metric contract must expose homepage-to-updates detail clicks.');
+assert.ok(posthog.includes('updateDetailClicks: numberValue(returnLoop.update_detail_clicks)'), 'PostHog return-loop result must map homepage detail clicks.');
+assert.ok(extended.includes('returnLoop.updateDetailClicks'), 'Founder Analytics must surface homepage-to-updates engagement.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')) AS update_users"), 'Return-loop users must include homepage-to-updates detail clickers.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions"), 'Return-loop sessions must include homepage-to-updates detail click sessions.');
 assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club transitions must be measured from the dedicated update event.');
