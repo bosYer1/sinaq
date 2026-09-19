@@ -71,5 +71,10 @@ export function buildCeoSignals(posthog: PostHogMetrics, supabase: SupabaseMetri
   if (signals.length === 0) {
     signals.push({ severity: 'positive', title: 'Əsas siqnallar stabildir', detail: 'Hazırkı dövrdə avtomatik kritik siqnal yaranmayıb.', action: 'Kampaniya və klub conversion trendini izləməyə davam et.' });
   }
-  return signals.slice(0, 6);
+  const severityRank: Record<CeoSignal['severity'], number> = { critical: 0, attention: 1, positive: 2 };
+  return signals
+    .map((signal, index) => ({ signal, index }))
+    .sort((left, right) => severityRank[left.signal.severity] - severityRank[right.signal.severity] || left.index - right.index)
+    .slice(0, 6)
+    .map(({ signal }) => signal);
 }
