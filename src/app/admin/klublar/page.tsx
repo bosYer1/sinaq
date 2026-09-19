@@ -27,7 +27,7 @@ function sanitizeSearch(value?: string) {
 const missingLabels: Record<string, string> = {
   phone: 'Telefon çatmır',
   description: 'Təsvir çatmır',
-  instagram: 'Instagram yoxdur',
+  instagram: 'Sosial profil yoxdur',
   hours: 'İş saatı çatmır',
   pricing: 'Qiymət çatmır',
   images: 'Şəkil çatmır',
@@ -65,6 +65,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       district_id,
       phone,
       instagram_url,
+      tiktok_url,
       profile_image_url,
       latitude,
       longitude,
@@ -133,7 +134,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
     return [
       !club.phone ? 'Telefon' : null,
       !club.description?.trim() ? 'Təsvir' : null,
-      !club.instagram_url ? 'Instagram' : null,
+      !club.instagram_url && !club.tiktok_url ? 'Sosial profil' : null,
       !idsWithHours.has(club.id) ? 'Saat' : null,
       !idsWithPricing.has(club.id) ? 'Qiymət' : null,
       !hasImageForClub(club) ? 'Şəkil' : null,
@@ -157,7 +158,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
     .filter((club) => {
       if (missingFilter === 'phone' && club.phone) return false;
       if (missingFilter === 'description' && club.description?.trim()) return false;
-      if (missingFilter === 'instagram' && club.instagram_url) return false;
+      if (missingFilter === 'instagram' && (club.instagram_url || club.tiktok_url)) return false;
       if (missingFilter === 'hours' && idsWithHours.has(club.id)) return false;
       if (missingFilter === 'pricing' && idsWithPricing.has(club.id)) return false;
       if (missingFilter === 'images' && hasImageForClub(club)) return false;
@@ -166,7 +167,7 @@ export default async function AdminClubsPage({ searchParams }: PageProps) {
       if (missingFilter === 'address' && !isVagueClubAddress(club.address)) return false;
       if (
         visibilityFilter === 'public' &&
-        (!club.is_active || !club.instagram_url || club.latitude == null || club.longitude == null || !idsWithTypes.has(club.id))
+        (!club.is_active || (!club.instagram_url && !club.tiktok_url) || club.latitude == null || club.longitude == null || !idsWithTypes.has(club.id))
       ) return false;
 
       if (freshnessFilter) {
