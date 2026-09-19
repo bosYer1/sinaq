@@ -58,3 +58,11 @@ $$;
 
 revoke all on function app_private.is_public_club(uuid) from public;
 grant execute on function app_private.is_public_club(uuid) to anon, authenticated;
+
+
+-- Founder-authorized Sigma Gamer Arena activation using its verified TikTok profile.
+update public.clubs
+set tiktok_url = 'https://www.tiktok.com/@sigmagamersarenavip',
+    is_active = true,
+    updated_at = now()
+where slug = 'sigma-gamer-arena';
