@@ -32,6 +32,7 @@ for (const uiContract of [
   assert.ok(explore.includes(uiContract), `ExploreView must keep analytics UI contract: ${uiContract}`);
 }
 
+assert.ok(clubMap.includes("rememberClubEntryOrigin(club.slug)"), 'Map popup club opens must preserve the discovery return origin before navigation');
 assert.ok(clubMap.includes("trackPostHogEvent('club_card_click'"), 'Map popup club opens must stay measurable as club-card discovery clicks');
 assert.ok(clubMap.includes("discovery_surface: 'map_popup'"), 'Map popup clicks must preserve their discovery surface');
 assert.ok(clubMap.includes("transport: 'sendBeacon'"), 'Map popup navigation tracking must use unload-safe transport');
