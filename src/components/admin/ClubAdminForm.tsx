@@ -32,6 +32,7 @@ type ClubForAdmin = {
   longitude?: number | null;
   phone?: string | null;
   instagram_url?: string | null;
+  tiktok_url?: string | null;
   rating_avg?: number | null;
   rating_count?: number;
   is_premium?: boolean;
@@ -144,6 +145,20 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
               className={inputClass}
             />
           </label>
+          <label className="text-sm font-medium">
+            TikTok
+            <input
+              name="tiktok_url"
+              type="url"
+              defaultValue={club?.tiktok_url ?? ''}
+              placeholder="https://www.tiktok.com/@username"
+              pattern="https://(www\.)?tiktok\.com/@[A-Za-z0-9._]{2,24}/?(\?.*)?"
+              title="Klubun tam TikTok profil linkini yaz: https://www.tiktok.com/@username"
+              autoCapitalize="none"
+              spellCheck={false}
+              className={inputClass}
+            />
+          </label>
           <label className="text-sm font-medium">Latitude<input name="latitude" type="number" step="any" min="-90" max="90" defaultValue={club?.latitude ?? ''} className={inputClass} /></label>
           <label className="text-sm font-medium">Longitude<input name="longitude" type="number" step="any" min="-180" max="180" defaultValue={club?.longitude ?? ''} className={inputClass} /></label>
         </div>
@@ -196,7 +211,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
             <p className="font-semibold">Bu klub əvvəl deaktiv edilib və public saytda görünmür.</p>
             <label className="mt-2 flex items-start gap-2">
               <input type="checkbox" name="confirm_reactivate" className="mt-0.5" />
-              <span>Klubun fəaliyyətini, aktual Instagramını və klub tipini yenidən yoxladım; aktivləşdirməni təsdiqləyirəm.</span>
+              <span>Klubun fəaliyyətini, aktual Instagram/TikTok profilini və klub tipini yenidən yoxladım; aktivləşdirməni təsdiqləyirəm.</span>
             </label>
           </div>
         ) : null}
@@ -209,7 +224,7 @@ export function ClubAdminForm({ club, districts, types, action, submitLabel }: C
             <label className="text-sm font-medium">Səs sayı<input name="rating_count" type="number" min="0" defaultValue={club?.rating_count ?? 0} className={inputClass} /></label>
           </div>
         </div>
-        <p className="mt-3 text-xs text-gray-500">Aktiv klub üçün aktual Instagram və ən azı bir təsdiqlənmiş klub tipi tələb olunur. Premium aktiv edilirsə bitmə tarixini də doldur.</p>
+        <p className="mt-3 text-xs text-gray-500">Aktiv klub üçün aktual Instagram və ya TikTok profili və ən azı bir təsdiqlənmiş klub tipi tələb olunur. Premium aktiv edilirsə bitmə tarixini də doldur.</p>
       </section>
 
       <div className="sticky bottom-4 flex justify-end rounded-xl border border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur">
