@@ -12,6 +12,7 @@ type ClubRow = {
   description: string | null;
   phone: string | null;
   instagram_url: string | null;
+  tiktok_url: string | null;
   profile_image_url: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -43,7 +44,7 @@ export default async function SeoPriorityPage() {
   const [clubsResult, pageViewsResult, hoursResult, pricingResult, imagesResult, typesResult] = await Promise.all([
     supabase
       .from('clubs')
-      .select('id,name,slug,description,phone,instagram_url,profile_image_url,latitude,longitude,is_active')
+      .select('id,name,slug,description,phone,instagram_url,tiktok_url,profile_image_url,latitude,longitude,is_active')
       .eq('is_active', true)
       .not('latitude', 'is', null)
       .not('longitude', 'is', null),
@@ -88,7 +89,7 @@ export default async function SeoPriorityPage() {
     return [
       !club.phone ? 'Telefon' : null,
       descriptionIssue(club.description),
-      !club.instagram_url ? 'Instagram' : null,
+      !club.instagram_url && !club.tiktok_url ? 'Sosial profil' : null,
       !idsWithHours.has(club.id) ? 'İş saatı' : null,
       !idsWithPricing.has(club.id) ? 'Qiymət' : null,
       !hasImage ? 'Şəkil' : null,
