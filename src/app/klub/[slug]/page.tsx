@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getClubBySlug, getClubs } from '@/lib/queries/clubs';
+import { getClubTikTokUrl } from '@/lib/queries/club-social';
 import { ClubDetail } from '@/components/clubs/ClubDetail';
 import { ShareClubButton } from '@/components/clubs/ShareClubButton';
 import { getSiteUrl } from '@/lib/site-url';
@@ -93,6 +94,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const { slug } = await params;
   const club = await getClubBySlug(slug);
   if (!club) notFound();
+  const tiktokUrl = await getClubTikTokUrl(club.id);
   const siteUrl = getSiteUrl();
   const clubUrl = `${siteUrl}/klub/${club.slug}`;
   const typeAssignments = Array.isArray(club.type_assignments) ? club.type_assignments : [];
@@ -148,7 +150,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
       })))
     : [];
   const localTypeLinks = localTypeResults.filter((type) => type.count >= 2);
-  const socialProfiles = [club.instagram_url, club.tiktok_url].filter((value): value is string => Boolean(value));
+  const socialProfiles = [club.instagram_url, tiktokUrl].filter((value): value is string => Boolean(value));
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -186,7 +188,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
-    <ClubDetail club={club} />
+    <ClubDetail club={club} tiktokUrl={tiktokUrl} />
     <nav className="mx-auto flex max-w-5xl flex-wrap gap-2 px-4 pb-8 pt-2 text-xs sm:px-6" aria-label="Əlaqəli klub kateqoriyaları və paylaşım">
       <ShareClubButton name={club.name} url={clubUrl} />
       {club.district?.slug ? <Link href={`/rayon/${club.district.slug}`} className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">{club.district.name} rayonundakı digər klublar</Link> : null}
