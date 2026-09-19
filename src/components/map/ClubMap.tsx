@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import type { ClubWithDistance } from '@/types/database';
+import { rememberClubEntryOrigin } from '@/components/clubs/BackToClubsLink';
 import type { UserLocation } from '@/hooks/useUserLocation';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { formatDistance } from '@/lib/geo';
@@ -66,7 +67,10 @@ function appendText(parent: HTMLElement, tag: keyof HTMLElementTagNameMap, class
 }
 
 function createPopupContent(club: ClubWithDistance) {
-  const trackClubOpen = (surface: 'map_popup_title' | 'map_popup_details') => trackPostHogEvent('club_card_click', { club_id: club.id, club_slug: club.slug, surface, discovery_surface: 'map_popup' }, { send_instantly: true, transport: 'sendBeacon' });
+  const trackClubOpen = (surface: 'map_popup_title' | 'map_popup_details') => {
+    rememberClubEntryOrigin(club.slug);
+    trackPostHogEvent('club_card_click', { club_id: club.id, club_slug: club.slug, surface, discovery_surface: 'map_popup' }, { send_instantly: true, transport: 'sendBeacon' });
+  };
   const root = document.createElement('div'); root.className = 'min-w-[210px]';
   const title = document.createElement('a'); title.href = `/klub/${encodeURIComponent(club.slug)}`; title.className = 'font-display text-sm font-semibold text-ink no-underline hover:text-primary'; title.textContent = club.name; title.addEventListener('click', () => trackClubOpen('map_popup_title')); root.appendChild(title);
   appendText(root, 'div', 'mt-1 text-xs text-muted', club.district?.name ?? 'Rayon göstərilməyib');
