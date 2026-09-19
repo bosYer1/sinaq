@@ -27,7 +27,7 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
     returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
     supplyFunnel: { ownerClaimViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
-    discoveryQuality: { searchSessions: 0, zeroResultSearchSessions: 0, zeroResultRate: 0, clubImpressionSessions: 0, clubClickSessions: 0, clubCtr: 0 },
+    discoveryQuality: { searchSessions: 0, zeroResultSearchSessions: 0, zeroResultRate: 0, filterSessions: 0, filterAdoptionRate: 0, mapSessions: 0, mapAdoptionRate: 0, clubImpressionSessions: 0, clubClickSessions: 0, clubCtr: 0 },
   };
 }
 
@@ -301,6 +301,8 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         SELECT
           uniqIf(properties.$session_id, event = 'search_query' AND notEmpty(properties.$session_id)) AS search_sessions,
           uniqIf(properties.$session_id, event = 'search_query' AND properties.no_results = true AND notEmpty(properties.$session_id)) AS zero_result_search_sessions,
+          uniqIf(properties.$session_id, event = 'filter_changed' AND properties.filter_name IN ('district','club_type','price_max') AND notEmpty(properties.$session_id)) AS filter_sessions,
+          uniqIf(properties.$session_id, event IN ('map_location_clicked','location_sort_clicked') AND notEmpty(properties.$session_id)) AS map_sessions,
           uniqIf(properties.$session_id, event = 'club_impression' AND notEmpty(properties.$session_id)) AS club_impression_sessions,
           uniqIf(properties.$session_id, event = 'club_card_click' AND notEmpty(properties.$session_id)) AS club_click_sessions
         FROM events
@@ -400,6 +402,10 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         searchSessions: numberValue(discoveryQuality.search_sessions),
         zeroResultSearchSessions: numberValue(discoveryQuality.zero_result_search_sessions),
         zeroResultRate: rate(numberValue(discoveryQuality.zero_result_search_sessions), numberValue(discoveryQuality.search_sessions)),
+        filterSessions: numberValue(discoveryQuality.filter_sessions),
+        filterAdoptionRate: rate(numberValue(discoveryQuality.filter_sessions), numberValue(funnel.discovery_sessions)),
+        mapSessions: numberValue(discoveryQuality.map_sessions),
+        mapAdoptionRate: rate(numberValue(discoveryQuality.map_sessions), numberValue(funnel.discovery_sessions)),
         clubImpressionSessions: numberValue(discoveryQuality.club_impression_sessions),
         clubClickSessions: numberValue(discoveryQuality.club_click_sessions),
         clubCtr: rate(numberValue(discoveryQuality.club_click_sessions), numberValue(discoveryQuality.club_impression_sessions)),
