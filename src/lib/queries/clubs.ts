@@ -6,7 +6,7 @@ import type { ClubFilters, ClubWithRelations } from '@/types/database';
 
 const CLUB_SELECT = `
   id, name, slug, description, district_id, address, latitude, longitude,
-  phone, instagram_url, tiktok_url, profile_image_url, is_premium, premium_expires_at, is_active,
+  phone, instagram_url, profile_image_url, is_premium, premium_expires_at, is_active,
   is_verified, verified_at, created_at, updated_at,
   district:districts ( id, name, slug ),
   type_assignments:club_type_assignments (
@@ -68,7 +68,6 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
     .from('clubs')
     .select(selectString)
     .eq('is_active', true)
-    .or('instagram_url.not.is.null,tiktok_url.not.is.null')
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
     .order('is_premium', { ascending: false })
@@ -148,7 +147,6 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
     .select(CLUB_SELECT)
     .eq('slug', slug)
     .eq('is_active', true)
-    .or('instagram_url.not.is.null,tiktok_url.not.is.null')
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
     .maybeSingle()
