@@ -35,12 +35,18 @@ export function PostHogAnalytics() {
       const target = event.target;
       if (!(target instanceof Element)) return;
 
+      const deviceSurface = window.matchMedia('(min-width: 1024px)').matches ? 'desktop' : 'mobile';
+      const homeClubJump = target.closest('[data-home-club-jump="true"]');
+      if (homeClubJump instanceof HTMLAnchorElement) {
+        trackPostHogEvent('home_club_jump_clicked', { surface: `${deviceSurface}_home` });
+        return;
+      }
+
       const button = target.closest('button');
       if (!(button instanceof HTMLButtonElement)) return;
 
       const label = button.getAttribute('aria-label')?.trim() ?? '';
       const text = button.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-      const deviceSurface = window.matchMedia('(min-width: 1024px)').matches ? 'desktop' : 'mobile';
 
       if (label === 'Xəritəni aktiv et' && button.closest('[data-mobile-list-map-container="true"]')) {
         trackPostHogEvent('mobile_map_preview_activated', { surface: 'mobile_list' });

@@ -113,13 +113,13 @@ export default async function HomePage({ searchParams }: PageProps) {
       <div className="mx-auto max-w-[1440px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-8">
         <section className="mb-4 flex items-end justify-between gap-3 sm:mb-5" aria-labelledby="home-title">
           <div className="min-w-0"><h1 id="home-title" className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-ink sm:text-3xl">Bakıda PC və PlayStation klubları</h1><p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">Rayon və xəritəyə görə gaming klubu tap, qiymətləri və iş saatlarını müqayisə et.</p></div>
-          <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-pc-tint px-3 py-1.5 text-xs font-semibold text-primary sm:gap-2 sm:px-3.5 sm:py-2 sm:text-sm"><span aria-hidden="true">🎮</span>{discoveryClubs.length} klub</div>
+          <a href="#club-discovery" data-home-club-jump="true" aria-label="Klublara bax" className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-pc-tint px-3 py-1.5 text-xs font-semibold text-primary no-underline transition hover:bg-primary/15 sm:gap-2 sm:px-3.5 sm:py-2 sm:text-sm"><span aria-hidden="true">🎮</span>{discoveryClubs.length} klub <span aria-hidden="true">↓</span></a>
         </section>
 
         <Suspense fallback={<div className="mb-3 rounded-2xl border border-border bg-surface p-3 sm:mb-4 sm:p-4"><Skeleton className="h-11 w-full rounded-control" /></div>}><FilterBar districts={activeDistricts} types={types} /></Suspense>
 
         <div className="flex flex-col">
-          <section className="order-1 overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:order-2 sm:p-4" aria-label="Klub siyahısı və xəritə"><ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} /></section>
+          <section id="club-discovery" className="order-1 scroll-mt-20 overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:order-2 sm:p-4" aria-label="Klub siyahısı və xəritə"><ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} /></section>
 
           {activeUpdates.length > 0 ? (
             <section className="order-2 mt-3 sm:order-1 sm:mb-4 sm:mt-0 sm:rounded-2xl sm:border sm:border-primary/15 sm:bg-primary/5 sm:px-5 sm:py-5" aria-label="Aktiv təkliflər və turnirlər">
