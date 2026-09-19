@@ -63,3 +63,4 @@
 20260909170000_support_ongoing_club_offers
 20260909192500_normalize_pricing_units
 20260915193000_optimize_founder_absence_db_health
+20260919183000_add_club_tiktok_social
