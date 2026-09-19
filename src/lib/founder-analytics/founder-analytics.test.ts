@@ -101,3 +101,15 @@ test('CEO signals expose provider unavailability instead of fake metrics', () =>
   };
   assert.equal(buildCeoSignals(posthog, supabase)[0].severity, 'critical');
 });
+
+test('CEO signals surface open supply queues without treating them as verified inventory', () => {
+  const zero = metric(0, 0);
+  const posthog = {
+    status: { key: 'posthog', label: 'PostHog', status: 'ready', detail: '', checkedAt: '' }, pageviews: zero, visitors: zero, sessions: zero, clubViews: zero, clubClicks: zero, ctaClicks: zero, searchQueries: zero, filterChanges: zero, exploreViewChanges: zero, mapUsage: zero, phoneClicks: zero, instagramClicks: zero, mapsClicks: zero, newUsers: 0, returningUsers: 0, returningRate: 0, sessionsPerUser: 0, usersWithThreeSessions: 0, conversionRate: zero, acquisition: [], campaigns: [], clubs: [], trend: [], tracking: { latestEventAt: new Date().toISOString(), publicEvents: 0, testEvents: 0, missingSessionAttribution: 0, missingCampaignAttribution: 0, noResultSearches: 0, botEvents: 0, sourceMissingSessions: 0, attributionCompleteness: 100 }, funnel: { landingSessions: 0, discoverySessions: 0, clubViewSessions: 0, ctaSessions: 0, profileToLeadRate: 0 }, retention: { d1: null, d3: null, d7: null, d1CohortUsers: 0, d3CohortUsers: 0, d7CohortUsers: 0, cohortUsers: 0 }, pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 }, returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 }, supplyFunnel: { ownerClaimViews: 0, newClubViews: 0, correctionViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, newClubSent: 0, correctionSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 }, discoveryQuality: { searchSessions: 0, zeroResultSearchSessions: 0, zeroResultRate: 0, filterSessions: 0, filterAdoptionRate: 0, mapSessions: 0, mapAdoptionRate: 0, clubImpressionSessions: 0, clubClickSessions: 0, clubCtr: 0 }, webVitals: { lcpP75: null, lcpSamples: 0, inpP75: null, inpSamples: 0, clsP75: null, clsSamples: 0 },
+  } satisfies PostHogMetrics;
+  const supabase: SupabaseMetrics = { status: { key: 'supabase', label: 'Supabase', status: 'ready', detail: '', checkedAt: '' }, activeClubs: 0, verifiedClubs: 0, pendingSubmissions: 3, staleSubmissions: 0, submissionBacklogByKind: { ownerClaim: 1, newClub: 1, correction: 1 }, completeness: { total: 0, missingImage: 0, missingPhone: 0, missingInstagram: 0, missingCoordinates: 0, missingType: 0 }, qualityBacklog: [] };
+  const titles = buildCeoSignals(posthog, supabase).map((signal) => signal.title);
+  assert.ok(titles.includes('Klub sahibi müraciəti gözləyir'));
+  assert.ok(titles.includes('Yeni klub təklifləri növbədədir'));
+  assert.ok(titles.includes('Klub data düzəlişləri növbədədir'));
+});
