@@ -81,6 +81,7 @@ export type TrendPoint = { date: string; pageviews: number; visitors: number; ct
 
 export type ReturnLoopMetrics = {
   updateImpressions: number;
+  updateDetailClicks: number;
   updateClubClicks: number;
   updateSourceClicks: number;
   updateUsers: number;
@@ -91,6 +92,21 @@ export type ReturnLoopMetrics = {
   returningUpdateRate: number;
   clubViewReachRate: number;
   ctaReachRate: number;
+};
+
+export type SupplyFunnelMetrics = {
+  ownerClaimViews: number;
+  newClubViews: number;
+  correctionViews: number;
+  ownerClaimStarts: number;
+  ownerClaimAttempts: number;
+  ownerClaimSent: number;
+  newClubSent: number;
+  correctionSent: number;
+  ownerClaimErrors: number;
+  ownerClaimRateLimited: number;
+  startRate: number;
+  submitRate: number;
 };
 
 export type RetentionMetrics = {
@@ -124,6 +140,7 @@ export type PostHogMetrics = {
   phoneClicks: Metric;
   instagramClicks: Metric;
   mapsClicks: Metric;
+  newUsers: number;
   returningUsers: number;
   returningRate: number;
   sessionsPerUser: number;
@@ -144,10 +161,13 @@ export type PostHogMetrics = {
     sourceMissingSessions: number;
     attributionCompleteness: number;
   };
-  funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number };
+  funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number; profileToLeadRate: number };
   retention: RetentionMetrics;
   pwa: PwaMetrics;
   returnLoop: ReturnLoopMetrics;
+  supplyFunnel: SupplyFunnelMetrics;
+  discoveryQuality: { searchSessions: number; zeroResultSearchSessions: number; zeroResultRate: number; filterSessions: number; filterAdoptionRate: number; mapSessions: number; mapAdoptionRate: number; clubImpressionSessions: number; clubClickSessions: number; clubCtr: number };
+  webVitals: { lcpP75: number | null; lcpSamples: number; inpP75: number | null; inpSamples: number; clsP75: number | null; clsSamples: number };
 };
 
 export type Ga4Metrics = {
@@ -214,6 +234,7 @@ export type SupabaseMetrics = {
   verifiedClubs: number;
   pendingSubmissions: number;
   staleSubmissions: number;
+  submissionBacklogByKind: { ownerClaim: number; newClub: number; correction: number };
   completeness: {
     total: number;
     missingImage: number;
