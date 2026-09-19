@@ -84,6 +84,7 @@ test('CEO signals expose provider unavailability instead of fake metrics', () =>
     retention: { d1: null, d3: null, d7: null, d1CohortUsers: 0, d3CohortUsers: 0, d7CohortUsers: 0, cohortUsers: 0 },
     pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
     returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
+    supplyFunnel: { ownerClaimViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
   };
   const supabase: SupabaseMetrics = {
     status: { key: 'supabase', label: 'Supabase', status: 'ready', detail: '', checkedAt: '' },
