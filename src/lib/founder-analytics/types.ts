@@ -160,7 +160,7 @@ export type PostHogMetrics = {
     sourceMissingSessions: number;
     attributionCompleteness: number;
   };
-  funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number };
+  funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number; profileToLeadRate: number };
   retention: RetentionMetrics;
   pwa: PwaMetrics;
   returnLoop: ReturnLoopMetrics;
