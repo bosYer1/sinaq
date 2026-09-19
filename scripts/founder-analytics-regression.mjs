@@ -79,6 +79,10 @@ assert.ok(posthog.includes("event IN ('map_location_clicked','location_sort_clic
 assert.ok(posthog.includes('filterAdoptionRate: rate(numberValue(discoveryQuality.filter_sessions), numberValue(funnel.discovery_sessions))'), 'Filter adoption denominator must be discovery sessions.');
 assert.ok(posthog.includes('mapAdoptionRate: rate(numberValue(discoveryQuality.map_sessions), numberValue(funnel.discovery_sessions))'), 'Map adoption denominator must be discovery sessions.');
 assert.ok(extended.includes('discoveryQuality.filterAdoptionRate') && extended.includes('discoveryQuality.mapAdoptionRate'), 'Founder Analytics must surface filter and map adoption.');
+assert.ok(posthog.includes("quantileIf(0.75)") && posthog.includes("event = 'web_vital'"), 'Real-user performance must use p75 web-vital telemetry.');
+for (const metricName of ['LCP', 'INP', 'CLS']) assert.ok(posthog.includes(`properties.metric_name = '${metricName}'`), `Web-vital query must include ${metricName}.`);
+assert.ok(extended.includes('posthog.webVitals') && extended.includes('Real user performance'), 'Founder Analytics must surface real-user performance.');
+assert.ok(extended.includes('webVitals.lcpSamples') && extended.includes('webVitals.inpSamples') && extended.includes('webVitals.clsSamples'), 'Performance p75 must show sample counts.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')) AS update_users"), 'Return-loop users must include homepage-to-updates detail clickers.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions"), 'Return-loop sessions must include homepage-to-updates detail click sessions.');
 assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club transitions must be measured from the dedicated update event.');
