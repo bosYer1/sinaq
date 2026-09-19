@@ -28,7 +28,7 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
     supplyFunnel: { ownerClaimViews: 0, newClubViews: 0, correctionViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, newClubSent: 0, correctionSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
     discoveryQuality: { searchSessions: 0, zeroResultSearchSessions: 0, zeroResultRate: 0, filterSessions: 0, filterAdoptionRate: 0, mapSessions: 0, mapAdoptionRate: 0, clubImpressionSessions: 0, clubClickSessions: 0, clubCtr: 0 },
-    webVitals: { lcpP75: null, lcpSamples: 0, inpP75: null, inpSamples: 0, clsP75: null, clsSamples: 0, mobileHomeLcpP75: null, mobileHomeLcpSamples: 0, mobileHomeInpP75: null, mobileHomeInpSamples: 0 },
+    webVitals: { lcpP75: null, lcpSamples: 0, inpP75: null, inpSamples: 0, clsP75: null, clsSamples: 0 },
   };
 }
 
@@ -425,10 +425,6 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         inpSamples: numberValue(webVitals.inp_samples),
         clsP75: numberValue(webVitals.cls_samples) > 0 ? numberValue(webVitals.cls_p75) : null,
         clsSamples: numberValue(webVitals.cls_samples),
-        mobileHomeLcpP75: numberValue(webVitals.mobile_home_lcp_samples) > 0 ? numberValue(webVitals.mobile_home_lcp_p75) : null,
-        mobileHomeLcpSamples: numberValue(webVitals.mobile_home_lcp_samples),
-        mobileHomeInpP75: numberValue(webVitals.mobile_home_inp_samples) > 0 ? numberValue(webVitals.mobile_home_inp_p75) : null,
-        mobileHomeInpSamples: numberValue(webVitals.mobile_home_inp_samples),
       },
       discoveryQuality: {
         searchSessions: numberValue(discoveryQuality.search_sessions),
