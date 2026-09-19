@@ -57,7 +57,6 @@ function currentDiscoveryContext(): DiscoveryContext {
 
 export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function ClubCard({ club, listPosition, active, onMouseEnter, imagePriority = false }, ref) {
   const router = useRouter();
-  const isVerified = club.is_verified;
   const hasHours = club.opening_hours.length > 0;
   const cardElementRef = useRef<HTMLAnchorElement | null>(null);
   const clubHref = `/klub/${encodeURIComponent(club.slug)}`;
@@ -169,7 +168,6 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
         <div className="flex min-w-0 items-start gap-2">
           <h3 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold tracking-[-0.01em] text-ink transition-colors group-hover:text-primary">{club.name}</h3>
           <div className="flex shrink-0 items-center gap-1">
-            {isVerified ? <Badge tone="verified">✓</Badge> : null}
             {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
           </div>
         </div>
