@@ -189,14 +189,8 @@ async function assertHomepage(client, viewport) {
       const mobileNav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
       const rect = mapContainer?.getBoundingClientRect();
       const navRect = mobileNav?.getBoundingClientRect();
-      const visibleBottom = Math.min(window.innerHeight, navRect?.top ?? window.innerHeight);
       const updateCards = Array.from(document.querySelectorAll('[data-update-impression-id]')).filter((element) => element.getBoundingClientRect().height > 0);
-      const visibleUpdateCards = updateCards.filter((element) => {
-        const cardRect = element.getBoundingClientRect();
-        return cardRect.width > 0 && cardRect.height > 0
-          && cardRect.bottom > 64 && cardRect.top < visibleBottom
-          && cardRect.right > 0 && cardRect.left < window.innerWidth;
-      }).length;
+      const firstUpdateTop = updateCards[0]?.getBoundingClientRect().top ?? null;
       return {
         liveMapLoaded: Boolean(map),
         liveMarkerCount: document.querySelectorAll('.leaflet-marker-icon').length,
@@ -214,7 +208,7 @@ async function assertHomepage(client, viewport) {
         clubsVisible: document.body.innerText.includes('Klublar ('),
         mapContainerHeight: rect?.height ?? 0,
         updateCardCount: updateCards.length,
-        visibleUpdateCards,
+        firstUpdateTop,
         mobileNavTop: navRect?.top ?? null,
       };
     })()`);
@@ -234,7 +228,7 @@ async function assertHomepage(client, viewport) {
     assert(listView.mapContainerHeight >= 335 && listView.mapContainerHeight <= 410, `${viewport.name}: enlarged list-view map height regressed`, listView);
     assert(listView.mapContainerRect?.top != null && listView.mapContainerRect.top < 500, `${viewport.name}: mobile map moved below the club list`, listView);
     assert(listView.updateCardCount > 0, `${viewport.name}: mobile offer cards are missing from the homepage`, listView);
-    assert(listView.visibleUpdateCards > 0, `${viewport.name}: no mobile offer card is visible above the bottom navigation`, listView);
+    assert(listView.firstUpdateTop != null && listView.mapContainerRect?.top != null && listView.firstUpdateTop > listView.mapContainerRect.top, `${viewport.name}: mobile updates must remain below core club discovery`, listView);
     await capture(client, `${viewport.name}-home-list`);
     await evaluate(client, `document.querySelector('[aria-label="Xəritəni aktiv et"]')?.click()`);
     await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
