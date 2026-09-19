@@ -9,6 +9,7 @@ type ActiveClubRow = {
   address: string | null;
   description: string | null;
   instagram_url: string | null;
+  tiktok_url: string | null;
   profile_image_url: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -61,7 +62,7 @@ export default async function AdminPage() {
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_verified', true),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).is('phone', null),
-    supabase.from('clubs').select('id,address,description,instagram_url,profile_image_url,latitude,longitude,updated_at').eq('is_active', true),
+    supabase.from('clubs').select('id,address,description,instagram_url,tiktok_url,profile_image_url,latitude,longitude,updated_at').eq('is_active', true),
     supabase.from('club_opening_hours').select('club_id'),
     supabase.from('club_pricing').select('club_id'),
     supabase.from('club_images').select('club_id'),
@@ -88,7 +89,7 @@ export default async function AdminPage() {
 
   for (const club of activeRows) {
     if (!club.description?.trim()) missingDescription += 1;
-    if (!club.instagram_url) missingInstagram += 1;
+    if (!club.instagram_url && !club.tiktok_url) missingInstagram += 1;
     if (!idsWithHours.has(club.id)) missingHours += 1;
     if (!idsWithPricing.has(club.id)) missingPricing += 1;
     if (!club.profile_image_url && !idsWithImages.has(club.id)) missingImages += 1;
@@ -100,7 +101,7 @@ export default async function AdminPage() {
   }
 
   const visibleClubs = activeRows.filter((club) =>
-    Boolean(club.instagram_url) &&
+    Boolean(club.instagram_url || club.tiktok_url) &&
     club.latitude != null &&
     club.longitude != null &&
     idsWithTypes.has(club.id)
@@ -110,7 +111,7 @@ export default async function AdminPage() {
   const completenessItems = [
     { label: 'Telefon çatmır', value: missingPhone, key: 'phone' },
     { label: 'Təsvir çatmır', value: missingDescription, key: 'description' },
-    { label: 'Instagram yoxdur', value: missingInstagram, key: 'instagram' },
+    { label: 'Sosial profil yoxdur', value: missingInstagram, key: 'instagram' },
     { label: 'İş saatı çatmır', value: missingHours, key: 'hours' },
     { label: 'Qiymət çatmır', value: missingPricing, key: 'pricing' },
     { label: 'Şəkil çatmır', value: missingImages, key: 'images' },
