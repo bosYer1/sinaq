@@ -72,6 +72,11 @@ assert.ok(types.includes('discoveryQuality:'), 'Founder Analytics contract must 
 assert.ok(posthog.includes("event = 'search_query' AND properties.no_results = true"), 'Discovery quality must measure zero-result search sessions.');
 assert.ok(posthog.includes("event = 'club_impression'") && posthog.includes("event = 'club_card_click'"), 'Discovery quality must measure visible-card and click sessions.');
 assert.ok(extended.includes('posthog.discoveryQuality') && extended.includes('Discovery quality'), 'Founder Analytics must surface discovery quality.');
+assert.ok(posthog.includes("event = 'filter_changed' AND properties.filter_name IN ('district','club_type','price_max')"), 'Filter adoption must use the contracted district/type/price filters.');
+assert.ok(posthog.includes("event IN ('map_location_clicked','location_sort_clicked')"), 'Map adoption must use the contracted map/location events.');
+assert.ok(posthog.includes('filterAdoptionRate: rate(numberValue(discoveryQuality.filter_sessions), numberValue(funnel.discovery_sessions))'), 'Filter adoption denominator must be discovery sessions.');
+assert.ok(posthog.includes('mapAdoptionRate: rate(numberValue(discoveryQuality.map_sessions), numberValue(funnel.discovery_sessions))'), 'Map adoption denominator must be discovery sessions.');
+assert.ok(extended.includes('discoveryQuality.filterAdoptionRate') && extended.includes('discoveryQuality.mapAdoptionRate'), 'Founder Analytics must surface filter and map adoption.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')) AS update_users"), 'Return-loop users must include homepage-to-updates detail clickers.');
 assert.ok(posthog.includes("event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions"), 'Return-loop sessions must include homepage-to-updates detail click sessions.');
 assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club transitions must be measured from the dedicated update event.');
