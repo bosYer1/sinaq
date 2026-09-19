@@ -347,7 +347,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         noResultSearches: numberValue(health.no_result_searches),
         botEvents: numberValue(health.bot_events),
         sourceMissingSessions: numberValue(health.source_missing_sessions),
-        attributionCompleteness: rate(publicPageviewSessions - missingSessionAttribution, publicPageviewSessions),
+        attributionCompleteness: rate(publicPageviewSessions - numberValue(health.source_missing_sessions), publicPageviewSessions),
       },
       funnel: {
         landingSessions: numberValue(funnel.landing_sessions),
