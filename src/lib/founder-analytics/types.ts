@@ -94,6 +94,17 @@ export type ReturnLoopMetrics = {
   ctaReachRate: number;
 };
 
+export type SupplyFunnelMetrics = {
+  ownerClaimViews: number;
+  ownerClaimStarts: number;
+  ownerClaimAttempts: number;
+  ownerClaimSent: number;
+  ownerClaimErrors: number;
+  ownerClaimRateLimited: number;
+  startRate: number;
+  submitRate: number;
+};
+
 export type RetentionMetrics = {
   d1: number | null;
   d3: number | null;
@@ -149,6 +160,7 @@ export type PostHogMetrics = {
   retention: RetentionMetrics;
   pwa: PwaMetrics;
   returnLoop: ReturnLoopMetrics;
+  supplyFunnel: SupplyFunnelMetrics;
 };
 
 export type Ga4Metrics = {
