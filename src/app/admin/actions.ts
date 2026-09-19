@@ -13,6 +13,7 @@ const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INSTAGRAM_PATTERN = /^https:\/\/(?:www\.)?instagram\.com\/[a-z0-9._]{1,30}\/?(?:\?.*)?$/i;
+const TIKTOK_PATTERN = /^https:\/\/(?:www\.)?tiktok\.com\/@[a-z0-9._]{2,24}\/?(?:\?.*)?$/i;
 
 type PricingFormRow = {
   club_type_id: string;
@@ -80,11 +81,15 @@ function validateCoreFormInput(formData: FormData) {
   }
 
   const instagramUrl = nullableText(formData, 'instagram_url');
+  const tiktokUrl = nullableText(formData, 'tiktok_url');
   if (instagramUrl && !INSTAGRAM_PATTERN.test(instagramUrl)) {
     throw new Error('Instagram üçün klubun tam profil linkini yazın: https://instagram.com/username');
   }
-  if (booleanValue(formData, 'is_active') && !instagramUrl) {
-    throw new Error('Instagramı təsdiqlənməyən klub aktiv edilə bilməz. Klubu deaktiv saxlayın.');
+  if (tiktokUrl && !TIKTOK_PATTERN.test(tiktokUrl)) {
+    throw new Error('TikTok üçün klubun tam profil linkini yazın: https://www.tiktok.com/@username');
+  }
+  if (booleanValue(formData, 'is_active') && !instagramUrl && !tiktokUrl) {
+    throw new Error('Aktiv klub üçün təsdiqlənmiş Instagram və ya TikTok profili tələb olunur. Klubu deaktiv saxlayın.');
   }
 
   if (booleanValue(formData, 'is_premium')) {
@@ -423,7 +428,7 @@ export async function saveClub(formData: FormData) {
 
   const { data: previousClub, error: previousClubError } = await supabase
     .from('clubs')
-    .select('name,slug,description,district_id,address,latitude,longitude,phone,instagram_url,rating_avg,rating_count,is_premium,premium_expires_at,is_active,updated_at')
+    .select('name,slug,description,district_id,address,latitude,longitude,phone,instagram_url,tiktok_url,rating_avg,rating_count,is_premium,premium_expires_at,is_active,updated_at')
     .eq('id', id)
     .single();
   if (previousClubError || !previousClub) {
@@ -440,6 +445,7 @@ export async function saveClub(formData: FormData) {
     longitude,
     phone: nullableText(formData, 'phone'),
     instagram_url: nullableText(formData, 'instagram_url'),
+    tiktok_url: nullableText(formData, 'tiktok_url'),
     rating_avg: nullableNumber(formData, 'rating_avg'),
     rating_count: nullableNumber(formData, 'rating_count') ?? 0,
     is_premium: booleanValue(formData, 'is_premium'),
@@ -517,6 +523,7 @@ export async function createClub(sourceSubmissionId: string | null, formData: Fo
     longitude,
     phone: nullableText(formData, 'phone'),
     instagram_url: nullableText(formData, 'instagram_url'),
+    tiktok_url: nullableText(formData, 'tiktok_url'),
     rating_avg: nullableNumber(formData, 'rating_avg'),
     rating_count: nullableNumber(formData, 'rating_count') ?? 0,
     is_premium: booleanValue(formData, 'is_premium'),
@@ -582,13 +589,13 @@ export async function toggleClubActive(formData: FormData) {
 
   const { data: club, error: clubError } = await supabase
     .from('clubs')
-    .select('slug,instagram_url')
+    .select('slug,instagram_url,tiktok_url')
     .eq('id', id)
     .maybeSingle();
   if (clubError) throw new Error(clubError.message);
   if (!club) throw new Error('Klub tapılmadı.');
-  if (nextValue && !club.instagram_url) {
-    throw new Error('Instagramı təsdiqlənməyən klub yenidən aktiv edilə bilməz.');
+  if (nextValue && !club.instagram_url && !club.tiktok_url) {
+    throw new Error('Instagram və ya TikTok profili təsdiqlənməyən klub yenidən aktiv edilə bilməz.');
   }
 
   if (nextValue) {

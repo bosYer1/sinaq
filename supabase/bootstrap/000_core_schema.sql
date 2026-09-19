@@ -30,6 +30,7 @@ create table if not exists public.clubs (
   longitude numeric,
   phone text,
   instagram_url text,
+  tiktok_url text,
   rating_avg numeric,
   rating_count integer not null default 0,
   is_premium boolean not null default false,

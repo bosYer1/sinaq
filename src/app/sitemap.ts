@@ -68,7 +68,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       )
     `)
     .eq('is_active', true)
-    .not('instagram_url', 'is', null)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null);
   if (error) return entries;

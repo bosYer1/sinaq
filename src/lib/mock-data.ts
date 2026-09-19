@@ -75,6 +75,7 @@ function buildClub(input: MockClubInput): ClubWithRelations {
     longitude: input.longitude,
     phone: input.phone,
     instagram_url: input.instagram,
+    tiktok_url: null,
     profile_image_url: null,
     rating_avg: input.ratingAvg,
     rating_count: input.ratingCount,
