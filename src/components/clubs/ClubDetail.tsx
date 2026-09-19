@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { ClubWithRelations } from '@/types/database';
 import { TrackedClubLink } from '@/components/analytics/TrackedClubLink';
+import { TrackedTikTokLink } from '@/components/analytics/TrackedTikTokLink';
 import { ClubViewTracker } from '@/components/analytics/ClubViewTracker';
 import { BackToClubsLink } from '@/components/clubs/BackToClubsLink';
 import { Badge } from '@/components/ui/Badge';
@@ -11,7 +12,7 @@ import { cn, DAY_NAMES_AZ, formatOpeningHoursLabel, isClubOpenNow, isPremiumActi
 
 const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', year: 'numeric', month: 'long', day: 'numeric' });
 
-export function ClubDetail({ club }: { club: ClubWithRelations }) {
+export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations; tiktokUrl?: string | null }) {
   const hasHours = club.opening_hours.length > 0;
   const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
   const premiumActive = isPremiumActive(club);
@@ -28,6 +29,8 @@ export function ClubDetail({ club }: { club: ClubWithRelations }) {
   const googleMapsUrl = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}` : null;
   const clubContext = `club=${encodeURIComponent(club.name)}&slug=${encodeURIComponent(club.slug)}`;
   const correctionHref = `/elaqe?${clubContext}`;
+  const socialHref = tiktokUrl || club.instagram_url;
+  const socialKind = tiktokUrl ? 'tiktok' : socialHref ? 'instagram' : null;
 
   return (
     <article className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
