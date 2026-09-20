@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+const [clubs, popularity, popularPage, layout, tip, card, detail, sitemap] = await Promise.all([
+  readFile(new URL('../src/lib/queries/clubs.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/queries/club-popularity.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/populyar-klublar/page.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/tip/page.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/sitemap.ts', import.meta.url), 'utf8'),
+]);
+
+assert.ok(popularity.includes("from('page_views')"), 'Popularity must derive from first-party club profile views.');
+assert.ok(popularity.includes("new Set<string>()"), 'Popularity must deduplicate sessions instead of ranking raw refreshes only.');
+assert.ok(popularity.includes("revalidate: 600"), 'Popularity reads must be cached to avoid per-request analytics load.');
+
+const premiumIndex = clubs.indexOf('const premiumDelta');
+const sessionIndex = clubs.indexOf('const sessionDelta');
+assert.ok(premiumIndex >= 0 && sessionIndex > premiumIndex, 'Commercial list order must pin Premium before organic popularity.');
+assert.ok(clubs.includes('bPopularity?.sessions') && clubs.includes('bPopularity?.views'), 'Default list must rank non-Premium clubs by 30-day demand.');
+
+assert.ok(popularPage.includes('Premium status bu səhifədə orqanik sıralamaya təsir etmir.'), 'Organic popular page must disclose Premium neutrality.');
+assert.ok(popularPage.includes('(b.metric?.sessions ?? 0) - (a.metric?.sessions ?? 0)'), 'Popular page must rank organically by unique sessions.');
+assert.ok(layout.includes('href="/populyar-klublar"'), 'Desktop/footer navigation must expose popular clubs.');
+assert.ok(tip.includes('href="/populyar-klublar"'), 'Mobile menu destination must expose popular clubs.');
+assert.ok(sitemap.includes('/populyar-klublar'), 'Popular clubs page must be discoverable in sitemap.');
+assert.ok(card.includes('<Badge tone="premium">Premium</Badge>'), 'Club cards must label paid placement as Premium.');
+assert.ok(detail.includes('<Badge tone="premium">Premium</Badge>'), 'Club detail must label paid placement as Premium.');
+assert.ok(!card.includes('<Badge tone="premium">VIP</Badge>') && !detail.includes('<Badge tone="premium">VIP</Badge>'), 'Legacy VIP wording must not remain on public club surfaces.');
+
+console.log('Premium placement + organic popularity regression: PASS');

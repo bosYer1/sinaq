@@ -141,3 +141,8 @@ assert.ok(posthog.includes('queryCoreHogQL(host, projectId, apiKey'), 'Core Post
 assert.ok(posthog.includes('for (let attempt = 0; attempt < 2; attempt += 1)'), 'Core PostHog read must retry once for transient failures.');
 assert.ok(posthog.includes("if (result.status.status !== 'ready') throw new Error(result.status.detail);"), 'Provider errors must not be stored as successful cached analytics.');
 assert.ok(posthog.includes('return fetchPostHogMetrics(range);'), 'Cached PostHog failures must get an uncached recovery attempt.');
+
+assert.ok(posthog.includes("const [healthRows, retentionRows] = await Promise.all(["), 'Health and retention must be promoted out of optional PostHog fan-out.');
+assert.ok(posthog.includes("queryCoreHogQL(host, projectId, apiKey"), 'Critical PostHog health/retention reads must use retrying core queries.');
+assert.ok(posthog.includes("if (healthRows.length === 0 || retentionRows.length === 0)"), 'Missing critical CEO-signal inputs must fail closed instead of producing fake zero signals.');
+assert.ok(!posthog.includes("const [campaignRows, clubRows, trendRows, healthRows, retentionRows"), 'Health/retention must not remain in optional fail-soft result tuple.');

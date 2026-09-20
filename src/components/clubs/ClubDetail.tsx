@@ -62,7 +62,7 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">{club.name}</h1>
-                {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
+                {premiumActive ? <Badge tone="premium">Premium</Badge> : null}
                 {typeSlugs.map((slug) => <Badge key={slug} tone={slug === 'pc' ? 'pc' : 'ps'}>{slug === 'pc' ? 'PC' : 'PlayStation'}</Badge>)}
               </div>
               <p className="mt-2 text-sm text-muted">{club.district?.name ?? 'Rayon göstərilməyib'}{club.address ? ` · ${club.address}` : ''}</p>

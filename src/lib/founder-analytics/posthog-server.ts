@@ -165,7 +165,60 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         GROUP BY period
       `);
 
-    const [campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows] = await Promise.all([
+    const [healthRows, retentionRows] = await Promise.all([
+      queryCoreHogQL(host, projectId, apiKey, `
+        SELECT
+          maxIf(timestamp, ${publicScope}) AS latest_event_at,
+          countIf(${publicScope}) AS public_events,
+          countIf(properties.gameyer_traffic_scope = 'test' AND properties.$host = 'gameyer.az') AS test_events,
+          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview' AND empty(properties.gameyer_session_landing_path)) AS missing_session,
+          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview'
+            AND (notEmpty(properties.gameyer_first_fbclid) OR notEmpty(properties.gameyer_session_fbclid) OR notEmpty(properties.fbclid))
+            AND empty(properties.gameyer_first_utm_campaign)
+            AND empty(properties.gameyer_session_utm_campaign)
+            AND empty(properties.utm_campaign)) AS missing_campaign,
+          countIf(${publicScope} AND event = 'search_query' AND properties.no_results = true) AS no_result_searches,
+          countIf(${productionPublicScope} AND properties.$virt_is_bot = true) AS bot_events,
+          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview'
+            AND empty(properties.gameyer_first_referrer)
+            AND empty(properties.gameyer_session_referrer)
+            AND empty(properties.gameyer_first_utm_source)
+            AND empty(properties.gameyer_session_utm_source)
+            AND empty(properties.utm_source)
+            AND empty(properties.gameyer_first_fbclid)
+            AND empty(properties.gameyer_session_fbclid)
+            AND empty(properties.fbclid)) AS source_missing_sessions,
+          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions
+        FROM events
+        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
+      `),
+      queryCoreHogQL(host, projectId, apiKey, `
+        SELECT
+          count() AS users,
+          countIf(first_seen < toDateTime('${from}')) AS returning_users,
+          countIf(current_sessions >= 3) AS three_session_users,
+          round(avg(current_sessions), 2) AS sessions_per_user
+        FROM (
+          SELECT
+            person_id,
+            min(timestamp) AS first_seen,
+            uniqIf(properties.$session_id, timestamp >= toDateTime('${from}')) AS current_sessions
+          FROM events
+          WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
+            AND timestamp < toDateTime('${to}')
+            AND ${publicScope}
+            AND event = '$pageview'
+          GROUP BY person_id
+        )
+        WHERE current_sessions > 0
+      `),
+    ]);
+
+    if (healthRows.length === 0 || retentionRows.length === 0) {
+      return emptyMetrics('PostHog tracking sağlamlığı və ya retention datası alınmadı.', 'error');
+    }
+
+    const [campaignRows, clubRows, trendRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows] = await Promise.all([
       runHogQL(`
         SELECT
           source,
@@ -235,52 +288,8 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         GROUP BY date
         ORDER BY date
       `),
-      runHogQL(`
-        SELECT
-          maxIf(timestamp, ${publicScope}) AS latest_event_at,
-          countIf(${publicScope}) AS public_events,
-          countIf(properties.gameyer_traffic_scope = 'test' AND properties.$host = 'gameyer.az') AS test_events,
-          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview' AND empty(properties.gameyer_session_landing_path)) AS missing_session,
-          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview'
-            AND (notEmpty(properties.gameyer_first_fbclid) OR notEmpty(properties.gameyer_session_fbclid) OR notEmpty(properties.fbclid))
-            AND empty(properties.gameyer_first_utm_campaign)
-            AND empty(properties.gameyer_session_utm_campaign)
-            AND empty(properties.utm_campaign)) AS missing_campaign,
-          countIf(${publicScope} AND event = 'search_query' AND properties.no_results = true) AS no_result_searches,
-          countIf(${productionPublicScope} AND properties.$virt_is_bot = true) AS bot_events,
-          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview'
-            AND empty(properties.gameyer_first_referrer)
-            AND empty(properties.gameyer_session_referrer)
-            AND empty(properties.gameyer_first_utm_source)
-            AND empty(properties.gameyer_session_utm_source)
-            AND empty(properties.utm_source)
-            AND empty(properties.gameyer_first_fbclid)
-            AND empty(properties.gameyer_session_fbclid)
-            AND empty(properties.fbclid)) AS source_missing_sessions,
-          uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions
-        FROM events
-        WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
-      `),
-      runHogQL(`
-        SELECT
-          count() AS users,
-          countIf(first_seen < toDateTime('${from}')) AS returning_users,
-          countIf(current_sessions >= 3) AS three_session_users,
-          round(avg(current_sessions), 2) AS sessions_per_user
-        FROM (
-          SELECT
-            person_id,
-            min(timestamp) AS first_seen,
-            uniqIf(properties.$session_id, timestamp >= toDateTime('${from}')) AS current_sessions
-          FROM events
-          WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
-            AND timestamp < toDateTime('${to}')
-            AND ${publicScope}
-            AND event = '$pageview'
-          GROUP BY person_id
-        )
-        WHERE current_sessions > 0
-      `),
+
+
       runHogQL(`
         SELECT
           uniqIf(properties.$session_id, event = '$pageview') AS landing_sessions,
