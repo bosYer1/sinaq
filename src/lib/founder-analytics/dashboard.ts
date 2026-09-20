@@ -32,7 +32,7 @@ export async function getFounderDashboard(
     getMetaAdsMetrics(range),
     getGa4Metrics(range),
     getGscMetrics(range),
-    getSupabaseMetrics(supabase),
+    getSupabaseMetrics(supabase, range),
   ]);
   const providers = [
     posthog.status,
