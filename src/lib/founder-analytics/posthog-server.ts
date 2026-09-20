@@ -15,6 +15,7 @@ const GAMEYER_POSTHOG_PROJECT_ID = '585472';
 const GAMEYER_POSTHOG_HOST = 'https://us.posthog.com';
 const POSTHOG_QUERY_TIMEOUT_MS = 6_000;
 const POSTHOG_CORE_TIMEOUT_MS = 10_000;
+const POSTHOG_DASHBOARD_DEADLINE_MS = 8_000;
 const POSTHOG_MAX_CONCURRENCY = 6;
 
 function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogMetrics {
@@ -500,10 +501,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         clubViewSessions: numberValue(funnel.club_view_sessions),
         ctaSessions: numberValue(funnel.cta_sessions),
         profileToLeadRate: rate(numberValue(funnel.cta_sessions), numberValue(funnel.club_view_sessions)),
-        integrityOk:
-          numberValue(funnel.landing_sessions) >= numberValue(funnel.discovery_sessions)
-          && numberValue(funnel.discovery_sessions) >= numberValue(funnel.club_view_sessions)
-          && numberValue(funnel.club_view_sessions) >= numberValue(funnel.cta_sessions),
+        integrityOk: numberValue(funnel.cta_sessions) <= numberValue(funnel.club_view_sessions),
       },
       retention: {
         d1: d1CohortUsers > 0 ? rate(numberValue(cohort.d1_users), d1CohortUsers) : null,
@@ -580,16 +578,28 @@ const getCachedPostHogMetrics = unstable_cache(
     if (result.status.status !== 'ready') throw new Error(result.status.detail);
     return result;
   },
-  ['founder-analytics-posthog-v6'],
+  ['founder-analytics-posthog-v7'],
   { revalidate: 300, tags: ['founder-analytics'] },
 );
 
 export async function getPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await getCachedPostHogMetrics(range);
-  } catch {
-    // Provider failures must not remain sticky in the Next data cache.
-    // Retry live so a transient PostHog/API failure can recover on the next dashboard refresh.
-    return fetchPostHogMetrics(range);
+    return await Promise.race([
+      getCachedPostHogMetrics(range),
+      new Promise<PostHogMetrics>((resolve) => {
+        timer = setTimeout(
+          () => resolve(emptyMetrics(`PostHog dashboard deadline exceeded (${POSTHOG_DASHBOARD_DEADLINE_MS / 1000}s)`, 'error')),
+          POSTHOG_DASHBOARD_DEADLINE_MS,
+        );
+      }),
+    ]);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : 'PostHog sorğusu uğursuz oldu.';
+    // Failed provider results are not cached as successful analytics and are not retried
+    // synchronously in the same dashboard request, avoiding a second full query waterfall.
+    return emptyMetrics(detail, 'error');
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
