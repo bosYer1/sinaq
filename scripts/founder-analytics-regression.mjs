@@ -119,3 +119,14 @@ for (const kind of ['owner_claim', 'new_club', 'correction']) assert.ok(supabase
 assert.ok(page.includes('submissionBacklogByKind.ownerClaim') && page.includes('submissionBacklogByKind.newClub') && page.includes('submissionBacklogByKind.correction'), 'Founder dashboard must surface the open supply backlog mix.');
 
 assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0') && calculations.includes('Klub sahibi müraciəti gözləyir'), 'CEO signals must elevate open owner claims as an operational supply priority.');
+
+
+{
+  const source = await readFile(new URL('../src/lib/founder-analytics/posthog-server.ts', import.meta.url), 'utf8');
+  assert.ok(source.includes('POSTHOG_QUERY_TIMEOUT_MS = 6_000'), 'PostHog admin analytics must cap individual API latency.');
+  assert.ok(source.includes('POSTHOG_MAX_CONCURRENCY = 6'), 'PostHog admin analytics must avoid a 12-request burst.');
+  assert.ok(source.includes('createLimitedPostHogRunner'), 'PostHog queries must use a bounded runner.');
+  assert.ok(source.includes('errors.push(detail);') && source.includes('return [];'), 'Extended PostHog query failures must fail soft instead of taking down the whole dashboard.');
+  assert.ok(source.includes("if (overviewRows.length === 0)"), 'Core overview failure must still fail closed rather than showing invented zero metrics.');
+  assert.ok(source.includes("['founder-analytics-posthog-v4']") && source.includes('revalidate: 600'), 'PostHog dashboard cache must reduce repeated provider load.');
+}
