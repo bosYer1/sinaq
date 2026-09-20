@@ -80,19 +80,6 @@ const navigate = async (path) => {
   await sleep(400);
 };
 
-const installCaptureShim = async () => evaluate(`(() => {
-  window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
-  window.posthog = {
-    __loaded: true,
-    init() {},
-    register_once() {},
-    capture(event, properties) {
-      window.__gameyerCapturedEvents.push({ event, properties });
-    },
-  };
-  return true;
-})()`);
-
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Network.enable');
@@ -153,8 +140,12 @@ try {
   assert(clubHref && detail, 'No public club detail exposes prominent Phone, Instagram, and Maps CTAs for outbound analytics regression', { checkedClubHrefs: clubHrefs });
   assert(detail.path === clubHref, 'Outbound CTA regression did not land on the selected club detail page', detail);
 
-  await installCaptureShim();
   await evaluate(`(() => {
+    window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
+    window.posthog = {
+      __loaded: true,
+      capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
+    };
     const anchor = Array.from(document.querySelectorAll('a[href^="tel:"]')).find((item) => (item.textContent || '').trim() === 'Zəng et');
     anchor.setAttribute('href', 'javascript:void(0)');
     anchor.click();
@@ -175,8 +166,12 @@ try {
   assert(phoneCapture.properties?.cta_surface === 'contact_phone', 'Phone CTA lost contact surface attribution', phoneCapture);
   assert(phoneCapture.path === clubHref, 'Phone regression click unexpectedly navigated away from the club detail page', phoneCapture);
 
-  await installCaptureShim();
   await evaluate(`(() => {
+    window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
+    window.posthog = {
+      __loaded: true,
+      capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
+    };
     const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Instagram');
     anchor.removeAttribute('target');
     anchor.setAttribute('href', 'javascript:void(0)');
@@ -198,8 +193,12 @@ try {
   assert(instagramCapture.properties?.cta_surface === 'contact_instagram', 'Instagram CTA lost contact surface attribution', instagramCapture);
   assert(instagramCapture.path === clubHref, 'Instagram regression click unexpectedly navigated away from the club detail page', instagramCapture);
 
-  await installCaptureShim();
   await evaluate(`(() => {
+    window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
+    window.posthog = {
+      __loaded: true,
+      capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
+    };
     const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Marşrut');
     anchor.removeAttribute('target');
     anchor.setAttribute('href', 'javascript:void(0)');
