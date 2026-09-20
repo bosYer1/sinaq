@@ -130,3 +130,6 @@ assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0
   assert.ok(source.includes("if (overviewRows.length === 0)"), 'Core overview failure must still fail closed rather than showing invented zero metrics.');
   assert.ok(source.includes("['founder-analytics-posthog-v4']") && source.includes('revalidate: 600'), 'PostHog dashboard cache must reduce repeated provider load.');
 }
+
+assert.ok(posthog.includes('toFloatOrZero(toString(properties.metric_value))'), 'PostHog web-vitals query must use the supported HogQL float conversion helper.');
+assert.ok(!posthog.includes('toFloat64OrZero('), 'Unsupported HogQL toFloat64OrZero must not regress into Founder Analytics.');
