@@ -57,7 +57,7 @@ assert.ok(posthog.includes('countIf(person_id IN ('), 'Campaign returning users 
 assert.ok(posthog.includes("timestamp < toDateTime('${from}')"), 'Prior-visit queries must end before the selected interval starts.');
 assert.ok(posthog.includes("uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions"), 'Attribution denominator must deduplicate public pageview sessions.');
 assert.ok(posthog.includes('attributionCompleteness: rate(publicPageviewSessions - numberValue(health.source_missing_sessions), publicPageviewSessions)'), 'Attribution completeness must measure sessions with known traffic source, not landing-path completeness.');
-assert.match(extended, />Stage reach</, 'Independent discovery stages must be labeled as Stage reach.');
+assert.match(extended, />Stage reach — strict funnel deyil</, 'Independent discovery stages must be labeled as non-strict Stage Reach.');
 assert.doesNotMatch(extended, /dropoff|OR-funnel|Landing-dən conversion/, 'Independent stage counts must not claim ordered funnel conversion or dropoff.');
 
 assert.match(posthog, /event = 'club_update_impression'/, 'Return-loop impressions must be measured from the dedicated update event.');
