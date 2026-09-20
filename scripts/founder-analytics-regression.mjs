@@ -95,7 +95,7 @@ assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club tran
 assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
 assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
-assert.ok(posthog.includes("['founder-analytics-posthog-v3']"), 'PostHog cache key must be bumped when production and retention semantics change.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v4']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
 assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
