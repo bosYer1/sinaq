@@ -120,9 +120,11 @@ try {
     await navigate(candidateHref);
     await wait(`Boolean(document.querySelector('h1'))`, `club detail heading ${candidateHref}`);
     const candidateDetail = await evaluate(`(() => {
-      const instagram = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').trim() === 'Instagram');
-      const maps = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').trim() === 'Marşrut');
-      const phone = Array.from(document.querySelectorAll('a[href^="tel:"]')).find((anchor) => (anchor.textContent || '').trim() === 'Zəng et');
+      const article = document.querySelector('article');
+      const articleLinks = Array.from(article?.querySelectorAll('a') ?? []);
+      const instagram = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Instagram');
+      const maps = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Marşrut');
+      const phone = articleLinks.find((anchor) => anchor.getAttribute('href')?.startsWith('tel:') && (anchor.textContent || '').trim() === 'Zəng et');
       return {
         path: location.pathname,
         instagramHref: instagram?.href || null,
@@ -146,7 +148,7 @@ try {
       __loaded: true,
       capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
     };
-    const anchor = Array.from(document.querySelectorAll('a[href^="tel:"]')).find((item) => (item.textContent || '').trim() === 'Zəng et');
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a[href^="tel:"]') ?? []).find((item) => (item.textContent || '').trim() === 'Zəng et');
     anchor.setAttribute('href', 'javascript:void(0)');
     anchor.click();
     return true;
@@ -172,7 +174,7 @@ try {
       __loaded: true,
       capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
     };
-    const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Instagram');
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a') ?? []).find((item) => (item.textContent || '').trim() === 'Instagram');
     anchor.setAttribute('target', '_blank');
     anchor.setAttribute('href', 'about:blank');
     anchor.click();
@@ -199,7 +201,7 @@ try {
       __loaded: true,
       capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
     };
-    const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Marşrut');
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a') ?? []).find((item) => (item.textContent || '').trim() === 'Marşrut');
     anchor.setAttribute('target', '_blank');
     anchor.setAttribute('href', 'about:blank');
     anchor.click();
