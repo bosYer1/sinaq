@@ -39,6 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, changeFrequency: 'daily', priority: 1 },
     { url: `${baseUrl}/rayon`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/tip`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/populyar-klublar`, changeFrequency: 'daily', priority: 0.86 },
     { url: `${baseUrl}/haqqimizda`, changeFrequency: 'monthly', priority: 0.62 },
     { url: `${baseUrl}/melumat-metodologiyasi`, changeFrequency: 'monthly', priority: 0.58 },
     { url: `${baseUrl}/elaqe`, changeFrequency: 'monthly', priority: 0.4 },
@@ -151,6 +152,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   applyLatest(baseUrl, overallLatest);
   applyLatest(`${baseUrl}/rayon`, overallLatest);
   applyLatest(`${baseUrl}/tip`, overallLatest);
+  applyLatest(`${baseUrl}/populyar-klublar`, overallLatest);
 
   for (const districtSlug of activeDistricts) {
     const latest = districtLatest.get(districtSlug) ?? null;

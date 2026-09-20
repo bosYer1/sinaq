@@ -115,8 +115,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="font-display text-xl font-bold tracking-[-0.04em] text-ink">Game<span className="text-primary">Yer</span></span>
             </Link>
 
-            <nav className="hidden items-center gap-8 text-sm font-medium text-muted md:flex" aria-label="Əsas keçidlər">
+            <nav className="hidden items-center gap-5 text-sm font-medium text-muted md:flex" aria-label="Əsas keçidlər">
               <Link href="/" className="font-semibold text-primary">Klublar</Link>
+              <Link href="/populyar-klublar" className="transition hover:text-ink">Populyar</Link>
               <Link href="/rayon" className="transition hover:text-ink">Rayonlar</Link>
               <Link href="/tip" className="transition hover:text-ink">PC / PS</Link>
               <Link href="/yenilikler" className="transition hover:text-ink">Yeniliklər</Link>
@@ -137,6 +138,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="border-t border-border bg-surface pb-[68px] md:pb-0">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6 lg:px-8">
             <span className="font-semibold text-ink">© 2026 GameYer</span>
+            <Link href="/populyar-klublar" className="hover:text-ink">Populyar klublar</Link>
             <Link href="/yaxinliqda-gaming-klublari" className="hover:text-ink">Yaxın klublar</Link>
             <Link href="/bakida-gaming-klub-qiymetleri" className="hover:text-ink">Klub qiymətləri</Link>
             <Link href="/bakida-pc-klublari" className="hover:text-ink">PC klubları</Link>

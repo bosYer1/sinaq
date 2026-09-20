@@ -2,6 +2,7 @@ import { unstable_cache } from 'next/cache';
 import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { isPremiumActive } from '@/lib/utils';
+import { getClubPopularityMetrics } from '@/lib/queries/club-popularity';
 import type { ClubFilters, ClubWithRelations } from '@/types/database';
 
 const CLUB_SELECT = `
@@ -94,7 +95,10 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
     }
   }
 
-  const { data, error } = await query.returns<ClubWithRelations[]>();
+  const [{ data, error }, popularity] = await Promise.all([
+    query.returns<ClubWithRelations[]>(),
+    getClubPopularityMetrics(),
+  ]);
   if (error) {
     console.error('getClubs xətası:', error.message);
     return [];
@@ -120,9 +124,22 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
     );
   }
 
+  const popularityBySlug = new Map(popularity.map((item) => [item.slug, item]));
+
   clubs = [...clubs].sort((a, b) => {
+    // Commercial placement is explicit: active Premium clubs are pinned first.
     const premiumDelta = Number(isPremiumActive(b)) - Number(isPremiumActive(a));
     if (premiumDelta !== 0) return premiumDelta;
+
+    // Within the same commercial tier, rank by real 30-day demand.
+    // Unique sessions are primary so repeated refreshes do not dominate the list.
+    const aPopularity = popularityBySlug.get(a.slug);
+    const bPopularity = popularityBySlug.get(b.slug);
+    const sessionDelta = (bPopularity?.sessions ?? 0) - (aPopularity?.sessions ?? 0);
+    if (sessionDelta !== 0) return sessionDelta;
+    const viewDelta = (bPopularity?.views ?? 0) - (aPopularity?.views ?? 0);
+    if (viewDelta !== 0) return viewDelta;
+
     return a.name.localeCompare(b.name, 'az');
   });
 
