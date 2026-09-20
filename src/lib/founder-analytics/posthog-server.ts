@@ -143,7 +143,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   const runHogQL = createLimitedPostHogRunner(host, projectId, apiKey, queryErrors);
 
   try {
-    const overviewRows = await queryCoreHogQL(host, projectId, apiKey, `
+    const overviewPromise = queryCoreHogQL(host, projectId, apiKey, `
         SELECT
           if(timestamp >= toDateTime('${from}'), 'current', 'previous') AS period,
           countIf(event = '$pageview') AS pageviews,
@@ -168,7 +168,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         GROUP BY period
       `);
 
-    const [healthRows, retentionRows] = await Promise.all([
+    const healthRetentionPromise = Promise.all([
       queryCoreHogQL(host, projectId, apiKey, `
         SELECT
           maxIf(timestamp, ${publicScope}) AS latest_event_at,
@@ -217,11 +217,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       `),
     ]);
 
-    if (healthRows.length === 0 || retentionRows.length === 0) {
-      return emptyMetrics('PostHog tracking sağlamlığı və ya retention datası alınmadı.', 'error');
-    }
-
-    const [campaignRows, clubRows, trendRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows] = await Promise.all([
+    const optionalPromise = Promise.all([
       runHogQL(`
         SELECT
           source,
@@ -409,6 +405,16 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} AND event = 'web_vital'
       `),
     ]);
+
+    const [
+      overviewRows,
+      [healthRows, retentionRows],
+      [campaignRows, clubRows, trendRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows],
+    ] = await Promise.all([overviewPromise, healthRetentionPromise, optionalPromise]);
+
+    if (healthRows.length === 0 || retentionRows.length === 0) {
+      return emptyMetrics('PostHog tracking sağlamlığı və ya retention datası alınmadı.', 'error');
+    }
 
     if (overviewRows.length === 0) {
       return emptyMetrics(queryErrors[0] ?? 'PostHog əsas overview sorğusu data qaytarmadı.', 'error');

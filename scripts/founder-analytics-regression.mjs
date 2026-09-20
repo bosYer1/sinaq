@@ -169,9 +169,11 @@ assert.ok(dashboard.includes('SECONDARY_PROVIDER_DEADLINE_MS = 4_500') && dashbo
 assert.ok(dashboard.includes("withDashboardDeadline('GA4'") && dashboard.includes("withDashboardDeadline('GSC'") && dashboard.includes("withDashboardDeadline('Meta Ads'") && dashboard.includes("withDashboardDeadline('Supabase'"), 'Founder dashboard must apply provider deadlines consistently.');
 assert.ok(loading.includes('Analitika yüklənir') && loading.includes('aria-busy="true"'), 'Analytics route must render an immediate loading shell during server navigation.');
 
-assert.ok(posthog.includes("const [healthRows, retentionRows] = await Promise.all(["), 'Health and retention must be promoted out of optional PostHog fan-out.');
+assert.ok(posthog.includes("const healthRetentionPromise = Promise.all(["), 'Health and retention must start concurrently with overview and optional PostHog reads.');
 assert.ok(posthog.includes("queryCoreHogQL(host, projectId, apiKey"), 'Critical PostHog health/retention reads must use retrying core queries.');
 assert.ok(posthog.includes("if (healthRows.length === 0 || retentionRows.length === 0)"), 'Missing critical CEO-signal inputs must fail closed instead of producing fake zero signals.');
+assert.ok(posthog.includes('const overviewPromise = queryCoreHogQL') && posthog.includes('const optionalPromise = Promise.all(['), 'PostHog phases must launch without a sequential waterfall.');
+assert.ok(posthog.includes('await Promise.all([overviewPromise, healthRetentionPromise, optionalPromise])'), 'PostHog phases must converge through one concurrent await.');
 assert.ok(!posthog.includes("const [campaignRows, clubRows, trendRows, healthRows, retentionRows"), 'Health/retention must not remain in optional fail-soft result tuple.');
 
 assert.ok(posthog.includes('integrityOk: numberValue(funnel.cta_sessions) <= numberValue(funnel.club_view_sessions)'), 'Stage Reach integrity must only enforce the true CTA subset invariant.');
