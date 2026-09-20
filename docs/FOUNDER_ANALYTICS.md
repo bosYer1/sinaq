@@ -25,4 +25,4 @@ Private dəyişənlərin heç biri `NEXT_PUBLIC_` prefiksi daşımamalıdır.
 - Supabase: aktiv/verified klub sayı, açıq müraciətlər və profil sahələrinin tamlığı; mövcud admin RLS ilə oxunur.
 - CEO Signals: versiyalanmış kod qaydaları ilə deterministik çıxarılır; AI-generated və ya saxta tövsiyə deyil.
 
-External provider sorğuları beş dəqiqə bounded cache olunur. Provider konfiqurasiyası yoxdursa və ya API xətası baş verirsə həmin provider fail closed olur, rəqəm uydurulmur və digər provider-lər işləməyə davam edir.
+Uğurlu external provider sorğuları bounded cache olunur. PostHog üçün uğursuz provider nəticələri cache-də yapışdırılmır: əsas overview sorğusu ayrıca prioritetləşdirilir, bir dəfə retry edilir və növbəti dashboard refresh canlı recovery cəhdi edir. Provider konfiqurasiyası yoxdursa və ya API xətası davam edirsə provider fail closed olur, rəqəm uydurulmur və digər provider-lər işləməyə davam edir.

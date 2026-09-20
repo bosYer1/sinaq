@@ -11,7 +11,10 @@ type Row = Record<string, unknown>;
 
 const ALLOWED_HOSTS = new Set(['https://us.posthog.com', 'https://eu.posthog.com']);
 const PRODUCT_TIME_ZONE = 'Asia/Baku';
+const GAMEYER_POSTHOG_PROJECT_ID = '585472';
+const GAMEYER_POSTHOG_HOST = 'https://us.posthog.com';
 const POSTHOG_QUERY_TIMEOUT_MS = 6_000;
+const POSTHOG_CORE_TIMEOUT_MS = 10_000;
 const POSTHOG_MAX_CONCURRENCY = 6;
 
 function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogMetrics {
@@ -45,16 +48,35 @@ function rows(response: HogQLResponse): Row[] {
   return response.results.map((values) => Object.fromEntries(response.columns!.map((column, index) => [column, values[index]])));
 }
 
-async function queryHogQL(host: string, projectId: string, apiKey: string, query: string): Promise<Row[]> {
+async function queryHogQL(
+  host: string,
+  projectId: string,
+  apiKey: string,
+  query: string,
+  timeoutMs = POSTHOG_QUERY_TIMEOUT_MS,
+): Promise<Row[]> {
   const response = await fetch(`${host}/api/projects/${projectId}/query/`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: { kind: 'HogQLQuery', query } }),
     cache: 'no-store',
-    signal: AbortSignal.timeout(POSTHOG_QUERY_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) throw new Error(`PostHog sorğusu ${response.status} statusu qaytardı.`);
   return rows(await response.json() as HogQLResponse);
+}
+
+async function queryCoreHogQL(host: string, projectId: string, apiKey: string, query: string): Promise<Row[]> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      return await queryHogQL(host, projectId, apiKey, query, POSTHOG_CORE_TIMEOUT_MS);
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 350));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('PostHog əsas sorğusu uğursuz oldu.');
 }
 
 function periodClause(range: DateRange) {
@@ -103,10 +125,13 @@ function createLimitedPostHogRunner(host: string, projectId: string, apiKey: str
 
 async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   const apiKey = process.env.POSTHOG_PERSONAL_API_KEY?.trim();
-  const projectId = process.env.POSTHOG_PROJECT_ID?.trim();
-  const host = (process.env.POSTHOG_API_HOST?.trim() || 'https://us.posthog.com').replace(/\/$/, '');
-  if (!apiKey || !projectId) return emptyMetrics('POSTHOG_PERSONAL_API_KEY və ya POSTHOG_PROJECT_ID yoxdur.', 'unavailable');
-  if (!/^\d+$/.test(projectId) || !ALLOWED_HOSTS.has(host)) return emptyMetrics('PostHog project ID və ya API host təhlükəsiz deyil.', 'error');
+  const configuredProjectId = process.env.POSTHOG_PROJECT_ID?.trim();
+  const configuredHost = (process.env.POSTHOG_API_HOST?.trim() || '').replace(/\/$/, '');
+  const projectId = configuredProjectId && /^\d+$/.test(configuredProjectId)
+    ? configuredProjectId
+    : GAMEYER_POSTHOG_PROJECT_ID;
+  const host = ALLOWED_HOSTS.has(configuredHost) ? configuredHost : GAMEYER_POSTHOG_HOST;
+  if (!apiKey) return emptyMetrics('PostHog server read credential konfiqurasiya olunmayıb.', 'unavailable');
 
   const { from, to, previousFrom } = periodClause(range);
   const productionPublicScope = "properties.gameyer_traffic_scope = 'public' AND properties.$host = 'gameyer.az'";
@@ -117,8 +142,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   const runHogQL = createLimitedPostHogRunner(host, projectId, apiKey, queryErrors);
 
   try {
-    const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows] = await Promise.all([
-      runHogQL(`
+    const overviewRows = await queryCoreHogQL(host, projectId, apiKey, `
         SELECT
           if(timestamp >= toDateTime('${from}'), 'current', 'previous') AS period,
           countIf(event = '$pageview') AS pageviews,
@@ -139,7 +163,9 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         FROM events
         WHERE timestamp >= toDateTime('${previousFrom}') AND timestamp < toDateTime('${to}') AND ${publicScope}
         GROUP BY period
-      `),
+      `);
+
+    const [campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows] = await Promise.all([
       runHogQL(`
         SELECT
           source,
@@ -522,8 +548,22 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   }
 }
 
-export const getPostHogMetrics = unstable_cache(
-  fetchPostHogMetrics,
-  ['founder-analytics-posthog-v4'],
-  { revalidate: 600, tags: ['founder-analytics'] },
+const getCachedPostHogMetrics = unstable_cache(
+  async (range: DateRange) => {
+    const result = await fetchPostHogMetrics(range);
+    if (result.status.status !== 'ready') throw new Error(result.status.detail);
+    return result;
+  },
+  ['founder-analytics-posthog-v5'],
+  { revalidate: 300, tags: ['founder-analytics'] },
 );
+
+export async function getPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
+  try {
+    return await getCachedPostHogMetrics(range);
+  } catch {
+    // Provider failures must not remain sticky in the Next data cache.
+    // Retry live so a transient PostHog/API failure can recover on the next dashboard refresh.
+    return fetchPostHogMetrics(range);
+  }
+}
