@@ -16,8 +16,9 @@ function buildClubDataPriorities(posthog: PostHogMetrics, operational: SupabaseM
     const behavior = demand.get(club.slug);
     const views = behavior?.views ?? 0;
     const ctaClicks = behavior ? behavior.phoneClicks + behavior.instagramClicks + behavior.mapsClicks : 0;
+    const intentSessions = behavior?.intentSessions ?? 0;
     const gapPoints = 100 - club.completenessScore;
-    const demandPoints = Math.min(60, views * 2 + ctaClicks * 4);
+    const demandPoints = Math.min(60, views * 2 + intentSessions * 4);
     const evidencePoints = club.evidenceState === 'missing' ? 10 : club.evidenceState === 'stale' ? 5 : 0;
     return { ...club, views, ctaClicks, priorityScore: gapPoints + demandPoints + evidencePoints };
   }).sort((a, b) => b.priorityScore - a.priorityScore || b.views - a.views || a.name.localeCompare(b.name, 'az'));

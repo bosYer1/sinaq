@@ -239,8 +239,10 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           )) AS returning_users,
           sum(pageviews) AS pageviews,
           sum(club_views) AS club_views,
+          sum(club_view_sessions) AS club_view_sessions,
           sum(club_clicks) AS club_clicks,
-          sum(cta_clicks) AS cta_clicks
+          sum(cta_clicks) AS cta_clicks,
+          sum(cta_sessions) AS cta_sessions
         FROM (
           SELECT
             coalesce(nullIf(properties.gameyer_first_utm_source, ''), if(notEmpty(properties.gameyer_first_fbclid), 'facebook', 'direct')) AS source,
@@ -250,8 +252,10 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
             uniq(properties.$session_id) AS person_sessions,
             countIf(event = '$pageview') AS pageviews,
             countIf(event = 'club_view') AS club_views,
+            uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)) AS club_view_sessions,
             countIf(event = 'club_card_click') AS club_clicks,
-            countIf(event IN ('phone_click','instagram_click','maps_click')) AS cta_clicks
+            countIf(event IN ('phone_click','instagram_click','maps_click')) AS cta_clicks,
+            uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click') AND notEmpty(properties.$session_id)) AS cta_sessions
           FROM events
           WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
           GROUP BY source, medium, campaign, person_id
@@ -267,10 +271,12 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           coalesce(nullIf(anyIf(properties.district, notEmpty(properties.district)), ''), 'Məlum deyil') AS district,
           countIf(event = 'club_impression') AS impressions,
           countIf(event = 'club_view') AS views,
+          uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)) AS view_sessions,
           countIf(event = 'club_card_click') AS card_clicks,
           countIf(event = 'phone_click') AS phone_clicks,
           countIf(event = 'instagram_click') AS instagram_clicks,
-          countIf(event = 'maps_click') AS maps_clicks
+          countIf(event = 'maps_click') AS maps_clicks,
+          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click') AND notEmpty(properties.$session_id)) AS intent_sessions
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
           AND ${publicScope}

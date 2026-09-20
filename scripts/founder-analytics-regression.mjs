@@ -12,6 +12,8 @@ const dashboard = await readFile(new URL('../src/lib/founder-analytics/dashboard
 const calculations = await readFile(new URL('../src/lib/founder-analytics/calculations.ts', import.meta.url), 'utf8');
 const types = await readFile(new URL('../src/lib/founder-analytics/types.ts', import.meta.url), 'utf8');
 const supabase = await readFile(new URL('../src/lib/founder-analytics/supabase-server.ts', import.meta.url), 'utf8');
+const normalization = await readFile(new URL('../src/lib/founder-analytics/normalization.ts', import.meta.url), 'utf8');
+const databaseTypes = await readFile(new URL('../src/types/database.ts', import.meta.url), 'utf8');
 
 assert.match(page, /await requireAdmin\(\)/, 'Founder analytics must enforce admin and MFA authorization in the page.');
 assert.match(posthog, /^import 'server-only';/m, 'PostHog private API adapter must remain server-only.');
@@ -98,6 +100,13 @@ assert.ok(dashboard.includes('getSupabaseMetrics(supabase, range)'), 'First-part
 assert.ok(page.includes('Metodologiya guard:') && page.includes('cross-provider bölmə aparılmır'), 'Dashboard must guard provider identity semantics in user-visible copy.');
 assert.ok(page.includes('Outbound intent sessiyası') && page.includes('firstPartyIntent.browserVisitors'), 'Dashboard must surface the intent North Star and first-party verifier.');
 assert.ok(page.includes('GA4 key events = 0:') && page.includes('behavior tracking yoxdur demək deyil'), 'GA4 zero key-events must not be mislabeled as absent tracking.');
+assert.ok(databaseTypes.includes('analytics_events: {') && databaseTypes.includes("AnalyticsEvent = Database['public']['Tables']['analytics_events']['Row']"), 'Database types must include the production analytics_events table.');
+assert.ok(types.includes('clubViewSessions: number;') && types.includes('ctaSessions: number;') && types.includes('viewSessions: number;') && types.includes('intentSessions: number;'), 'Founder metric contracts must keep raw events separate from unique-session reach.');
+assert.ok(posthog.includes('AS club_view_sessions') && posthog.includes('AS cta_sessions') && posthog.includes('AS view_sessions') && posthog.includes('AS intent_sessions'), 'PostHog campaign and club queries must collect unique-session conversion denominators.');
+assert.ok(normalization.includes('clubViewRate: rate(clubViewSessions, sessions)') && normalization.includes('conversionRate: rate(ctaSessions, sessions)'), 'Campaign rates must use unique session reach, not raw clicks.');
+assert.ok(normalization.includes('intentRate: rate(intentSessions, viewSessions)'), 'Club intent rate must use unique session denominators.');
+assert.ok(normalization.includes('ctaRate: rate(row.ctaSessions, row.sessions)'), 'Acquisition intent rate must use unique intent sessions.');
+assert.ok(page.includes('Intent sess.') && extended.includes('Intent sess. rate') && extended.includes('Detail→intent'), 'Founder UI must visibly distinguish raw CTA events from unique intent sessions.');
 assert.ok(types.includes('newUsers: number;'), 'Founder Analytics contract must expose first-seen users separately from returning users.');
 assert.ok(posthog.includes('newUsers: Math.max(0, numberValue(retention.users) - numberValue(retention.returning_users))'), 'New users must derive from current users minus users seen before the interval within the retention lookback.');
 assert.ok(extended.includes('posthog.newUsers') && extended.includes('Yeni istifadəçilər'), 'Founder Analytics must surface new versus returning users.');

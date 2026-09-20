@@ -21,9 +21,11 @@ test('metric and CTA rate never emit invalid numbers', () => {
 });
 
 test('campaign normalization preserves attribution and calculates intent', () => {
-  const row = normalizeCampaign({ source: 'facebook', medium: 'paid_social', campaign: 'launch', visitors: '10', sessions: 12, pageviews: 20, club_views: 8, club_clicks: 6, cta_clicks: 2 });
+  const row = normalizeCampaign({ source: 'facebook', medium: 'paid_social', campaign: 'launch', visitors: '10', sessions: 12, pageviews: 20, club_views: 8, club_view_sessions: 6, club_clicks: 6, cta_clicks: 4, cta_sessions: 2 });
   assert.equal(row.key, 'facebook|paid_social|launch');
-  assert.equal(row.clubViewRate, 66.67);
+  assert.equal(row.ctaClicks, 4);
+  assert.equal(row.ctaSessions, 2);
+  assert.equal(row.clubViewRate, 50);
   assert.equal(row.conversionRate, 16.67);
 });
 
@@ -34,16 +36,19 @@ test('absent attribution is labeled without inventing a campaign', () => {
 });
 
 test('acquisition groups paid and organic campaign rows without losing totals', () => {
-  const paid = normalizeCampaign({ source: 'ig', medium: 'paid', campaign: 'one', visitors: 4, sessions: 5, club_views: 2, cta_clicks: 1 });
-  const organic = normalizeCampaign({ source: 'google', medium: 'organic', campaign: '', visitors: 3, sessions: 3, club_views: 1, cta_clicks: 0 });
+  const paid = normalizeCampaign({ source: 'ig', medium: 'paid', campaign: 'one', visitors: 4, sessions: 5, club_views: 3, club_view_sessions: 2, cta_clicks: 3, cta_sessions: 1 });
+  const organic = normalizeCampaign({ source: 'google', medium: 'organic', campaign: '', visitors: 3, sessions: 3, club_views: 1, club_view_sessions: 1, cta_clicks: 0, cta_sessions: 0 });
   const grouped = aggregateAcquisition([paid, organic]);
   assert.equal(acquisitionChannel('ig', 'paid'), 'Paid');
   assert.equal(grouped.find((row) => row.channel === 'Paid')?.sessions, 5);
   assert.equal(grouped.find((row) => row.channel === 'Organic')?.visitors, 3);
+  assert.equal(grouped.find((row) => row.channel === 'Paid')?.ctaRate, 20);
 });
 
 test('club intent combines only tracked contact actions', () => {
-  const row = normalizeClubPerformance({ slug: 'arena', name: 'Arena', views: 10, phone_clicks: 1, instagram_clicks: 2, maps_clicks: 1 });
+  const row = normalizeClubPerformance({ slug: 'arena', name: 'Arena', views: 10, view_sessions: 5, phone_clicks: 2, instagram_clicks: 2, maps_clicks: 2, intent_sessions: 2 });
+  assert.equal(row.phoneClicks + row.instagramClicks + row.mapsClicks, 6);
+  assert.equal(row.intentSessions, 2);
   assert.equal(row.intentRate, 40);
 });
 
@@ -125,7 +130,7 @@ test('CEO signal cap never hides a later critical signal behind lower-severity n
     ctaClicks: metric(25, 10), intentSessions: metric(8, 4), searchQueries: metric(10, 0), filterChanges: zero, exploreViewChanges: zero,
     mapUsage: zero, phoneClicks: zero, instagramClicks: zero, mapsClicks: zero, newUsers: 25,
     returningUsers: 0, returningRate: 0, sessionsPerUser: 1, usersWithThreeSessions: 0, conversionRate: zero,
-    acquisition: [], campaigns: [{ key: 'a', source: 'x', medium: 'paid', campaign: 'a', visitors: 8, sessions: 8, pageviews: 8, clubViews: 0, clubClicks: 0, ctaClicks: 0, returningUsers: 0, sessionsPerUser: 1, clubViewRate: 0, conversionRate: 0 }, { key: 'b', source: 'x', medium: 'paid', campaign: 'b', visitors: 2, sessions: 2, pageviews: 2, clubViews: 0, clubClicks: 0, ctaClicks: 0, returningUsers: 0, sessionsPerUser: 1, clubViewRate: 0, conversionRate: 0 }],
+    acquisition: [], campaigns: [{ key: 'a', source: 'x', medium: 'paid', campaign: 'a', visitors: 8, sessions: 8, pageviews: 8, clubViews: 0, clubViewSessions: 0, clubClicks: 0, ctaClicks: 0, ctaSessions: 0, returningUsers: 0, sessionsPerUser: 1, clubViewRate: 0, conversionRate: 0 }, { key: 'b', source: 'x', medium: 'paid', campaign: 'b', visitors: 2, sessions: 2, pageviews: 2, clubViews: 0, clubViewSessions: 0, clubClicks: 0, ctaClicks: 0, ctaSessions: 0, returningUsers: 0, sessionsPerUser: 1, clubViewRate: 0, conversionRate: 0 }],
     clubs: [], trend: [],
     tracking: { latestEventAt: new Date().toISOString(), publicEvents: 25, testEvents: 0, missingSessionAttribution: 0, missingCampaignAttribution: 0, noResultSearches: 5, botEvents: 0, sourceMissingSessions: 10, attributionCompleteness: 60 },
     funnel: { landingSessions: 25, discoverySessions: 0, clubViewSessions: 0, ctaSessions: 0, profileToLeadRate: 0, integrityOk: true },

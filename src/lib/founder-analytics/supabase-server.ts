@@ -97,7 +97,7 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
     ? { available: false, detail: 'First-party analytics_events oxunmadı.', events: 0, browserVisitors: 0, phoneClicks: 0, instagramClicks: 0, mapsClicks: 0 }
     : {
         available: true,
-        detail: 'Supabase analytics_events · session_id burada browser visitor ID-dir, PostHog session deyil.',
+        detail: 'Supabase analytics_events · raw first-party browser visitor ID; PostHog session/person və bot modeli ilə eyni vahid deyil.',
         events: intentRows.length,
         browserVisitors: new Set(intentRows.map((row) => row.session_id)).size,
         phoneClicks: intentRows.filter((row) => row.event_type === 'phone_click').length,

@@ -32,8 +32,10 @@ export type CampaignRow = {
   sessions: number;
   pageviews: number;
   clubViews: number;
+  clubViewSessions: number;
   clubClicks: number;
   ctaClicks: number;
+  ctaSessions: number;
   returningUsers: number;
   sessionsPerUser: number;
   clubViewRate: number;
@@ -45,7 +47,9 @@ export type AcquisitionRow = {
   visitors: number;
   sessions: number;
   clubViews: number;
+  clubViewSessions: number;
   ctaClicks: number;
+  ctaSessions: number;
   ctaRate: number;
 };
 
@@ -55,10 +59,12 @@ export type ClubPerformanceRow = {
   district: string;
   impressions: number;
   views: number;
+  viewSessions: number;
   cardClicks: number;
   phoneClicks: number;
   instagramClicks: number;
   mapsClicks: number;
+  intentSessions: number;
   intentRate: number;
 };
 
