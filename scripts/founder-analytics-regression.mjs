@@ -48,7 +48,7 @@ assert.match(posthog, /d7_cohort_users/, 'D7 retention must have its own mature 
 assert.match(posthog, /event = 'pwa_install_available'/, 'PWA install availability must be measured separately from completed installs.');
 assert.match(posthog, /event = 'pwa_installed'/, 'Completed PWA installs must use the dedicated appinstalled-backed event.');
 assert.match(posthog, /event = 'pwa_standalone_opened'/, 'Standalone PWA opens must be measured separately for installed-app evidence.');
-assert.match(posthog, /revalidate: 600/, 'PostHog provider must use bounded caching.');
+assert.match(posthog, /revalidate: 300/, 'PostHog provider must use bounded caching.');
 assert.match(ga4, /revalidate: 300/, 'GA4 provider must use bounded caching.');
 assert.match(gsc, /revalidate: 300/, 'GSC provider must use bounded caching.');
 
@@ -95,7 +95,7 @@ assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club tran
 assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
 assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
-assert.ok(posthog.includes("['founder-analytics-posthog-v4']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v5']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
 assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
@@ -128,8 +128,16 @@ assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0
   assert.ok(source.includes('createLimitedPostHogRunner'), 'PostHog queries must use a bounded runner.');
   assert.ok(source.includes('errors.push(detail);') && source.includes('return [];'), 'Extended PostHog query failures must fail soft instead of taking down the whole dashboard.');
   assert.ok(source.includes("if (overviewRows.length === 0)"), 'Core overview failure must still fail closed rather than showing invented zero metrics.');
-  assert.ok(source.includes("['founder-analytics-posthog-v4']") && source.includes('revalidate: 600'), 'PostHog dashboard cache must reduce repeated provider load.');
+  assert.ok(source.includes("['founder-analytics-posthog-v5']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
 }
 
 assert.ok(posthog.includes('toFloatOrZero(toString(properties.metric_value))'), 'PostHog web-vitals query must use the supported HogQL float conversion helper.');
 assert.ok(!posthog.includes('toFloat64OrZero('), 'Unsupported HogQL toFloat64OrZero must not regress into Founder Analytics.');
+
+assert.ok(posthog.includes("GAMEYER_POSTHOG_PROJECT_ID = '585472'"), 'GameYer analytics must have a verified project-id fallback.');
+assert.ok(posthog.includes("GAMEYER_POSTHOG_HOST = 'https://us.posthog.com'"), 'GameYer analytics must use the verified US PostHog region fallback.');
+assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 10_000'), 'Core overview gets a longer bounded timeout than optional analytics queries.');
+assert.ok(posthog.includes('queryCoreHogQL(host, projectId, apiKey'), 'Core PostHog overview must run before optional query fan-out.');
+assert.ok(posthog.includes('for (let attempt = 0; attempt < 2; attempt += 1)'), 'Core PostHog read must retry once for transient failures.');
+assert.ok(posthog.includes("if (result.status.status !== 'ready') throw new Error(result.status.detail);"), 'Provider errors must not be stored as successful cached analytics.');
+assert.ok(posthog.includes('return fetchPostHogMetrics(range);'), 'Cached PostHog failures must get an uncached recovery attempt.');
