@@ -159,7 +159,7 @@ assert.ok(!posthog.includes('toFloat64OrZero('), 'Unsupported HogQL toFloat64OrZ
 
 assert.ok(posthog.includes("GAMEYER_POSTHOG_PROJECT_ID = '585472'"), 'GameYer analytics must have a verified project-id fallback.');
 assert.ok(posthog.includes("GAMEYER_POSTHOG_HOST = 'https://us.posthog.com'"), 'GameYer analytics must use the verified US PostHog region fallback.');
-assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 10_000'), 'Core overview gets a longer bounded timeout than optional analytics queries.');
+assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 6_000'), 'Core PostHog timeout must stay within the dashboard deadline budget and allow one bounded retry.');
 assert.ok(posthog.includes('queryCoreHogQL(host, projectId, apiKey'), 'Core PostHog overview must run before optional query fan-out.');
 assert.ok(posthog.includes('for (let attempt = 0; attempt < 2; attempt += 1)'), 'Core PostHog read must retry once for transient failures.');
 assert.ok(posthog.includes("if (result.status.status !== 'ready') throw new Error(result.status.detail);"), 'Provider errors must not be stored as successful cached analytics.');
