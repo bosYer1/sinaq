@@ -13,16 +13,17 @@ const [clubs, popularity, popularPage, layout, tip, card, detail, sitemap] = awa
 ]);
 
 assert.ok(popularity.includes("from('page_views')"), 'Popularity must derive from first-party club profile views.');
-assert.ok(popularity.includes("new Set<string>()"), 'Popularity must deduplicate sessions instead of ranking raw refreshes only.');
+assert.ok(popularity.includes("new Set<string>()"), 'Popularity must retain unique-session data as a tie-breaker.');
 assert.ok(popularity.includes("revalidate: 600"), 'Popularity reads must be cached to avoid per-request analytics load.');
 
 const premiumIndex = clubs.indexOf('const premiumDelta');
+const viewIndex = clubs.indexOf('const viewDelta');
 const sessionIndex = clubs.indexOf('const sessionDelta');
-assert.ok(premiumIndex >= 0 && sessionIndex > premiumIndex, 'Commercial list order must pin Premium before organic popularity.');
+assert.ok(premiumIndex >= 0 && viewIndex > premiumIndex && sessionIndex > viewIndex, 'Commercial list order must pin Premium first, then rank by profile views before session tie-breaks.');
 assert.ok(clubs.includes('bPopularity?.sessions') && clubs.includes('bPopularity?.views'), 'Default list must rank non-Premium clubs by 30-day demand.');
 
 assert.ok(popularPage.includes('Premium status bu səhifədə orqanik sıralamaya təsir etmir.'), 'Organic popular page must disclose Premium neutrality.');
-assert.ok(popularPage.includes('(b.metric?.sessions ?? 0) - (a.metric?.sessions ?? 0)'), 'Popular page must rank organically by unique sessions.');
+assert.ok(popularPage.includes('(b.metric?.views ?? 0) - (a.metric?.views ?? 0)') && popularPage.indexOf('(b.metric?.views ?? 0)') < popularPage.indexOf('(b.metric?.sessions ?? 0)'), 'Popular page must rank organically by 30-day profile views first.');
 assert.ok(layout.includes('href="/populyar-klublar"'), 'Desktop/footer navigation must expose popular clubs.');
 assert.ok(tip.includes('href="/populyar-klublar"'), 'Mobile menu destination must expose popular clubs.');
 assert.ok(sitemap.includes('/populyar-klublar'), 'Popular clubs page must be discoverable in sitemap.');
@@ -31,3 +32,9 @@ assert.ok(detail.includes('<Badge tone="premium">Premium</Badge>'), 'Club detail
 assert.ok(!card.includes('<Badge tone="premium">VIP</Badge>') && !detail.includes('<Badge tone="premium">VIP</Badge>'), 'Legacy VIP wording must not remain on public club surfaces.');
 
 console.log('Premium placement + organic popularity regression: PASS');
+
+assert.ok(popularity.includes('queryPostHogPopularity'), 'Popularity must have a PostHog fallback when server-admin page_views access is unavailable.');
+assert.ok(popularity.includes("event = 'club_view'"), 'PostHog fallback must use real club profile views.');
+assert.ok(popularity.includes("['gameyer-club-popularity-30d-v2']"), 'Popularity cache key must be bumped for view-first semantics.');
+assert.ok(clubs.includes("['gameyer-public-clubs-v5']"), 'Public club cache key must be bumped for new ranking semantics.');
+assert.ok(clubs.includes('const recencyDelta'), 'Alphabetical ordering must not be the default fallback when popularity data ties or is unavailable.');
