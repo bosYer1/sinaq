@@ -11,6 +11,8 @@ type Row = Record<string, unknown>;
 
 const ALLOWED_HOSTS = new Set(['https://us.posthog.com', 'https://eu.posthog.com']);
 const PRODUCT_TIME_ZONE = 'Asia/Baku';
+const POSTHOG_QUERY_TIMEOUT_MS = 6_000;
+const POSTHOG_MAX_CONCURRENCY = 6;
 
 function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogMetrics {
   const zero = metric(0, 0);
@@ -49,7 +51,7 @@ async function queryHogQL(host: string, projectId: string, apiKey: string, query
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: { kind: 'HogQLQuery', query } }),
     cache: 'no-store',
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(POSTHOG_QUERY_TIMEOUT_MS),
   });
   if (!response.ok) throw new Error(`PostHog sorğusu ${response.status} statusu qaytardı.`);
   return rows(await response.json() as HogQLResponse);
@@ -60,6 +62,43 @@ function periodClause(range: DateRange) {
   const to = safeIso(range.to);
   const previousFrom = safeIso(range.previousFrom);
   return { from, to, previousFrom };
+}
+
+function createLimitedPostHogRunner(host: string, projectId: string, apiKey: string, errors: string[]) {
+  let active = 0;
+  const waiters: Array<() => void> = [];
+
+  async function acquire() {
+    if (active < POSTHOG_MAX_CONCURRENCY) {
+      active += 1;
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      waiters.push(() => {
+        active += 1;
+        resolve();
+      });
+    });
+  }
+
+  function release() {
+    active = Math.max(0, active - 1);
+    waiters.shift()?.();
+  }
+
+  return async (query: string): Promise<Row[]> => {
+    await acquire();
+    try {
+      return await queryHogQL(host, projectId, apiKey, query);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'PostHog sorğusu uğursuz oldu.';
+      errors.push(detail);
+      return [];
+    } finally {
+      release();
+    }
+  };
 }
 
 async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
@@ -74,10 +113,12 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   const publicScope = `${productionPublicScope} AND (properties.$virt_is_bot != true OR isNull(properties.$virt_is_bot))`;
   const fromDay = `toDate(toTimeZone(toDateTime('${from}'), '${PRODUCT_TIME_ZONE}'))`;
   const toDay = `toDate(toTimeZone(toDateTime('${to}'), '${PRODUCT_TIME_ZONE}'))`;
+  const queryErrors: string[] = [];
+  const runHogQL = createLimitedPostHogRunner(host, projectId, apiKey, queryErrors);
 
   try {
     const [overviewRows, campaignRows, clubRows, trendRows, healthRows, retentionRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows] = await Promise.all([
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           if(timestamp >= toDateTime('${from}'), 'current', 'previous') AS period,
           countIf(event = '$pageview') AS pageviews,
@@ -99,7 +140,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         WHERE timestamp >= toDateTime('${previousFrom}') AND timestamp < toDateTime('${to}') AND ${publicScope}
         GROUP BY period
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           source,
           medium,
@@ -138,7 +179,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         ORDER BY cta_clicks DESC, visitors DESC
         LIMIT 20
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           coalesce(nullIf(properties.club_slug, ''), '(slug yoxdur)') AS slug,
           coalesce(nullIf(properties.club_name, ''), slug) AS name,
@@ -157,7 +198,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         ORDER BY views DESC, card_clicks DESC
         LIMIT 20
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           toString(toDate(toTimeZone(timestamp, '${PRODUCT_TIME_ZONE}'))) AS date,
           countIf(event = '$pageview') AS pageviews,
@@ -168,7 +209,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         GROUP BY date
         ORDER BY date
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           maxIf(timestamp, ${publicScope}) AS latest_event_at,
           countIf(${publicScope}) AS public_events,
@@ -194,7 +235,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           count() AS users,
           countIf(first_seen < toDateTime('${from}')) AS returning_users,
@@ -214,7 +255,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         )
         WHERE current_sessions > 0
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           uniqIf(properties.$session_id, event = '$pageview') AS landing_sessions,
           uniqIf(properties.$session_id, event IN ('club_card_click','club_view')) AS discovery_sessions,
@@ -223,7 +264,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           countIf(first_day >= ${fromDay} AND first_day < addDays(${toDay}, -1)) AS d1_cohort_users,
           countIf(first_day >= ${fromDay} AND first_day < addDays(${toDay}, -1) AND has(active_days, addDays(first_day, 1))) AS d1_users,
@@ -244,7 +285,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           GROUP BY person_id
         )
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           countIf(event = 'club_update_impression') AS update_impressions,
           countIf(event = 'club_update_detail_click') AS update_detail_clicks,
@@ -285,7 +326,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           countIf(event = 'submission_form_viewed' AND properties.submission_kind = 'owner_claim') AS owner_claim_views,
           countIf(event = 'submission_form_viewed' AND properties.submission_kind = 'new_club') AS new_club_views,
@@ -301,7 +342,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
           AND ${publicScope}
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
           uniqIf(properties.$session_id, event = 'search_query' AND notEmpty(properties.$session_id)) AS search_sessions,
           uniqIf(properties.$session_id, event = 'search_query' AND properties.no_results = true AND notEmpty(properties.$session_id)) AS zero_result_search_sessions,
@@ -312,18 +353,22 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
       `),
-      queryHogQL(host, projectId, apiKey, `
+      runHogQL(`
         SELECT
-          quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'LCP') AS lcp_p75,
+          quantileIf(0.75)(toFloatOrZero(toString(properties.metric_value)), properties.metric_name = 'LCP') AS lcp_p75,
           countIf(properties.metric_name = 'LCP') AS lcp_samples,
-          quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'INP') AS inp_p75,
+          quantileIf(0.75)(toFloatOrZero(toString(properties.metric_value)), properties.metric_name = 'INP') AS inp_p75,
           countIf(properties.metric_name = 'INP') AS inp_samples,
-          quantileIf(0.75)(toFloat64OrZero(toString(properties.metric_value)), properties.metric_name = 'CLS') AS cls_p75,
+          quantileIf(0.75)(toFloatOrZero(toString(properties.metric_value)), properties.metric_name = 'CLS') AS cls_p75,
           countIf(properties.metric_name = 'CLS') AS cls_samples
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} AND event = 'web_vital'
       `),
     ]);
+
+    if (overviewRows.length === 0) {
+      return emptyMetrics(queryErrors[0] ?? 'PostHog əsas overview sorğusu data qaytarmadı.', 'error');
+    }
 
     const current = overviewRows.find((row) => row.period === 'current') ?? {};
     const previous = overviewRows.find((row) => row.period === 'previous') ?? {};
@@ -360,7 +405,13 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
     const d7CohortUsers = numberValue(cohort.d7_cohort_users);
 
     return {
-      status: providerStatus('posthog', 'ready', 'Real production public event datası server-side PostHog API-dən oxundu; məlum botlar çıxarıldı.'),
+      status: providerStatus(
+        'posthog',
+        'ready',
+        queryErrors.length > 0
+          ? `Əsas PostHog datası işləyir; ${queryErrors.length} əlavə sorğu bu yükləmədə alınmadı. Səhifə qismən data ilə fail-soft göstərildi.`
+          : 'Real production public event datası server-side PostHog API-dən oxundu; məlum botlar çıxarıldı.',
+      ),
       pageviews: metric(numberValue(current.pageviews), numberValue(previous.pageviews)),
       visitors: metric(numberValue(current.visitors), numberValue(previous.visitors)),
       sessions: metric(numberValue(current.sessions), numberValue(previous.sessions)),
@@ -473,6 +524,6 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
 
 export const getPostHogMetrics = unstable_cache(
   fetchPostHogMetrics,
-  ['founder-analytics-posthog-v3'],
-  { revalidate: 300, tags: ['founder-analytics'] },
+  ['founder-analytics-posthog-v4'],
+  { revalidate: 600, tags: ['founder-analytics'] },
 );

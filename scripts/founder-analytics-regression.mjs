@@ -48,7 +48,7 @@ assert.match(posthog, /d7_cohort_users/, 'D7 retention must have its own mature 
 assert.match(posthog, /event = 'pwa_install_available'/, 'PWA install availability must be measured separately from completed installs.');
 assert.match(posthog, /event = 'pwa_installed'/, 'Completed PWA installs must use the dedicated appinstalled-backed event.');
 assert.match(posthog, /event = 'pwa_standalone_opened'/, 'Standalone PWA opens must be measured separately for installed-app evidence.');
-assert.match(posthog, /revalidate: 300/, 'PostHog provider must use bounded caching.');
+assert.match(posthog, /revalidate: 600/, 'PostHog provider must use bounded caching.');
 assert.match(ga4, /revalidate: 300/, 'GA4 provider must use bounded caching.');
 assert.match(gsc, /revalidate: 300/, 'GSC provider must use bounded caching.');
 
@@ -95,7 +95,7 @@ assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club tran
 assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
 assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
-assert.ok(posthog.includes("['founder-analytics-posthog-v3']"), 'PostHog cache key must be bumped when production and retention semantics change.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v4']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
 assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
@@ -119,3 +119,17 @@ for (const kind of ['owner_claim', 'new_club', 'correction']) assert.ok(supabase
 assert.ok(page.includes('submissionBacklogByKind.ownerClaim') && page.includes('submissionBacklogByKind.newClub') && page.includes('submissionBacklogByKind.correction'), 'Founder dashboard must surface the open supply backlog mix.');
 
 assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0') && calculations.includes('Klub sahibi müraciəti gözləyir'), 'CEO signals must elevate open owner claims as an operational supply priority.');
+
+
+{
+  const source = await readFile(new URL('../src/lib/founder-analytics/posthog-server.ts', import.meta.url), 'utf8');
+  assert.ok(source.includes('POSTHOG_QUERY_TIMEOUT_MS = 6_000'), 'PostHog admin analytics must cap individual API latency.');
+  assert.ok(source.includes('POSTHOG_MAX_CONCURRENCY = 6'), 'PostHog admin analytics must avoid a 12-request burst.');
+  assert.ok(source.includes('createLimitedPostHogRunner'), 'PostHog queries must use a bounded runner.');
+  assert.ok(source.includes('errors.push(detail);') && source.includes('return [];'), 'Extended PostHog query failures must fail soft instead of taking down the whole dashboard.');
+  assert.ok(source.includes("if (overviewRows.length === 0)"), 'Core overview failure must still fail closed rather than showing invented zero metrics.');
+  assert.ok(source.includes("['founder-analytics-posthog-v4']") && source.includes('revalidate: 600'), 'PostHog dashboard cache must reduce repeated provider load.');
+}
+
+assert.ok(posthog.includes('toFloatOrZero(toString(properties.metric_value))'), 'PostHog web-vitals query must use the supported HogQL float conversion helper.');
+assert.ok(!posthog.includes('toFloat64OrZero('), 'Unsupported HogQL toFloat64OrZero must not regress into Founder Analytics.');
