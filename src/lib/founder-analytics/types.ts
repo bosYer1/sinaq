@@ -32,8 +32,10 @@ export type CampaignRow = {
   sessions: number;
   pageviews: number;
   clubViews: number;
+  clubViewSessions: number;
   clubClicks: number;
   ctaClicks: number;
+  ctaSessions: number;
   returningUsers: number;
   sessionsPerUser: number;
   clubViewRate: number;
@@ -45,7 +47,9 @@ export type AcquisitionRow = {
   visitors: number;
   sessions: number;
   clubViews: number;
+  clubViewSessions: number;
   ctaClicks: number;
+  ctaSessions: number;
   ctaRate: number;
 };
 
@@ -55,10 +59,12 @@ export type ClubPerformanceRow = {
   district: string;
   impressions: number;
   views: number;
+  viewSessions: number;
   cardClicks: number;
   phoneClicks: number;
   instagramClicks: number;
   mapsClicks: number;
+  intentSessions: number;
   intentRate: number;
 };
 
@@ -133,6 +139,7 @@ export type PostHogMetrics = {
   clubViews: Metric;
   clubClicks: Metric;
   ctaClicks: Metric;
+  intentSessions: Metric;
   searchQueries: Metric;
   filterChanges: Metric;
   exploreViewChanges: Metric;
@@ -161,7 +168,7 @@ export type PostHogMetrics = {
     sourceMissingSessions: number;
     attributionCompleteness: number;
   };
-  funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number; profileToLeadRate: number };
+  funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number; profileToLeadRate: number; integrityOk: boolean };
   retention: RetentionMetrics;
   pwa: PwaMetrics;
   returnLoop: ReturnLoopMetrics;
@@ -244,6 +251,15 @@ export type SupabaseMetrics = {
     missingType: number;
   };
   qualityBacklog: ClubDataQualityRow[];
+  firstPartyIntent: {
+    available: boolean;
+    detail: string;
+    events: number;
+    browserVisitors: number;
+    phoneClicks: number;
+    instagramClicks: number;
+    mapsClicks: number;
+  };
 };
 
 export type CeoSignal = {

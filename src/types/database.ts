@@ -73,6 +73,12 @@ export interface Database {
         Update: { id?: number; session_id?: string; visit_id?: string | null; path?: string; referrer_host?: string | null; user_agent?: string | null; ip_address?: string | null; created_at?: string };
         Relationships: [];
       };
+      analytics_events: {
+        Row: { id: number; session_id: string; path: string; event_type: string; club_slug: string | null; created_at: string };
+        Insert: { id?: number; session_id: string; path: string; event_type: string; club_slug?: string | null; created_at?: string };
+        Update: { id?: number; session_id?: string; path?: string; event_type?: string; club_slug?: string | null; created_at?: string };
+        Relationships: [];
+      };
       club_submissions: {
         Row: {
           id: string;
@@ -157,6 +163,7 @@ export type ClubImage = Database['public']['Tables']['club_images']['Row'];
 export type ClubDataEvidence = Database['public']['Tables']['club_data_evidence']['Row'];
 export type ClubSubmission = Database['public']['Tables']['club_submissions']['Row'];
 export type PageView = Database['public']['Tables']['page_views']['Row'];
+export type AnalyticsEvent = Database['public']['Tables']['analytics_events']['Row'];
 export type AdminNotification = Database['public']['Tables']['admin_notifications']['Row'];
 
 export interface ClubWithRelations extends ClubRow {
