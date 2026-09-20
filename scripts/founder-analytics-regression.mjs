@@ -48,7 +48,7 @@ assert.match(posthog, /d7_cohort_users/, 'D7 retention must have its own mature 
 assert.match(posthog, /event = 'pwa_install_available'/, 'PWA install availability must be measured separately from completed installs.');
 assert.match(posthog, /event = 'pwa_installed'/, 'Completed PWA installs must use the dedicated appinstalled-backed event.');
 assert.match(posthog, /event = 'pwa_standalone_opened'/, 'Standalone PWA opens must be measured separately for installed-app evidence.');
-assert.match(posthog, /revalidate: 300/, 'PostHog provider must use bounded caching.');
+assert.match(posthog, /revalidate: 600/, 'PostHog provider must use bounded caching.');
 assert.match(ga4, /revalidate: 300/, 'GA4 provider must use bounded caching.');
 assert.match(gsc, /revalidate: 300/, 'GSC provider must use bounded caching.');
 
