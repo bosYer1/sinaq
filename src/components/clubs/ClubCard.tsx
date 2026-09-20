@@ -168,7 +168,7 @@ export const ClubCard = forwardRef<HTMLAnchorElement, ClubCardProps>(function Cl
         <div className="flex min-w-0 items-start gap-2">
           <h3 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold tracking-[-0.01em] text-ink transition-colors group-hover:text-primary">{club.name}</h3>
           <div className="flex shrink-0 items-center gap-1">
-            {premiumActive ? <Badge tone="premium">VIP</Badge> : null}
+            {premiumActive ? <Badge tone="premium">Premium</Badge> : null}
           </div>
         </div>
 

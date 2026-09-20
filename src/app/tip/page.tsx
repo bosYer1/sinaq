@@ -79,7 +79,8 @@ export default async function TypeIndexPage() {
         <h2 id="popular-searches-heading" className="font-display text-lg font-bold text-ink">Populyar gaming klub axtarışları</h2>
         <p className="mt-2 text-sm leading-6 text-muted">Yaxınlıq, mövcud qiymət və məlum iş saatına görə daha konkret seçim etmək üçün aşağıdakı siyahılara keç.</p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Yaxınlıqdakı gaming klubları</Link>
+          <Link href="/populyar-klublar" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Populyar klublar</Link>
+          <Link href="/yaxinliqda-gaming-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Yaxınlıqdakı gaming klubları</Link>
           <Link href="/bakida-internet-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Internet kafe və kompüter klubları</Link>
           <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Gaming klub qiymətləri</Link>
           <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Ucuz PC klubları</Link>
