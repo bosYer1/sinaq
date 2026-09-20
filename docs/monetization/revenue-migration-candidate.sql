@@ -214,7 +214,7 @@ returns uuid
 language plpgsql
 security invoker
 set search_path = public, pg_temp
-as $
+as $gameyer_commercial$
 declare
   v_opportunity public.commercial_opportunities%rowtype;
   v_contract_id uuid;
@@ -298,8 +298,7 @@ begin
 
   return v_contract_id;
 end;
-$;
-
+$gameyer_commercial$;
 revoke execute on function public.record_paid_commercial_sale_atomic(uuid,numeric,numeric,timestamptz,timestamptz,text,text,text) from public, anon, authenticated;
 grant execute on function public.record_paid_commercial_sale_atomic(uuid,numeric,numeric,timestamptz,timestamptz,text,text,text) to authenticated;
 
@@ -318,7 +317,7 @@ returns uuid
 language plpgsql
 security invoker
 set search_path = public, pg_temp
-as $
+as $gameyer_commercial$
 declare
   v_contract public.commercial_contracts%rowtype;
   v_club_id uuid;
@@ -450,8 +449,7 @@ begin
 
   return v_placement_id;
 end;
-$;
-
+$gameyer_commercial$;
 revoke execute on function public.activate_commercial_premium_atomic(uuid,timestamptz,timestamptz,integer,integer,integer,integer,integer,integer) from public, anon, authenticated;
 grant execute on function public.activate_commercial_premium_atomic(uuid,timestamptz,timestamptz,integer,integer,integer,integer,integer,integer) to authenticated;
 
@@ -470,7 +468,7 @@ returns uuid
 language plpgsql
 security invoker
 set search_path = public, pg_temp
-as $
+as $gameyer_commercial$
 declare
   v_placement public.commercial_placements%rowtype;
   v_club_id uuid;
@@ -555,8 +553,7 @@ begin
 
   return v_placement.id;
 end;
-$;
-
+$gameyer_commercial$;
 revoke execute on function public.finalize_commercial_performance_atomic(uuid,timestamptz,timestamptz,integer,integer,integer,integer,integer,integer) from public, anon, authenticated;
 grant execute on function public.finalize_commercial_performance_atomic(uuid,timestamptz,timestamptz,integer,integer,integer,integer,integer,integer) to authenticated;
 
