@@ -22,12 +22,12 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
   return {
     status: providerStatus('posthog', status, detail),
     pageviews: zero, visitors: zero, sessions: zero, clubViews: zero, clubClicks: zero,
-    ctaClicks: zero, searchQueries: zero, filterChanges: zero, exploreViewChanges: zero,
+    ctaClicks: zero, intentSessions: zero, searchQueries: zero, filterChanges: zero, exploreViewChanges: zero,
     mapUsage: zero, phoneClicks: zero, instagramClicks: zero, mapsClicks: zero,
     newUsers: 0, returningUsers: 0, returningRate: 0, sessionsPerUser: 0, usersWithThreeSessions: 0,
     conversionRate: zero, acquisition: [], campaigns: [], clubs: [], trend: [],
     tracking: { latestEventAt: null, publicEvents: 0, testEvents: 0, missingSessionAttribution: 0, missingCampaignAttribution: 0, noResultSearches: 0, botEvents: 0, sourceMissingSessions: 0, attributionCompleteness: 0 },
-    funnel: { landingSessions: 0, discoverySessions: 0, clubViewSessions: 0, ctaSessions: 0, profileToLeadRate: 0 },
+    funnel: { landingSessions: 0, discoverySessions: 0, clubViewSessions: 0, ctaSessions: 0, profileToLeadRate: 0, integrityOk: true },
     retention: { d1: null, d3: null, d7: null, d1CohortUsers: 0, d3CohortUsers: 0, d7CohortUsers: 0, cohortUsers: 0 },
     pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
     returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
@@ -153,6 +153,8 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           countIf(event = 'phone_click') AS phone_clicks,
           countIf(event = 'instagram_click') AS instagram_clicks,
           countIf(event = 'maps_click') AS maps_clicks,
+          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click') AND notEmpty(properties.$session_id)) AS intent_sessions,
+          uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)) AS club_view_sessions,
           countIf(event IN ('map_location_clicked','location_sort_clicked')) AS map_usage,
           countIf(event = 'search_query') AS searches,
           countIf(event = 'filter_changed') AS filters,
@@ -411,6 +413,10 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
     const previousCta = numberValue(previous.cta_clicks);
     const currentViews = numberValue(current.club_views);
     const previousViews = numberValue(previous.club_views);
+    const currentIntentSessions = numberValue(current.intent_sessions);
+    const previousIntentSessions = numberValue(previous.intent_sessions);
+    const currentClubViewSessions = numberValue(current.club_view_sessions);
+    const previousClubViewSessions = numberValue(previous.club_view_sessions);
     const health = healthRows[0] ?? {};
     const retention = retentionRows[0] ?? {};
     const funnel = funnelRows[0] ?? {};
@@ -453,6 +459,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       clubViews: metric(currentViews, previousViews),
       clubClicks: metric(numberValue(current.club_clicks), numberValue(previous.club_clicks)),
       ctaClicks: metric(currentCta, previousCta),
+      intentSessions: metric(currentIntentSessions, previousIntentSessions),
       phoneClicks: metric(numberValue(current.phone_clicks), numberValue(previous.phone_clicks)),
       instagramClicks: metric(numberValue(current.instagram_clicks), numberValue(previous.instagram_clicks)),
       mapsClicks: metric(numberValue(current.maps_clicks), numberValue(previous.maps_clicks)),
@@ -465,7 +472,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       returningRate: rate(numberValue(retention.returning_users), numberValue(retention.users)),
       sessionsPerUser: numberValue(retention.sessions_per_user),
       usersWithThreeSessions: numberValue(retention.three_session_users),
-      conversionRate: metric(rate(currentCta, currentViews), rate(previousCta, previousViews)),
+      conversionRate: metric(rate(currentIntentSessions, currentClubViewSessions), rate(previousIntentSessions, previousClubViewSessions)),
       acquisition: aggregateAcquisition(campaigns),
       campaigns,
       clubs,
@@ -487,6 +494,10 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         clubViewSessions: numberValue(funnel.club_view_sessions),
         ctaSessions: numberValue(funnel.cta_sessions),
         profileToLeadRate: rate(numberValue(funnel.cta_sessions), numberValue(funnel.club_view_sessions)),
+        integrityOk:
+          numberValue(funnel.landing_sessions) >= numberValue(funnel.discovery_sessions)
+          && numberValue(funnel.discovery_sessions) >= numberValue(funnel.club_view_sessions)
+          && numberValue(funnel.club_view_sessions) >= numberValue(funnel.cta_sessions),
       },
       retention: {
         d1: d1CohortUsers > 0 ? rate(numberValue(cohort.d1_users), d1CohortUsers) : null,
@@ -563,7 +574,7 @@ const getCachedPostHogMetrics = unstable_cache(
     if (result.status.status !== 'ready') throw new Error(result.status.detail);
     return result;
   },
-  ['founder-analytics-posthog-v5'],
+  ['founder-analytics-posthog-v6'],
   { revalidate: 300, tags: ['founder-analytics'] },
 );
 
