@@ -1,6 +1,6 @@
 # GameYer Revenue & Monetization Data Foundation
 
-Status: design-ready, not deployed
+Status: implementation prepared on branch, not deployed
 
 ## Goal
 Capture every commercial relationship from the first paid club onward so revenue, package history, placement performance and payment state are never reconstructed from memory or overwritten flags.
@@ -43,7 +43,15 @@ Core fields:
 - `is_active boolean not null default true`
 - `created_at timestamptz not null`
 
-Examples are intentionally not seeded until the commercial offer is approved.
+The approved launch package is seeded as `premium_founder_30d` at 29 AZN / 30 days. Contract price remains historical truth if the package default changes later.
+
+### `commercial_opportunities`
+Tracks the Founder sales pipeline separately from the financial ledger.
+
+Stages:
+`targeted -> contacted -> replied -> offered -> paid -> activated -> reported -> renewed | lost`
+
+It stores the offered price, contact/follow-up timestamps, optional lost reason and the contract link once a sale is recorded. A pipeline stage by itself never activates Premium.
 
 ### `commercial_contracts`
 The historical source of truth for a sold package.
@@ -95,6 +103,14 @@ Core fields:
 - `created_at timestamptz not null`
 
 Potential placement types may include featured-list placement, premium badge and sponsored campaign, but production values must only be introduced when those products are actually approved.
+
+### `commercial_performance_snapshots`
+Stores aggregate, privacy-safe placement checkpoints:
+- `baseline`: 30 days immediately before Premium start;
+- `day7`: first 7 complete placement days;
+- `final`: complete placement period after expiry.
+
+Stored metrics are profile views, unique view sessions, phone/Instagram/Maps click counts and unique outbound-intent sessions. No raw visitor identity is copied into revenue tables.
 
 ## Admin commercial workflow
 
@@ -193,3 +209,16 @@ When a placement becomes active, admin workflow may synchronize those two fields
 
 ## Phase 1 scope
 Only the internal ledger and admin-safe data model. No payment gateway, checkout, automatic invoicing, subscription billing or public customer portal is activated without separate founder approval.
+
+
+## Atomic lifecycle boundary
+
+Phase-1 commercial writes use database transactions rather than compensating multi-request updates:
+
+- `record_paid_commercial_sale_atomic` locks the opportunity and atomically creates contract + paid ledger entry + paid stage/customer state.
+- `activate_commercial_premium_atomic` locks contract/club state, revalidates full net payment, creates/reuses one Premium placement, stores the baseline once, then synchronizes club Premium + opportunity activation.
+- `finalize_commercial_performance_atomic` stores the final snapshot once and closes placement + contract + opportunity + public Premium state in one transaction.
+- all three functions are `SECURITY INVOKER`, explicitly check `is_admin()`, revoke default `PUBLIC/anon/authenticated` execution, then grant execution back only to `authenticated`; table RLS remains authoritative.
+- unique indexes provide retry/concurrency invariants for opportunity→contract, initial paid payment, external payment reference, contract→placement, and one active Premium placement per club.
+
+Day-7 capture remains a single-row insert protected by the existing `(placement_id, snapshot_type)` uniqueness constraint.

@@ -90,6 +90,7 @@ export default async function AdminLayout({
               <Link href="/admin/analitika" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Analitika</Link>
               <Link href="/admin/statistika" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Supabase statistikası</Link>
               <Link href="/admin/seo-prioritet" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Google SEO prioriteti</Link>
+              <Link href="/admin/kommersiya" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Kommersiya</Link>
               <NotificationLink unread={unreadNotifications} />
               <Link href="/admin/klublar" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Klublar</Link>
               <Link href="/admin/muracietler" className="block rounded-lg px-3 py-2.5 font-medium text-gray-700 hover:bg-gray-100">Müraciətlər</Link>
@@ -108,6 +109,7 @@ export default async function AdminLayout({
               <Link href="/admin/analitika" className="shrink-0 text-gray-600">Analitika</Link>
               <Link href="/admin/statistika" className="shrink-0 text-gray-600">Supabase</Link>
               <Link href="/admin/seo-prioritet" className="shrink-0 text-gray-600">SEO prioriteti</Link>
+              <Link href="/admin/kommersiya" className="shrink-0 text-gray-600">Kommersiya</Link>
               <NotificationLink unread={unreadNotifications} mobile />
               <Link href="/admin/klublar" className="shrink-0 text-gray-600">Klublar</Link>
               <Link href="/admin/muracietler" className="shrink-0 text-gray-600">Müraciətlər</Link>
