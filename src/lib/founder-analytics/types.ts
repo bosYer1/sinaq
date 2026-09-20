@@ -133,6 +133,7 @@ export type PostHogMetrics = {
   clubViews: Metric;
   clubClicks: Metric;
   ctaClicks: Metric;
+  intentSessions: Metric;
   searchQueries: Metric;
   filterChanges: Metric;
   exploreViewChanges: Metric;
@@ -161,7 +162,7 @@ export type PostHogMetrics = {
     sourceMissingSessions: number;
     attributionCompleteness: number;
   };
-  funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number; profileToLeadRate: number };
+  funnel: { landingSessions: number; discoverySessions: number; clubViewSessions: number; ctaSessions: number; profileToLeadRate: number; integrityOk: boolean };
   retention: RetentionMetrics;
   pwa: PwaMetrics;
   returnLoop: ReturnLoopMetrics;
@@ -244,6 +245,15 @@ export type SupabaseMetrics = {
     missingType: number;
   };
   qualityBacklog: ClubDataQualityRow[];
+  firstPartyIntent: {
+    available: boolean;
+    detail: string;
+    events: number;
+    browserVisitors: number;
+    phoneClicks: number;
+    instagramClicks: number;
+    mapsClicks: number;
+  };
 };
 
 export type CeoSignal = {
