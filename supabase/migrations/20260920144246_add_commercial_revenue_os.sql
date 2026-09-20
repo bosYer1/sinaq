@@ -1,5 +1,5 @@
--- Reviewed Revenue OS SQL source. Production migration applied as 20260920144246_add_commercial_revenue_os.
--- Do not re-apply this document manually; canonical history lives under supabase/migrations.
+-- GameYer Revenue OS canonical repository migration.
+-- Keep listed as repository-only until the production migration is explicitly applied.
 
 create table if not exists public.business_customers (
   id uuid primary key default gen_random_uuid(),

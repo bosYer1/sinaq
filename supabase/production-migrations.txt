@@ -64,3 +64,4 @@
 20260909192500_normalize_pricing_units
 20260915193000_optimize_founder_absence_db_health
 20260919183000_add_club_tiktok_social
+20260920144246_add_commercial_revenue_os

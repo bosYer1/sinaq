@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { MutableRefObject } from 'react';
 import type { ClubWithDistance } from '@/types/database';
 import { ClubCard } from './ClubCard';
@@ -30,12 +31,21 @@ export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchAct
         : 'Hazırda bu seçimə uyğun aktiv klub yoxdur.';
 
     return (
-      <EmptyState
-        title={title}
-        description={description}
-        actionLabel={onClearFilters ? 'Filtrləri təmizlə' : undefined}
-        onAction={onClearFilters}
-      />
+      <div>
+        <EmptyState
+          title={title}
+          description={description}
+          actionLabel={onClearFilters ? 'Filtrləri təmizlə' : undefined}
+          onAction={onClearFilters}
+        />
+        {searchActive ? (
+          <div className="mt-3 text-center">
+            <Link href="/elaqe#new-club" className="text-sm font-semibold text-primary hover:underline">
+              Klub siyahıda yoxdur? Təklif et
+            </Link>
+          </div>
+        ) : null}
+      </div>
     );
   }
 

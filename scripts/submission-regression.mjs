@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [actionSource, formSource, contactSource, ownerSource] = await Promise.all([
+const [actionSource, formSource, contactSource, ownerSource, clubListSource] = await Promise.all([
   readFile(new URL('../src/app/submissions/actions.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/submissions/SubmissionForm.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/elaqe/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/klub-sahibi/page.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/clubs/ClubList.tsx', import.meta.url), 'utf8'),
 ]);
 
 assert.match(actionSource, /const KINDS = new Set\(\['correction', 'new_club', 'owner_claim'\]\)/, 'all public submission kinds must remain accepted');
@@ -25,5 +26,9 @@ assert.match(contactSource, /params\.sent === '1'/, 'contact page must render su
 assert.match(contactSource, /params\.error === '1'/, 'contact page must render failure feedback');
 assert.match(ownerSource, /kind="owner_claim"/, 'club-owner page must continue exposing owner claims');
 assert.match(ownerSource, /params\.sent === '1'/, 'club-owner page must render success feedback');
+assert.match(contactSource, /section id="new-club"/, 'contact page must expose a stable new-club anchor.');
+assert.match(clubListSource, /href="\/elaqe#new-club"/, 'search no-result state must link to the existing verified new-club form.');
+assert.match(clubListSource, /Klub siyahıda yoxdur\? Təklif et/, 'search no-result CTA copy must remain explicit.');
+assert.doesNotMatch(clubListSource, /club=.*search|q=.*new-club|new-club.*q=/, 'no-result proposal must not treat a free-text query as factual club identity.');
 
 console.log('Submission regression contract: PASS');

@@ -90,7 +90,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
         />
       </section>
 
-      <section className="mt-6 rounded-xl border border-border bg-surface p-5 shadow-card sm:p-6">
+      <section id="new-club" className="mt-6 scroll-mt-24 rounded-xl border border-border bg-surface p-5 shadow-card sm:p-6">
         <h2 className="font-display text-xl font-bold text-ink">Yeni klub təklif et</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
           GameYer-də olmayan real PC və ya PlayStation klubunu bildir. Məlumat təsdiqlənmədən saytda fakt kimi yayımlanmayacaq.
