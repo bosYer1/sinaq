@@ -72,7 +72,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
     .order('is_premium', { ascending: false })
-    .order('name', { ascending: true });
+    .order('created_at', { ascending: false });
 
   if (districtId) query = query.eq('district_id', districtId);
 
@@ -131,15 +131,17 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
     const premiumDelta = Number(isPremiumActive(b)) - Number(isPremiumActive(a));
     if (premiumDelta !== 0) return premiumDelta;
 
-    // Within the same commercial tier, rank by real 30-day demand.
-    // Unique sessions are primary so repeated refreshes do not dominate the list.
+    // Within the same commercial tier, rank by real 30-day profile views.
+    // Unique sessions only break ties; A–Z is no longer the default fallback.
     const aPopularity = popularityBySlug.get(a.slug);
     const bPopularity = popularityBySlug.get(b.slug);
-    const sessionDelta = (bPopularity?.sessions ?? 0) - (aPopularity?.sessions ?? 0);
-    if (sessionDelta !== 0) return sessionDelta;
     const viewDelta = (bPopularity?.views ?? 0) - (aPopularity?.views ?? 0);
     if (viewDelta !== 0) return viewDelta;
+    const sessionDelta = (bPopularity?.sessions ?? 0) - (aPopularity?.sessions ?? 0);
+    if (sessionDelta !== 0) return sessionDelta;
 
+    const recencyDelta = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (recencyDelta !== 0) return recencyDelta;
     return a.name.localeCompare(b.name, 'az');
   });
 
@@ -148,7 +150,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v4'],
+  ['gameyer-public-clubs-v5'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 

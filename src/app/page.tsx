@@ -119,10 +119,10 @@ export default async function HomePage({ searchParams }: PageProps) {
         <Suspense fallback={<div className="mb-3 rounded-2xl border border-border bg-surface p-3 sm:mb-4 sm:p-4"><Skeleton className="h-11 w-full rounded-control" /></div>}><FilterBar districts={activeDistricts} types={types} /></Suspense>
 
         <div className="flex flex-col">
-          <section id="club-discovery" className="order-1 scroll-mt-20 overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:order-2 sm:p-4" aria-label="Klub siyahısı və xəritə"><ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} /></section>
+          <section id="club-discovery" className="order-2 scroll-mt-20 overflow-hidden rounded-2xl border border-border bg-surface p-2.5 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:p-4" aria-label="Klub siyahısı və xəritə"><ExploreView clubs={clubs} view={view} searchActive={Boolean(filters.q)} /></section>
 
           {activeUpdates.length > 0 ? (
-            <section className="order-2 mt-3 sm:order-1 sm:mb-4 sm:mt-0 sm:rounded-2xl sm:border sm:border-primary/15 sm:bg-primary/5 sm:px-5 sm:py-5" aria-label="Aktiv təkliflər və turnirlər">
+            <section className="order-1 mb-3 sm:mb-4 sm:mt-0 sm:rounded-2xl sm:border sm:border-primary/15 sm:bg-primary/5 sm:px-5 sm:py-5" aria-label="Aktiv təkliflər və turnirlər">
               <div className="mb-2 flex items-center justify-between gap-3 sm:hidden">
                 <h2 className="font-display text-base font-bold tracking-tight text-ink">🔥 Təkliflər</h2>
                 <Link href="/yenilikler" className="shrink-0 text-xs font-semibold text-primary no-underline">Hamısına bax →</Link>

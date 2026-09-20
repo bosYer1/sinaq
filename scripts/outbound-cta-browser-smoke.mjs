@@ -120,9 +120,11 @@ try {
     await navigate(candidateHref);
     await wait(`Boolean(document.querySelector('h1'))`, `club detail heading ${candidateHref}`);
     const candidateDetail = await evaluate(`(() => {
-      const instagram = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').trim() === 'Instagram');
-      const maps = Array.from(document.querySelectorAll('a')).find((anchor) => (anchor.textContent || '').trim() === 'Marşrut');
-      const phone = Array.from(document.querySelectorAll('a[href^="tel:"]')).find((anchor) => (anchor.textContent || '').trim() === 'Zəng et');
+      const article = document.querySelector('article');
+      const articleLinks = Array.from(article?.querySelectorAll('a') ?? []);
+      const instagram = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Instagram');
+      const maps = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Marşrut');
+      const phone = articleLinks.find((anchor) => anchor.getAttribute('href')?.startsWith('tel:') && (anchor.textContent || '').trim() === 'Zəng et');
       return {
         path: location.pathname,
         instagramHref: instagram?.href || null,
@@ -141,7 +143,12 @@ try {
   assert(detail.path === clubHref, 'Outbound CTA regression did not land on the selected club detail page', detail);
 
   await evaluate(`(() => {
-    const anchor = Array.from(document.querySelectorAll('a[href^="tel:"]')).find((item) => (item.textContent || '').trim() === 'Zəng et');
+    window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
+    window.posthog = {
+      __loaded: true,
+      capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
+    };
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a[href^="tel:"]') ?? []).find((item) => (item.textContent || '').trim() === 'Zəng et');
     anchor.setAttribute('href', 'javascript:void(0)');
     anchor.click();
     return true;
@@ -162,9 +169,14 @@ try {
   assert(phoneCapture.path === clubHref, 'Phone regression click unexpectedly navigated away from the club detail page', phoneCapture);
 
   await evaluate(`(() => {
-    const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Instagram');
-    anchor.removeAttribute('target');
-    anchor.setAttribute('href', 'javascript:void(0)');
+    window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
+    window.posthog = {
+      __loaded: true,
+      capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
+    };
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a') ?? []).find((item) => (item.textContent || '').trim() === 'Instagram');
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('href', 'about:blank');
     anchor.click();
     return true;
   })()`);
@@ -184,9 +196,14 @@ try {
   assert(instagramCapture.path === clubHref, 'Instagram regression click unexpectedly navigated away from the club detail page', instagramCapture);
 
   await evaluate(`(() => {
-    const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Marşrut');
-    anchor.removeAttribute('target');
-    anchor.setAttribute('href', 'javascript:void(0)');
+    window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
+    window.posthog = {
+      __loaded: true,
+      capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
+    };
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a') ?? []).find((item) => (item.textContent || '').trim() === 'Marşrut');
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('href', 'about:blank');
     anchor.click();
     return true;
   })()`);

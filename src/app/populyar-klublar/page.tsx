@@ -35,10 +35,10 @@ export default async function PopularClubsPage() {
   // but never changes the rank here.
   const ranked = clubs
     .map((club) => ({ club, metric: metricBySlug.get(club.slug) }))
-    .filter((item) => (item.metric?.sessions ?? 0) > 0)
+    .filter((item) => (item.metric?.views ?? 0) > 0)
     .sort((a, b) =>
-      (b.metric?.sessions ?? 0) - (a.metric?.sessions ?? 0)
-      || (b.metric?.views ?? 0) - (a.metric?.views ?? 0)
+      (b.metric?.views ?? 0) - (a.metric?.views ?? 0)
+      || (b.metric?.sessions ?? 0) - (a.metric?.sessions ?? 0)
       || a.club.name.localeCompare(b.club.name, 'az')
     )
     .slice(0, 20);
@@ -68,7 +68,7 @@ export default async function PopularClubsPage() {
         <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">Son 30 gün</p>
         <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">Ən çox baxılan klublar</h1>
         <p className="mt-3 text-sm leading-6 text-muted">
-          Sıralama GameYer-də klub profillərinə daxil olan unikal sessiyalara əsaslanır. Təkrar baxışlar yalnız bərabərlik zamanı nəzərə alınır.
+          Sıralama son 30 gündə klub profillərinin baxış sayına əsaslanır. Unikal sessiyalar yalnız bərabərlik zamanı nəzərə alınır.
           Premium status bu səhifədə orqanik sıralamaya təsir etmir.
         </p>
       </div>
