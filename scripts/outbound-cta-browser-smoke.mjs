@@ -173,8 +173,8 @@ try {
       capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
     };
     const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Instagram');
-    anchor.removeAttribute('target');
-    anchor.setAttribute('href', 'javascript:void(0)');
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('href', 'about:blank');
     anchor.click();
     return true;
   })()`);
@@ -200,8 +200,8 @@ try {
       capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
     };
     const anchor = Array.from(document.querySelectorAll('a')).find((item) => (item.textContent || '').trim() === 'Marşrut');
-    anchor.removeAttribute('target');
-    anchor.setAttribute('href', 'javascript:void(0)');
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('href', 'about:blank');
     anchor.click();
     return true;
   })()`);
