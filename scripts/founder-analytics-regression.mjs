@@ -85,6 +85,19 @@ for (const metricName of ['LCP', 'INP', 'CLS']) assert.ok(posthog.includes(`prop
 assert.ok(extended.includes('posthog.webVitals') && extended.includes('Real user performance'), 'Founder Analytics must surface real-user performance.');
 assert.ok(extended.includes('webVitals.lcpSamples') && extended.includes('webVitals.inpSamples') && extended.includes('webVitals.clsSamples'), 'Performance p75 must show sample counts.');
 assert.ok(posthog.includes('profileToLeadRate: rate(numberValue(funnel.cta_sessions), numberValue(funnel.club_view_sessions))'), 'Profile-to-lead must use unique CTA sessions over club-view sessions.');
+assert.ok(types.includes('intentSessions: Metric;'), 'Founder Analytics must expose unique outbound-intent sessions.');
+assert.ok(posthog.includes("AS intent_sessions") && posthog.includes("AS club_view_sessions"), 'PostHog overview must calculate unique intent and club-view sessions.');
+assert.ok(posthog.includes('conversionRate: metric(rate(currentIntentSessions, currentClubViewSessions), rate(previousIntentSessions, previousClubViewSessions))'), 'Primary intent conversion must use unique session denominators.');
+assert.ok(types.includes('integrityOk: boolean'), 'Stage Reach contract must expose integrity state.');
+assert.ok(extended.includes('funnel.integrityOk') && extended.includes('Reach integrity check keçib'), 'Stage Reach must surface subset integrity.');
+assert.ok(extended.includes('D30 bu dashboard-da hesablanmır'), 'Retention UI must explicitly state that D30 is not calculated.');
+assert.ok(extended.includes('user bazasına bölünmür'), 'Filter adoption denominator must be explicit in the UI.');
+assert.ok(types.includes('firstPartyIntent:'), 'Supabase metrics must include first-party intent verification.');
+assert.ok(supabase.includes("from('analytics_events')") && supabase.includes("['phone_click', 'instagram_click', 'maps_click']"), 'Supabase must independently verify outbound intent events.');
+assert.ok(dashboard.includes('getSupabaseMetrics(supabase, range)'), 'First-party verification must use the same selected date range.');
+assert.ok(page.includes('Metodologiya guard:') && page.includes('cross-provider') === false, 'Dashboard must guard provider identity semantics in user-visible copy.');
+assert.ok(page.includes('Outbound intent sessiyası') && page.includes('firstPartyIntent.browserVisitors'), 'Dashboard must surface the intent North Star and first-party verifier.');
+assert.ok(page.includes('GA4 key events = 0:') && page.includes('behavior tracking yoxdur demək deyil'), 'GA4 zero key-events must not be mislabeled as absent tracking.');
 assert.ok(types.includes('newUsers: number;'), 'Founder Analytics contract must expose first-seen users separately from returning users.');
 assert.ok(posthog.includes('newUsers: Math.max(0, numberValue(retention.users) - numberValue(retention.returning_users))'), 'New users must derive from current users minus users seen before the interval within the retention lookback.');
 assert.ok(extended.includes('posthog.newUsers') && extended.includes('Yeni istifadəçilər'), 'Founder Analytics must surface new versus returning users.');
@@ -95,7 +108,7 @@ assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club tran
 assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
 assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
-assert.ok(posthog.includes("['founder-analytics-posthog-v5']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v6']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
 assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
@@ -128,7 +141,7 @@ assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0
   assert.ok(source.includes('createLimitedPostHogRunner'), 'PostHog queries must use a bounded runner.');
   assert.ok(source.includes('errors.push(detail);') && source.includes('return [];'), 'Extended PostHog query failures must fail soft instead of taking down the whole dashboard.');
   assert.ok(source.includes("if (overviewRows.length === 0)"), 'Core overview failure must still fail closed rather than showing invented zero metrics.');
-  assert.ok(source.includes("['founder-analytics-posthog-v5']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
+  assert.ok(source.includes("['founder-analytics-posthog-v6']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
 }
 
 assert.ok(posthog.includes('toFloatOrZero(toString(properties.metric_value))'), 'PostHog web-vitals query must use the supported HogQL float conversion helper.');
