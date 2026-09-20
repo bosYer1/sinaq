@@ -42,6 +42,6 @@ assert(clubsQuery.includes("const searchTerms = sanitized.split(/\\s+/).filter(B
 assert(clubsQuery.includes('for (const term of searchTerms)'), 'Club search must apply every sanitized search term.');
 assert(clubsQuery.includes('`name.ilike.%${term}%,address.ilike.%${term}%,slug.ilike.%${term}%`'), 'Each search token must match club name, address, or slug.');
 assert(!clubsQuery.includes('`name.ilike.%${sanitized}%,address.ilike.%${sanitized}%,slug.ilike.%${sanitized}%`'), 'Club search must not require a spaced partial query to exist as one literal phrase.');
-assert(clubsQuery.includes("['gameyer-public-clubs-v5']"), 'Public club query cache must be bumped after search matching changes.');
+assert(clubsQuery.includes("['gameyer-public-clubs-v6']"), 'Public club query cache must be bumped after search matching changes.');
 
 console.log('Search input regression checks passed.');

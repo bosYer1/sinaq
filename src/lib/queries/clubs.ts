@@ -131,7 +131,12 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
     const premiumDelta = Number(isPremiumActive(b)) - Number(isPremiumActive(a));
     if (premiumDelta !== 0) return premiumDelta;
 
-    // Within the same commercial tier, rank by real 30-day profile views.
+    // Within the same commercial tier, keep incomplete discovery cards below
+    // clubs that have a real profile image. PopularClubs remains purely organic.
+    const profileImageDelta = Number(Boolean(b.profile_image_url?.trim())) - Number(Boolean(a.profile_image_url?.trim()));
+    if (profileImageDelta !== 0) return profileImageDelta;
+
+    // Complete profiles are then ranked by real 30-day profile views.
     // Unique sessions only break ties; A–Z is no longer the default fallback.
     const aPopularity = popularityBySlug.get(a.slug);
     const bPopularity = popularityBySlug.get(b.slug);
@@ -150,7 +155,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v5'],
+  ['gameyer-public-clubs-v6'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
