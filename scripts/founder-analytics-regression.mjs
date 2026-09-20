@@ -95,7 +95,7 @@ assert.ok(extended.includes('user bazasına bölünmür'), 'Filter adoption deno
 assert.ok(types.includes('firstPartyIntent:'), 'Supabase metrics must include first-party intent verification.');
 assert.ok(supabase.includes("from('analytics_events')") && supabase.includes("['phone_click', 'instagram_click', 'maps_click']"), 'Supabase must independently verify outbound intent events.');
 assert.ok(dashboard.includes('getSupabaseMetrics(supabase, range)'), 'First-party verification must use the same selected date range.');
-assert.ok(page.includes('Metodologiya guard:') && page.includes('cross-provider') === false, 'Dashboard must guard provider identity semantics in user-visible copy.');
+assert.ok(page.includes('Metodologiya guard:') && page.includes('cross-provider bölmə aparılmır'), 'Dashboard must guard provider identity semantics in user-visible copy.');
 assert.ok(page.includes('Outbound intent sessiyası') && page.includes('firstPartyIntent.browserVisitors'), 'Dashboard must surface the intent North Star and first-party verifier.');
 assert.ok(page.includes('GA4 key events = 0:') && page.includes('behavior tracking yoxdur demək deyil'), 'GA4 zero key-events must not be mislabeled as absent tracking.');
 assert.ok(types.includes('newUsers: number;'), 'Founder Analytics contract must expose first-seen users separately from returning users.');
