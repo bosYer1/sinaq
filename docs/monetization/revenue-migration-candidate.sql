@@ -1,5 +1,5 @@
--- Candidate only. Do NOT apply directly to production.
--- Convert this reviewed SQL into a repository migration through the Supabase migration workflow.
+-- Reviewed Revenue OS SQL source. Production migration applied as 20260920144246_add_commercial_revenue_os.
+-- Do not re-apply this document manually; canonical history lives under supabase/migrations.
 
 create table if not exists public.business_customers (
   id uuid primary key default gen_random_uuid(),

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const sql = fs.readFileSync('docs/monetization/revenue-migration-candidate.sql', 'utf8');
-const canonical = fs.readFileSync('supabase/migrations/20260920190000_add_commercial_revenue_os.sql', 'utf8');
+const canonical = fs.readFileSync('supabase/migrations/20260920144246_add_commercial_revenue_os.sql', 'utf8');
 
 const tables = [
   'business_customers',
