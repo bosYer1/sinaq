@@ -33,9 +33,9 @@ if (!sql.includes('amount_azn > 0')) throw new Error('Payment amount constraint 
 if (!sql.includes("jsonb_typeof(metadata) = 'object'")) throw new Error('Placement metadata object constraint missing');
 if (/security\s+definer/i.test(sql)) throw new Error('SECURITY DEFINER must not appear in candidate SQL');
 if (/security\s+definer/i.test(canonical)) throw new Error('SECURITY DEFINER must not appear in canonical Revenue OS migration');
-if ((canonical.match(/as \\$gameyer_commercial\\$/g) || []).length !== 3) throw new Error('Canonical migration must contain three valid named PL/pgSQL dollar-quote openers');
-if ((canonical.match(/\\$gameyer_commercial\\$;/g) || []).length !== 3) throw new Error('Canonical migration must contain three valid named PL/pgSQL dollar-quote closers');
-if (/as \\$(?!gameyer_commercial\\$)/.test(canonical)) throw new Error('Canonical migration contains an invalid single-dollar PL/pgSQL delimiter');
+if ((canonical.match(/as \$gameyer_commercial\$/g) || []).length !== 3) throw new Error('Canonical migration must contain three valid named PL/pgSQL dollar-quote openers');
+if ((canonical.match(/\$gameyer_commercial\$;/g) || []).length !== 3) throw new Error('Canonical migration must contain three valid named PL/pgSQL dollar-quote closers');
+if (/as \$(?!gameyer_commercial\$)/.test(canonical)) throw new Error('Canonical migration contains an invalid single-dollar PL/pgSQL delimiter');
 if (/grant\s+.*\s+to\s+anon/i.test(sql)) throw new Error('Revenue tables must not grant privileges to anon');
 if (/grant\s+delete\s+on\s+table\s+public\.commercial_payments/i.test(sql)) throw new Error('Payment DELETE must remain disabled');
 if (/card_number|cvv|password|pan\b/i.test(sql)) throw new Error('Sensitive payment credential field detected');

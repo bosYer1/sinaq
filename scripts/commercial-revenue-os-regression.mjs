@@ -47,9 +47,9 @@ assert.ok(candidate.includes('commercial_placements_contract_type_uidx'), 'Contr
 assert.ok(candidate.includes('commercial_placements_one_active_premium_per_club_uidx'), 'One-active-Premium-per-club invariant missing');
 assert.ok(candidate.includes('for update'), 'Atomic lifecycle RPCs must lock the serialized business rows.');
 assert.ok(candidate.includes('on conflict (placement_id, snapshot_type) do nothing'), 'Baseline/final snapshot retries must be idempotent.');
-assert.equal((candidate.match(/as \\$gameyer_commercial\\$/g) || []).length, 3, 'All commercial PL/pgSQL functions must use a valid named dollar-quote opener.');
-assert.equal((candidate.match(/\\$gameyer_commercial\\$;/g) || []).length, 3, 'All commercial PL/pgSQL functions must use a valid named dollar-quote closer.');
-assert.doesNotMatch(candidate, /as \\$(?!gameyer_commercial\\$)/, 'Invalid single-dollar PL/pgSQL delimiter must never ship.');
+assert.equal((candidate.match(/as \$gameyer_commercial\$/g) || []).length, 3, 'All commercial PL/pgSQL functions must use a valid named dollar-quote opener.');
+assert.equal((candidate.match(/\$gameyer_commercial\$;/g) || []).length, 3, 'All commercial PL/pgSQL functions must use a valid named dollar-quote closer.');
+assert.doesNotMatch(candidate, /as \$(?!gameyer_commercial\$)/, 'Invalid single-dollar PL/pgSQL delimiter must never ship.');
 assert.ok(!actions.includes('Satış yazıldı, amma status sinxronizasiyası tamamlanmadı'), 'Paid sale must not rely on partial application-level rollback/status sync.');
 assert.ok(!actions.includes("supabase.from('commercial_contracts').delete().eq('id', contract.id)"), 'Paid sale must not rely on compensating deletes.');
 assert.ok(actions.includes("existing && snapshotType === 'day7'"), 'Final retries must reach the atomic reconciler while day7 duplicate capture stays guarded.');
