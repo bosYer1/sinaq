@@ -23,7 +23,7 @@ const [card, link, whatsappBookingLink, detail, clubView, pageview, submissionAn
 
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(card.includes(token), `ClubCard must keep ${token}`);
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(link.includes(token), `TrackedClubLink must keep ${token}`);
-for (const token of ['trackGaEvent', 'trackPostHogEvent', 'whatsapp_booking_click', 'contact_whatsapp_booking', 'intent_only']) assert.ok(whatsappBookingLink.includes(token), `WhatsApp booking analytics must keep ${token}`);
+for (const token of ['trackGaEvent', 'trackPostHogEvent', 'whatsapp_booking_click', 'contact_whatsapp_booking', 'intent_only', "navigator.sendBeacon('/api/analytics/event'", "eventType: 'whatsapp_booking_click'"]) assert.ok(whatsappBookingLink.includes(token), `WhatsApp booking analytics must keep ${token}`);
 assert.ok(!whatsappBookingLink.includes('trackMetaCustomEvent'), 'WhatsApp booking rollout must not touch Meta/SMM tracking');
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(clubView.includes(token), `ClubViewTracker must keep ${token}`);
 assert.ok(card.includes('club_card_click'), 'club_card_click must stay wired');
