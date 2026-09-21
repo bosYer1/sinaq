@@ -109,7 +109,19 @@ async function runReport(propertyId: string, accessToken: string, from: string, 
   const response = await fetchGoogle(`${GA4_API_ROOT}/properties/${propertyId}:runReport`, {
     method: 'POST',
     headers: { authorization: `Bearer ${accessToken}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ dateRanges: [{ startDate: bakuDate(from), endDate: bakuDate(to, true) }], metrics: METRICS.map((name) => ({ name })), keepEmptyRows: true }),
+    body: JSON.stringify({
+      dateRanges: [{ startDate: bakuDate(from), endDate: bakuDate(to, true) }],
+      metrics: METRICS.map((name) => ({ name })),
+      dimensionFilter: {
+        notExpression: {
+          filter: {
+            fieldName: 'pagePath',
+            stringFilter: { matchType: 'BEGINS_WITH', value: '/admin', caseSensitive: true },
+          },
+        },
+      },
+      keepEmptyRows: true,
+    }),
   }, 'GA4 Data API');
   if (!response.ok) throw new Error(`GA4 Data API request failed (${response.status})`);
   return parseReport(await response.json() as Ga4ApiResponse);
@@ -154,7 +166,7 @@ async function loadGa4Metrics(range: DateRange): Promise<Ga4Metrics> {
 
 const cachedGa4Metrics = unstable_cache(
   async (serializedRange: string) => loadGa4Metrics(JSON.parse(serializedRange) as DateRange),
-  ['founder-analytics-ga4-v2'], { revalidate: 300 },
+  ['founder-analytics-ga4-v3'], { revalidate: 300 },
 );
 
 export async function getGa4Metrics(range: DateRange) {
