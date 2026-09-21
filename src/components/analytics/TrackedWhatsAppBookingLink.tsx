@@ -22,11 +22,15 @@ function visitorId() {
     if (existing && existing.length >= 8 && existing.length <= 64) return existing;
     const next = typeof crypto.randomUUID === 'function'
       ? crypto.randomUUID()
-      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      : (() => {
+          const bytes = new Uint8Array(16);
+          crypto.getRandomValues(bytes);
+          return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+        })();
     window.localStorage.setItem(STORAGE_KEY, next);
     return next;
   } catch {
-    return `temp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`.slice(0, 64);
+    return `temp-${Date.now().toString(36)}`.slice(0, 64);
   }
 }
 
