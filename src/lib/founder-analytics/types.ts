@@ -63,6 +63,7 @@ export type ClubPerformanceRow = {
   cardClicks: number;
   phoneClicks: number;
   instagramClicks: number;
+  tiktokClicks: number;
   mapsClicks: number;
   intentSessions: number;
   intentRate: number;
@@ -146,6 +147,7 @@ export type PostHogMetrics = {
   mapUsage: Metric;
   phoneClicks: Metric;
   instagramClicks: Metric;
+  tiktokClicks: Metric;
   mapsClicks: Metric;
   newUsers: number;
   returningUsers: number;
