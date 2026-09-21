@@ -6,6 +6,7 @@ import { requireAdmin } from '@/lib/admin/requireAdmin';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MANUAL_SALES_STAGES = new Set(['targeted','contacted','replied','offered','lost']);
 const INTENT_EVENTS = ['phone_click', 'instagram_click', 'maps_click'] as const;
+const SYNTHETIC_USER_AGENT_RE = /(bot|crawler|spider|headless|playwright|puppeteer|lighthouse)/i;
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -73,7 +74,7 @@ async function collectFirstPartyMetrics(
   const [viewsResult, intentResult] = await Promise.all([
     supabase
       .from('page_views')
-      .select('session_id')
+      .select('session_id,user_agent')
       .eq('path', path)
       .gte('created_at', from)
       .lt('created_at', to)
@@ -91,14 +92,16 @@ async function collectFirstPartyMetrics(
   if (viewsResult.error) throw new Error(`Profil baxışları oxunmadı: ${viewsResult.error.message}`);
   if (intentResult.error) throw new Error(`Intent məlumatları oxunmadı: ${intentResult.error.message}`);
 
-  const viewRows = viewsResult.data ?? [];
-  const intentRows = intentResult.data ?? [];
-  const viewSessions = new Set(viewRows.map((row) => row.session_id));
+  const rawViewRows = viewsResult.data ?? [];
+  const viewRows = rawViewRows.filter((row) => !SYNTHETIC_USER_AGENT_RE.test(row.user_agent ?? ''));
+  const normalViewSessionIds = new Set(viewRows.map((row) => row.session_id));
+  const rawIntentRows = intentResult.data ?? [];
+  const intentRows = rawIntentRows.filter((row) => normalViewSessionIds.has(row.session_id));
   const intentSessions = new Set(intentRows.map((row) => row.session_id));
 
   return {
     profile_views: viewRows.length,
-    view_sessions: viewSessions.size,
+    view_sessions: normalViewSessionIds.size,
     phone_clicks: intentRows.filter((row) => row.event_type === 'phone_click').length,
     instagram_clicks: intentRows.filter((row) => row.event_type === 'instagram_click').length,
     maps_clicks: intentRows.filter((row) => row.event_type === 'maps_click').length,
