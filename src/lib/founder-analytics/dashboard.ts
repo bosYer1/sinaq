@@ -105,7 +105,7 @@ function buildClubDataPriorities(posthog: PostHogMetrics, operational: SupabaseM
   return operational.qualityBacklog.map((club) => {
     const behavior = demand.get(club.slug);
     const views = behavior?.views ?? 0;
-    const ctaClicks = behavior ? behavior.phoneClicks + behavior.instagramClicks + behavior.mapsClicks : 0;
+    const ctaClicks = behavior ? behavior.phoneClicks + behavior.instagramClicks + behavior.tiktokClicks + behavior.mapsClicks : 0;
     const intentSessions = behavior?.intentSessions ?? 0;
     const gapPoints = 100 - club.completenessScore;
     const demandPoints = Math.min(60, views * 2 + intentSessions * 4);
