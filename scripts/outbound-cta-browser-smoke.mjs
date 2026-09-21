@@ -259,6 +259,24 @@ try {
   assert(mapsCapture.properties?.cta_surface === 'header_maps', 'Maps header CTA lost surface attribution', mapsCapture);
   assert(mapsCapture.path === clubHref, 'Maps regression click unexpectedly navigated away from the club detail page', mapsCapture);
 
+
+  await navigate('/klub/fight-club-playstation');
+  await wait(`Boolean(document.querySelector('h1'))`, 'fixed-line club detail heading');
+  const fixedLineGuard = await evaluate(`(() => {
+    const article = document.querySelector('article');
+    const links = Array.from(article?.querySelectorAll('a') ?? []);
+    const booking = links.find((anchor) => (anchor.textContent || '').trim() === 'WhatsApp-da rezervasiya soruş');
+    const phone = links.find((anchor) => anchor.getAttribute('href')?.startsWith('tel:') && (anchor.textContent || '').trim() === 'Zəng et');
+    return {
+      path: location.pathname,
+      bookingHref: booking?.href || null,
+      phoneHref: phone?.getAttribute('href') || null,
+    };
+  })()`);
+  assert(fixedLineGuard.path === '/klub/fight-club-playstation', 'Fixed-line guard did not land on the expected club', fixedLineGuard);
+  assert(fixedLineGuard.bookingHref === null, 'Fixed-line club must not expose WhatsApp reservation CTA', fixedLineGuard);
+  assert(Boolean(fixedLineGuard.phoneHref), 'Fixed-line club must keep normal phone contact', fixedLineGuard);
+
   console.log('Outbound CTA browser regression: PASS');
 } finally {
   ws.close();
