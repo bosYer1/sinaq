@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import type { ClubWithRelations } from '@/types/database';
 import { TrackedClubLink } from '@/components/analytics/TrackedClubLink';
 import { TrackedTikTokLink } from '@/components/analytics/TrackedTikTokLink';
@@ -29,6 +30,7 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
   const googleMapsUrl = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/dir/?api=1&destination=${club.latitude},${club.longitude}` : null;
   const clubContext = `club=${encodeURIComponent(club.name)}&slug=${encodeURIComponent(club.slug)}`;
   const correctionHref = `/elaqe?${clubContext}`;
+  const ownerHref = `/klub-sahibi?${clubContext}`;
 
   return (
     <article className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
@@ -106,6 +108,7 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
             {updatedLabel ? <p className="text-xs leading-5 text-muted">Məlumat son dəfə {updatedLabel} tarixində yenilənib.</p> : null}
             <div className="mt-3 flex flex-col gap-2">
               <TrackedClubLink href={correctionHref} eventType="club_correction_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="text-sm font-semibold text-primary hover:underline">Məlumatda səhv var? Bildir</TrackedClubLink>
+              <Link href={ownerHref} className="text-sm font-semibold text-muted transition hover:text-primary hover:underline">Bu klub sizindir? Təsdiqlə</Link>
             </div>
           </div>
         </aside>
