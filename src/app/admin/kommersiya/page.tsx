@@ -123,7 +123,7 @@ export default async function CommercialAdminPage() {
 
       <section className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="text-lg font-bold">Yeni satış hədəfi</h2><p className="mt-1 text-xs text-gray-500">Sən satışa başlamazdan əvvəl klub pipeline-a əlavə olunur.</p></div>
+          <div><h2 className="text-lg font-bold">Yeni satış hədəfi</h2><p className="mt-1 text-xs text-gray-500">Klub yalnız real owner/official kontaktına başladıqda pipeline-a əlavə olunur; araşdırma shortlist-i burada lead kimi yazılmır.</p></div>
           {founderPackage ? <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">Founding Partner: {money(Number(founderPackage.default_price_azn ?? 0))} AZN / 30 gün</span> : null}
         </div>
         <form action={createCommercialOpportunity} className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -134,7 +134,7 @@ export default async function CommercialAdminPage() {
           <input name="contact_phone" maxLength={64} placeholder="Telefon" className="h-10 rounded-lg border border-gray-300 px-3 text-sm" />
           <input name="contact_instagram" maxLength={200} placeholder="Instagram" className="h-10 rounded-lg border border-gray-300 px-3 text-sm" />
           <input name="notes" maxLength={4000} placeholder="Qeyd" className="h-10 rounded-lg border border-gray-300 px-3 text-sm xl:col-span-2" />
-          <button type="submit" className="h-10 rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white hover:bg-[#6A47F0]">Pipeline-a əlavə et</button>
+          <button type="submit" className="h-10 rounded-lg bg-[#7C5CFC] px-4 text-sm font-semibold text-white hover:bg-[#6A47F0]">Real kontaktı pipeline-a əlavə et</button>
         </form>
       </section>
 
