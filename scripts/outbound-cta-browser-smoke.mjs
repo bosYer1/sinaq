@@ -145,7 +145,7 @@ try {
   assert(detail.path === clubHref, 'Outbound CTA regression did not land on the selected club detail page', detail);
   const bookingUrl = new URL(detail.bookingHref);
   assert(bookingUrl.protocol === 'https:' && bookingUrl.hostname === 'wa.me', 'Reservation CTA must use the official wa.me host', detail);
-  assert(/^\/994\d{9}$/.test(bookingUrl.pathname), 'Reservation CTA must carry a normalized Azerbaijan phone', { bookingHref: detail.bookingHref });
+  assert(/^\/994(?:10|50|51|55|60|70|77|99)\d{7}$/.test(bookingUrl.pathname), 'Reservation CTA must carry a normalized Azerbaijan mobile phone', { bookingHref: detail.bookingHref });
   const bookingMessage = bookingUrl.searchParams.get('text') || '';
   assert(bookingMessage.includes('GameYer.az-da klubunuzu gördüm.') && bookingMessage.includes('Rezervasiya etmək istəyirəm.') && bookingMessage.includes('Saat: __:__') && bookingMessage.includes('Nəfər sayı: __'), 'Reservation CTA must keep neutral GameYer discovery attribution plus time and party-size fields', { bookingMessage });
 

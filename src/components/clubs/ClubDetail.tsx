@@ -15,10 +15,16 @@ const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/B
 
 function normalizeWhatsAppPhone(phone: string) {
   const digits = phone.replace(/\D/g, '');
-  if (/^994\d{9}$/.test(digits)) return digits;
-  if (/^0\d{9}$/.test(digits)) return `994${digits.slice(1)}`;
-  if (/^\d{9}$/.test(digits)) return `994${digits}`;
-  return null;
+  const canonical = /^994\d{9}$/.test(digits)
+    ? digits
+    : /^0\d{9}$/.test(digits)
+      ? `994${digits.slice(1)}`
+      : /^\d{9}$/.test(digits)
+        ? `994${digits}`
+        : null;
+
+  if (!canonical) return null;
+  return /^994(?:10|50|51|55|60|70|77|99)\d{7}$/.test(canonical) ? canonical : null;
 }
 
 export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations; tiktokUrl?: string | null }) {
