@@ -13,6 +13,10 @@ const all = process.argv.includes('--all');
 const dryRun = process.argv.includes('--dry-run');
 const daysRaw = argValue('--days');
 const days = daysRaw == null ? 7 : Number(daysRaw);
+const explicitUrlArgs = process.argv
+  .filter((value) => value.startsWith('--url='))
+  .map((value) => value.slice('--url='.length))
+  .filter(Boolean);
 
 if (!all && (!Number.isFinite(days) || days < 0 || days > 3650)) {
   throw new Error('--days must be a number between 0 and 3650.');
@@ -50,30 +54,49 @@ function sameHost(url) {
   }
 }
 
-const sitemapResponse = await fetch(sitemapUrl, {
-  headers: { 'user-agent': 'GameYer-IndexNow/1.0' },
-});
-
-if (!sitemapResponse.ok) {
-  throw new Error(`Failed to fetch sitemap (${sitemapResponse.status}).`);
+function normalizeExplicitUrl(value) {
+  const candidate = new URL(value, `${siteUrl}/`);
+  if (candidate.host !== site.host) {
+    throw new Error(`Explicit IndexNow URL must use ${site.host}: ${value}`);
+  }
+  candidate.hash = '';
+  return candidate.toString();
 }
 
-const xml = await sitemapResponse.text();
-const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
-const selected = extractEntries(xml)
-  .filter((entry) => sameHost(entry.loc))
-  .filter((entry) => {
-    if (all) return true;
-    if (!entry.lastmod) return false;
-    const timestamp = Date.parse(entry.lastmod);
-    return Number.isFinite(timestamp) && timestamp >= cutoff;
-  })
-  .map((entry) => entry.loc);
+const explicitUrls = explicitUrlArgs.map(normalizeExplicitUrl);
+const includeSitemap = explicitUrls.length === 0 || all || daysRaw != null;
+let selected = [...explicitUrls];
 
-const urlList = [...new Set(selected)].slice(0, 10_000);
+if (includeSitemap) {
+  const sitemapResponse = await fetch(sitemapUrl, {
+    headers: { 'user-agent': 'GameYer-IndexNow/1.0' },
+  });
+
+  if (!sitemapResponse.ok) {
+    throw new Error(`Failed to fetch sitemap (${sitemapResponse.status}).`);
+  }
+
+  const xml = await sitemapResponse.text();
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  selected = selected.concat(extractEntries(xml)
+    .filter((entry) => sameHost(entry.loc))
+    .filter((entry) => {
+      if (all) return true;
+      if (!entry.lastmod) return false;
+      const timestamp = Date.parse(entry.lastmod);
+      return Number.isFinite(timestamp) && timestamp >= cutoff;
+    })
+    .map((entry) => entry.loc));
+}
+
+const uniqueUrls = [...new Set(selected)];
+if (uniqueUrls.length > 10_000) {
+  throw new Error(`IndexNow submission contains ${uniqueUrls.length} URLs; maximum is 10,000.`);
+}
+const urlList = uniqueUrls;
 
 if (urlList.length === 0) {
-  console.log(`IndexNow: no ${all ? '' : `last-${days}-day `}sitemap URLs selected.`);
+  console.log('IndexNow: no URLs selected.');
   process.exit(0);
 }
 
@@ -87,8 +110,9 @@ const payload = {
 if (dryRun) {
   console.log(JSON.stringify({
     endpoint,
-    sitemapUrl,
+    sitemapUrl: includeSitemap ? sitemapUrl : null,
     keyLocation,
+    explicitUrlCount: explicitUrls.length,
     count: urlList.length,
     urlList,
   }, null, 2));

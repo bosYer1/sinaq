@@ -98,6 +98,23 @@ function homepageClubCounts(html) {
   };
 }
 
+async function checkBrandFavicon() {
+  const response = await fetch(absolute('/favicon.jpeg'), { redirect: 'manual' });
+  assert(response.status === 200, 'Root favicon must return HTTP 200 without redirect', {
+    status: response.status,
+    location: response.headers.get('location'),
+  });
+  const contentType = response.headers.get('content-type') || '';
+  assert(contentType.toLowerCase().startsWith('image/jpeg'), 'Root favicon must use image/jpeg MIME type', { contentType });
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  assert(bytes.length > 1000, 'Root favicon must contain a real image payload', { bytes: bytes.length });
+
+  const manifest = await fetchText('/manifest.webmanifest');
+  assert(manifest.response.status === 200, 'Web manifest must return HTTP 200', { status: manifest.response.status });
+  const payload = JSON.parse(manifest.text);
+  assert(Array.isArray(payload.icons) && payload.icons.some((icon) => icon?.src === '/favicon.jpeg'), 'Web manifest must reference the root favicon', payload.icons);
+}
+
 async function checkHealth() {
   const { response, text } = await fetchText('/api/health');
   assert(response.status === 200, 'Health endpoint must return HTTP 200', { status: response.status, text });
@@ -166,6 +183,18 @@ async function checkHtmlPage(url) {
   return text;
 }
 
+async function checkKnownSeoRedirects() {
+  const response = await fetch(absolute('/klub/prime-cyberclub'), { redirect: 'manual' });
+  assert([307, 308].includes(response.status), 'Prime legacy slug must permanently redirect', {
+    status: response.status,
+    location: response.headers.get('location'),
+  });
+  const location = response.headers.get('location');
+  assert(Boolean(location), 'Prime legacy redirect must include a Location header');
+  const target = new URL(location, EXPECTED_CANONICAL_ORIGIN);
+  assert(target.origin === EXPECTED_CANONICAL_ORIGIN && target.pathname === '/klub/prime-cyber-club', 'Prime legacy redirect must target the proven active canonical slug', { location });
+}
+
 async function checkParameterizedHomeIsNotIndexable() {
   for (const query of ['?district=nesimi', '?type=pc', '?price_max=3', '?q=gaming', '?view=map']) {
     const { response, text } = await fetchText(`/${query}`);
@@ -219,6 +248,7 @@ function checkHomepageClubCount(homeHtml, sitemapUrls) {
 }
 
 await checkHealth();
+await checkBrandFavicon();
 const sitemapUrls = await checkRobotsAndSitemap();
 
 const pageHtmlByPath = new Map();
@@ -236,6 +266,7 @@ if (!homeHtml) {
 }
 checkHomepageClubCount(homeHtml, sitemapUrls);
 await checkInternalLinks(pageHtmlByPath);
+await checkKnownSeoRedirects();
 await checkParameterizedHomeIsNotIndexable();
 await checkParameterizedClubOwnerIsNotIndexable();
 

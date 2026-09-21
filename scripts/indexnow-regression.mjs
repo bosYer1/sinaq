@@ -9,6 +9,9 @@ assert.match(key, /^[A-Za-z0-9-]{8,128}$/, 'IndexNow key file must use the proto
 assert.ok(script.includes('keyLocation'), 'IndexNow payload must provide keyLocation.');
 assert.ok(script.includes('urlList'), 'IndexNow payload must submit URL lists.');
 assert.ok(script.includes('10_000'), 'IndexNow bulk submissions must remain bounded to 10,000 URLs.');
+assert.ok(script.includes("startsWith('--url=')"), 'IndexNow must support explicit URL submission for redirects/deletions.');
+assert.ok(script.includes('normalizeExplicitUrl'), 'Explicit IndexNow URLs must be normalized and same-host validated.');
+assert.ok(script.includes('explicitUrlCount'), 'IndexNow dry-run output must expose explicit URL count.');
 assert.equal(pkg.scripts['indexnow:submit'], 'node scripts/indexnow-submit.mjs');
 assert.ok(pkg.scripts.test.includes('node scripts/indexnow-regression.mjs'), 'IndexNow regression must run in the test suite.');
 

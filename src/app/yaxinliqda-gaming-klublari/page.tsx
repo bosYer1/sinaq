@@ -9,9 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs();
   const hasPricing = clubs.some((club) => club.pricing.some((item) => item.price_from > 0));
   const hasHours = clubs.some((club) => club.opening_hours.length > 0);
-  const title = hasPricing
-    ? 'Yaxınlıqdakı gaming klubları — qiymətlər və xəritə'
-    : 'Yaxınlıqdakı gaming klubları — PC və PlayStation xəritədə';
+  const title = 'Yaxınlıqdakı PC və PlayStation klubları — Bakı xəritəsi';
   const availability = [hasPricing ? 'mövcud qiymətlər' : null, hasHours ? 'iş saatları' : null]
     .filter((value): value is string => Boolean(value))
     .join(', ');
