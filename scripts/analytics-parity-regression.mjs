@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [card, link, detail, clubView, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest] = await Promise.all([
+const [card, link, detail, clubView, pageview, submissionAnalytics, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest] = await Promise.all([
   readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedClubLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/ClubViewTracker.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/PageViewTracker.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/submissions/SubmissionAnalytics.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/error.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/not-found.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/posthog.ts', import.meta.url), 'utf8'),
@@ -48,6 +49,11 @@ assert.equal((detail.match(/eventType=\"instagram_click\"/g) ?? []).length, 1, '
 assert.equal((detail.match(/eventType=\"maps_click\"/g) ?? []).length, 1, 'ClubDetail must expose one route CTA surface');
 assert.ok(!detail.includes('Bu klubun sahibisiniz?'), 'Premature club-owner claim CTA must remain hidden until the owner flow is ready');
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
+for (const event of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) {
+  assert.ok(submissionAnalytics.includes(`trackGaEvent('${event}'`) && submissionAnalytics.includes(`trackPostHogEvent('${event}'`), `${event} must stay wired to GA4 and PostHog`);
+}
+for (const property of ['submission_kind', 'return_to', 'has_linked_club']) assert.ok(submissionAnalytics.includes(property), `Submission analytics must keep ${property} context`);
+
 assert.ok(errorPage.includes('runtime_error'), 'runtime_error observability must stay wired');
 assert.ok(notFound.includes('not_found'), 'not_found observability must stay wired');
 assert.ok(posthog.includes('/admin') && posthog.includes('/api'), 'PostHog must keep admin/API exclusions');
@@ -100,7 +106,7 @@ assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, visi
 assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, path, event_type, club_slug)'), 'Server-only migration must revoke public analytics-event insert columns');
 assert.ok(serverOnlyAnalyticsMigration.includes('FROM anon, authenticated'), 'Server-only migration must revoke both public PostgREST roles');
 
-const combined = [card, link, detail, clubView, pageview, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest].join('\n');
+const combined = [card, link, detail, clubView, pageview, submissionAnalytics, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
 console.log('Analytics parity regression contract: PASS');
