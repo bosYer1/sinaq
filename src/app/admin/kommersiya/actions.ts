@@ -191,14 +191,17 @@ export async function createCommercialOpportunity(formData: FormData) {
     createdCustomerId = customer.id;
   }
 
+  const contactStartedAt = new Date().toISOString();
   const { error: opportunityError } = await supabase
     .from('commercial_opportunities')
     .insert({
       customer_id: customerId,
       club_id: clubId,
       package_id: packageId,
-      stage: 'targeted',
+      stage: 'contacted',
       offer_price_azn: offerPrice,
+      first_contact_at: contactStartedAt,
+      last_contact_at: contactStartedAt,
       notes: nullableText(formData, 'notes'),
     });
 
