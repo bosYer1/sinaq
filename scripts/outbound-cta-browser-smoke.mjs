@@ -122,25 +122,62 @@ try {
     const candidateDetail = await evaluate(`(() => {
       const article = document.querySelector('article');
       const articleLinks = Array.from(article?.querySelectorAll('a') ?? []);
+      const booking = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'WhatsApp-da rezervasiya soruş');
       const instagram = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Instagram');
       const maps = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Marşrut');
       const phone = articleLinks.find((anchor) => anchor.getAttribute('href')?.startsWith('tel:') && (anchor.textContent || '').trim() === 'Zəng et');
       return {
         path: location.pathname,
+        bookingHref: booking?.href || null,
         instagramHref: instagram?.href || null,
         mapsHref: maps?.href || null,
         phoneHref: phone?.getAttribute('href') || null,
       };
     })()`);
-    if (candidateDetail.instagramHref && candidateDetail.mapsHref && candidateDetail.phoneHref) {
+    if (candidateDetail.bookingHref && candidateDetail.instagramHref && candidateDetail.mapsHref && candidateDetail.phoneHref) {
       clubHref = candidateHref;
       detail = candidateDetail;
       break;
     }
   }
 
-  assert(clubHref && detail, 'No public club detail exposes prominent Phone, Instagram, and Maps CTAs for outbound analytics regression', { checkedClubHrefs: clubHrefs });
+  assert(clubHref && detail, 'No public club detail exposes prominent WhatsApp, Phone, Instagram, and Maps CTAs for outbound analytics regression', { checkedClubHrefs: clubHrefs });
   assert(detail.path === clubHref, 'Outbound CTA regression did not land on the selected club detail page', detail);
+  const bookingUrl = new URL(detail.bookingHref);
+  assert(bookingUrl.protocol === 'https:' && bookingUrl.hostname === 'wa.me', 'Reservation CTA must use the official wa.me host', detail);
+  assert(/^\/994(?:10|50|51|55|60|70|77|99)\d{7}$/.test(bookingUrl.pathname), 'Reservation CTA must carry a normalized Azerbaijan mobile phone', { bookingHref: detail.bookingHref });
+  const bookingMessage = bookingUrl.searchParams.get('text') || '';
+  assert(bookingMessage.includes('GameYer.az-da klubunuzu gördüm.') && bookingMessage.includes('Rezervasiya etmək istəyirəm.') && bookingMessage.includes('Saat: __:__') && bookingMessage.includes('Nəfər sayı: __'), 'Reservation CTA must keep neutral GameYer discovery attribution plus time and party-size fields', { bookingMessage });
+
+
+  await evaluate(`(() => {
+    window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
+    window.posthog = {
+      __loaded: true,
+      capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
+    };
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a') ?? []).find((item) => (item.textContent || '').trim() === 'WhatsApp-da rezervasiya soruş');
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('href', 'about:blank');
+    anchor.click();
+    return true;
+  })()`);
+  await wait(`window.__gameyerCapturedEvents.some((entry) => entry.event === 'whatsapp_booking_click')`, 'whatsapp_booking_click PostHog capture');
+
+  const bookingCapture = await evaluate(`(() => {
+    const capture = window.__gameyerCapturedEvents.find((entry) => entry.event === 'whatsapp_booking_click');
+    return {
+      path: location.pathname,
+      event: capture?.event || null,
+      properties: capture?.properties || null,
+    };
+  })()`);
+  assert(bookingCapture.event === 'whatsapp_booking_click', 'Reservation CTA did not emit whatsapp_booking_click', bookingCapture);
+  assert(bookingCapture.properties?.club_slug === clubHref.split('/').filter(Boolean).pop(), 'Reservation CTA lost club slug attribution', bookingCapture);
+  assert(bookingCapture.properties?.cta_surface === 'contact_whatsapp_booking', 'Reservation CTA lost WhatsApp surface attribution', bookingCapture);
+  assert(bookingCapture.properties?.booking_channel === 'whatsapp', 'Reservation CTA lost booking channel attribution', bookingCapture);
+  assert(bookingCapture.properties?.booking_status === 'intent_only', 'Reservation CTA must remain intent-only', bookingCapture);
+  assert(bookingCapture.path === clubHref, 'Reservation regression click unexpectedly navigated away from the club detail page', bookingCapture);
 
   await evaluate(`(() => {
     window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
@@ -221,6 +258,24 @@ try {
   assert(mapsCapture.properties?.club_slug === clubHref.split('/').filter(Boolean).pop(), 'Maps CTA lost club slug attribution', mapsCapture);
   assert(mapsCapture.properties?.cta_surface === 'header_maps', 'Maps header CTA lost surface attribution', mapsCapture);
   assert(mapsCapture.path === clubHref, 'Maps regression click unexpectedly navigated away from the club detail page', mapsCapture);
+
+
+  await navigate('/klub/fight-club-playstation');
+  await wait(`Boolean(document.querySelector('h1'))`, 'fixed-line club detail heading');
+  const fixedLineGuard = await evaluate(`(() => {
+    const article = document.querySelector('article');
+    const links = Array.from(article?.querySelectorAll('a') ?? []);
+    const booking = links.find((anchor) => (anchor.textContent || '').trim() === 'WhatsApp-da rezervasiya soruş');
+    const phone = links.find((anchor) => anchor.getAttribute('href')?.startsWith('tel:') && (anchor.textContent || '').trim() === 'Zəng et');
+    return {
+      path: location.pathname,
+      bookingHref: booking?.href || null,
+      phoneHref: phone?.getAttribute('href') || null,
+    };
+  })()`);
+  assert(fixedLineGuard.path === '/klub/fight-club-playstation', 'Fixed-line guard did not land on the expected club', fixedLineGuard);
+  assert(fixedLineGuard.bookingHref === null, 'Fixed-line club must not expose WhatsApp reservation CTA', fixedLineGuard);
+  assert(Boolean(fixedLineGuard.phoneHref), 'Fixed-line club must keep normal phone contact', fixedLineGuard);
 
   console.log('Outbound CTA browser regression: PASS');
 } finally {

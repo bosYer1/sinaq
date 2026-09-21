@@ -2,6 +2,7 @@ import Image from 'next/image';
 import type { ClubWithRelations } from '@/types/database';
 import { TrackedClubLink } from '@/components/analytics/TrackedClubLink';
 import { TrackedTikTokLink } from '@/components/analytics/TrackedTikTokLink';
+import { TrackedWhatsAppBookingLink } from '@/components/analytics/TrackedWhatsAppBookingLink';
 import { ClubViewTracker } from '@/components/analytics/ClubViewTracker';
 import { BackToClubsLink } from '@/components/clubs/BackToClubsLink';
 import { Badge } from '@/components/ui/Badge';
@@ -12,6 +13,20 @@ import { cn, DAY_NAMES_AZ, formatOpeningHoursLabel, isClubOpenNow, isPremiumActi
 
 const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', year: 'numeric', month: 'long', day: 'numeric' });
 
+function normalizeWhatsAppPhone(phone: string) {
+  const digits = phone.replace(/\D/g, '');
+  const canonical = /^994\d{9}$/.test(digits)
+    ? digits
+    : /^0\d{9}$/.test(digits)
+      ? `994${digits.slice(1)}`
+      : /^\d{9}$/.test(digits)
+        ? `994${digits}`
+        : null;
+
+  if (!canonical) return null;
+  return /^994(?:10|50|51|55|60|70|77|99)\d{7}$/.test(canonical) ? canonical : null;
+}
+
 export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations; tiktokUrl?: string | null }) {
   const hasHours = club.opening_hours.length > 0;
   const openNow = hasHours ? isClubOpenNow(club.opening_hours) : false;
@@ -20,6 +35,9 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
   const typeSlugs = inferClubTypeSlugs(club);
   const phoneNumbers = (club.phone ?? '').split(/\s*\/\s*|\s*,\s*|\s*;\s*/).map((phone) => phone.trim()).filter(Boolean);
   const primaryPhone = phoneNumbers[0] ?? null;
+  const whatsappPhone = primaryPhone ? normalizeWhatsAppPhone(primaryPhone) : null;
+  const whatsappMessage = `Salam! GameYer.az-da klubunuzu gördüm. Rezervasiya etmək istəyirəm.\nSaat: __:__\nNəfər sayı: __`;
+  const whatsappBookingUrl = whatsappPhone ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}` : null;
   const updatedAt = new Date(club.updated_at);
   const updatedLabel = Number.isNaN(updatedAt.getTime()) ? null : BAKU_DATE_FORMATTER.format(updatedAt);
   const sortedHours = [...club.opening_hours].filter((hours) => hours.day_of_week >= 0 && hours.day_of_week <= 6).sort((a, b) => a.day_of_week - b.day_of_week);
@@ -73,13 +91,17 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
           </div>
         </div>
 
-        {(primaryPhone || club.instagram_url || tiktokUrl || googleMapsUrl) ? (
-          <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {primaryPhone ? <TrackedClubLink href={`tel:${primaryPhone.replace(/[^+\d]/g, '')}`} eventType="phone_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="inline-flex h-12 items-center justify-center rounded-control bg-primary px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Zəng et</TrackedClubLink> : null}
+        {(whatsappBookingUrl || primaryPhone || club.instagram_url || tiktokUrl || googleMapsUrl) ? (
+          <>
+            <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {whatsappBookingUrl ? <TrackedWhatsAppBookingLink href={whatsappBookingUrl} clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-[#25D366] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">WhatsApp-da rezervasiya soruş</TrackedWhatsAppBookingLink> : null}
+              {primaryPhone ? <TrackedClubLink href={`tel:${primaryPhone.replace(/[^+\d]/g, '')}`} eventType="phone_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="inline-flex h-12 items-center justify-center rounded-control bg-primary px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Zəng et</TrackedClubLink> : null}
             {club.instagram_url ? <TrackedClubLink href={club.instagram_url} eventType="instagram_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-[#E1306C] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Instagram</TrackedClubLink> : null}
             {tiktokUrl ? <TrackedTikTokLink href={tiktokUrl} clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-black px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">TikTok</TrackedTikTokLink> : null}
-            {googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-12 items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut</TrackedClubLink> : null}
-          </div>
+              {googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-12 items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut</TrackedClubLink> : null}
+            </div>
+            {whatsappBookingUrl ? <p className="mt-2 text-xs leading-5 text-muted">GameYer rezervasiyanı qəbul və ya təsdiq etmir. Rezervasiyanı klub birbaşa təsdiqləyir.</p> : null}
+          </>
         ) : null}
       </div>
 

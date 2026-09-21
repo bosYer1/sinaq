@@ -16,7 +16,7 @@ function emptyMetrics(detail: string): SupabaseMetrics {
     submissionBacklogByKind: { ownerClaim: 0, newClub: 0, correction: 0 },
     completeness: { total: 0, missingImage: 0, missingPhone: 0, missingSocial: 0, missingCoordinates: 0, missingType: 0 },
     qualityBacklog: [],
-    firstPartyIntent: { available: false, detail: 'First-party intent datası əlçatan deyil.', events: 0, browserVisitors: 0, phoneClicks: 0, instagramClicks: 0, mapsClicks: 0 },
+    firstPartyIntent: { available: false, detail: 'First-party intent datası əlçatan deyil.', events: 0, browserVisitors: 0, phoneClicks: 0, instagramClicks: 0, mapsClicks: 0, whatsappBookingClicks: 0 },
   };
 }
 
@@ -82,7 +82,7 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
       .select('session_id,event_type')
       .gte('created_at', range.from)
       .lt('created_at', range.to)
-      .in('event_type', ['phone_click', 'instagram_click', 'maps_click'])
+      .in('event_type', ['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click'])
       .limit(10000),
   ]);
   const error = clubsResult.error || verifiedResult.error || pendingResult.error || staleResult.error || ownerClaimPendingResult.error || newClubPendingResult.error || correctionPendingResult.error || imagesResult.error || typesResult.error || evidenceResult.error;
@@ -94,7 +94,7 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
   const evidenceRows = (evidenceResult.data ?? []) as EvidenceRow[];
   const intentRows = intentResult.error ? [] : (intentResult.data ?? []);
   const firstPartyIntent = intentResult.error
-    ? { available: false, detail: 'First-party analytics_events oxunmadı.', events: 0, browserVisitors: 0, phoneClicks: 0, instagramClicks: 0, mapsClicks: 0 }
+    ? { available: false, detail: 'First-party analytics_events oxunmadı.', events: 0, browserVisitors: 0, phoneClicks: 0, instagramClicks: 0, mapsClicks: 0, whatsappBookingClicks: 0 }
     : {
         available: true,
         detail: 'Supabase analytics_events · raw first-party browser visitor ID; PostHog session/person və bot modeli ilə eyni vahid deyil.',
@@ -103,6 +103,7 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
         phoneClicks: intentRows.filter((row) => row.event_type === 'phone_click').length,
         instagramClicks: intentRows.filter((row) => row.event_type === 'instagram_click').length,
         mapsClicks: intentRows.filter((row) => row.event_type === 'maps_click').length,
+        whatsappBookingClicks: intentRows.filter((row) => row.event_type === 'whatsapp_booking_click').length,
       };
   return {
     status: providerStatus('supabase', 'ready', 'Real klub, evidence və müraciət datası admin RLS sərhədindən oxundu.'),

@@ -65,6 +65,7 @@ export type ClubPerformanceRow = {
   instagramClicks: number;
   tiktokClicks: number;
   mapsClicks: number;
+  whatsappBookingClicks: number;
   intentSessions: number;
   intentRate: number;
 };
@@ -149,6 +150,7 @@ export type PostHogMetrics = {
   instagramClicks: Metric;
   tiktokClicks: Metric;
   mapsClicks: Metric;
+  whatsappBookingClicks: Metric;
   newUsers: number;
   returningUsers: number;
   returningRate: number;
@@ -261,6 +263,7 @@ export type SupabaseMetrics = {
     phoneClicks: number;
     instagramClicks: number;
     mapsClicks: number;
+    whatsappBookingClicks: number;
   };
 };
 

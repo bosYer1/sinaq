@@ -2,16 +2,11 @@
 
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from 'react';
 import { trackGaEvent } from '@/lib/google-analytics';
-import { clubActionEvent, trackMetaCustomEvent } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
 import { cn } from '@/lib/utils';
 
-type EventType = 'maps_click' | 'phone_click' | 'instagram_click' | 'club_correction_click';
-type CtaSurface = 'header_maps' | 'contact_phone' | 'contact_instagram' | 'contact_maps' | 'correction';
-
-interface TrackedClubLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+interface TrackedWhatsAppBookingLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
-  eventType: EventType;
   clubId: string;
   clubSlug: string;
   clubName: string;
@@ -39,42 +34,36 @@ function visitorId() {
   }
 }
 
-function ctaSurface(anchor: HTMLAnchorElement, eventType: EventType): CtaSurface {
-  if (eventType === 'phone_click') return 'contact_phone';
-  if (eventType === 'instagram_click') return 'contact_instagram';
-  if (eventType === 'club_correction_click') return 'correction';
-  return anchor.closest('aside') ? 'contact_maps' : 'header_maps';
-}
-
-function interactionClassName(eventType: EventType) {
-  if (eventType === 'phone_click' || eventType === 'instagram_click') {
-    return cn('inline-flex min-h-11 items-center rounded-md px-2', FOCUS_RING);
-  }
-  if (eventType === 'club_correction_click') {
-    return cn('inline-flex min-h-10 items-center rounded-md px-2', FOCUS_RING);
-  }
-  return FOCUS_RING;
-}
-
-export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, children, onClick, className, ...props }: TrackedClubLinkProps) {
+export function TrackedWhatsAppBookingLink({
+  href,
+  clubId,
+  clubSlug,
+  clubName,
+  children,
+  onClick,
+  className,
+  ...props
+}: TrackedWhatsAppBookingLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
     if (event.defaultPrevented) return;
 
-    const eventProperties = {
+    const properties = {
       club_id: clubId,
       club_slug: clubSlug,
       club_name: clubName,
-      cta_surface: ctaSurface(event.currentTarget, eventType),
+      cta_surface: 'contact_whatsapp_booking',
+      booking_channel: 'whatsapp',
+      booking_status: 'intent_only',
     };
-    trackMetaCustomEvent(clubActionEvent(eventType, { clubId, clubSlug, clubName }));
-    trackGaEvent(eventType, eventProperties);
-    trackPostHogEvent(eventType, eventProperties);
+
+    trackGaEvent('whatsapp_booking_click', properties);
+    trackPostHogEvent('whatsapp_booking_click', properties);
 
     const body = JSON.stringify({
       sessionId: visitorId(),
       path: window.location.pathname,
-      eventType,
+      eventType: 'whatsapp_booking_click',
       clubSlug,
     });
 
@@ -96,5 +85,14 @@ export function TrackedClubLink({ href, eventType, clubId, clubSlug, clubName, c
     }).catch(() => undefined);
   }
 
-  return <a href={href} onClick={handleClick} {...props} className={cn(className, interactionClassName(eventType))}>{children}</a>;
+  return (
+    <a
+      href={href}
+      onClick={handleClick}
+      {...props}
+      className={cn(className, FOCUS_RING)}
+    >
+      {children}
+    </a>
+  );
 }
