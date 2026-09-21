@@ -73,7 +73,7 @@ export type ClubDataQualityRow = {
   slug: string;
   name: string;
   completenessScore: number;
-  missingFields: Array<'image' | 'phone' | 'instagram' | 'coordinates' | 'type'>;
+  missingFields: Array<'image' | 'phone' | 'social' | 'coordinates' | 'type'>;
   lastEvidenceCheckedAt: string | null;
   evidenceState: 'fresh' | 'stale' | 'missing';
 };
@@ -248,7 +248,7 @@ export type SupabaseMetrics = {
     total: number;
     missingImage: number;
     missingPhone: number;
-    missingInstagram: number;
+    missingSocial: number;
     missingCoordinates: number;
     missingType: number;
   };
