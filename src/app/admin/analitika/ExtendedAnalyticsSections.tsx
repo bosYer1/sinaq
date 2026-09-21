@@ -8,7 +8,7 @@ function MetricTile({ label, metric, value, suffix = '', detail, emptyLabel }: {
 function reachRate(value: number, base: number) { return base > 0 ? Math.round((value / base) * 10_000) / 100 : 0; }
 
 function missingFieldLabel(field: ClubDataPriorityRow['missingFields'][number]) {
-  return field === 'image' ? 'şəkil' : field === 'phone' ? 'telefon' : field === 'instagram' ? 'Instagram' : field === 'coordinates' ? 'koordinat' : 'klub tipi';
+  return field === 'image' ? 'şəkil' : field === 'phone' ? 'telefon' : field === 'social' ? 'sosial profil' : field === 'coordinates' ? 'koordinat' : 'klub tipi';
 }
 
 function evidenceLabel(state: ClubDataPriorityRow['evidenceState']) {
