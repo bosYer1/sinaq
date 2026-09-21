@@ -19,7 +19,6 @@ const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
 const socialImage = `${siteUrl}/opengraph-image`;
 const brandLogo = `${siteUrl}/gameyer-logo.jpeg`;
-const brandFavicon = `${siteUrl}/favicon.jpeg`;
 const organizationId = `${siteUrl}/#organization`;
 const websiteId = `${siteUrl}/#website`;
 
