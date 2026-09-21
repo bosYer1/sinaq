@@ -122,25 +122,59 @@ try {
     const candidateDetail = await evaluate(`(() => {
       const article = document.querySelector('article');
       const articleLinks = Array.from(article?.querySelectorAll('a') ?? []);
+      const booking = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Rezervasiya et');
       const instagram = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Instagram');
       const maps = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Marşrut');
       const phone = articleLinks.find((anchor) => anchor.getAttribute('href')?.startsWith('tel:') && (anchor.textContent || '').trim() === 'Zəng et');
       return {
         path: location.pathname,
+        bookingHref: booking?.href || null,
         instagramHref: instagram?.href || null,
         mapsHref: maps?.href || null,
         phoneHref: phone?.getAttribute('href') || null,
       };
     })()`);
-    if (candidateDetail.instagramHref && candidateDetail.mapsHref && candidateDetail.phoneHref) {
+    if (candidateDetail.bookingHref && candidateDetail.instagramHref && candidateDetail.mapsHref && candidateDetail.phoneHref) {
       clubHref = candidateHref;
       detail = candidateDetail;
       break;
     }
   }
 
-  assert(clubHref && detail, 'No public club detail exposes prominent Phone, Instagram, and Maps CTAs for outbound analytics regression', { checkedClubHrefs: clubHrefs });
+  assert(clubHref && detail, 'No public club detail exposes prominent WhatsApp, Phone, Instagram, and Maps CTAs for outbound analytics regression', { checkedClubHrefs: clubHrefs });
   assert(detail.path === clubHref, 'Outbound CTA regression did not land on the selected club detail page', detail);
+  assert(detail.bookingHref.startsWith('https://wa.me/'), 'Reservation CTA must use the official wa.me surface', detail);
+  assert(detail.bookingHref.includes('GameYer-d%C9%99n') || detail.bookingHref.includes('GameYer-d%C9%99n'.toLowerCase()), 'Reservation CTA must keep GameYer attribution in the prefilled WhatsApp message', detail);
+
+
+  await evaluate(`(() => {
+    window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
+    window.posthog = {
+      __loaded: true,
+      capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
+    };
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a') ?? []).find((item) => (item.textContent || '').trim() === 'Rezervasiya et');
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('href', 'about:blank');
+    anchor.click();
+    return true;
+  })()`);
+  await wait(`window.__gameyerCapturedEvents.some((entry) => entry.event === 'whatsapp_booking_click')`, 'whatsapp_booking_click PostHog capture');
+
+  const bookingCapture = await evaluate(`(() => {
+    const capture = window.__gameyerCapturedEvents.find((entry) => entry.event === 'whatsapp_booking_click');
+    return {
+      path: location.pathname,
+      event: capture?.event || null,
+      properties: capture?.properties || null,
+    };
+  })()`);
+  assert(bookingCapture.event === 'whatsapp_booking_click', 'Reservation CTA did not emit whatsapp_booking_click', bookingCapture);
+  assert(bookingCapture.properties?.club_slug === clubHref.split('/').filter(Boolean).pop(), 'Reservation CTA lost club slug attribution', bookingCapture);
+  assert(bookingCapture.properties?.cta_surface === 'contact_whatsapp_booking', 'Reservation CTA lost WhatsApp surface attribution', bookingCapture);
+  assert(bookingCapture.properties?.booking_channel === 'whatsapp', 'Reservation CTA lost booking channel attribution', bookingCapture);
+  assert(bookingCapture.properties?.booking_status === 'intent_only', 'Reservation CTA must remain intent-only', bookingCapture);
+  assert(bookingCapture.path === clubHref, 'Reservation regression click unexpectedly navigated away from the club detail page', bookingCapture);
 
   await evaluate(`(() => {
     window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
