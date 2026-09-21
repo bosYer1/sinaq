@@ -21,6 +21,7 @@ const socialImage = `${siteUrl}/opengraph-image`;
 const brandLogo = `${siteUrl}/gameyer-logo.jpeg`;
 const organizationId = `${siteUrl}/#organization`;
 const websiteId = `${siteUrl}/#website`;
+const brandImageId = `${siteUrl}/#brand-image`;
 
 const themeInitScript = `(() => {
   try {
@@ -42,11 +43,22 @@ const siteStructuredData = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'ImageObject',
+      '@id': brandImageId,
+      url: brandLogo,
+      contentUrl: brandLogo,
+      width: 1254,
+      height: 1254,
+      caption: 'GameYer',
+      representativeOfPage: true,
+    },
+    {
       '@type': 'Organization',
       '@id': organizationId,
       name: 'GameYer',
       url: siteUrl,
-      logo: brandLogo,
+      logo: { '@id': brandImageId },
+      image: { '@id': brandImageId },
       description: 'Azərbaycanda PC və PlayStation klublarını tapmaq və müqayisə etmək üçün gaming klub kataloqu və xəritəsi.',
       sameAs: ['https://www.instagram.com/gameyer.az/', 'https://www.tiktok.com/@gameyer.az'],
     },
@@ -77,7 +89,11 @@ export const metadata: Metadata = {
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: [{ url: '/gameyer-favicon.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
+    icon: [
+      { url: '/favicon.ico', type: 'image/jpeg', sizes: '1254x1254' },
+      { url: '/gameyer-favicon.jpeg', type: 'image/jpeg', sizes: '1254x1254' },
+    ],
+    shortcut: [{ url: '/favicon.ico', type: 'image/jpeg', sizes: '1254x1254' }],
     apple: [{ url: '/gameyer-logo.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
   },
   ...(googleVerification ? { verification: { google: googleVerification } } : {}),

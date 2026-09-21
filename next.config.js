@@ -51,6 +51,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/gameyer-favicon.jpeg',
+      },
+    ];
+  },
   async redirects() {
     return [
       ...legacyProductionHosts.map((host) => ({
