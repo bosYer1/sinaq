@@ -141,11 +141,23 @@ async function queryClubPopularityMetrics(): Promise<ClubPopularityMetric[]> {
 }
 
 const getCachedClubPopularityMetrics = unstable_cache(
-  queryClubPopularityMetrics,
-  ['gameyer-club-popularity-30d-v3'],
+  async () => {
+    const metrics = await queryClubPopularityMetrics();
+    if (metrics.length === 0) {
+      throw new Error('Club popularity sources returned no metrics; skip caching the empty result.');
+    }
+    return metrics;
+  },
+  ['gameyer-club-popularity-30d-v4'],
   { revalidate: 600, tags: ['club-popularity'] },
 );
 
 export async function getClubPopularityMetrics() {
-  return getCachedClubPopularityMetrics();
+  try {
+    return await getCachedClubPopularityMetrics();
+  } catch {
+    // Never pin a transient provider failure as an empty public ranking.
+    // Retry live so first-party popularity can recover immediately.
+    return queryClubPopularityMetrics();
+  }
 }

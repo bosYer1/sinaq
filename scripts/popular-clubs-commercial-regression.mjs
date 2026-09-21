@@ -16,6 +16,7 @@ assert.ok(popularity.includes("from('page_views')"), 'Popularity must derive fro
 assert.ok(popularity.includes("select('path,session_id,user_agent')") && popularity.includes('SYNTHETIC_USER_AGENT_RE.test'), 'First-party popularity must exclude synthetic/bot-like traffic.');
 assert.ok(popularity.includes("new Set<string>()"), 'Popularity must retain unique-session data as a tie-breaker.');
 assert.ok(popularity.includes("revalidate: 600"), 'Popularity reads must be cached to avoid per-request analytics load.');
+assert.ok(popularity.includes('skip caching the empty result') && popularity.includes('return queryClubPopularityMetrics();'), 'Transient empty popularity results must not be cached and must retry live.');
 
 const premiumIndex = clubs.indexOf('const premiumDelta');
 const profileImageIndex = clubs.indexOf('const profileImageDelta');
@@ -37,7 +38,7 @@ console.log('Premium placement + organic popularity regression: PASS');
 
 assert.ok(popularity.includes('queryPostHogPopularity'), 'Popularity must have a PostHog fallback when server-admin page_views access is unavailable.');
 assert.ok(popularity.includes("event = 'club_view'"), 'PostHog fallback must use real club profile views.');
-assert.ok(popularity.includes("['gameyer-club-popularity-30d-v3']"), 'Popularity cache key must be bumped when traffic-quality semantics change.');
+assert.ok(popularity.includes("['gameyer-club-popularity-30d-v4']"), 'Popularity cache key must be bumped when empty-cache recovery semantics change.');
 assert.ok(clubs.includes("['gameyer-public-clubs-v6']"), 'Public club cache key must be bumped for profile-image discovery ranking semantics.');
 assert.ok(clubs.includes('const profileImageDelta') && clubs.includes('profile_image_url?.trim()'), 'Incomplete discovery cards must rank below clubs with a real profile image.');
 assert.ok(clubs.includes('const recencyDelta'), 'Alphabetical ordering must not be the default fallback when popularity data ties or is unavailable.');
