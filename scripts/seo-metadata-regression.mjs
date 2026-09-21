@@ -24,6 +24,7 @@ const checks = [
   [rootLayout.includes("shortcut: [{ url: '/favicon.jpeg'"), 'root metadata exposes an explicit shortcut favicon'],
   [rootLayout.includes("alternateName: ['GameYer.az']"), 'brand structured data carries the stable GameYer.az alternate name'],
   [rootLayout.includes("'@type': 'ImageObject'"), 'organization logo is emitted as an explicit ImageObject'],
+  [rootLayout.includes("areaServed: { '@type': 'Country', name: 'Azerbaijan' }"), 'organization structured data keeps the verified Azerbaijan service area'],
   [Buffer.compare(rootFavicon, brandedFavicon) === 0, 'root favicon is byte-identical to the locked GameYer favicon asset'],
   [manifest.includes("src: '/favicon.jpeg'"), 'PWA manifest points at the crawler-friendly root favicon'],
   [nearbyPage.includes("const title = 'Yaxınlıqdakı PC və PlayStation klubları — Bakı xəritəsi';"), 'nearby landing keeps stable PC + PlayStation intent in the title'],

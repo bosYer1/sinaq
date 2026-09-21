@@ -56,6 +56,7 @@ const siteStructuredData = {
         height: 1254,
       },
       image: brandLogo,
+      areaServed: { '@type': 'Country', name: 'Azerbaijan' },
       description: 'Azərbaycanda PC və PlayStation klublarını tapmaq və müqayisə etmək üçün gaming klub kataloqu və xəritəsi.',
       sameAs: ['https://www.instagram.com/gameyer.az/', 'https://www.tiktok.com/@gameyer.az'],
     },
