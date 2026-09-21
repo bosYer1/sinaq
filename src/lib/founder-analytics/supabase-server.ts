@@ -6,7 +6,7 @@ import { calculateCompleteness } from './normalization';
 import type { Database } from '@/types/database';
 import type { ClubDataQualityRow, DateRange, SupabaseMetrics } from './types';
 
-type ClubQualityRow = Pick<Database['public']['Tables']['clubs']['Row'], 'id' | 'name' | 'slug' | 'phone' | 'instagram_url' | 'profile_image_url' | 'latitude' | 'longitude'>;
+type ClubQualityRow = Pick<Database['public']['Tables']['clubs']['Row'], 'id' | 'name' | 'slug' | 'phone' | 'instagram_url' | 'tiktok_url' | 'profile_image_url' | 'latitude' | 'longitude'>;
 type EvidenceRow = Pick<Database['public']['Tables']['club_data_evidence']['Row'], 'club_id' | 'checked_at'>;
 
 function emptyMetrics(detail: string): SupabaseMetrics {
@@ -14,7 +14,7 @@ function emptyMetrics(detail: string): SupabaseMetrics {
     status: providerStatus('supabase', 'error', detail), activeClubs: 0, verifiedClubs: 0,
     pendingSubmissions: 0, staleSubmissions: 0,
     submissionBacklogByKind: { ownerClaim: 0, newClub: 0, correction: 0 },
-    completeness: { total: 0, missingImage: 0, missingPhone: 0, missingInstagram: 0, missingCoordinates: 0, missingType: 0 },
+    completeness: { total: 0, missingImage: 0, missingPhone: 0, missingSocial: 0, missingCoordinates: 0, missingType: 0 },
     qualityBacklog: [],
     firstPartyIntent: { available: false, detail: 'First-party intent datası əlçatan deyil.', events: 0, browserVisitors: 0, phoneClicks: 0, instagramClicks: 0, mapsClicks: 0 },
   };
@@ -37,7 +37,7 @@ function buildQualityBacklog(
     const missingFields: ClubDataQualityRow['missingFields'] = [];
     if (!club.profile_image_url && !imageIds.has(club.id)) missingFields.push('image');
     if (!club.phone?.trim()) missingFields.push('phone');
-    if (!club.instagram_url?.trim()) missingFields.push('instagram');
+    if (!club.instagram_url?.trim() && !club.tiktok_url?.trim()) missingFields.push('social');
     if (club.latitude == null || club.longitude == null) missingFields.push('coordinates');
     if (!typeIds.has(club.id)) missingFields.push('type');
 
@@ -68,7 +68,7 @@ function buildQualityBacklog(
 export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, range: DateRange): Promise<SupabaseMetrics> {
   const staleCutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
   const [clubsResult, verifiedResult, pendingResult, staleResult, ownerClaimPendingResult, newClubPendingResult, correctionPendingResult, imagesResult, typesResult, evidenceResult, intentResult] = await Promise.all([
-    supabase.from('clubs').select('id,name,slug,phone,instagram_url,profile_image_url,latitude,longitude').eq('is_active', true),
+    supabase.from('clubs').select('id,name,slug,phone,instagram_url,tiktok_url,profile_image_url,latitude,longitude').eq('is_active', true),
     supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_verified', true),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']).lt('created_at', staleCutoff),
