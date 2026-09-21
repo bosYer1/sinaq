@@ -10,21 +10,21 @@ const [analytics, clubDetail, adminHome] = await Promise.all([
 assert.ok(
   analytics.includes('Founder-approved klub') &&
   analytics.includes('Founder-approved inventory-dədir') &&
-  analytics.includes('owner/rəsmi nümayəndə verifikasiya flag-ı'),
+  analytics.includes('ayrıca verification flag · owner təsdiqi kimi oxuma'),
   'Founder Analytics must separate active Founder-approved inventory from owner verification.',
 );
 
 assert.ok(
-  clubDetail.includes('Owner/rəsmi nümayəndə təsdiqli') &&
-  clubDetail.includes('Owner verifikasiyası yoxdur') &&
-  clubDetail.includes('Owner verifikasiyasını ləğv et'),
-  'Club admin detail must label is_verified strictly as owner/official-representative verification.',
+  clubDetail.includes('Verification flag aktivdir') &&
+  clubDetail.includes('Verification flag yoxdur') &&
+  clubDetail.includes('Verification flag-ı ləğv et'),
+  'Club admin detail must present is_verified as a neutral flag, not ownership proof.',
 );
 
 assert.ok(
-  adminHome.includes('Owner/rəsmi nümayəndə verified') &&
-  adminHome.includes('Founder-approved aktiv inventardan ayrı flag'),
-  'Admin home must not present raw is_verified as generic Founder approval.',
+  adminHome.includes('Verification flag') &&
+  adminHome.includes('Founder-approved aktiv inventardan ayrı raw flag · owner təsdiqi kimi oxuma'),
+  'Admin home must keep raw verification separate from Founder approval and owner proof.',
 );
 
 assert.ok(

@@ -137,7 +137,7 @@ export default async function AdminPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Ümumi klub</p><p className="mt-2 text-4xl font-bold">{totalClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv</p><p className="mt-2 text-4xl font-bold">{activeClubs}</p></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Aktiv premium</p><p className="mt-2 text-4xl font-bold">{premiumClubs}</p></div>
-        <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Owner/rəsmi nümayəndə verified</p><p className="mt-2 text-4xl font-bold">{verifiedClubs}</p><p className="mt-1 text-xs text-gray-500">Founder-approved aktiv inventardan ayrı flag</p></div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6"><p className="text-sm text-gray-500">Verification flag</p><p className="mt-2 text-4xl font-bold">{verifiedClubs}</p><p className="mt-1 text-xs text-gray-500">Founder-approved aktiv inventardan ayrı raw flag · owner təsdiqi kimi oxuma</p></div>
         <Link href="/admin/klublar?status=active&freshness=stale90&sort=oldest" className="rounded-xl border border-amber-200 bg-amber-50 p-6 transition hover:border-amber-400">
           <p className="text-sm text-amber-700">90+ gün köhnə</p>
           <div className="mt-2 flex items-end justify-between gap-3"><p className="text-4xl font-bold text-amber-900">{stale90}</p><span className="text-sm font-semibold text-amber-700">Yoxla →</span></div>
