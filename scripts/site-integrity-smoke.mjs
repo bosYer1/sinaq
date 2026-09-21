@@ -183,6 +183,18 @@ async function checkHtmlPage(url) {
   return text;
 }
 
+async function checkKnownSeoRedirects() {
+  const response = await fetch(absolute('/klub/prime-cyberclub'), { redirect: 'manual' });
+  assert([307, 308].includes(response.status), 'Prime legacy slug must permanently redirect', {
+    status: response.status,
+    location: response.headers.get('location'),
+  });
+  const location = response.headers.get('location');
+  assert(Boolean(location), 'Prime legacy redirect must include a Location header');
+  const target = new URL(location, EXPECTED_CANONICAL_ORIGIN);
+  assert(target.origin === EXPECTED_CANONICAL_ORIGIN && target.pathname === '/klub/prime-cyber-club', 'Prime legacy redirect must target the proven active canonical slug', { location });
+}
+
 async function checkParameterizedHomeIsNotIndexable() {
   for (const query of ['?district=nesimi', '?type=pc', '?price_max=3', '?q=gaming', '?view=map']) {
     const { response, text } = await fetchText(`/${query}`);
@@ -254,6 +266,7 @@ if (!homeHtml) {
 }
 checkHomepageClubCount(homeHtml, sitemapUrls);
 await checkInternalLinks(pageHtmlByPath);
+await checkKnownSeoRedirects();
 await checkParameterizedHomeIsNotIndexable();
 await checkParameterizedClubOwnerIsNotIndexable();
 

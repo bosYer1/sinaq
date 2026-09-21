@@ -75,6 +75,11 @@ const nextConfig = {
         destination: '/bakida-playstation-klublari',
         permanent: true,
       },
+      {
+        source: '/klub/prime-cyberclub',
+        destination: '/klub/prime-cyber-club',
+        permanent: true,
+      },
     ];
   },
   async headers() {
