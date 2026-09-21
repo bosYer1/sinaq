@@ -100,6 +100,9 @@ assert.ok(types.includes('whatsappBookingClicks: Metric;') && types.includes('wh
 assert.ok(types.includes("'social'") && types.includes('missingSocial: number;'), 'Data-quality contracts must treat social profile as Instagram-or-TikTok, not Instagram-only.');
 assert.ok(supabase.includes("!club.instagram_url?.trim() && !club.tiktok_url?.trim()") && supabase.includes("missingFields.push('social')"), 'TikTok-only active clubs must not be penalized as missing social data.');
 assert.ok(extended.includes('posthog.tiktokClicks') && page.includes('club.tiktokClicks'), 'Founder analytics UI must surface TikTok club intent.');
+assert.ok(page.includes('club.whatsappBookingClicks') && page.includes('WhatsApp rezervasiya'), 'Founder analytics UI must surface WhatsApp reservation intent per club.');
+assert.ok(page.includes('WhatsApp rezervasiya intent-i PostHog-da ayrıca ölçülür'), 'Founder dashboard must disclose that WhatsApp reservation intent is PostHog-only while first-party DB schema remains unchanged.');
+assert.ok(page.includes('təsdiqlənmiş rezervasiya, müştəri və ya satış deyil'), 'Founder dashboard must not mislabel WhatsApp reservation intent as a confirmed booking or sale.');
 assert.ok(extended.includes('posthog.whatsappBookingClicks') && extended.includes('club.whatsappBookingClicks'), 'Founder analytics UI must surface WhatsApp reservation intent.');
 assert.ok(posthog.includes('conversionRate: metric(rate(currentIntentSessions, currentClubViewSessions), rate(previousIntentSessions, previousClubViewSessions))'), 'Primary intent conversion must use unique session denominators.');
 assert.ok(types.includes('integrityOk: boolean'), 'Stage Reach contract must expose integrity state.');
