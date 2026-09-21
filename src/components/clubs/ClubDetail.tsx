@@ -30,7 +30,7 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
   const phoneNumbers = (club.phone ?? '').split(/\s*\/\s*|\s*,\s*|\s*;\s*/).map((phone) => phone.trim()).filter(Boolean);
   const primaryPhone = phoneNumbers[0] ?? null;
   const whatsappPhone = primaryPhone ? normalizeWhatsAppPhone(primaryPhone) : null;
-  const whatsappMessage = `Salam! GameYer-dən gəlirəm. ${club.name} üçün rezervasiya etmək istəyirəm.`;
+  const whatsappMessage = `Salam! GameYer-dən gəlirik. ${club.name} klubunda rezervasiya etmək istəyirik.\nSaat: __:__\nNeçə nəfərik: __ nəfər`;
   const whatsappBookingUrl = whatsappPhone ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}` : null;
   const updatedAt = new Date(club.updated_at);
   const updatedLabel = Number.isNaN(updatedAt.getTime()) ? null : BAKU_DATE_FORMATTER.format(updatedAt);

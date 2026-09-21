@@ -53,7 +53,7 @@ assert.equal((detail.match(/eventType=\"maps_click\"/g) ?? []).length, 1, 'ClubD
 assert.ok(detail.includes('Rezervasiya et') && detail.includes('whatsappBookingUrl'), 'ClubDetail must expose the WhatsApp reservation CTA');
 assert.ok(detail.includes('WhatsApp-da rezervasiya sorğusu açılır; rezervasiya klub tərəfindən təsdiqlənir.'), 'WhatsApp reservation CTA must keep the intent-only disclaimer');
 assert.ok(detail.includes("if (/^994\\d{9}$/.test(digits))") && detail.includes("if (/^0\\d{9}$/.test(digits))"), 'WhatsApp phone normalization must preserve Azerbaijan formats');
-assert.ok(detail.includes('GameYer-dən gəlirəm') && detail.includes('rezervasiya etmək istəyirəm'), 'WhatsApp reservation message must preserve GameYer attribution and reservation intent');
+assert.ok(detail.includes('GameYer-dən gəlirik') && detail.includes('rezervasiya etmək istəyirik') && detail.includes('Saat: __:__') && detail.includes('Neçə nəfərik: __ nəfər'), 'WhatsApp reservation message must preserve GameYer attribution plus time and party-size fields');
 assert.ok(!detail.includes('Bu klub sizindir? Təsdiqlə') && !detail.includes('ownerHref'), 'Club detail must not expose a direct owner-claim CTA.');
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
 for (const event of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) {

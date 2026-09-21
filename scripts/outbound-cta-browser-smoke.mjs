@@ -147,7 +147,7 @@ try {
   assert(bookingUrl.protocol === 'https:' && bookingUrl.hostname === 'wa.me', 'Reservation CTA must use the official wa.me host', detail);
   assert(/^\/994\d{9}$/.test(bookingUrl.pathname), 'Reservation CTA must carry a normalized Azerbaijan phone', { bookingHref: detail.bookingHref });
   const bookingMessage = bookingUrl.searchParams.get('text') || '';
-  assert(bookingMessage.includes('GameYer-dən gəlirəm.') && bookingMessage.includes('rezervasiya etmək istəyirəm.'), 'Reservation CTA must keep GameYer attribution and reservation intent', { bookingMessage });
+  assert(bookingMessage.includes('GameYer-dən gəlirik.') && bookingMessage.includes('rezervasiya etmək istəyirik.') && bookingMessage.includes('Saat: __:__') && bookingMessage.includes('Neçə nəfərik: __ nəfər'), 'Reservation CTA must keep GameYer attribution plus time and party-size fields', { bookingMessage });
 
 
   await evaluate(`(() => {
