@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { SearchIcon } from '@/components/ui/Icon';
+import { trackGaEvent } from '@/lib/google-analytics';
 import { trackPostHogEvent } from '@/lib/posthog';
 
 type PendingSearchAnalytics = {
@@ -138,14 +139,23 @@ export function SearchFilter() {
       if (!pending.query) {
         lastTrackedQueryRef.current = '';
         setPendingSearchAnalytics(null);
-        trackPostHogEvent('search_cleared', {
+        const clearedProperties = {
           search_query: null,
           search_query_length: 0,
           district: pending.district,
           club_type: pending.clubType,
           price_max: pending.priceMax,
           explore_view: pending.exploreView,
+        };
+        trackGaEvent('search_cleared', {
+          search_term: null,
+          search_query_length: 0,
+          district: pending.district,
+          club_type: pending.clubType,
+          price_max: pending.priceMax,
+          explore_view: pending.exploreView,
         });
+        trackPostHogEvent('search_cleared', clearedProperties);
         return;
       }
 
@@ -159,7 +169,7 @@ export function SearchFilter() {
 
       lastTrackedQueryRef.current = pending.query;
       setPendingSearchAnalytics(null);
-      trackPostHogEvent('search_query', {
+      const searchProperties = {
         search_query: pending.query,
         search_query_length: pending.query.length,
         district: pending.district,
@@ -168,7 +178,18 @@ export function SearchFilter() {
         explore_view: pending.exploreView,
         result_count: resultCount,
         no_results: resultCount === 0,
+      };
+      trackGaEvent('search_query', {
+        search_term: pending.query,
+        search_query_length: pending.query.length,
+        district: pending.district,
+        club_type: pending.clubType,
+        price_max: pending.priceMax,
+        explore_view: pending.exploreView,
+        result_count: resultCount,
+        no_results: resultCount === 0,
       });
+      trackPostHogEvent('search_query', searchProperties);
     };
 
     retryTimer = window.setTimeout(captureCommittedSearch, 0);
