@@ -122,7 +122,7 @@ try {
     const candidateDetail = await evaluate(`(() => {
       const article = document.querySelector('article');
       const articleLinks = Array.from(article?.querySelectorAll('a') ?? []);
-      const booking = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Rezervasiya et');
+      const booking = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'WhatsApp-da rezervasiya soruş');
       const instagram = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Instagram');
       const maps = articleLinks.find((anchor) => (anchor.textContent || '').trim() === 'Marşrut');
       const phone = articleLinks.find((anchor) => anchor.getAttribute('href')?.startsWith('tel:') && (anchor.textContent || '').trim() === 'Zəng et');
@@ -147,7 +147,7 @@ try {
   assert(bookingUrl.protocol === 'https:' && bookingUrl.hostname === 'wa.me', 'Reservation CTA must use the official wa.me host', detail);
   assert(/^\/994\d{9}$/.test(bookingUrl.pathname), 'Reservation CTA must carry a normalized Azerbaijan phone', { bookingHref: detail.bookingHref });
   const bookingMessage = bookingUrl.searchParams.get('text') || '';
-  assert(bookingMessage.includes('GameYer-dən gəlirik.') && bookingMessage.includes('rezervasiya etmək istəyirik.') && bookingMessage.includes('Saat: __:__') && bookingMessage.includes('Neçə nəfərik: __ nəfər'), 'Reservation CTA must keep GameYer attribution plus time and party-size fields', { bookingMessage });
+  assert(bookingMessage.includes('GameYer.az-da klubunuzu gördüm.') && bookingMessage.includes('Rezervasiya etmək istəyirəm.') && bookingMessage.includes('Saat: __:__') && bookingMessage.includes('Nəfər sayı: __'), 'Reservation CTA must keep neutral GameYer discovery attribution plus time and party-size fields', { bookingMessage });
 
 
   await evaluate(`(() => {
@@ -156,7 +156,7 @@ try {
       __loaded: true,
       capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
     };
-    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a') ?? []).find((item) => (item.textContent || '').trim() === 'Rezervasiya et');
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a') ?? []).find((item) => (item.textContent || '').trim() === 'WhatsApp-da rezervasiya soruş');
     anchor.setAttribute('target', '_blank');
     anchor.setAttribute('href', 'about:blank');
     anchor.click();

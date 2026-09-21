@@ -50,10 +50,10 @@ assert.ok(correctionAnalyticsMigration.includes('session_count >= 30') && correc
 assert.equal((detail.match(/eventType=\"phone_click\"/g) ?? []).length, 1, 'ClubDetail must expose one phone CTA surface');
 assert.equal((detail.match(/eventType=\"instagram_click\"/g) ?? []).length, 1, 'ClubDetail must expose one Instagram CTA surface');
 assert.equal((detail.match(/eventType=\"maps_click\"/g) ?? []).length, 1, 'ClubDetail must expose one route CTA surface');
-assert.ok(detail.includes('Rezervasiya et') && detail.includes('whatsappBookingUrl'), 'ClubDetail must expose the WhatsApp reservation CTA');
-assert.ok(detail.includes('WhatsApp-da rezervasiya sorğusu açılır; rezervasiya klub tərəfindən təsdiqlənir.'), 'WhatsApp reservation CTA must keep the intent-only disclaimer');
+assert.ok(detail.includes('WhatsApp-da rezervasiya soruş') && detail.includes('whatsappBookingUrl'), 'ClubDetail must expose the WhatsApp reservation CTA');
+assert.ok(detail.includes('GameYer rezervasiyanı qəbul və ya təsdiq etmir. Rezervasiyanı klub birbaşa təsdiqləyir.'), 'WhatsApp reservation CTA must keep the platform-responsibility disclaimer');
 assert.ok(detail.includes("if (/^994\\d{9}$/.test(digits))") && detail.includes("if (/^0\\d{9}$/.test(digits))"), 'WhatsApp phone normalization must preserve Azerbaijan formats');
-assert.ok(detail.includes('GameYer-dən gəlirik') && detail.includes('rezervasiya etmək istəyirik') && detail.includes('Saat: __:__') && detail.includes('Neçə nəfərik: __ nəfər'), 'WhatsApp reservation message must preserve GameYer attribution plus time and party-size fields');
+assert.ok(detail.includes('GameYer.az-da klubunuzu gördüm') && detail.includes('Rezervasiya etmək istəyirəm') && detail.includes('Saat: __:__') && detail.includes('Nəfər sayı: __'), 'WhatsApp reservation message must preserve neutral GameYer discovery attribution plus time and party-size fields');
 assert.ok(!detail.includes('Bu klub sizindir? Təsdiqlə') && !detail.includes('ownerHref'), 'Club detail must not expose a direct owner-claim CTA.');
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
 for (const event of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) {

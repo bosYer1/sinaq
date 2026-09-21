@@ -30,7 +30,7 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
   const phoneNumbers = (club.phone ?? '').split(/\s*\/\s*|\s*,\s*|\s*;\s*/).map((phone) => phone.trim()).filter(Boolean);
   const primaryPhone = phoneNumbers[0] ?? null;
   const whatsappPhone = primaryPhone ? normalizeWhatsAppPhone(primaryPhone) : null;
-  const whatsappMessage = `Salam! GameYer-dən gəlirik. ${club.name} klubunda rezervasiya etmək istəyirik.\nSaat: __:__\nNeçə nəfərik: __ nəfər`;
+  const whatsappMessage = `Salam! GameYer.az-da klubunuzu gördüm. Rezervasiya etmək istəyirəm.\nSaat: __:__\nNəfər sayı: __`;
   const whatsappBookingUrl = whatsappPhone ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}` : null;
   const updatedAt = new Date(club.updated_at);
   const updatedLabel = Number.isNaN(updatedAt.getTime()) ? null : BAKU_DATE_FORMATTER.format(updatedAt);
@@ -88,13 +88,13 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
         {(whatsappBookingUrl || primaryPhone || club.instagram_url || tiktokUrl || googleMapsUrl) ? (
           <>
             <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
-              {whatsappBookingUrl ? <TrackedWhatsAppBookingLink href={whatsappBookingUrl} clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-[#25D366] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Rezervasiya et</TrackedWhatsAppBookingLink> : null}
+              {whatsappBookingUrl ? <TrackedWhatsAppBookingLink href={whatsappBookingUrl} clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-[#25D366] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">WhatsApp-da rezervasiya soruş</TrackedWhatsAppBookingLink> : null}
               {primaryPhone ? <TrackedClubLink href={`tel:${primaryPhone.replace(/[^+\d]/g, '')}`} eventType="phone_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} className="inline-flex h-12 items-center justify-center rounded-control bg-primary px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Zəng et</TrackedClubLink> : null}
             {club.instagram_url ? <TrackedClubLink href={club.instagram_url} eventType="instagram_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-[#E1306C] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">Instagram</TrackedClubLink> : null}
             {tiktokUrl ? <TrackedTikTokLink href={tiktokUrl} clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center rounded-control bg-black px-4 text-sm font-semibold text-white no-underline transition hover:opacity-90">TikTok</TrackedTikTokLink> : null}
               {googleMapsUrl ? <TrackedClubLink href={googleMapsUrl} eventType="maps_click" clubId={club.id} clubSlug={club.slug} clubName={club.name} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#1A73E8', color: '#ffffff' }} className="inline-flex h-12 items-center justify-center rounded-control px-4 text-sm font-semibold no-underline transition hover:opacity-90">Marşrut</TrackedClubLink> : null}
             </div>
-            {whatsappBookingUrl ? <p className="mt-2 text-xs leading-5 text-muted">WhatsApp-da rezervasiya sorğusu açılır; rezervasiya klub tərəfindən təsdiqlənir.</p> : null}
+            {whatsappBookingUrl ? <p className="mt-2 text-xs leading-5 text-muted">GameYer rezervasiyanı qəbul və ya təsdiq etmir. Rezervasiyanı klub birbaşa təsdiqləyir.</p> : null}
           </>
         ) : null}
       </div>
