@@ -23,7 +23,7 @@ const checks = [
   [rootLayout.includes("shortcut: [{ url: '/favicon.ico'"), 'homepage metadata exposes a stable conventional favicon URL'],
   [nextConfig.includes("source: '/favicon.ico'") && nextConfig.includes("destination: '/gameyer-favicon.jpeg'"), 'legacy favicon path resolves to the original GameYer favicon asset'],
   [indexNowWorkflow.includes('Wait for Vercel deployment') && indexNowWorkflow.includes('node scripts/indexnow-submit.mjs'), 'IndexNow notification waits for production and submits changed URLs'],
-  [indexNowWorkflow.includes('df8fa4723f76653caecfd894a38ef608.txt') && indexNowWorkflow.includes('sitemap.xml'), 'IndexNow workflow verifies ownership key and sitemap before submission'],
+  [indexNowWorkflow.includes("expected='df8fa4723f76653caecfd894a38ef608'") && indexNowWorkflow.includes('${expected}.txt') && indexNowWorkflow.includes('sitemap.xml'), 'IndexNow workflow verifies ownership key and sitemap before submission'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
