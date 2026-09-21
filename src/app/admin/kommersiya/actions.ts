@@ -249,6 +249,23 @@ export async function recordPaidCommercialSale(formData: FormData) {
   const { supabase } = await requireAdmin();
   const opportunityId = requiredUuid(formData, 'opportunity_id');
 
+  const { data: opportunity, error: opportunityError } = await supabase
+    .from('commercial_opportunities')
+    .select('id,stage,club_id')
+    .eq('id', opportunityId)
+    .maybeSingle();
+  if (opportunityError || !opportunity) throw new Error(opportunityError?.message ?? 'Opportunity tapılmadı.');
+  if (opportunity.stage === 'lost') throw new Error('LOST opportunity əvvəlcə yenidən aktiv satış mərhələsinə keçirilməlidir.');
+  if (!opportunity.club_id) throw new Error('Opportunity klubla bağlı deyil.');
+
+  const { data: saleClub, error: saleClubError } = await supabase
+    .from('clubs')
+    .select('id,is_active')
+    .eq('id', opportunity.club_id)
+    .maybeSingle();
+  if (saleClubError || !saleClub) throw new Error(saleClubError?.message ?? 'Klub tapılmadı.');
+  if (!saleClub.is_active) throw new Error('Deaktiv klub üçün ödənişli satış qeyd edilmir.');
+
   const agreedPrice = nonNegativeNumber(formData, 'agreed_price_azn');
   const discount = nonNegativeNumber(formData, 'discount_azn', 0);
   if (discount > agreedPrice) throw new Error('Endirim satış qiymətindən böyük ola bilməz.');
@@ -295,10 +312,11 @@ export async function activateCommercialPremium(formData: FormData) {
 
   const { data: club, error: clubError } = await supabase
     .from('clubs')
-    .select('id,slug')
+    .select('id,slug,is_active')
     .eq('id', contract.club_id)
     .maybeSingle();
   if (clubError || !club) throw new Error(clubError?.message ?? 'Klub tapılmadı.');
+  if (!club.is_active) throw new Error('Deaktiv klub Premium-a keçirilmir.');
 
   const baselineEnd = startsAt;
   const baselineStart = new Date(startsAt.getTime() - 30 * 86_400_000);
