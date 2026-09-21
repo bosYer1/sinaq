@@ -94,6 +94,8 @@ assert.ok(types.includes('intentSessions: Metric;'), 'Founder Analytics must exp
 assert.ok(posthog.includes("AS intent_sessions") && posthog.includes("AS club_view_sessions"), 'PostHog overview must calculate unique intent and club-view sessions.');
 assert.ok(posthog.includes("'tiktok_click'"), 'TikTok clicks must be included in the PostHog outbound-intent contract.');
 assert.ok(types.includes('tiktokClicks: Metric;') && types.includes('tiktokClicks: number;'), 'Founder analytics contracts must expose TikTok click counts.');
+assert.ok(types.includes("'social'") && types.includes('missingSocial: number;'), 'Data-quality contracts must treat social profile as Instagram-or-TikTok, not Instagram-only.');
+assert.ok(supabase.includes("!club.instagram_url?.trim() && !club.tiktok_url?.trim()") && supabase.includes("missingFields.push('social')"), 'TikTok-only active clubs must not be penalized as missing social data.');
 assert.ok(extended.includes('posthog.tiktokClicks') && page.includes('club.tiktokClicks'), 'Founder analytics UI must surface TikTok club intent.');
 assert.ok(posthog.includes('conversionRate: metric(rate(currentIntentSessions, currentClubViewSessions), rate(previousIntentSessions, previousClubViewSessions))'), 'Primary intent conversion must use unique session denominators.');
 assert.ok(types.includes('integrityOk: boolean'), 'Stage Reach contract must expose integrity state.');
