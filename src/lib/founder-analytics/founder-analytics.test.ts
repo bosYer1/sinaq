@@ -46,8 +46,8 @@ test('acquisition groups paid and organic campaign rows without losing totals', 
 });
 
 test('club intent combines only tracked contact actions', () => {
-  const row = normalizeClubPerformance({ slug: 'arena', name: 'Arena', views: 10, view_sessions: 5, phone_clicks: 2, instagram_clicks: 2, tiktok_clicks: 2, maps_clicks: 2, intent_sessions: 2 });
-  assert.equal(row.phoneClicks + row.instagramClicks + row.tiktokClicks + row.mapsClicks, 8);
+  const row = normalizeClubPerformance({ slug: 'arena', name: 'Arena', views: 10, view_sessions: 5, phone_clicks: 2, instagram_clicks: 2, tiktok_clicks: 2, maps_clicks: 2, whatsapp_booking_clicks: 2, intent_sessions: 2 });
+  assert.equal(row.phoneClicks + row.instagramClicks + row.tiktokClicks + row.mapsClicks + row.whatsappBookingClicks, 10);
   assert.equal(row.intentSessions, 2);
   assert.equal(row.intentRate, 40);
 });

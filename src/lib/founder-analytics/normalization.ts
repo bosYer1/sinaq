@@ -30,8 +30,9 @@ export function normalizeClubPerformance(row: Record<string, unknown>): ClubPerf
   const instagramClicks = numberValue(row.instagram_clicks);
   const tiktokClicks = numberValue(row.tiktok_clicks);
   const mapsClicks = numberValue(row.maps_clicks);
+  const whatsappBookingClicks = numberValue(row.whatsapp_booking_clicks);
   const intentSessions = numberValue(row.intent_sessions);
-  return { slug: stringValue(row.slug, '(slug yoxdur)'), name: stringValue(row.name, 'Naməlum klub'), district: stringValue(row.district, 'Məlum deyil'), impressions: numberValue(row.impressions), views, viewSessions, cardClicks: numberValue(row.card_clicks), phoneClicks, instagramClicks, tiktokClicks, mapsClicks, intentSessions, intentRate: rate(intentSessions, viewSessions) };
+  return { slug: stringValue(row.slug, '(slug yoxdur)'), name: stringValue(row.name, 'Naməlum klub'), district: stringValue(row.district, 'Məlum deyil'), impressions: numberValue(row.impressions), views, viewSessions, cardClicks: numberValue(row.card_clicks), phoneClicks, instagramClicks, tiktokClicks, mapsClicks, whatsappBookingClicks, intentSessions, intentRate: rate(intentSessions, viewSessions) };
 }
 
 export function acquisitionChannel(sourceInput: string, mediumInput: string): string {
