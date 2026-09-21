@@ -24,7 +24,7 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     status: providerStatus('posthog', status, detail),
     pageviews: zero, visitors: zero, sessions: zero, clubViews: zero, clubClicks: zero,
     ctaClicks: zero, intentSessions: zero, searchQueries: zero, filterChanges: zero, exploreViewChanges: zero,
-    mapUsage: zero, phoneClicks: zero, instagramClicks: zero, mapsClicks: zero,
+    mapUsage: zero, phoneClicks: zero, instagramClicks: zero, tiktokClicks: zero, mapsClicks: zero,
     newUsers: 0, returningUsers: 0, returningRate: 0, sessionsPerUser: 0, usersWithThreeSessions: 0,
     conversionRate: zero, acquisition: [], campaigns: [], clubs: [], trend: [],
     tracking: { latestEventAt: null, publicEvents: 0, testEvents: 0, missingSessionAttribution: 0, missingCampaignAttribution: 0, noResultSearches: 0, botEvents: 0, sourceMissingSessions: 0, attributionCompleteness: 0 },
@@ -153,8 +153,9 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           countIf(event = 'club_card_click') AS club_clicks,
           countIf(event = 'phone_click') AS phone_clicks,
           countIf(event = 'instagram_click') AS instagram_clicks,
+          countIf(event = 'tiktok_click') AS tiktok_clicks,
           countIf(event = 'maps_click') AS maps_clicks,
-          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click') AND notEmpty(properties.$session_id)) AS intent_sessions,
+          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','tiktok_click','maps_click') AND notEmpty(properties.$session_id)) AS intent_sessions,
           uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)) AS club_view_sessions,
           countIf(event IN ('map_location_clicked','location_sort_clicked')) AS map_usage,
           countIf(event = 'search_query') AS searches,
@@ -251,8 +252,8 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
             countIf(event = 'club_view') AS club_views,
             uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)) AS club_view_sessions,
             countIf(event = 'club_card_click') AS club_clicks,
-            countIf(event IN ('phone_click','instagram_click','maps_click')) AS cta_clicks,
-            uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click') AND notEmpty(properties.$session_id)) AS cta_sessions
+            countIf(event IN ('phone_click','instagram_click','tiktok_click','maps_click')) AS cta_clicks,
+            uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','tiktok_click','maps_click') AND notEmpty(properties.$session_id)) AS cta_sessions
           FROM events
           WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
           GROUP BY source, medium, campaign, person_id
@@ -272,8 +273,9 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           countIf(event = 'club_card_click') AS card_clicks,
           countIf(event = 'phone_click') AS phone_clicks,
           countIf(event = 'instagram_click') AS instagram_clicks,
+          countIf(event = 'tiktok_click') AS tiktok_clicks,
           countIf(event = 'maps_click') AS maps_clicks,
-          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click') AND notEmpty(properties.$session_id)) AS intent_sessions
+          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','tiktok_click','maps_click') AND notEmpty(properties.$session_id)) AS intent_sessions
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
           AND ${publicScope}
@@ -287,7 +289,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           toString(toDate(toTimeZone(timestamp, '${PRODUCT_TIME_ZONE}'))) AS date,
           countIf(event = '$pageview') AS pageviews,
           uniqIf(person_id, event = '$pageview') AS visitors,
-          countIf(event IN ('phone_click','instagram_click','maps_click')) AS cta_clicks
+          countIf(event IN ('phone_click','instagram_click','tiktok_click','maps_click')) AS cta_clicks
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
         GROUP BY date
@@ -300,7 +302,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           uniqIf(properties.$session_id, event = '$pageview') AS landing_sessions,
           uniqIf(properties.$session_id, event IN ('club_card_click','club_view')) AS discovery_sessions,
           uniqIf(properties.$session_id, event = 'club_view') AS club_view_sessions,
-          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click')) AS cta_sessions
+          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','tiktok_click','maps_click')) AS cta_sessions
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
       `),
@@ -343,7 +345,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
                 AND notEmpty(properties.$session_id)
                 AND notEmpty(properties.club_id)
             )) AS downstream_club_view_sessions,
-          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','maps_click') AND notEmpty(properties.$session_id)
+          uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','tiktok_click','maps_click') AND notEmpty(properties.$session_id)
             AND (properties.$session_id, properties.club_id) IN (
               SELECT properties.$session_id, properties.club_id
               FROM events
@@ -475,6 +477,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       intentSessions: metric(currentIntentSessions, previousIntentSessions),
       phoneClicks: metric(numberValue(current.phone_clicks), numberValue(previous.phone_clicks)),
       instagramClicks: metric(numberValue(current.instagram_clicks), numberValue(previous.instagram_clicks)),
+      tiktokClicks: metric(numberValue(current.tiktok_clicks), numberValue(previous.tiktok_clicks)),
       mapsClicks: metric(numberValue(current.maps_clicks), numberValue(previous.maps_clicks)),
       mapUsage: metric(numberValue(current.map_usage), numberValue(previous.map_usage)),
       searchQueries: metric(numberValue(current.searches), numberValue(previous.searches)),
@@ -584,7 +587,7 @@ const getCachedPostHogMetrics = unstable_cache(
     if (result.status.status !== 'ready') throw new Error(result.status.detail);
     return result;
   },
-  ['founder-analytics-posthog-v8'],
+  ['founder-analytics-posthog-v9'],
   { revalidate: 300, tags: ['founder-analytics'] },
 );
 
