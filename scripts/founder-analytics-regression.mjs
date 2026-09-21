@@ -166,12 +166,12 @@ assert.ok(!posthog.includes('toFloat64OrZero('), 'Unsupported HogQL toFloat64OrZ
 
 assert.ok(posthog.includes("GAMEYER_POSTHOG_PROJECT_ID = '585472'"), 'GameYer analytics must have a verified project-id fallback.');
 assert.ok(posthog.includes("GAMEYER_POSTHOG_HOST = 'https://us.posthog.com'"), 'GameYer analytics must use the verified US PostHog region fallback.');
-assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 6_000'), 'Core PostHog timeout must stay within the dashboard deadline budget and allow one bounded retry.');
+assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 4_000'), 'Core PostHog timeout must stay within the dashboard deadline budget and allow one bounded retry.');
 assert.ok(posthog.includes('queryCoreHogQL(host, projectId, apiKey'), 'Core PostHog overview must run before optional query fan-out.');
 assert.ok(posthog.includes('for (let attempt = 0; attempt < 2; attempt += 1)'), 'Core PostHog read must retry once for transient failures.');
 assert.ok(posthog.includes("if (result.status.status !== 'ready') throw new Error(result.status.detail);"), 'Provider errors must not be stored as successful cached analytics.');
 assert.ok(!posthog.includes('return fetchPostHogMetrics(range);'), 'A failed cached PostHog read must not trigger a second full live query in the same dashboard request.');
-assert.ok(posthog.includes('POSTHOG_DASHBOARD_DEADLINE_MS = 14_000') && posthog.includes('Promise.race(['), 'PostHog dashboard reads must have a hard UI deadline.');
+assert.ok(posthog.includes('POSTHOG_DASHBOARD_DEADLINE_MS = 9_000') && posthog.includes('Promise.race(['), 'PostHog dashboard reads must have a hard UI deadline.');
 assert.ok(dashboard.includes('SECONDARY_PROVIDER_DEADLINE_MS = 4_500') && dashboard.includes('SUPABASE_DEADLINE_MS = 4_000'), 'Non-core providers must not block the entire Founder dashboard indefinitely.');
 assert.ok(dashboard.includes("withDashboardDeadline('GA4'") && dashboard.includes("withDashboardDeadline('GSC'") && dashboard.includes("withDashboardDeadline('Meta Ads'") && dashboard.includes("withDashboardDeadline('Supabase'"), 'Founder dashboard must apply provider deadlines consistently.');
 assert.ok(loading.includes('Analitika yüklənir') && loading.includes('aria-busy="true"'), 'Analytics route must render an immediate loading shell during server navigation.');
@@ -186,6 +186,6 @@ assert.ok(!posthog.includes("const [campaignRows, clubRows, trendRows, healthRow
 assert.ok(posthog.includes('integrityOk: numberValue(funnel.cta_sessions) <= numberValue(funnel.club_view_sessions)'), 'Stage Reach integrity must only enforce the true CTA subset invariant.');
 assert.ok(extended.includes('CTA sessiyası klub-detail sessiyasının subsetidir'), 'Stage Reach UI must describe the true subset invariant instead of a fake strict funnel.');
 
-assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 6_000'), 'Core PostHog attempts must fit inside the dashboard deadline even with one bounded retry.');
+assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 4_000'), 'Core PostHog attempts must fit inside the dashboard deadline even with one bounded retry.');
 assert.ok(posthog.includes('POSTHOG_MAX_CONCURRENCY = 6'), 'PostHog optional-query concurrency must remain bounded.');
-assert.ok(posthog.includes('POSTHOG_DASHBOARD_DEADLINE_MS = 14_000'), 'Dashboard deadline must exceed the 12.35s worst-case bounded query topology.');
+assert.ok(posthog.includes('POSTHOG_DASHBOARD_DEADLINE_MS = 9_000'), 'Dashboard deadline must exceed the 8.35s worst-case bounded core retry topology.');
