@@ -263,6 +263,7 @@ export type SupabaseMetrics = {
     phoneClicks: number;
     instagramClicks: number;
     mapsClicks: number;
+    whatsappBookingClicks: number;
   };
 };
 
