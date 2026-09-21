@@ -155,13 +155,19 @@ export async function createCommercialOpportunity(formData: FormData) {
   let createdCustomerId: string | null = null;
 
   if (customerId) {
-    const contactPatch = {
-      contact_name: nullableText(formData, 'contact_name', 160),
-      contact_phone: nullableText(formData, 'contact_phone', 64),
-      contact_instagram: nullableText(formData, 'contact_instagram', 200),
-    };
-    const hasContactPatch = Object.values(contactPatch).some(Boolean);
-    if (hasContactPatch) {
+    const contactPatch: {
+      contact_name?: string;
+      contact_phone?: string;
+      contact_instagram?: string;
+    } = {};
+    const contactName = nullableText(formData, 'contact_name', 160);
+    const contactPhone = nullableText(formData, 'contact_phone', 64);
+    const contactInstagram = nullableText(formData, 'contact_instagram', 200);
+    if (contactName) contactPatch.contact_name = contactName;
+    if (contactPhone) contactPatch.contact_phone = contactPhone;
+    if (contactInstagram) contactPatch.contact_instagram = contactInstagram;
+
+    if (Object.keys(contactPatch).length > 0) {
       const { error: customerUpdateError } = await supabase
         .from('business_customers')
         .update({ ...contactPatch, display_name: club.name })
