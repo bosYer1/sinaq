@@ -101,7 +101,7 @@ assert.ok(types.includes("'social'") && types.includes('missingSocial: number;')
 assert.ok(supabase.includes("!club.instagram_url?.trim() && !club.tiktok_url?.trim()") && supabase.includes("missingFields.push('social')"), 'TikTok-only active clubs must not be penalized as missing social data.');
 assert.ok(extended.includes('posthog.tiktokClicks') && page.includes('club.tiktokClicks'), 'Founder analytics UI must surface TikTok club intent.');
 assert.ok(page.includes('club.whatsappBookingClicks') && page.includes('WhatsApp rezervasiya'), 'Founder analytics UI must surface WhatsApp reservation intent per club.');
-assert.ok(page.includes('WhatsApp rezervasiya intent-i PostHog-da ayrıca ölçülür'), 'Founder dashboard must disclose that WhatsApp reservation intent is PostHog-only while first-party DB schema remains unchanged.');
+assert.ok(page.includes('data.supabase.firstPartyIntent.whatsappBookingClicks') && page.includes('WhatsApp rezervasiya sorğusu'), 'Founder dashboard must surface first-party WhatsApp reservation intent alongside PostHog.');
 assert.ok(page.includes('təsdiqlənmiş rezervasiya, müştəri və ya satış deyil'), 'Founder dashboard must not mislabel WhatsApp reservation intent as a confirmed booking or sale.');
 assert.ok(extended.includes('posthog.whatsappBookingClicks') && extended.includes('club.whatsappBookingClicks'), 'Founder analytics UI must surface WhatsApp reservation intent.');
 assert.ok(posthog.includes('conversionRate: metric(rate(currentIntentSessions, currentClubViewSessions), rate(previousIntentSessions, previousClubViewSessions))'), 'Primary intent conversion must use unique session denominators.');
@@ -110,7 +110,7 @@ assert.ok(extended.includes('funnel.integrityOk') && extended.includes('Reach in
 assert.ok(extended.includes('D30 bu dashboard-da hesablanmır'), 'Retention UI must explicitly state that D30 is not calculated.');
 assert.ok(extended.includes('user bazasına bölünmür'), 'Filter adoption denominator must be explicit in the UI.');
 assert.ok(types.includes('firstPartyIntent:'), 'Supabase metrics must include first-party intent verification.');
-assert.ok(supabase.includes("from('analytics_events')") && supabase.includes("['phone_click', 'instagram_click', 'maps_click']"), 'Supabase must independently verify outbound intent events.');
+assert.ok(supabase.includes("from('analytics_events')") && supabase.includes("['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click']"), 'Supabase must independently verify outbound intent events including WhatsApp reservation intent.');
 assert.ok(dashboard.includes('getSupabaseMetrics(supabase, range)'), 'First-party verification must use the same selected date range.');
 assert.ok(page.includes('Metodologiya guard:') && page.includes('cross-provider bölmə aparılmır'), 'Dashboard must guard provider identity semantics in user-visible copy.');
 assert.ok(page.includes('Outbound intent sessiyası') && page.includes('firstPartyIntent.browserVisitors'), 'Dashboard must surface the intent North Star and first-party verifier.');
