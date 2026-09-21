@@ -96,6 +96,7 @@ function unavailableSupabase(detail: string): SupabaseMetrics {
       phoneClicks: 0,
       instagramClicks: 0,
       mapsClicks: 0,
+      whatsappBookingClicks: 0,
     },
   };
 }
