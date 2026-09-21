@@ -98,6 +98,23 @@ function homepageClubCounts(html) {
   };
 }
 
+async function checkBrandFavicon() {
+  const response = await fetch(absolute('/favicon.jpeg'), { redirect: 'manual' });
+  assert(response.status === 200, 'Root favicon must return HTTP 200 without redirect', {
+    status: response.status,
+    location: response.headers.get('location'),
+  });
+  const contentType = response.headers.get('content-type') || '';
+  assert(contentType.toLowerCase().startsWith('image/jpeg'), 'Root favicon must use image/jpeg MIME type', { contentType });
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  assert(bytes.length > 1000, 'Root favicon must contain a real image payload', { bytes: bytes.length });
+
+  const manifest = await fetchText('/manifest.webmanifest');
+  assert(manifest.response.status === 200, 'Web manifest must return HTTP 200', { status: manifest.response.status });
+  const payload = JSON.parse(manifest.text);
+  assert(Array.isArray(payload.icons) && payload.icons.some((icon) => icon?.src === '/favicon.jpeg'), 'Web manifest must reference the root favicon', payload.icons);
+}
+
 async function checkHealth() {
   const { response, text } = await fetchText('/api/health');
   assert(response.status === 200, 'Health endpoint must return HTTP 200', { status: response.status, text });
@@ -219,6 +236,7 @@ function checkHomepageClubCount(homeHtml, sitemapUrls) {
 }
 
 await checkHealth();
+await checkBrandFavicon();
 const sitemapUrls = await checkRobotsAndSitemap();
 
 const pageHtmlByPath = new Map();
