@@ -21,10 +21,18 @@ const [card, link, whatsappBookingLink, detail, clubView, pageview, submissionAn
   readFile(new URL('../supabase/functions/gameyer-analytics-ingest/index.ts', import.meta.url), 'utf8'),
 ]);
 
+const [whatsappConstraintMigration, whatsappRateLimitMigration] = await Promise.all([
+  readFile(new URL('../supabase/migrations/20260921152430_add_whatsapp_booking_analytics_event.sql', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/migrations/20260921153431_allow_whatsapp_booking_in_analytics_rate_limit.sql', import.meta.url), 'utf8'),
+]);
+
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(card.includes(token), `ClubCard must keep ${token}`);
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(link.includes(token), `TrackedClubLink must keep ${token}`);
 for (const token of ['trackGaEvent', 'trackPostHogEvent', 'whatsapp_booking_click', 'contact_whatsapp_booking', 'intent_only', "navigator.sendBeacon('/api/analytics/event'", "eventType: 'whatsapp_booking_click'"]) assert.ok(whatsappBookingLink.includes(token), `WhatsApp booking analytics must keep ${token}`);
 assert.ok(!whatsappBookingLink.includes('trackMetaCustomEvent'), 'WhatsApp booking rollout must not touch Meta/SMM tracking');
+assert.ok(eventRoute.includes("'whatsapp_booking_click'"), 'First-party analytics route must accept WhatsApp reservation intent.');
+assert.ok(whatsappConstraintMigration.includes("'whatsapp_booking_click'") && whatsappConstraintMigration.includes('analytics_events_type_valid'), 'Production analytics constraint migration must allow WhatsApp reservation intent.');
+assert.ok(whatsappRateLimitMigration.includes("'whatsapp_booking_click'") && whatsappRateLimitMigration.includes('enforce_analytics_event_rate_limit'), 'Production analytics trigger migration must allow WhatsApp reservation intent.');
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(clubView.includes(token), `ClubViewTracker must keep ${token}`);
 assert.ok(card.includes('club_card_click'), 'club_card_click must stay wired');
 for (const property of ['source_surface', 'explore_view', 'search_active', 'club_type_filter', 'district_filter', 'price_max_filter']) assert.ok(card.includes(property), `Club discovery events must keep ${property} context`);
