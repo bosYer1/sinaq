@@ -57,6 +57,7 @@ assert.ok(actions.includes('if (contactName) contactPatch.contact_name = contact
 assert.ok(actions.includes("opportunity.stage === 'lost'") && actions.includes("LOST opportunity əvvəlcə yenidən aktiv satış mərhələsinə keçirilməlidir."), 'Lost opportunities must not jump directly into the paid ledger.');
 assert.ok(actions.includes("Deaktiv klub üçün ödənişli satış qeyd edilmir.") && actions.includes("Deaktiv klub Premium-a keçirilmir."), 'Commercial sale and Premium activation must reject clubs that became inactive.');
 assert.ok(page.includes("!contract && opportunity.stage !== 'lost'"), 'Commercial UI must hide paid-sale action for lost opportunities.');
+assert.ok(page.includes('yalnız real owner/official kontaktına başladıqda pipeline-a əlavə olunur') && page.includes('Real kontaktı pipeline-a əlavə et'), 'Revenue OS UI must not encourage speculative uncontacted targets to be written as customer/pipeline records.');
 assert.ok(actions.includes("select('session_id,user_agent')"), 'Commercial snapshots must read user-agent evidence for traffic-quality filtering.');
 assert.ok(actions.includes('SYNTHETIC_USER_AGENT_RE') && actions.includes('rawViewRows.filter'), 'Commercial snapshots must exclude synthetic/bot-like profile traffic.');
 assert.ok(actions.includes('normalViewSessionIds.has(row.session_id)'), 'Commercial intent must be limited to normal profile-visitor IDs so synthetic CTA tests cannot inflate results.');
