@@ -50,7 +50,7 @@ export function SubmissionForm({ kind, clubName, clubSlug, returnTo, submitLabel
           <div className="rounded-xl border border-border bg-surface p-4">
             <h3 className="font-display text-sm font-bold text-ink">Klub məlumatlarını göndər</h3>
             <p className="mt-1 text-xs leading-5 text-muted">Bildiyiniz sahələri doldurun. Bunlar admin yoxlamasından keçmədən public sayta əlavə olunmur.</p>
-            <p className="mt-2 text-xs leading-5 text-muted">Təsdiq üçün aşağıdakı sahələrdən ən azı birini doldurun: rəsmi Instagram, qiymət, iş saatı və ya əlavə qeyd.</p>
+            <p className="mt-2 text-xs leading-5 text-muted">Təsdiq üçün aşağıdakı sahələrdən ən azı birini doldurun: rəsmi Instagram/TikTok, qiymət, iş saatı və ya əlavə qeyd.</p>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div>
@@ -65,6 +65,10 @@ export function SubmissionForm({ kind, clubName, clubSlug, returnTo, submitLabel
               <div>
                 <label htmlFor="official-instagram" className="text-sm font-medium text-ink">Klubun rəsmi Instagram-ı</label>
                 <input id="official-instagram" name="official_instagram" maxLength={200} className={inputClass} placeholder="@club və ya https://instagram.com/..." />
+              </div>
+              <div>
+                <label htmlFor="official-tiktok" className="text-sm font-medium text-ink">Klubun rəsmi TikTok-u</label>
+                <input id="official-tiktok" name="official_tiktok" type="url" maxLength={200} className={inputClass} placeholder="https://www.tiktok.com/@club" />
               </div>
               <div>
                 <label htmlFor="pc-price" className="text-sm font-medium text-ink">PC qiyməti — AZN/saat</label>

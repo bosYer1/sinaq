@@ -21,6 +21,9 @@ assert.match(actionSource, /resultUrl\(formData, 'rate'\)/, 'rate-limited submis
 assert.match(formSource, /action=\{submitClubSubmission\}/, 'public form must remain connected to the server action');
 assert.match(formSource, /name="website"/, 'honeypot field must remain present');
 assert.match(formSource, /name="contact_value"[\s\S]*required/, 'contact value must remain required');
+assert.match(formSource, /name="official_tiktok"/, 'owner claim form must accept first-class TikTok evidence.');
+assert.match(actionSource, /function validTikTok\(value: string\)/, 'owner claim action must validate TikTok evidence before storing it in the structured message.');
+assert.match(actionSource, /Rəsmi TikTok:/, 'owner claim structured evidence must preserve the official TikTok source.');
 assert.match(contactSource, /kind="new_club"/, 'contact page must continue exposing new club submissions');
 assert.match(contactSource, /params\.sent === '1'/, 'contact page must render success feedback');
 assert.match(contactSource, /params\.error === '1'/, 'contact page must render failure feedback');

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { trackGaEvent } from '@/lib/google-analytics';
 import { trackPostHogEvent } from '@/lib/posthog';
 
 type SubmissionKind = 'correction' | 'new_club' | 'owner_claim';
@@ -25,6 +26,7 @@ export function SubmissionAnalytics({ kind, returnTo, hasLinkedClub }: Submissio
       has_linked_club: hasLinkedClub,
     };
 
+    trackGaEvent('submission_form_viewed', common);
     trackPostHogEvent('submission_form_viewed', common);
 
     if (!resultCapturedRef.current) {
@@ -38,7 +40,9 @@ export function SubmissionAnalytics({ kind, returnTo, hasLinkedClub }: Submissio
 
       if (result) {
         resultCapturedRef.current = true;
-        trackPostHogEvent('submission_result', { ...common, result });
+        const resultProperties = { ...common, result };
+        trackGaEvent('submission_result', resultProperties);
+        trackPostHogEvent('submission_result', resultProperties);
       }
     }
 
@@ -53,10 +57,12 @@ export function SubmissionAnalytics({ kind, returnTo, hasLinkedClub }: Submissio
       if (target.getAttribute('name') === 'website') return;
 
       startedRef.current = true;
+      trackGaEvent('submission_form_started', common);
       trackPostHogEvent('submission_form_started', common);
     };
 
     const markSubmitAttempt = () => {
+      trackGaEvent('submission_submit_attempt', common);
       trackPostHogEvent('submission_submit_attempt', common);
     };
 

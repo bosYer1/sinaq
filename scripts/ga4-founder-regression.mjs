@@ -12,7 +12,8 @@ assert.ok(!ga4.includes('NEXT_PUBLIC_GOOGLE_ANALYTICS_PRIVATE_KEY'), 'GA4 privat
 assert.ok(ga4.includes('analyticsdata.googleapis.com') && ga4.includes('runReport'), 'GA4 adapter must query the official Data API');
 assert.ok(ga4.includes('REQUEST_ATTEMPTS = 2') && ga4.includes('response.status === 429 || response.status >= 500'), 'GA4 adapter must retry transient timeout/rate/server failures');
 assert.ok(ga4.includes("error.name === 'AbortError'") && ga4.includes('timeout ('), 'GA4 timeout failures must be normalized instead of exposing generic AbortError');
-assert.ok(ga4.includes("['founder-analytics-ga4-v2']"), 'GA4 cache version must be bumped after retry hardening');
+assert.ok(ga4.includes("['founder-analytics-ga4-v3']"), 'GA4 cache version must be bumped after public-traffic semantics change');
+assert.ok(ga4.includes("fieldName: 'pagePath'") && ga4.includes("matchType: 'BEGINS_WITH'") && ga4.includes("value: '/admin'"), 'GA4 business metrics must exclude admin-route traffic');
 assert.ok(ga4.search(/try \{\r?\n    return await cachedGa4Metrics/) > ga4.indexOf('const cachedGa4Metrics'), 'GA4 transient provider errors must be handled outside the cached loader');
 assert.ok(dashboard.includes('getGa4Metrics(range)') && dashboard.includes('ga4.status'), 'Founder dashboard must execute and surface GA4');
 assert.ok(types.includes('ga4: Ga4Metrics'), 'Founder dashboard contract must expose GA4 metrics');

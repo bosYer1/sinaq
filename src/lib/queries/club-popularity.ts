@@ -16,6 +16,7 @@ const PAGE_SIZE = 1000;
 const MAX_ROWS = 50_000;
 const GAMEYER_POSTHOG_PROJECT_ID = '585472';
 const GAMEYER_POSTHOG_HOST = 'https://us.posthog.com';
+const SYNTHETIC_USER_AGENT_RE = /(bot|crawler|spider|headless|playwright|puppeteer|lighthouse)/i;
 
 function slugFromPath(path: string) {
   const pathname = path.split('?')[0]?.split('#')[0] ?? '';
@@ -36,7 +37,7 @@ async function querySupabasePopularity(): Promise<ClubPopularityMetric[]> {
   for (let offset = 0; offset < MAX_ROWS; offset += PAGE_SIZE) {
     const { data, error } = await supabase
       .from('page_views')
-      .select('path,session_id')
+      .select('path,session_id,user_agent')
       .gte('created_at', since)
       .like('path', '/klub/%')
       .order('id', { ascending: true })
@@ -49,6 +50,7 @@ async function querySupabasePopularity(): Promise<ClubPopularityMetric[]> {
 
     const rows = data ?? [];
     for (const row of rows) {
+      if (SYNTHETIC_USER_AGENT_RE.test(row.user_agent ?? '')) continue;
       const slug = slugFromPath(row.path);
       if (!slug) continue;
       const current = aggregates.get(slug) ?? { views: 0, sessions: new Set<string>() };
@@ -140,7 +142,7 @@ async function queryClubPopularityMetrics(): Promise<ClubPopularityMetric[]> {
 
 const getCachedClubPopularityMetrics = unstable_cache(
   queryClubPopularityMetrics,
-  ['gameyer-club-popularity-30d-v2'],
+  ['gameyer-club-popularity-30d-v3'],
   { revalidate: 600, tags: ['club-popularity'] },
 );
 

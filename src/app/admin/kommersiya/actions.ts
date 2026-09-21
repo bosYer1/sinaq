@@ -6,6 +6,7 @@ import { requireAdmin } from '@/lib/admin/requireAdmin';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MANUAL_SALES_STAGES = new Set(['targeted','contacted','replied','offered','lost']);
 const INTENT_EVENTS = ['phone_click', 'instagram_click', 'maps_click'] as const;
+const SYNTHETIC_USER_AGENT_RE = /(bot|crawler|spider|headless|playwright|puppeteer|lighthouse)/i;
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -73,7 +74,7 @@ async function collectFirstPartyMetrics(
   const [viewsResult, intentResult] = await Promise.all([
     supabase
       .from('page_views')
-      .select('session_id')
+      .select('session_id,user_agent')
       .eq('path', path)
       .gte('created_at', from)
       .lt('created_at', to)
@@ -91,14 +92,16 @@ async function collectFirstPartyMetrics(
   if (viewsResult.error) throw new Error(`Profil baxışları oxunmadı: ${viewsResult.error.message}`);
   if (intentResult.error) throw new Error(`Intent məlumatları oxunmadı: ${intentResult.error.message}`);
 
-  const viewRows = viewsResult.data ?? [];
-  const intentRows = intentResult.data ?? [];
-  const viewSessions = new Set(viewRows.map((row) => row.session_id));
+  const rawViewRows = viewsResult.data ?? [];
+  const viewRows = rawViewRows.filter((row) => !SYNTHETIC_USER_AGENT_RE.test(row.user_agent ?? ''));
+  const normalViewSessionIds = new Set(viewRows.map((row) => row.session_id));
+  const rawIntentRows = intentResult.data ?? [];
+  const intentRows = rawIntentRows.filter((row) => normalViewSessionIds.has(row.session_id));
   const intentSessions = new Set(intentRows.map((row) => row.session_id));
 
   return {
     profile_views: viewRows.length,
-    view_sessions: viewSessions.size,
+    view_sessions: normalViewSessionIds.size,
     phone_clicks: intentRows.filter((row) => row.event_type === 'phone_click').length,
     instagram_clicks: intentRows.filter((row) => row.event_type === 'instagram_click').length,
     maps_clicks: intentRows.filter((row) => row.event_type === 'maps_click').length,
@@ -152,13 +155,19 @@ export async function createCommercialOpportunity(formData: FormData) {
   let createdCustomerId: string | null = null;
 
   if (customerId) {
-    const contactPatch = {
-      contact_name: nullableText(formData, 'contact_name', 160),
-      contact_phone: nullableText(formData, 'contact_phone', 64),
-      contact_instagram: nullableText(formData, 'contact_instagram', 200),
-    };
-    const hasContactPatch = Object.values(contactPatch).some(Boolean);
-    if (hasContactPatch) {
+    const contactPatch: {
+      contact_name?: string;
+      contact_phone?: string;
+      contact_instagram?: string;
+    } = {};
+    const contactName = nullableText(formData, 'contact_name', 160);
+    const contactPhone = nullableText(formData, 'contact_phone', 64);
+    const contactInstagram = nullableText(formData, 'contact_instagram', 200);
+    if (contactName) contactPatch.contact_name = contactName;
+    if (contactPhone) contactPatch.contact_phone = contactPhone;
+    if (contactInstagram) contactPatch.contact_instagram = contactInstagram;
+
+    if (Object.keys(contactPatch).length > 0) {
       const { error: customerUpdateError } = await supabase
         .from('business_customers')
         .update({ ...contactPatch, display_name: club.name })
@@ -182,14 +191,17 @@ export async function createCommercialOpportunity(formData: FormData) {
     createdCustomerId = customer.id;
   }
 
+  const contactStartedAt = new Date().toISOString();
   const { error: opportunityError } = await supabase
     .from('commercial_opportunities')
     .insert({
       customer_id: customerId,
       club_id: clubId,
       package_id: packageId,
-      stage: 'targeted',
+      stage: 'contacted',
       offer_price_azn: offerPrice,
+      first_contact_at: contactStartedAt,
+      last_contact_at: contactStartedAt,
       notes: nullableText(formData, 'notes'),
     });
 
@@ -240,6 +252,23 @@ export async function recordPaidCommercialSale(formData: FormData) {
   const { supabase } = await requireAdmin();
   const opportunityId = requiredUuid(formData, 'opportunity_id');
 
+  const { data: opportunity, error: opportunityError } = await supabase
+    .from('commercial_opportunities')
+    .select('id,stage,club_id')
+    .eq('id', opportunityId)
+    .maybeSingle();
+  if (opportunityError || !opportunity) throw new Error(opportunityError?.message ?? 'Opportunity tapılmadı.');
+  if (opportunity.stage === 'lost') throw new Error('LOST opportunity əvvəlcə yenidən aktiv satış mərhələsinə keçirilməlidir.');
+  if (!opportunity.club_id) throw new Error('Opportunity klubla bağlı deyil.');
+
+  const { data: saleClub, error: saleClubError } = await supabase
+    .from('clubs')
+    .select('id,is_active')
+    .eq('id', opportunity.club_id)
+    .maybeSingle();
+  if (saleClubError || !saleClub) throw new Error(saleClubError?.message ?? 'Klub tapılmadı.');
+  if (!saleClub.is_active) throw new Error('Deaktiv klub üçün ödənişli satış qeyd edilmir.');
+
   const agreedPrice = nonNegativeNumber(formData, 'agreed_price_azn');
   const discount = nonNegativeNumber(formData, 'discount_azn', 0);
   if (discount > agreedPrice) throw new Error('Endirim satış qiymətindən böyük ola bilməz.');
@@ -286,10 +315,11 @@ export async function activateCommercialPremium(formData: FormData) {
 
   const { data: club, error: clubError } = await supabase
     .from('clubs')
-    .select('id,slug')
+    .select('id,slug,is_active')
     .eq('id', contract.club_id)
     .maybeSingle();
   if (clubError || !club) throw new Error(clubError?.message ?? 'Klub tapılmadı.');
+  if (!club.is_active) throw new Error('Deaktiv klub Premium-a keçirilmir.');
 
   const baselineEnd = startsAt;
   const baselineStart = new Date(startsAt.getTime() - 30 * 86_400_000);

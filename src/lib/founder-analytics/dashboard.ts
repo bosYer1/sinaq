@@ -86,7 +86,7 @@ function unavailableSupabase(detail: string): SupabaseMetrics {
     pendingSubmissions: 0,
     staleSubmissions: 0,
     submissionBacklogByKind: { ownerClaim: 0, newClub: 0, correction: 0 },
-    completeness: { total: 0, missingImage: 0, missingPhone: 0, missingInstagram: 0, missingCoordinates: 0, missingType: 0 },
+    completeness: { total: 0, missingImage: 0, missingPhone: 0, missingSocial: 0, missingCoordinates: 0, missingType: 0 },
     qualityBacklog: [],
     firstPartyIntent: {
       available: false,
@@ -105,7 +105,7 @@ function buildClubDataPriorities(posthog: PostHogMetrics, operational: SupabaseM
   return operational.qualityBacklog.map((club) => {
     const behavior = demand.get(club.slug);
     const views = behavior?.views ?? 0;
-    const ctaClicks = behavior ? behavior.phoneClicks + behavior.instagramClicks + behavior.mapsClicks : 0;
+    const ctaClicks = behavior ? behavior.phoneClicks + behavior.instagramClicks + behavior.tiktokClicks + behavior.mapsClicks : 0;
     const intentSessions = behavior?.intentSessions ?? 0;
     const gapPoints = 100 - club.completenessScore;
     const demandPoints = Math.min(60, views * 2 + intentSessions * 4);

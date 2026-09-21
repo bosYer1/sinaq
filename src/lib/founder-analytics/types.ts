@@ -63,6 +63,7 @@ export type ClubPerformanceRow = {
   cardClicks: number;
   phoneClicks: number;
   instagramClicks: number;
+  tiktokClicks: number;
   mapsClicks: number;
   intentSessions: number;
   intentRate: number;
@@ -72,7 +73,7 @@ export type ClubDataQualityRow = {
   slug: string;
   name: string;
   completenessScore: number;
-  missingFields: Array<'image' | 'phone' | 'instagram' | 'coordinates' | 'type'>;
+  missingFields: Array<'image' | 'phone' | 'social' | 'coordinates' | 'type'>;
   lastEvidenceCheckedAt: string | null;
   evidenceState: 'fresh' | 'stale' | 'missing';
 };
@@ -146,6 +147,7 @@ export type PostHogMetrics = {
   mapUsage: Metric;
   phoneClicks: Metric;
   instagramClicks: Metric;
+  tiktokClicks: Metric;
   mapsClicks: Metric;
   newUsers: number;
   returningUsers: number;
@@ -246,7 +248,7 @@ export type SupabaseMetrics = {
     total: number;
     missingImage: number;
     missingPhone: number;
-    missingInstagram: number;
+    missingSocial: number;
     missingCoordinates: number;
     missingType: number;
   };

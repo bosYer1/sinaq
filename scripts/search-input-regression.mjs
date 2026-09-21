@@ -33,7 +33,9 @@ assert(!searchFilter.includes('SEARCH_RESULT_READ_ATTEMPTS'), 'Search analytics 
 assert(searchFilter.includes('}, SEARCH_NAVIGATION_DEBOUNCE_MS);'), 'URL navigation must use the dedicated navigation debounce.');
 assert(searchFilter.includes('}, SEARCH_ANALYTICS_SETTLE_MS);'), 'Search analytics must use the slower settled-query timer.');
 assert(searchFilter.includes("trackPostHogEvent('search_query'"), 'Committed settled queries must emit search_query analytics.');
+assert(searchFilter.includes("trackGaEvent('search_query'") && searchFilter.includes('search_term: pending.query'), 'Committed settled queries must mirror into GA4 using the standard search_term dimension.');
 assert(searchFilter.includes("trackPostHogEvent('search_cleared'"), 'Settled clear actions must still emit search_cleared analytics.');
+assert(searchFilter.includes("trackGaEvent('search_cleared'"), 'Settled clear actions must preserve GA4 parity.');
 assert(searchFilter.includes('lastTrackedQueryRef.current = currentQuery;'), 'External query synchronization must not be misclassified as fresh user search intent.');
 assert(searchFilter.includes('}, [value, pathname, router]);'), 'Typing debounce must not restart when stale server search params arrive.');
 assert(searchFilter.includes('setValue(currentQuery)'), 'SearchFilter must still sync genuine external query changes such as clear-all/back navigation.');

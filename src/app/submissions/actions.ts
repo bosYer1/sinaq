@@ -49,6 +49,11 @@ function validInstagram(value: string) {
   return /^@?[a-z0-9._]{1,30}$/i.test(value) || /^https:\/\/(?:www\.)?instagram\.com\/[a-z0-9._]+\/?(?:\?.*)?$/i.test(value);
 }
 
+function validTikTok(value: string) {
+  if (!value) return true;
+  return /^https:\/\/(?:www\.)?tiktok\.com\/@[a-z0-9._]{2,24}\/?(?:\?.*)?$/i.test(value);
+}
+
 function optionalPrice(formData: FormData, key: string) {
   const raw = text(formData, key, 20);
   if (!raw) return null;
@@ -60,19 +65,21 @@ function optionalPrice(formData: FormData, key: string) {
 function ownerClaimMessage(formData: FormData, freeMessage: string) {
   const role = text(formData, 'owner_role', 30);
   const officialInstagram = text(formData, 'official_instagram', 200);
+  const officialTikTok = text(formData, 'official_tiktok', 200);
   const hoursNote = text(formData, 'hours_note', 300);
   const pcPrice = optionalPrice(formData, 'pc_price');
   const psPrice = optionalPrice(formData, 'ps_price');
 
-  if (!OWNER_ROLES[role] || !validInstagram(officialInstagram) || Number.isNaN(pcPrice) || Number.isNaN(psPrice)) return null;
+  if (!OWNER_ROLES[role] || !validInstagram(officialInstagram) || !validTikTok(officialTikTok) || Number.isNaN(pcPrice) || Number.isNaN(psPrice)) return null;
 
-  const hasEvidenceSignal = Boolean(officialInstagram || hoursNote || pcPrice != null || psPrice != null || freeMessage.length >= 10);
+  const hasEvidenceSignal = Boolean(officialInstagram || officialTikTok || hoursNote || pcPrice != null || psPrice != null || freeMessage.length >= 10);
   if (!hasEvidenceSignal) return null;
 
   return [
     '[STRUKTURLAŞDIRILMIŞ KLUB SAHİBİ MƏLUMATI]',
     `Klubla əlaqə: ${OWNER_ROLES[role]}`,
     officialInstagram ? `Rəsmi Instagram: ${officialInstagram}` : null,
+    officialTikTok ? `Rəsmi TikTok: ${officialTikTok}` : null,
     pcPrice != null ? `PC qiyməti: ${pcPrice} AZN/saat` : null,
     psPrice != null ? `PlayStation qiyməti: ${psPrice} AZN/saat` : null,
     hoursNote ? `İş saatları: ${hoursNote}` : null,

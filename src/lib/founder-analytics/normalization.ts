@@ -28,9 +28,10 @@ export function normalizeClubPerformance(row: Record<string, unknown>): ClubPerf
   const viewSessions = numberValue(row.view_sessions);
   const phoneClicks = numberValue(row.phone_clicks);
   const instagramClicks = numberValue(row.instagram_clicks);
+  const tiktokClicks = numberValue(row.tiktok_clicks);
   const mapsClicks = numberValue(row.maps_clicks);
   const intentSessions = numberValue(row.intent_sessions);
-  return { slug: stringValue(row.slug, '(slug yoxdur)'), name: stringValue(row.name, 'Naməlum klub'), district: stringValue(row.district, 'Məlum deyil'), impressions: numberValue(row.impressions), views, viewSessions, cardClicks: numberValue(row.card_clicks), phoneClicks, instagramClicks, mapsClicks, intentSessions, intentRate: rate(intentSessions, viewSessions) };
+  return { slug: stringValue(row.slug, '(slug yoxdur)'), name: stringValue(row.name, 'Naməlum klub'), district: stringValue(row.district, 'Məlum deyil'), impressions: numberValue(row.impressions), views, viewSessions, cardClicks: numberValue(row.card_clicks), phoneClicks, instagramClicks, tiktokClicks, mapsClicks, intentSessions, intentRate: rate(intentSessions, viewSessions) };
 }
 
 export function acquisitionChannel(sourceInput: string, mediumInput: string): string {
@@ -63,8 +64,8 @@ export function aggregateAcquisition(campaigns: CampaignRow[]): AcquisitionRow[]
   return [...grouped.values()].map((row) => ({ ...row, ctaRate: rate(row.ctaSessions, row.sessions) })).sort((a, b) => b.sessions - a.sessions);
 }
 
-type QualityClub = { id: string; phone: string | null; instagram_url: string | null; profile_image_url: string | null; latitude: number | null; longitude: number | null };
+type QualityClub = { id: string; phone: string | null; instagram_url: string | null; tiktok_url: string | null; profile_image_url: string | null; latitude: number | null; longitude: number | null };
 
 export function calculateCompleteness(clubs: QualityClub[], imageIds: Set<string>, typeIds: Set<string>): SupabaseMetrics['completeness'] {
-  return { total: clubs.length, missingImage: clubs.filter((club) => !club.profile_image_url && !imageIds.has(club.id)).length, missingPhone: clubs.filter((club) => !club.phone?.trim()).length, missingInstagram: clubs.filter((club) => !club.instagram_url?.trim()).length, missingCoordinates: clubs.filter((club) => club.latitude == null || club.longitude == null).length, missingType: clubs.filter((club) => !typeIds.has(club.id)).length };
+  return { total: clubs.length, missingImage: clubs.filter((club) => !club.profile_image_url && !imageIds.has(club.id)).length, missingPhone: clubs.filter((club) => !club.phone?.trim()).length, missingSocial: clubs.filter((club) => !club.instagram_url?.trim() && !club.tiktok_url?.trim()).length, missingCoordinates: clubs.filter((club) => club.latitude == null || club.longitude == null).length, missingType: clubs.filter((club) => !typeIds.has(club.id)).length };
 }
