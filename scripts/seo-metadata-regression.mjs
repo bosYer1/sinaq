@@ -5,6 +5,7 @@ const clubLayout = fs.readFileSync('src/app/klub/[slug]/layout.tsx', 'utf8');
 const districtPage = fs.readFileSync('src/app/rayon/[slug]/page.tsx', 'utf8');
 const rootLayout = fs.readFileSync('src/app/layout.tsx', 'utf8');
 const manifest = fs.readFileSync('src/app/manifest.ts', 'utf8');
+const nearbyPage = fs.readFileSync('src/app/yaxinliqda-gaming-klublari/page.tsx', 'utf8');
 const rootFavicon = fs.readFileSync('public/favicon.jpeg');
 const brandedFavicon = fs.readFileSync('public/gameyer-favicon.jpeg');
 
@@ -25,6 +26,7 @@ const checks = [
   [rootLayout.includes("'@type': 'ImageObject'"), 'organization logo is emitted as an explicit ImageObject'],
   [Buffer.compare(rootFavicon, brandedFavicon) === 0, 'root favicon is byte-identical to the locked GameYer favicon asset'],
   [manifest.includes("src: '/favicon.jpeg'"), 'PWA manifest points at the crawler-friendly root favicon'],
+  [nearbyPage.includes("const title = 'Yaxınlıqdakı PC və PlayStation klubları — Bakı xəritəsi';"), 'nearby landing keeps stable PC + PlayStation intent in the title'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
