@@ -45,7 +45,6 @@ const INACTIVE_INDEXED_SLUGS = [
   'playstation-club-bakixanov-yavar-aliyev',
   'playstation-home-qara-qarayev',
   'playstation-sarayevo',
-  'prime-cyberclub',
   'prospekt-game-club',
   'qarabag-playstation-club-tibb',
   'qardawlar-ps-club',
@@ -85,10 +84,20 @@ for (const slug of INACTIVE_INDEXED_SLUGS) {
   });
 }
 
+const primeLegacy = await fetchPage('/klub/prime-cyberclub');
+assert([307, 308].includes(primeLegacy.response.status), 'Proven Prime legacy slug must permanently redirect instead of hard-404', {
+  status: primeLegacy.response.status,
+  location: primeLegacy.response.headers.get('location'),
+});
+const primeLocation = primeLegacy.response.headers.get('location');
+assert(primeLocation === '/klub/prime-cyber-club', 'Prime legacy redirect must target the proven active canonical slug', {
+  location: primeLocation,
+});
+
 const active = await fetchPage('/klub/milli-gaming-arena');
 assert(active.response.status === 200, 'Known active club slug must remain HTTP 200', {
   status: active.response.status,
   location: active.response.headers.get('location'),
 });
 
-console.log(`Inactive club hard-404 smoke PASS (${INACTIVE_INDEXED_SLUGS.length} indexed inactive slugs=404, active=200).`);
+console.log(`Inactive club hard-404 smoke PASS (${INACTIVE_INDEXED_SLUGS.length} indexed inactive slugs=404, Prime legacy=redirect, active=200).`);
