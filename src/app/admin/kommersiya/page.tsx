@@ -179,7 +179,7 @@ export default async function CommercialAdminPage() {
                   </div>
                 )}
 
-                {!contract ? (
+                {!contract && opportunity.stage !== 'lost' ? (
                   <details className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                     <summary className="cursor-pointer text-sm font-bold text-emerald-900">Satışı qeyd et — ödəniş təsdiqlənəndə</summary>
                     <form action={recordPaidCommercialSale} className="mt-3 grid gap-2 md:grid-cols-3 xl:grid-cols-6">
