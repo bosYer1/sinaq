@@ -47,7 +47,7 @@ assert.ok(correctionAnalyticsMigration.includes('session_count >= 30') && correc
 assert.equal((detail.match(/eventType=\"phone_click\"/g) ?? []).length, 1, 'ClubDetail must expose one phone CTA surface');
 assert.equal((detail.match(/eventType=\"instagram_click\"/g) ?? []).length, 1, 'ClubDetail must expose one Instagram CTA surface');
 assert.equal((detail.match(/eventType=\"maps_click\"/g) ?? []).length, 1, 'ClubDetail must expose one route CTA surface');
-assert.ok(detail.includes('const ownerHref = `/klub-sahibi?${clubContext}`') && detail.includes('Bu klub sizindir? Təsdiqlə'), 'Club detail must expose the linked owner-claim fast path now that the owner flow is production-ready');
+assert.ok(!detail.includes('Bu klub sizindir? Təsdiqlə') && !detail.includes('ownerHref'), 'Club detail must not expose a direct owner-claim CTA.');
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
 for (const event of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) {
   assert.ok(submissionAnalytics.includes(`trackGaEvent('${event}'`) && submissionAnalytics.includes(`trackPostHogEvent('${event}'`), `${event} must stay wired to GA4 and PostHog`);
