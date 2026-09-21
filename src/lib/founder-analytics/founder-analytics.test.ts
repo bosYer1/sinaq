@@ -46,8 +46,8 @@ test('acquisition groups paid and organic campaign rows without losing totals', 
 });
 
 test('club intent combines only tracked contact actions', () => {
-  const row = normalizeClubPerformance({ slug: 'arena', name: 'Arena', views: 10, view_sessions: 5, phone_clicks: 2, instagram_clicks: 2, maps_clicks: 2, intent_sessions: 2 });
-  assert.equal(row.phoneClicks + row.instagramClicks + row.mapsClicks, 6);
+  const row = normalizeClubPerformance({ slug: 'arena', name: 'Arena', views: 10, view_sessions: 5, phone_clicks: 2, instagram_clicks: 2, tiktok_clicks: 2, maps_clicks: 2, intent_sessions: 2 });
+  assert.equal(row.phoneClicks + row.instagramClicks + row.tiktokClicks + row.mapsClicks, 8);
   assert.equal(row.intentSessions, 2);
   assert.equal(row.intentRate, 40);
 });
@@ -75,6 +75,7 @@ test('CEO signals expose provider unavailability instead of fake metrics', () =>
     mapUsage: zero,
     phoneClicks: zero,
     instagramClicks: zero,
+    tiktokClicks: zero,
     mapsClicks: zero,
     newUsers: 0,
     returningUsers: 0,
