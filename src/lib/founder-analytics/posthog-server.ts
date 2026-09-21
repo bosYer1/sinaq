@@ -14,8 +14,8 @@ const PRODUCT_TIME_ZONE = 'Asia/Baku';
 const GAMEYER_POSTHOG_PROJECT_ID = '585472';
 const GAMEYER_POSTHOG_HOST = 'https://us.posthog.com';
 const POSTHOG_QUERY_TIMEOUT_MS = 6_000;
-const POSTHOG_CORE_TIMEOUT_MS = 6_000;
-const POSTHOG_DASHBOARD_DEADLINE_MS = 14_000;
+const POSTHOG_CORE_TIMEOUT_MS = 4_000;
+const POSTHOG_DASHBOARD_DEADLINE_MS = 9_000;
 const POSTHOG_MAX_CONCURRENCY = 6;
 
 function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogMetrics {
