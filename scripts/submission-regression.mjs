@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [actionSource, formSource, contactSource, ownerSource, clubListSource] = await Promise.all([
+const [actionSource, formSource, contactSource, ownerSource, clubListSource, clubDetailSource] = await Promise.all([
   readFile(new URL('../src/app/submissions/actions.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/submissions/SubmissionForm.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/elaqe/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/klub-sahibi/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubList.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
 ]);
 
 assert.match(actionSource, /const KINDS = new Set\(\['correction', 'new_club', 'owner_claim'\]\)/, 'all public submission kinds must remain accepted');
@@ -26,6 +27,12 @@ assert.match(contactSource, /params\.sent === '1'/, 'contact page must render su
 assert.match(contactSource, /params\.error === '1'/, 'contact page must render failure feedback');
 assert.match(ownerSource, /kind="owner_claim"/, 'club-owner page must continue exposing owner claims');
 assert.match(ownerSource, /params\.sent === '1'/, 'club-owner page must render success feedback');
+assert.match(clubDetailSource, /const ownerHref = `\/klub-sahibi\?\$\{clubContext\}`;/, 'club detail must preserve linked owner context.');
+assert.match(clubDetailSource, /Bu klub sizindir\? Təsdiqlə/, 'club detail must expose the owner verification CTA.');
+assert.match(ownerSource, /const ownerFormSection = \(/, 'owner flow must keep one reusable form section.');
+assert.match(ownerSource, /\{selectedClub \? ownerFormSection : null\}/, 'linked owner flow must surface the form before long explanatory content.');
+assert.match(ownerSource, /\{selectedClub \? null : ownerFormSection\}/, 'generic owner flow must preserve the explanatory-first form placement.');
+assert.ok(ownerSource.indexOf('{selectedClub ? ownerFormSection : null}') < ownerSource.indexOf('Niyə təsdiqləmək faydalıdır?'), 'linked owner form must appear before explanatory sections.');
 assert.match(contactSource, /section id="new-club"/, 'contact page must expose a stable new-club anchor.');
 assert.match(clubListSource, /href="\/elaqe#new-club"/, 'search no-result state must link to the existing verified new-club form.');
 assert.match(clubListSource, /Klub siyahıda yoxdur\? Təklif et/, 'search no-result CTA copy must remain explicit.');
