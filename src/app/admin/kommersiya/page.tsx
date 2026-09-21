@@ -123,7 +123,7 @@ export default async function CommercialAdminPage() {
 
       <section className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="text-lg font-bold">Yeni satış hədəfi</h2><p className="mt-1 text-xs text-gray-500">Klub yalnız real owner/official kontaktına başladıqda pipeline-a əlavə olunur; araşdırma shortlist-i burada lead kimi yazılmır.</p></div>
+          <div><h2 className="text-lg font-bold">Yeni satış hədəfi</h2><p className="mt-1 text-xs text-gray-500">Klub yalnız real owner/official kontaktına başladıqda pipeline-a əlavə olunur; yeni qeyd “Əlaqə quruldu” mərhələsi və ilk kontakt vaxtı ilə açılır.</p></div>
           {founderPackage ? <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">Founding Partner: {money(Number(founderPackage.default_price_azn ?? 0))} AZN / 30 gün</span> : null}
         </div>
         <form action={createCommercialOpportunity} className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
