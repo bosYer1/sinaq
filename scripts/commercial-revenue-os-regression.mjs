@@ -53,5 +53,8 @@ assert.doesNotMatch(candidate, /as \$(?!gameyer_commercial\$)/, 'Invalid single-
 assert.ok(!actions.includes('Satış yazıldı, amma status sinxronizasiyası tamamlanmadı'), 'Paid sale must not rely on partial application-level rollback/status sync.');
 assert.ok(!actions.includes("supabase.from('commercial_contracts').delete().eq('id', contract.id)"), 'Paid sale must not rely on compensating deletes.');
 assert.ok(actions.includes("existing && snapshotType === 'day7'"), 'Final retries must reach the atomic reconciler while day7 duplicate capture stays guarded.');
+assert.ok(actions.includes("select('session_id,user_agent')"), 'Commercial snapshots must read user-agent evidence for traffic-quality filtering.');
+assert.ok(actions.includes('SYNTHETIC_USER_AGENT_RE') && actions.includes('rawViewRows.filter'), 'Commercial snapshots must exclude synthetic/bot-like profile traffic.');
+assert.ok(actions.includes('normalViewSessionIds.has(row.session_id)'), 'Commercial intent must be limited to normal profile-visitor IDs so synthetic CTA tests cannot inflate results.');
 
 console.log('Commercial Revenue OS regression passed.');
