@@ -64,8 +64,8 @@ export function aggregateAcquisition(campaigns: CampaignRow[]): AcquisitionRow[]
   return [...grouped.values()].map((row) => ({ ...row, ctaRate: rate(row.ctaSessions, row.sessions) })).sort((a, b) => b.sessions - a.sessions);
 }
 
-type QualityClub = { id: string; phone: string | null; instagram_url: string | null; profile_image_url: string | null; latitude: number | null; longitude: number | null };
+type QualityClub = { id: string; phone: string | null; instagram_url: string | null; tiktok_url: string | null; profile_image_url: string | null; latitude: number | null; longitude: number | null };
 
 export function calculateCompleteness(clubs: QualityClub[], imageIds: Set<string>, typeIds: Set<string>): SupabaseMetrics['completeness'] {
-  return { total: clubs.length, missingImage: clubs.filter((club) => !club.profile_image_url && !imageIds.has(club.id)).length, missingPhone: clubs.filter((club) => !club.phone?.trim()).length, missingInstagram: clubs.filter((club) => !club.instagram_url?.trim()).length, missingCoordinates: clubs.filter((club) => club.latitude == null || club.longitude == null).length, missingType: clubs.filter((club) => !typeIds.has(club.id)).length };
+  return { total: clubs.length, missingImage: clubs.filter((club) => !club.profile_image_url && !imageIds.has(club.id)).length, missingPhone: clubs.filter((club) => !club.phone?.trim()).length, missingSocial: clubs.filter((club) => !club.instagram_url?.trim() && !club.tiktok_url?.trim()).length, missingCoordinates: clubs.filter((club) => club.latitude == null || club.longitude == null).length, missingType: clubs.filter((club) => !typeIds.has(club.id)).length };
 }
