@@ -26,13 +26,8 @@ const site = new URL(siteUrl);
 const sitemapUrl = `${siteUrl}/sitemap.xml`;
 const keyLocation = `${siteUrl}/${INDEXNOW_KEY}.txt`;
 
-function decodeXml(value) {
-  return value
-    .replaceAll('&amp;', '&')
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&apos;', "'");
+function decodeLoc(value) {
+  return value.replaceAll('&amp;', '&');
 }
 
 function extractEntries(xml) {
@@ -41,7 +36,7 @@ function extractEntries(xml) {
     const locMatch = block.match(/<loc>([\s\S]*?)<\/loc>/);
     const lastmodMatch = block.match(/<lastmod>([\s\S]*?)<\/lastmod>/);
     return {
-      loc: locMatch ? decodeXml(locMatch[1].trim()) : null,
+      loc: locMatch ? decodeLoc(locMatch[1].trim()) : null,
       lastmod: lastmodMatch ? lastmodMatch[1].trim() : null,
     };
   }).filter((entry) => entry.loc);

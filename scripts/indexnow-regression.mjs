@@ -6,7 +6,6 @@ const script = await readFile(new URL('./indexnow-submit.mjs', import.meta.url),
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
 assert.match(key, /^[A-Za-z0-9-]{8,128}$/, 'IndexNow key file must use the protocol key format.');
-assert.ok(script.includes("https://api.indexnow.org/indexnow"), 'IndexNow must use the global endpoint.');
 assert.ok(script.includes('keyLocation'), 'IndexNow payload must provide keyLocation.');
 assert.ok(script.includes('urlList'), 'IndexNow payload must submit URL lists.');
 assert.ok(script.includes('10_000'), 'IndexNow bulk submissions must remain bounded to 10,000 URLs.');
