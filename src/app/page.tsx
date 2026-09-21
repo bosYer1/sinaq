@@ -112,7 +112,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       {!isSupabaseConfigured() ? <div className="border-b border-warn/30 bg-warn-tint px-4 py-1.5 text-center text-xs font-medium text-warn sm:px-6">Supabase hələ qoşulmayıb — heç bir klub göstərilmir.</div> : null}
       <div className="mx-auto max-w-[1440px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-8">
         <section className="mb-4 flex items-end justify-between gap-3 sm:mb-5" aria-labelledby="home-title">
-          <div className="min-w-0"><h1 id="home-title" className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-ink sm:text-3xl">Bakıda PC və PlayStation klubları</h1><p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">Rayon və xəritəyə görə gaming klubu tap, qiymətləri və iş saatlarını müqayisə et.</p></div>
+          <div className="min-w-0"><h1 id="home-title" className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-ink sm:text-3xl">Bakıda PC və PlayStation klubları</h1><p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">Klubunu tap, turnirləri və xüsusi təklifləri kəşf et.</p></div>
           <a href="#club-discovery" data-home-club-jump="true" aria-label="Klublara bax" className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-pc-tint px-3 py-1.5 text-xs font-semibold text-primary no-underline transition hover:bg-primary/15 sm:gap-2 sm:px-3.5 sm:py-2 sm:text-sm"><span aria-hidden="true">🎮</span>{discoveryClubs.length} klub <span aria-hidden="true">↓</span></a>
         </section>
 
