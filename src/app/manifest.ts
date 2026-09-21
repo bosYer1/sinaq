@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#7C5CFC',
     icons: [
       {
-        src: '/gameyer-logo.jpeg',
+        src: '/favicon.jpeg',
         sizes: '1254x1254',
         type: 'image/jpeg',
         purpose: 'any',

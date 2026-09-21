@@ -19,6 +19,7 @@ const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
 const socialImage = `${siteUrl}/opengraph-image`;
 const brandLogo = `${siteUrl}/gameyer-logo.jpeg`;
+const brandFavicon = `${siteUrl}/favicon.jpeg`;
 const organizationId = `${siteUrl}/#organization`;
 const websiteId = `${siteUrl}/#website`;
 
@@ -45,8 +46,16 @@ const siteStructuredData = {
       '@type': 'Organization',
       '@id': organizationId,
       name: 'GameYer',
+      alternateName: ['GameYer.az'],
       url: siteUrl,
-      logo: brandLogo,
+      logo: {
+        '@type': 'ImageObject',
+        url: brandLogo,
+        contentUrl: brandLogo,
+        width: 1254,
+        height: 1254,
+      },
+      image: brandLogo,
       description: 'Azərbaycanda PC və PlayStation klublarını tapmaq və müqayisə etmək üçün gaming klub kataloqu və xəritəsi.',
       sameAs: ['https://www.instagram.com/gameyer.az/', 'https://www.tiktok.com/@gameyer.az'],
     },
@@ -55,6 +64,7 @@ const siteStructuredData = {
       '@id': websiteId,
       url: siteUrl,
       name: 'GameYer',
+      alternateName: ['GameYer.az'],
       inLanguage: 'az-AZ',
       publisher: { '@id': organizationId },
       description: 'Bakıda PC, kompüter, internet və PlayStation klublarını ünvan, rayon və xəritəyə görə tap; qiymət və iş saatlarına məlum olduqda bax.',
@@ -77,7 +87,11 @@ export const metadata: Metadata = {
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: [{ url: '/gameyer-favicon.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
+    icon: [
+      { url: '/favicon.jpeg', type: 'image/jpeg', sizes: '1254x1254' },
+      { url: '/gameyer-favicon.jpeg', type: 'image/jpeg', sizes: '1254x1254' },
+    ],
+    shortcut: [{ url: '/favicon.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
     apple: [{ url: '/gameyer-logo.jpeg', type: 'image/jpeg', sizes: '1254x1254' }],
   },
   ...(googleVerification ? { verification: { google: googleVerification } } : {}),

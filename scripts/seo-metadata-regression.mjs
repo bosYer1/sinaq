@@ -3,6 +3,10 @@ import fs from 'node:fs';
 const clubPage = fs.readFileSync('src/app/klub/[slug]/page.tsx', 'utf8');
 const clubLayout = fs.readFileSync('src/app/klub/[slug]/layout.tsx', 'utf8');
 const districtPage = fs.readFileSync('src/app/rayon/[slug]/page.tsx', 'utf8');
+const rootLayout = fs.readFileSync('src/app/layout.tsx', 'utf8');
+const manifest = fs.readFileSync('src/app/manifest.ts', 'utf8');
+const rootFavicon = fs.readFileSync('public/favicon.jpeg');
+const brandedFavicon = fs.readFileSync('public/gameyer-favicon.jpeg');
 
 const checks = [
   [clubPage.includes("const title = `${club.name} — ${districtName ?? 'Bakı'}, ${titleDetail}`;"), 'club title keeps club name + district context in a compact form'],
@@ -15,6 +19,12 @@ const checks = [
   [!clubLayout.includes('if (!club) return children;'), 'layout no longer lets missing/inactive club pages stream a soft-404 fallback'],
   [districtPage.includes("const title = `${data.district.name} gaming klubları — PC və PlayStation`;"), 'district title is compact and intent-first'],
   [districtPage.includes("Ünvan, iş saatları və xəritəyə GameYer-də bax."), 'district description stays compact and factual'],
+  [rootLayout.includes("{ url: '/favicon.jpeg', type: 'image/jpeg', sizes: '1254x1254' }"), 'root metadata exposes the crawler-friendly favicon path'],
+  [rootLayout.includes("shortcut: [{ url: '/favicon.jpeg'"), 'root metadata exposes an explicit shortcut favicon'],
+  [rootLayout.includes("alternateName: ['GameYer.az']"), 'brand structured data carries the stable GameYer.az alternate name'],
+  [rootLayout.includes("'@type': 'ImageObject'"), 'organization logo is emitted as an explicit ImageObject'],
+  [Buffer.compare(rootFavicon, brandedFavicon) === 0, 'root favicon is byte-identical to the locked GameYer favicon asset'],
+  [manifest.includes("src: '/favicon.jpeg'"), 'PWA manifest points at the crawler-friendly root favicon'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
