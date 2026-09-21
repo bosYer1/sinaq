@@ -50,7 +50,7 @@ assert.ok(correctionAnalyticsMigration.includes('session_count >= 30') && correc
 assert.equal((detail.match(/eventType=\"phone_click\"/g) ?? []).length, 1, 'ClubDetail must expose one phone CTA surface');
 assert.equal((detail.match(/eventType=\"instagram_click\"/g) ?? []).length, 1, 'ClubDetail must expose one Instagram CTA surface');
 assert.equal((detail.match(/eventType=\"maps_click\"/g) ?? []).length, 1, 'ClubDetail must expose one route CTA surface');
-assert.ok(detail.includes('Rezervasiya et') && detail.includes('https://wa.me/'), 'ClubDetail must expose the WhatsApp reservation CTA');
+assert.ok(detail.includes('Rezervasiya et') && detail.includes('whatsappBookingUrl'), 'ClubDetail must expose the WhatsApp reservation CTA');
 assert.ok(detail.includes('WhatsApp-da rezervasiya sorğusu açılır; rezervasiya klub tərəfindən təsdiqlənir.'), 'WhatsApp reservation CTA must keep the intent-only disclaimer');
 assert.ok(detail.includes("if (/^994\\d{9}$/.test(digits))") && detail.includes("if (/^0\\d{9}$/.test(digits))"), 'WhatsApp phone normalization must preserve Azerbaijan formats');
 assert.ok(detail.includes('GameYer-dən gəlirəm') && detail.includes('rezervasiya etmək istəyirəm'), 'WhatsApp reservation message must preserve GameYer attribution and reservation intent');

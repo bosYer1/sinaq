@@ -143,8 +143,11 @@ try {
 
   assert(clubHref && detail, 'No public club detail exposes prominent WhatsApp, Phone, Instagram, and Maps CTAs for outbound analytics regression', { checkedClubHrefs: clubHrefs });
   assert(detail.path === clubHref, 'Outbound CTA regression did not land on the selected club detail page', detail);
-  assert(detail.bookingHref.startsWith('https://wa.me/'), 'Reservation CTA must use the official wa.me surface', detail);
-  assert(detail.bookingHref.includes('GameYer-d%C9%99n') || detail.bookingHref.includes('GameYer-d%C9%99n'.toLowerCase()), 'Reservation CTA must keep GameYer attribution in the prefilled WhatsApp message', detail);
+  const bookingUrl = new URL(detail.bookingHref);
+  assert(bookingUrl.protocol === 'https:' && bookingUrl.hostname === 'wa.me', 'Reservation CTA must use the official wa.me host', detail);
+  assert(/^\/994\d{9}$/.test(bookingUrl.pathname), 'Reservation CTA must carry a normalized Azerbaijan phone', { bookingHref: detail.bookingHref });
+  const bookingMessage = bookingUrl.searchParams.get('text') || '';
+  assert(bookingMessage.includes('GameYer-dən gəlirəm.') && bookingMessage.includes('rezervasiya etmək istəyirəm.'), 'Reservation CTA must keep GameYer attribution and reservation intent', { bookingMessage });
 
 
   await evaluate(`(() => {
