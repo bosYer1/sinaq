@@ -53,6 +53,8 @@ assert.match(posthog, /event = 'pwa_installed'/, 'Completed PWA installs must us
 assert.match(posthog, /event = 'pwa_standalone_opened'/, 'Standalone PWA opens must be measured separately for installed-app evidence.');
 assert.match(posthog, /revalidate: 300/, 'PostHog provider must use bounded caching.');
 assert.match(ga4, /revalidate: 300/, 'GA4 provider must use bounded caching.');
+assert.ok(ga4.includes("fieldName: 'pagePath'") && ga4.includes("matchType: 'BEGINS_WITH'") && ga4.includes("value: '/admin'"), 'Founder GA4 metrics must exclude admin-route traffic from the public business view.');
+assert.ok(ga4.includes("['founder-analytics-ga4-v3']"), 'GA4 cache key must be bumped when public-traffic semantics change.');
 assert.match(gsc, /revalidate: 300/, 'GSC provider must use bounded caching.');
 
 assert.ok(posthog.includes("countIf(first_seen < toDateTime('${from}')) AS returning_users"), 'Returning users must have a public visit before the selected interval.');
