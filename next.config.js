@@ -37,6 +37,11 @@ const utilityQueryNoindexHeaders = utilityQueryNoindexPaths.flatMap((source) =>
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  env: {
+    // Founder Analytics must never drift to another PostHog project because of a stale Vercel env override.
+    POSTHOG_PROJECT_ID: '585472',
+    POSTHOG_API_HOST: 'https://us.posthog.com',
+  },
   images: {
     remotePatterns: [
       {
