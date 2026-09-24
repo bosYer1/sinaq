@@ -178,6 +178,7 @@ async function assertCommonLayout(client, viewport, path) {
   assert(layout.header.top >= -1 && layout.header.top <= 1, `${viewport.name} ${path}: sticky header is not pinned to viewport top`, layout);
 
   if (viewport.mobile) {
+    assert(layout.mobileNavOverlayDisplay !== 'none', `${viewport.name} ${path}: mobile navigation overlay is hidden`, layout);
     assert(layout.mobileNavDisplay !== 'none', `${viewport.name} ${path}: mobile navigation is hidden`, layout);
     assert(layout.mobileNav && Math.abs(layout.mobileNav.bottom - layout.visualViewportBottom) <= 2, `${viewport.name} ${path}: mobile navigation is not pinned to the visual viewport bottom`, layout);
 
@@ -212,7 +213,8 @@ async function assertCommonLayout(client, viewport, path) {
     const afterUp = await evaluate(client, commonLayoutExpression);
     assert(afterUp.mobileNav && Math.abs(afterUp.mobileNav.bottom - afterUp.visualViewportBottom) <= 2, `${viewport.name} ${path}: mobile navigation drifted from the visual viewport after scrolling back up`, afterUp);
   } else {
-    assert(layout.mobileNavDisplay === 'none', `${viewport.name} ${path}: mobile navigation leaked into desktop layout`, layout);
+    assert(layout.mobileNavOverlayDisplay === 'none', `${viewport.name} ${path}: mobile navigation overlay leaked into desktop layout`, layout);
+    assert(layout.mobileNavOverlay?.width === 0 && layout.mobileNavOverlay?.height === 0, `${viewport.name} ${path}: hidden mobile overlay still occupies desktop geometry`, layout);
   }
 }
 
