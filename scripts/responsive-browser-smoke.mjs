@@ -346,18 +346,29 @@ async function assertHomepage(client, viewport) {
 
   const scrolled = await evaluate(client, `(() => {
     const map = document.querySelector('[aria-label="GameYer klub xəritəsi"]');
+    if (!map) return false;
+    if (viewport.mobile) {
+      const root = document.querySelector('[data-mobile-scroll-root="true"]');
+      if (!(root instanceof HTMLElement)) return false;
+      const rootRect = root.getBoundingClientRect();
+      const target = root.scrollTop + map.getBoundingClientRect().top - rootRect.top + 60;
+      root.scrollTop = Math.max(0, target);
+      return true;
+    }
     const absoluteTop = map.getBoundingClientRect().top + window.scrollY;
     window.scrollTo(0, Math.max(0, absoluteTop + 60));
     return true;
   })()`);
-  if (!scrolled) throw new Error(`${viewport.name}: failed to scroll map under sticky chrome`);
+  if (!scrolled) throw new Error(`${viewport.name}: failed to scroll map under persistent chrome`);
   await sleep(250);
 
   const stacking = await evaluate(client, `(() => {
+    const root = document.querySelector('[data-mobile-scroll-root="true"]');
     const topElement = document.elementFromPoint(Math.floor(window.innerWidth / 2), 24);
     const bottomElement = document.elementFromPoint(Math.floor(window.innerWidth / 2), window.innerHeight - 16);
     return {
-      scrollY: window.scrollY,
+      windowScrollY: window.scrollY,
+      innerScrollTop: root?.scrollTop ?? null,
       topIsHeader: Boolean(topElement?.closest('header')),
       bottomIsMobileNav: Boolean(bottomElement?.closest('nav[aria-label="Mobil naviqasiya"]')),
       topTag: topElement?.tagName || null,
@@ -367,8 +378,13 @@ async function assertHomepage(client, viewport) {
     };
   })()`);
 
-  assert(stacking.scrollY > 0, `${viewport.name}: stacking test did not scroll`, stacking);
-  assert(stacking.topIsHeader, `${viewport.name}: Leaflet/map content covers the sticky header`, stacking);
+  if (viewport.mobile) {
+    assert(stacking.innerScrollTop > 0, `${viewport.name}: mobile stacking test did not scroll the inner page`, stacking);
+    assert(Math.abs(stacking.windowScrollY) <= 1, `${viewport.name}: mobile stacking test leaked scrolling to the document`, stacking);
+  } else {
+    assert(stacking.windowScrollY > 0, `${viewport.name}: desktop stacking test did not scroll`, stacking);
+  }
+  assert(stacking.topIsHeader, `${viewport.name}: Leaflet/map content covers the header`, stacking);
   if (viewport.mobile) assert(stacking.bottomIsMobileNav, `${viewport.name}: map/content covers the mobile navigation`, stacking);
   await capture(client, `${viewport.name}-home-map-scrolled`);
 }
