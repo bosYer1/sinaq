@@ -25,8 +25,8 @@ function text(formData: FormData, key: string, max: number) {
 }
 
 function resultUrl(formData: FormData, result: SubmissionResult) {
-  const requested = text(formData, 'return_to', 30);
-  const path = requested === '/klub-sahibi' ? '/klub-sahibi' : '/elaqe';
+  text(formData, 'return_to', 30);
+  const path = '/elaqe';
   const params = new URLSearchParams({ [result]: '1' });
   const club = text(formData, 'club_name', 120);
   const slug = text(formData, 'club_slug', 120);
