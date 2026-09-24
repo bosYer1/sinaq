@@ -170,6 +170,29 @@ async function assertCommonLayout(client, viewport, path) {
   if (viewport.mobile) {
     assert(layout.mobileNavDisplay !== 'none', `${viewport.name} ${path}: mobile navigation is hidden`, layout);
     assert(layout.mobileNav && Math.abs(layout.mobileNav.bottom - layout.innerHeight) <= 2, `${viewport.name} ${path}: mobile navigation is not pinned to viewport bottom`, layout);
+
+    const fixedContract = await evaluate(client, `(() => {
+      const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+      if (!nav) return null;
+      const style = getComputedStyle(nav);
+      return {
+        position: style.position,
+        inlineBottom: nav.style.bottom,
+        computedBottom: style.bottom,
+      };
+    })()`);
+    assert(fixedContract?.position === 'fixed', `${viewport.name} ${path}: mobile navigation must use native fixed positioning`, fixedContract);
+    assert(fixedContract?.inlineBottom === '', `${viewport.name} ${path}: mobile navigation must not carry stale inline bottom offsets`, fixedContract);
+
+    await evaluate(client, `window.scrollTo(0, Math.max(0, document.documentElement.scrollHeight - window.innerHeight))`);
+    await sleep(120);
+    const afterDown = await evaluate(client, commonLayoutExpression);
+    assert(afterDown.mobileNav && Math.abs(afterDown.mobileNav.bottom - afterDown.innerHeight) <= 2, `${viewport.name} ${path}: mobile navigation drifted after scrolling down`, afterDown);
+
+    await evaluate(client, `window.scrollTo(0, 0)`);
+    await sleep(120);
+    const afterUp = await evaluate(client, commonLayoutExpression);
+    assert(afterUp.mobileNav && Math.abs(afterUp.mobileNav.bottom - afterUp.innerHeight) <= 2, `${viewport.name} ${path}: mobile navigation drifted after scrolling back up`, afterUp);
   } else {
     assert(layout.mobileNavDisplay === 'none', `${viewport.name} ${path}: mobile navigation leaked into desktop layout`, layout);
   }

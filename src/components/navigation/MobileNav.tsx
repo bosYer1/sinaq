@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 const baseClass = 'flex flex-col items-center justify-center gap-1 text-[10px] transition';
@@ -14,44 +13,6 @@ function navClass(active: boolean) {
 
 export function MobileNav() {
   const pathname = usePathname();
-  const navRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
-
-    const visualViewport = window.visualViewport;
-    let frame = 0;
-
-    const syncVisualViewport = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        if (!visualViewport) {
-          nav.style.bottom = '0px';
-          return;
-        }
-
-        const visualBottom = visualViewport.offsetTop + visualViewport.height;
-        const bottomInset = Math.max(0, window.innerHeight - visualBottom);
-        nav.style.bottom = `${bottomInset}px`;
-      });
-    };
-
-    syncVisualViewport();
-    visualViewport?.addEventListener('resize', syncVisualViewport);
-    visualViewport?.addEventListener('scroll', syncVisualViewport);
-    window.addEventListener('resize', syncVisualViewport);
-    window.addEventListener('orientationchange', syncVisualViewport);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      visualViewport?.removeEventListener('resize', syncVisualViewport);
-      visualViewport?.removeEventListener('scroll', syncVisualViewport);
-      window.removeEventListener('resize', syncVisualViewport);
-      window.removeEventListener('orientationchange', syncVisualViewport);
-    };
-  }, []);
-
   const clubsActive = pathname === '/';
   const districtsActive = pathname === '/rayon' || pathname.startsWith('/rayon/');
   const updatesActive = pathname === '/yenilikler' || pathname.startsWith('/yenilikler/');
@@ -59,8 +20,7 @@ export function MobileNav() {
 
   return (
     <nav
-      ref={navRef}
-      className="fixed inset-x-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 grid min-h-[68px] grid-cols-5 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] [transform:translateZ(0)] md:hidden"
       aria-label="Mobil naviqasiya"
     >
       <Link href="/" className={navClass(clubsActive)}>
