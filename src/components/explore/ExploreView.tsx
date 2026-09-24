@@ -298,6 +298,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     <div
       className="bg-surface"
       data-explore-view={view}
+      data-result-count={clubsWithDistance.length}
       data-mobile-map-active={view === 'map' || mobileListMapActive}
     >
       {isDesktop ? (
