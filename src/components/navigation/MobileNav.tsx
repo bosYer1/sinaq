@@ -25,6 +25,11 @@ export function MobileNav() {
     let frame = 0;
     const settleTimers = new Set<number>();
 
+    const clearSettleTimers = () => {
+      for (const timer of settleTimers) window.clearTimeout(timer);
+      settleTimers.clear();
+    };
+
     const syncVisualViewport = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
@@ -45,6 +50,7 @@ export function MobileNav() {
     };
 
     const settleViewport = () => {
+      clearSettleTimers();
       syncVisualViewport();
       for (const delay of [50, 150, 300]) {
         const timer = window.setTimeout(() => {
@@ -55,21 +61,29 @@ export function MobileNav() {
       }
     };
 
-    syncVisualViewport();
-    visualViewport?.addEventListener('resize', syncViewportBottom);
-    visualViewport?.addEventListener('scroll', syncViewportBottom);
-    window.addEventListener('resize', syncViewportBottom);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') settleViewport();
+    };
+
+    settleViewport();
+    visualViewport?.addEventListener('resize', settleViewport);
+    visualViewport?.addEventListener('scroll', syncVisualViewport);
+    window.addEventListener('resize', settleViewport);
     window.addEventListener('orientationchange', settleViewport);
+    window.addEventListener('pageshow', settleViewport);
     document.addEventListener('focusout', settleViewport, true);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.cancelAnimationFrame(frame);
-      for (const timer of settleTimers) window.clearTimeout(timer);
-      visualViewport?.removeEventListener('resize', syncViewportBottom);
-      visualViewport?.removeEventListener('scroll', syncViewportBottom);
-      window.removeEventListener('resize', syncViewportBottom);
+      clearSettleTimers();
+      visualViewport?.removeEventListener('resize', settleViewport);
+      visualViewport?.removeEventListener('scroll', syncVisualViewport);
+      window.removeEventListener('resize', settleViewport);
       window.removeEventListener('orientationchange', settleViewport);
+      window.removeEventListener('pageshow', settleViewport);
       document.removeEventListener('focusout', settleViewport, true);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [pathname]);
   const clubsActive = pathname === '/';
