@@ -11,6 +11,7 @@ function assert(condition, message) {
 }
 
 assert(backSource.includes('window.history.back()'), 'Club return must reuse the previous cached discovery history entry.');
+assert(backSource.includes('data-back-to-clubs="true"'), 'Club return link must expose a stable browser-smoke selector independent of user-facing copy.');
 assert(backSource.includes("return 'Axtarış nəticələrinə qayıt'"), 'Club return CTA must identify search-result origins.');
 assert(backSource.includes("return 'Xəritəyə qayıt'"), 'Club return CTA must identify map origins.');
 assert(backSource.includes("return 'Filtrlənmiş klublara qayıt'"), 'Club return CTA must identify structured-filter origins.');
