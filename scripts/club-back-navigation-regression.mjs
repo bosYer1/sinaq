@@ -11,6 +11,10 @@ function assert(condition, message) {
 }
 
 assert(backSource.includes('window.history.back()'), 'Club return must reuse the previous cached discovery history entry.');
+assert(backSource.includes("return 'Axtarış nəticələrinə qayıt'"), 'Club return CTA must identify search-result origins.');
+assert(backSource.includes("return 'Xəritəyə qayıt'"), 'Club return CTA must identify map origins.');
+assert(backSource.includes("return 'Filtrlənmiş klublara qayıt'"), 'Club return CTA must identify structured-filter origins.');
+assert(backSource.includes('setFallbackHref(entry.origin)'), 'Club return link fallback must preserve the exact discovery origin.');
 assert(!backSource.includes('window.location.replace(origin)'), 'Club return must not force a full document reload.');
 assert(backSource.includes('entry.destination !== window.location.pathname'), 'Club return must validate that the remembered origin belongs to the current club detail page.');
 assert(backSource.includes("entry.origin.startsWith('/klub/')"), 'Club return must reject club-detail origins.');
