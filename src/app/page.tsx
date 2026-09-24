@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Suspense } from 'react';
 import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts, getClubTypes } from '@/lib/queries/districts';
+import { getActiveClubUpdates } from '@/lib/queries/club-updates';
 import { isSupabaseConfigured } from '@/lib/config';
 import { getSiteUrl } from '@/lib/site-url';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { ExploreView } from '@/components/explore/ExploreView';
+import { ClubUpdatesFeed } from '@/components/growth/ClubUpdatesFeed';
 import { Skeleton } from '@/components/ui/Skeleton';
 import type { ClubFilters } from '@/types/database';
 
@@ -47,11 +50,12 @@ export default async function HomePage({ searchParams }: PageProps) {
   const allClubsPromise = getClubs();
   const filteredClubsPromise = hasDataFilter ? getClubs(filters) : allClubsPromise;
 
-  const [clubs, discoveryClubs, districts, types] = await Promise.all([
+  const [clubs, discoveryClubs, districts, types, activeUpdates] = await Promise.all([
     filteredClubsPromise,
     allClubsPromise,
     getDistricts(),
     getClubTypes(),
+    getActiveClubUpdates(),
   ]);
 
   const activeDistrictSlugs = new Set(
@@ -126,6 +130,40 @@ export default async function HomePage({ searchParams }: PageProps) {
               <FilterBar districts={activeDistricts} types={types} />
             </Suspense>
           </section>
+
+          {activeUpdates.length > 0 ? (
+            <section
+              className="mb-3 sm:mb-4 sm:rounded-2xl sm:border sm:border-primary/15 sm:bg-primary/5 sm:px-5 sm:py-5"
+              aria-label="Aktiv təkliflər və turnirlər"
+            >
+              <div className="mb-2 flex items-center justify-between gap-3 sm:hidden">
+                <h2 className="font-display text-base font-bold tracking-tight text-ink">🔥 Təkliflər</h2>
+                <Link href="/yenilikler" className="shrink-0 text-xs font-semibold text-primary no-underline">
+                  Hamısına bax →
+                </Link>
+              </div>
+
+              <div className="mb-4 hidden items-end justify-between gap-3 sm:flex">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">GameYer yenilikləri</p>
+                  <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">
+                    Aktiv təkliflər və turnirlər
+                  </h2>
+                  <p className="mt-1 text-sm leading-5 text-muted">
+                    Klubların aktual turnir və təkliflərini bir yerdə kəşf et.
+                  </p>
+                </div>
+                <Link
+                  href="/yenilikler"
+                  className="shrink-0 rounded-control border border-primary/25 bg-surface px-4 py-2 text-xs font-semibold text-primary no-underline transition hover:border-primary"
+                >
+                  Hamısına bax →
+                </Link>
+              </div>
+
+              <ClubUpdatesFeed updates={activeUpdates} context="discovery" />
+            </section>
+          ) : null}
 
           <section
             id="club-discovery"
