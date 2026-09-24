@@ -124,7 +124,7 @@ export default async function HomePage({ searchParams }: PageProps) {
               data-home-club-jump="true"
               className="inline-flex h-9 shrink-0 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-bold text-primary no-underline transition active:scale-[0.98] sm:h-10 sm:px-4 sm:text-sm"
             >
-              {discoveryClubs.length} klub ↓
+              {clubs.length} klub ↓
             </a>
           </section>
 
