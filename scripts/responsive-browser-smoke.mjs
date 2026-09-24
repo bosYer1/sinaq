@@ -149,6 +149,9 @@ const commonLayoutExpression = `(() => {
     scrollY: window.scrollY,
     innerWidth: window.innerWidth,
     innerHeight: window.innerHeight,
+    visualViewportBottom: window.visualViewport
+      ? window.visualViewport.offsetTop + window.visualViewport.height
+      : window.innerHeight,
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
     header: rect(header),
@@ -169,7 +172,7 @@ async function assertCommonLayout(client, viewport, path) {
 
   if (viewport.mobile) {
     assert(layout.mobileNavDisplay !== 'none', `${viewport.name} ${path}: mobile navigation is hidden`, layout);
-    assert(layout.mobileNav && Math.abs(layout.mobileNav.bottom - layout.innerHeight) <= 2, `${viewport.name} ${path}: mobile navigation is not pinned to viewport bottom`, layout);
+    assert(layout.mobileNav && Math.abs(layout.mobileNav.bottom - layout.visualViewportBottom) <= 2, `${viewport.name} ${path}: mobile navigation is not pinned to the visual viewport bottom`, layout);
 
     const fixedContract = await evaluate(client, `(() => {
       const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
@@ -177,22 +180,25 @@ async function assertCommonLayout(client, viewport, path) {
       const style = getComputedStyle(nav);
       return {
         position: style.position,
+        inlineTop: nav.style.top,
         inlineBottom: nav.style.bottom,
+        computedTop: style.top,
         computedBottom: style.bottom,
       };
     })()`);
     assert(fixedContract?.position === 'fixed', `${viewport.name} ${path}: mobile navigation must use fixed positioning`, fixedContract);
-    assert(Number.isFinite(Number.parseFloat(fixedContract?.computedBottom ?? '')), `${viewport.name} ${path}: mobile navigation must expose a numeric viewport-alignment bottom offset`, fixedContract);
+    assert(Number.isFinite(Number.parseFloat(fixedContract?.inlineTop ?? '')), `${viewport.name} ${path}: mobile navigation must expose an explicit visual-viewport top coordinate`, fixedContract);
+    assert(fixedContract?.inlineBottom === 'auto', `${viewport.name} ${path}: visual viewport mode must not rely on bottom anchoring`, fixedContract);
 
     await evaluate(client, `window.scrollTo(0, Math.max(0, document.documentElement.scrollHeight - window.innerHeight))`);
     await sleep(120);
     const afterDown = await evaluate(client, commonLayoutExpression);
-    assert(afterDown.mobileNav && Math.abs(afterDown.mobileNav.bottom - afterDown.innerHeight) <= 2, `${viewport.name} ${path}: mobile navigation drifted after scrolling down`, afterDown);
+    assert(afterDown.mobileNav && Math.abs(afterDown.mobileNav.bottom - afterDown.visualViewportBottom) <= 2, `${viewport.name} ${path}: mobile navigation drifted from the visual viewport after scrolling down`, afterDown);
 
     await evaluate(client, `window.scrollTo(0, 0)`);
     await sleep(120);
     const afterUp = await evaluate(client, commonLayoutExpression);
-    assert(afterUp.mobileNav && Math.abs(afterUp.mobileNav.bottom - afterUp.innerHeight) <= 2, `${viewport.name} ${path}: mobile navigation drifted after scrolling back up`, afterUp);
+    assert(afterUp.mobileNav && Math.abs(afterUp.mobileNav.bottom - afterUp.visualViewportBottom) <= 2, `${viewport.name} ${path}: mobile navigation drifted from the visual viewport after scrolling back up`, afterUp);
   } else {
     assert(layout.mobileNavDisplay === 'none', `${viewport.name} ${path}: mobile navigation leaked into desktop layout`, layout);
   }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { getMobileNavBottomOffset } from '@/lib/mobileViewport';
+import { getMobileNavVisualTop } from '@/lib/mobileViewport';
 
 const baseClass = 'flex flex-col items-center justify-center gap-1 text-[10px] transition';
 const activeClass = 'font-semibold text-primary';
@@ -25,51 +25,67 @@ export function MobileNav() {
     let frame = 0;
     const settleTimers = new Set<number>();
 
-    const syncViewportBottom = () => {
+    const clearSettleTimers = () => {
+      for (const timer of settleTimers) window.clearTimeout(timer);
+      settleTimers.clear();
+    };
+
+    const syncVisualViewport = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
         if (!visualViewport) {
+          nav.style.top = '';
           nav.style.bottom = '0px';
           return;
         }
 
-        const bottomOffset = getMobileNavBottomOffset(
-          window.innerHeight,
+        const visualTop = getMobileNavVisualTop(
           visualViewport.offsetTop,
           visualViewport.height,
+          nav.offsetHeight,
         );
-        nav.style.bottom = `${bottomOffset}px`;
+        nav.style.top = `${visualTop}px`;
+        nav.style.bottom = 'auto';
       });
     };
 
-    const settleAfterKeyboard = () => {
-      syncViewportBottom();
+    const settleViewport = () => {
+      clearSettleTimers();
+      syncVisualViewport();
       for (const delay of [50, 150, 300]) {
         const timer = window.setTimeout(() => {
           settleTimers.delete(timer);
-          syncViewportBottom();
+          syncVisualViewport();
         }, delay);
         settleTimers.add(timer);
       }
     };
 
-    syncViewportBottom();
-    visualViewport?.addEventListener('resize', syncViewportBottom);
-    visualViewport?.addEventListener('scroll', syncViewportBottom);
-    window.addEventListener('resize', syncViewportBottom);
-    window.addEventListener('orientationchange', settleAfterKeyboard);
-    document.addEventListener('focusout', settleAfterKeyboard, true);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') settleViewport();
+    };
+
+    settleViewport();
+    visualViewport?.addEventListener('resize', settleViewport);
+    visualViewport?.addEventListener('scroll', syncVisualViewport);
+    window.addEventListener('resize', settleViewport);
+    window.addEventListener('orientationchange', settleViewport);
+    window.addEventListener('pageshow', settleViewport);
+    document.addEventListener('focusout', settleViewport, true);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.cancelAnimationFrame(frame);
-      for (const timer of settleTimers) window.clearTimeout(timer);
-      visualViewport?.removeEventListener('resize', syncViewportBottom);
-      visualViewport?.removeEventListener('scroll', syncViewportBottom);
-      window.removeEventListener('resize', syncViewportBottom);
-      window.removeEventListener('orientationchange', settleAfterKeyboard);
-      document.removeEventListener('focusout', settleAfterKeyboard, true);
+      clearSettleTimers();
+      visualViewport?.removeEventListener('resize', settleViewport);
+      visualViewport?.removeEventListener('scroll', syncVisualViewport);
+      window.removeEventListener('resize', settleViewport);
+      window.removeEventListener('orientationchange', settleViewport);
+      window.removeEventListener('pageshow', settleViewport);
+      document.removeEventListener('focusout', settleViewport, true);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [pathname]);
   const clubsActive = pathname === '/';
   const districtsActive = pathname === '/rayon' || pathname.startsWith('/rayon/');
   const updatesActive = pathname === '/yenilikler' || pathname.startsWith('/yenilikler/');
