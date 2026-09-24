@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useSyncExternalStore, type MouseEvent } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const CLUB_ENTRY_ORIGIN_KEY = 'gameyer:club-entry-origin';
 const MOBILE_EXPANDED_STATE_KEY = 'gameyer:mobile-expanded-state';
@@ -64,49 +65,53 @@ function returnLabel(origin: string) {
   return 'Klublara qayıt';
 }
 
-export function BackToClubsLink({ className }: { className?: string }) {
-  const [label, setLabel] = useState('Klublara qayıt');
-  const [fallbackHref, setFallbackHref] = useState('/');
+function subscribeClubEntryOrigin() {
+  return () => {};
+}
 
-  useEffect(() => {
-    try {
-      const rawEntry = window.sessionStorage.getItem(CLUB_ENTRY_ORIGIN_KEY);
-      if (!rawEntry) return;
-      const entry = JSON.parse(rawEntry) as ClubEntryOrigin;
-      if (
-        entry.destination !== window.location.pathname ||
-        !entry.origin.startsWith('/') ||
-        entry.origin.startsWith('/klub/')
-      ) {
-        return;
-      }
+function getClubEntryOriginSnapshot() {
+  try {
+    return window.sessionStorage.getItem(CLUB_ENTRY_ORIGIN_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
 
-      setLabel(returnLabel(entry.origin));
-      setFallbackHref(entry.origin);
-    } catch {
-      // Keep the generic fallback when the remembered origin is unavailable.
-    }
-  }, []);
+function getServerClubEntryOriginSnapshot() {
+  return '';
+}
 
-  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
-    if (!isPlainLeftClick(event)) return;
+function parseClubEntryOrigin(rawEntry: string, pathname: string): ClubEntryOrigin | null {
+  if (!rawEntry) return null;
 
-    let entry: ClubEntryOrigin | null = null;
-    try {
-      const rawEntry = window.sessionStorage.getItem(CLUB_ENTRY_ORIGIN_KEY);
-      if (rawEntry) entry = JSON.parse(rawEntry) as ClubEntryOrigin;
-    } catch {
-      entry = null;
-    }
-
+  try {
+    const entry = JSON.parse(rawEntry) as ClubEntryOrigin;
     if (
-      !entry ||
-      entry.destination !== window.location.pathname ||
+      entry.destination !== pathname ||
       !entry.origin.startsWith('/') ||
       entry.origin.startsWith('/klub/')
     ) {
-      return;
+      return null;
     }
+    return entry;
+  } catch {
+    return null;
+  }
+}
+
+export function BackToClubsLink({ className }: { className?: string }) {
+  const pathname = usePathname();
+  const rawEntry = useSyncExternalStore(
+    subscribeClubEntryOrigin,
+    getClubEntryOriginSnapshot,
+    getServerClubEntryOriginSnapshot,
+  );
+  const entry = parseClubEntryOrigin(rawEntry, pathname);
+  const label = entry ? returnLabel(entry.origin) : 'Klublara qayıt';
+  const fallbackHref = entry?.origin ?? '/';
+
+  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (!isPlainLeftClick(event) || !entry) return;
 
     event.preventDefault();
     try {
