@@ -9,6 +9,7 @@ const [analytics, explore, clubMap, mapPreview, home] = await Promise.all([
   readFile(new URL('../src/app/page.tsx', import.meta.url), 'utf8'),
 ]);
 
+assert.ok(explore.includes("if (isDesktop) {") && explore.includes("cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })"), 'Marker selection may sync the list on desktop but must not scroll the mobile page away from the map popup flow.');
 assert.ok(explore.includes("trackPostHogEvent('mobile_map_preview_activated'"), 'Mobile map preview activation must be captured directly');
 assert.ok(explore.includes("trackPostHogEvent('mobile_more_clubs_clicked'"), 'Mobile list toggle must be captured directly');
 assert.ok(explore.includes("action: nextExpanded ? 'expand' : 'collapse'"), 'Expand/collapse semantics must follow the next state');
