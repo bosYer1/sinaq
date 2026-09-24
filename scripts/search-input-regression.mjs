@@ -1,8 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
-const [filterBar, searchFilter, exploreView, clubsQuery] = await Promise.all([
+const [filterBar, searchFilter, typeFilter, exploreView, clubsQuery] = await Promise.all([
   readFile(new URL('../src/components/filters/FilterBar.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/filters/SearchFilter.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/filters/TypeFilter.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/explore/ExploreView.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/queries/clubs.ts', import.meta.url), 'utf8'),
 ]);
@@ -15,6 +16,9 @@ assert(!filterBar.includes('<SearchFilter key={searchQuery} />'), 'SearchFilter 
 assert(filterBar.includes('<SearchFilter />'), 'FilterBar must render a stable SearchFilter instance.');
 assert(!filterBar.includes('🔥 Təkliflər'), 'Mobile filter row must stay focused on search/filter controls; offers remain in the homepage offers section.');
 assert(filterBar.indexOf('Aktiv axtarış və filtrləri təmizlə') < filterBar.indexOf('<TypeFilter types={types} />'), 'Mobile clear action must appear before overflow-prone type/district/price controls.');
+assert(typeFilter.includes('<span className="sm:hidden">PS</span>'), 'Mobile PlayStation filter must use the compact PS label.');
+assert(typeFilter.includes('<span className="hidden sm:inline">{t.name}</span>'), 'Larger screens must retain the full PlayStation label.');
+assert(typeFilter.includes('aria-label={t.name}'), 'Compact mobile filter labels must preserve the full accessible name.');
 assert(searchFilter.includes('lastRequestedQueryRef'), 'SearchFilter must preserve local typing while URL navigation catches up.');
 assert(searchFilter.includes('lastTrackedQueryRef'), 'Search analytics must deduplicate settled queries independently from URL navigation.');
 assert(searchFilter.includes('currentQueryRef'), 'SearchFilter must track the latest committed query without restarting the typing debounce.');
