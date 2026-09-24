@@ -17,7 +17,7 @@ assert(backSource.includes("return 'Filtrlənmiş klublara qayıt'"), 'Club retu
 assert(backSource.includes('const fallbackHref = entry?.origin ?? \'/\';'), 'Club return link fallback must preserve the exact discovery origin.');
 assert(backSource.includes('useSyncExternalStore'), 'Club return context must derive from sessionStorage without effect-driven state churn.');
 assert(!backSource.includes('window.location.replace(origin)'), 'Club return must not force a full document reload.');
-assert(backSource.includes('entry.destination !== window.location.pathname'), 'Club return must validate that the remembered origin belongs to the current club detail page.');
+assert(backSource.includes('entry.destination !== pathname'), 'Club return must validate that the remembered origin belongs to the current club detail page.');
 assert(backSource.includes("entry.origin.startsWith('/klub/')"), 'Club return must reject club-detail origins.');
 assert(backSource.includes("const MOBILE_EXPANDED_STATE_KEY = 'gameyer:mobile-expanded-state'"), 'Club entry tracking must know the mobile expanded-list state key.');
 assert(backSource.includes('scrollY: Math.max(0, window.scrollY)'), 'Club navigation must snapshot the exact scroll position only when leaving the list.');
