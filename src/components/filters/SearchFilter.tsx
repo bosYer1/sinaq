@@ -35,7 +35,13 @@ export function SearchFilter() {
   const currentQuery = searchParams.get('q') ?? '';
   const [value, setValue] = useState(currentQuery);
   const [pendingSearchAnalytics, setPendingSearchAnalytics] = useState<PendingSearchAnalytics | null>(null);
+  const [resultRevealRequest, setResultRevealRequest] = useState<{
+    id: number;
+    query: string;
+    view: 'list' | 'map';
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const navigationTimerRef = useRef<number | null>(null);
   const lastRequestedQueryRef = useRef(currentQuery);
   const lastTrackedQueryRef = useRef(currentQuery);
   const currentQueryRef = useRef(currentQuery);
@@ -85,7 +91,10 @@ export function SearchFilter() {
   }, [currentQuery, paramsString]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    if (navigationTimerRef.current) window.clearTimeout(navigationTimerRef.current);
+
+    navigationTimerRef.current = window.setTimeout(() => {
+      navigationTimerRef.current = null;
       const nextQuery = value.trim();
       const currentQueryAtDispatch = currentQueryRef.current;
       if (nextQuery === currentQueryAtDispatch || nextQuery === lastRequestedQueryRef.current) return;
@@ -100,7 +109,12 @@ export function SearchFilter() {
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }, SEARCH_NAVIGATION_DEBOUNCE_MS);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      if (navigationTimerRef.current) {
+        window.clearTimeout(navigationTimerRef.current);
+        navigationTimerRef.current = null;
+      }
+    };
   }, [value, pathname, router]);
 
   useEffect(() => {
@@ -123,6 +137,39 @@ export function SearchFilter() {
 
     return () => window.clearTimeout(timer);
   }, [value]);
+
+  useEffect(() => {
+    const request = resultRevealRequest;
+    if (!request) return;
+
+    let retryTimer = 0;
+    let cancelled = false;
+    const startedAt = Date.now();
+
+    const revealCommittedDiscovery = () => {
+      if (cancelled) return;
+
+      const resultCount = readRenderedResultCount();
+      const mapTarget = document.querySelector<HTMLElement>('[data-explore-view="map"]');
+      const listTarget = document.getElementById('club-results');
+      const target = request.view === 'map' ? mapTarget : listTarget;
+
+      if (currentQueryRef.current === request.query && target && resultCount != null) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      if (Date.now() - startedAt < SEARCH_RESULT_READ_TIMEOUT_MS) {
+        retryTimer = window.setTimeout(revealCommittedDiscovery, SEARCH_RESULT_READ_INTERVAL_MS);
+      }
+    };
+
+    retryTimer = window.setTimeout(revealCommittedDiscovery, 0);
+    return () => {
+      cancelled = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+    };
+  }, [resultRevealRequest]);
 
   useEffect(() => {
     const pending = pendingSearchAnalytics;
@@ -213,6 +260,31 @@ export function SearchFilter() {
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
+            const submittedQuery = event.currentTarget.value.trim();
+
+            if (navigationTimerRef.current) {
+              window.clearTimeout(navigationTimerRef.current);
+              navigationTimerRef.current = null;
+            }
+
+            if (submittedQuery !== currentQueryRef.current && submittedQuery !== lastRequestedQueryRef.current) {
+              lastRequestedQueryRef.current = submittedQuery;
+              const params = new URLSearchParams(paramsStringRef.current);
+              if (submittedQuery) params.set('q', submittedQuery);
+              else params.delete('q');
+              const query = params.toString();
+              router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+            }
+
+            if (submittedQuery) {
+              const params = new URLSearchParams(paramsStringRef.current);
+              setResultRevealRequest((request) => ({
+                id: (request?.id ?? 0) + 1,
+                query: submittedQuery,
+                view: params.get('view') === 'map' ? 'map' : 'list',
+              }));
+            }
+
             event.currentTarget.blur();
           }
         }}
