@@ -35,9 +35,9 @@ assert.match(contactSource, /Klubun adını və əlaqə nömrənizi yazın\./, '
 assert.match(contactSource, /params\.sent === '1'/, 'contact page must render success feedback');
 assert.match(contactSource, /params\.error === '1'/, 'contact page must render failure feedback');
 assert.match(contactSource, /section id="new-club"/, 'contact page must expose a stable new-club anchor.');
-assert.match(clubListSource, /href="\/elaqe#new-club"/, 'search no-result state must link to the existing verified new-club form.');
+assert.match(clubListSource, /\/elaqe\?suggest=\$\{encodeURIComponent\(searchQuery\)\}#new-club/, 'search no-result state must carry the query only as an encoded suggestion prefill.');
 assert.match(clubListSource, /Klub siyahıda yoxdur\? Təklif et/, 'search no-result CTA copy must remain explicit.');
-assert.doesNotMatch(clubListSource, /club=.*search|q=.*new-club|new-club.*q=/, 'no-result proposal must not treat a free-text query as factual club identity.');
+assert.doesNotMatch(clubListSource, /\/elaqe\?club=/, 'search no-result proposal must not label free-text search as an existing club identity.');
 
 assert.doesNotMatch(contactSource, /\/klub-sahibi/, 'contact page must not link to the removed club-owner flow.');
 
