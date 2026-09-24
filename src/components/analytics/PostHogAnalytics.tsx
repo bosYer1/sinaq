@@ -36,32 +36,11 @@ export function PostHogAnalytics() {
       if (!(target instanceof Element)) return;
 
       const deviceSurface = window.matchMedia('(min-width: 1024px)').matches ? 'desktop' : 'mobile';
-      const homeClubJump = target.closest('[data-home-club-jump="true"]');
-      if (homeClubJump instanceof HTMLAnchorElement) {
-        trackPostHogEvent('home_club_jump_clicked', { surface: `${deviceSurface}_home` });
-        return;
-      }
-
       const button = target.closest('button');
       if (!(button instanceof HTMLButtonElement)) return;
 
       const label = button.getAttribute('aria-label')?.trim() ?? '';
       const text = button.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-
-      if (label === 'Xəritəni aktiv et' && button.closest('[data-mobile-list-map-container="true"]')) {
-        trackPostHogEvent('mobile_map_preview_activated', { surface: 'mobile_list' });
-        return;
-      }
-
-      if (text.startsWith('Daha çox klub göstər')) {
-        trackPostHogEvent('mobile_more_clubs_clicked', { action: 'expand', surface: 'mobile_list' });
-        return;
-      }
-
-      if (text === 'Daha az klub göstər') {
-        trackPostHogEvent('mobile_more_clubs_clicked', { action: 'collapse', surface: 'mobile_list' });
-        return;
-      }
 
       if (MAP_LOCATION_LABELS.has(label)) {
         trackPostHogEvent('map_location_clicked', {

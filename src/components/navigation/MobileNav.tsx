@@ -18,14 +18,13 @@ export function MobileNav() {
   const districtsActive = pathname === '/rayon' || pathname.startsWith('/rayon/');
   const updatesActive = pathname === '/yenilikler' || pathname.startsWith('/yenilikler/');
   const menuActive = pathname === '/menyu';
-  const searchActive = pathname === '/' && typeof window !== 'undefined' && window.location.hash === '#club-search';
 
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] md:hidden"
       aria-label="Mobil naviqasiya"
     >
-      <Link href="/" className={navClass(clubsActive && !searchActive)}>
+      <Link href="/" className={navClass(clubsActive)}>
         <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M7.5 8h9a4 4 0 0 1 3.7 5.5l-1.3 3.2a2 2 0 0 1-3.2.7L14 16h-4l-1.7 1.4a2 2 0 0 1-3.2-.7l-1.3-3.2A4 4 0 0 1 7.5 8Z" />
           <path d="M8 11v4M6 13h4M16.5 12h.01M18 14h.01" />
@@ -43,7 +42,7 @@ export function MobileNav() {
         <span>Rayonlar</span>
       </Link>
 
-      <Link href="/#club-search" className={navClass(searchActive || clubsActive)}>
+      <Link href="/#club-search" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary transition">
         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-[0_5px_16px_rgba(124,92,252,0.3)]">
           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="6" />
