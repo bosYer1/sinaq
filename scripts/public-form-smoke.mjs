@@ -15,5 +15,4 @@ async function check(path, markers) {
 }
 
 await check('/elaqe', ['name="contact_value"', 'name="website"']);
-await check('/klub-sahibi', ['name="contact_value"', 'name="website"']);
 console.log('Public form availability smoke: PASS');

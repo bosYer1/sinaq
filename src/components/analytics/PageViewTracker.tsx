@@ -62,11 +62,11 @@ function getEntryReferrerHost() {
 }
 
 function trackSubmissionSuccess(pathname: string) {
-  if (pathname !== '/elaqe' && pathname !== '/klub-sahibi') return;
+  if (pathname !== '/elaqe') return;
   const params = new URLSearchParams(window.location.search);
   if (params.get('sent') !== '1') return;
 
-  const surface = pathname === '/klub-sahibi' ? 'club_owner' : 'contact';
+  const surface = 'contact';
   const clubSlug = params.get('slug');
   const clubName = params.get('club');
   const key = `gameyer_submission_success:${surface}:${clubSlug ?? ''}:${clubName ?? ''}`;

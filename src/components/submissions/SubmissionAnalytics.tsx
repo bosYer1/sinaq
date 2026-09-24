@@ -9,7 +9,7 @@ type SubmissionKind = 'correction' | 'new_club' | 'owner_claim';
 
 interface SubmissionAnalyticsProps {
   kind: SubmissionKind;
-  returnTo: '/elaqe' | '/klub-sahibi';
+  returnTo: '/elaqe';
   hasLinkedClub: boolean;
 }
 

@@ -23,7 +23,7 @@ const legacyProductionHosts = [
   'bosyer-web.vercel.app',
 ];
 
-const utilityQueryNoindexPaths = ['/klub-sahibi', '/elaqe'];
+const utilityQueryNoindexPaths = ['/elaqe'];
 const utilityQueryStateKeys = ['club', 'slug', 'sent', 'error', 'rate'];
 const utilityQueryNoindexHeaders = utilityQueryNoindexPaths.flatMap((source) =>
   utilityQueryStateKeys.map((key) => ({
@@ -70,6 +70,11 @@ const nextConfig = {
         source: '/:path*',
         has: [{ type: 'host', value: 'www.gameyer.az' }],
         destination: 'https://gameyer.az/:path*',
+        permanent: true,
+      },
+      {
+        source: '/klub-sahibi',
+        destination: '/elaqe#new-club',
         permanent: true,
       },
       {
