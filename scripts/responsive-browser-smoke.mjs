@@ -347,7 +347,7 @@ async function assertHomepage(client, viewport) {
   const scrolled = await evaluate(client, `(() => {
     const map = document.querySelector('[aria-label="GameYer klub xəritəsi"]');
     if (!map) return false;
-    if (viewport.mobile) {
+    if (${viewport.mobile ? 'true' : 'false'}) {
       const root = document.querySelector('[data-mobile-scroll-root="true"]');
       if (!(root instanceof HTMLElement)) return false;
       const rootRect = root.getBoundingClientRect();
