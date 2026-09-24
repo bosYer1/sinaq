@@ -216,7 +216,7 @@ export function SearchFilter() {
         aria-label="Klub axtar"
         enterKeyHint="search"
         autoComplete="off"
-        className="h-12 w-full rounded-xl border border-border-strong bg-surface pl-11 pr-11 text-sm text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 lg:h-11"
+        className="h-12 w-full rounded-xl border border-border-strong bg-surface pl-11 pr-11 text-base text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 sm:text-sm lg:h-11"
       />
 
       {value ? (
