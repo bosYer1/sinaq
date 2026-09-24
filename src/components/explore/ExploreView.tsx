@@ -326,6 +326,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 onHoverClub={handleHoverCard}
                 cardRefs={cardRefs}
                 searchActive={searchActive}
+                searchQuery={searchQuery}
                 hasStructuredFilters={hasStructuredFilters}
                 onClearFilters={hasActiveFilters ? clearAll : undefined}
               />
@@ -386,6 +387,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 onHoverClub={handleHoverCard}
                 cardRefs={cardRefs}
                 searchActive={searchActive}
+                searchQuery={searchQuery}
                 hasStructuredFilters={hasStructuredFilters}
                 onClearFilters={hasActiveFilters ? clearAll : undefined}
               />
