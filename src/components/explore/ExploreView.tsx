@@ -375,7 +375,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                   type="button"
                   onClick={handleLocationSort}
                   disabled={status === 'loading' || status === 'unsupported'}
-                  className={`rounded-xl border px-3 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted'}`}
+                  className={`shrink-0 whitespace-nowrap rounded-xl border px-2.5 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted'}`}
                 >
                   {locationButtonLabel}
                 </button>
