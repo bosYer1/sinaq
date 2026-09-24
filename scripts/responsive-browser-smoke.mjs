@@ -442,6 +442,19 @@ async function assertIOSChromeNavFallback(client) {
   assert(restored.visibility === 'visible', 'iOS nav must restore after keyboard dismissal settling', restored);
   assert(restored.navBottom != null && restored.visualBottom != null && Math.abs(restored.navBottom - restored.visualBottom) <= 2, 'iOS nav must realign after keyboard dismissal', restored);
 
+  await evaluate(client, `document.querySelector('nav[aria-label="Mobil naviqasiya"] a[href="/rayon"]')?.focus()`);
+  await sleep(120);
+  const afterLinkFocus = await evaluate(client, `(() => {
+    const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+    return {
+      visibility: nav ? getComputedStyle(nav).visibility : null,
+      activeTag: document.activeElement?.tagName ?? null,
+      activeHref: document.activeElement?.getAttribute?.('href') ?? null,
+    };
+  })()`);
+  assert(afterLinkFocus.activeTag === 'A' && afterLinkFocus.activeHref === '/rayon', 'iOS non-editable focus regression must actually focus a nav link', afterLinkFocus);
+  assert(afterLinkFocus.visibility === 'visible', 'Focusing a normal navigation link must never trigger keyboard hiding', afterLinkFocus);
+
   console.log('iOS Chrome absolute-nav and phantom-scroll regression passed.');
 }
 
