@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { getMobileNavVisualTop } from '@/lib/mobileViewport';
+import { getMobileNavDocumentTop, getRealLayoutMaxScrollTop, isIOSWebKit, isPhantomBottomScroll } from '@/lib/mobileViewport';
 
 const baseClass = 'flex flex-col items-center justify-center gap-1 text-[10px] transition';
 const activeClass = 'font-semibold text-primary';
@@ -22,7 +22,27 @@ export function MobileNav() {
     if (!nav) return;
 
     const visualViewport = window.visualViewport;
+    const iosWebKit = isIOSWebKit(
+      window.navigator.userAgent,
+      window.navigator.platform,
+      window.navigator.maxTouchPoints,
+    );
+
+    if (!iosWebKit || !visualViewport) {
+      nav.style.position = '';
+      nav.style.top = '';
+      nav.style.bottom = '';
+      nav.style.visibility = '';
+      delete nav.dataset.iosViewportMode;
+      return;
+    }
+
+    nav.dataset.iosViewportMode = 'absolute';
+
     let frame = 0;
+    let editableFocusSeen = false;
+    let keyboardPollTimer = 0;
+    let keyboardReleaseTimer = 0;
     const settleTimers = new Set<number>();
 
     const clearSettleTimers = () => {
@@ -30,35 +50,101 @@ export function MobileNav() {
       settleTimers.clear();
     };
 
-    const syncVisualViewport = () => {
+    const isEditableElement = (target: EventTarget | null) => (
+      target instanceof HTMLInputElement
+      || target instanceof HTMLTextAreaElement
+      || (target instanceof HTMLElement && target.isContentEditable)
+    );
+
+    const isEditableFocused = () => isEditableElement(document.activeElement);
+
+    const getRealContentBottom = () => {
+      const sentinel = document.querySelector<HTMLElement>('[data-mobile-content-end="true"]');
+      if (!sentinel) return null;
+      return window.scrollY + sentinel.getBoundingClientRect().top;
+    };
+
+    const syncNav = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        if (!visualViewport) {
-          nav.style.top = '';
-          nav.style.bottom = '0px';
+        const editableFocused = isEditableFocused();
+        nav.style.position = 'absolute';
+        nav.style.bottom = 'auto';
+
+        if (editableFocused) {
+          editableFocusSeen = true;
+          nav.style.visibility = 'hidden';
+
+          if (keyboardReleaseTimer) {
+            window.clearTimeout(keyboardReleaseTimer);
+            keyboardReleaseTimer = 0;
+          }
+          if (!keyboardPollTimer) {
+            keyboardPollTimer = window.setTimeout(() => {
+              keyboardPollTimer = 0;
+              syncNav();
+            }, 100);
+          }
           return;
         }
 
-        const visualTop = getMobileNavVisualTop(
-          visualViewport.offsetTop,
+        if (editableFocusSeen) {
+          nav.style.visibility = 'hidden';
+          if (!keyboardReleaseTimer) {
+            keyboardReleaseTimer = window.setTimeout(() => {
+              keyboardReleaseTimer = 0;
+              editableFocusSeen = false;
+              settleViewport();
+            }, 500);
+          }
+          return;
+        }
+
+        const contentBottom = getRealContentBottom();
+        if (contentBottom != null) {
+          const maxLayoutScrollTop = getRealLayoutMaxScrollTop(
+            contentBottom,
+            visualViewport.offsetTop,
+            visualViewport.height,
+          );
+          if (isPhantomBottomScroll(window.scrollY, maxLayoutScrollTop)) {
+            window.scrollTo({ top: maxLayoutScrollTop, left: 0, behavior: 'auto' });
+            nav.style.visibility = 'hidden';
+            window.requestAnimationFrame(syncNav);
+            return;
+          }
+        }
+
+        const top = getMobileNavDocumentTop(
+          visualViewport.pageTop,
           visualViewport.height,
           nav.offsetHeight,
         );
-        nav.style.top = `${visualTop}px`;
-        nav.style.bottom = 'auto';
+        nav.style.top = `${top}px`;
+        nav.style.visibility = 'visible';
       });
     };
 
     const settleViewport = () => {
       clearSettleTimers();
-      syncVisualViewport();
+      syncNav();
       for (const delay of [50, 150, 300]) {
         const timer = window.setTimeout(() => {
           settleTimers.delete(timer);
-          syncVisualViewport();
+          syncNav();
         }, delay);
         settleTimers.add(timer);
       }
+    };
+
+    const handleFocusIn = (event: FocusEvent) => {
+      if (!isEditableElement(event.target)) return;
+      syncNav();
+    };
+
+    const handleFocusOut = (event: FocusEvent) => {
+      if (!isEditableElement(event.target)) return;
+      syncNav();
     };
 
     const handleVisibilityChange = () => {
@@ -66,24 +152,35 @@ export function MobileNav() {
     };
 
     settleViewport();
-    visualViewport?.addEventListener('resize', settleViewport);
-    visualViewport?.addEventListener('scroll', syncVisualViewport);
+    visualViewport.addEventListener('resize', settleViewport);
+    visualViewport.addEventListener('scroll', syncNav);
+    window.addEventListener('scroll', syncNav, { passive: true });
     window.addEventListener('resize', settleViewport);
     window.addEventListener('orientationchange', settleViewport);
     window.addEventListener('pageshow', settleViewport);
-    document.addEventListener('focusout', settleViewport, true);
+    document.addEventListener('focusin', handleFocusIn, true);
+    document.addEventListener('focusout', handleFocusOut, true);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.cancelAnimationFrame(frame);
       clearSettleTimers();
-      visualViewport?.removeEventListener('resize', settleViewport);
-      visualViewport?.removeEventListener('scroll', syncVisualViewport);
+      if (keyboardPollTimer) window.clearTimeout(keyboardPollTimer);
+      if (keyboardReleaseTimer) window.clearTimeout(keyboardReleaseTimer);
+      visualViewport.removeEventListener('resize', settleViewport);
+      visualViewport.removeEventListener('scroll', syncNav);
+      window.removeEventListener('scroll', syncNav);
       window.removeEventListener('resize', settleViewport);
       window.removeEventListener('orientationchange', settleViewport);
       window.removeEventListener('pageshow', settleViewport);
-      document.removeEventListener('focusout', settleViewport, true);
+      document.removeEventListener('focusin', handleFocusIn, true);
+      document.removeEventListener('focusout', handleFocusOut, true);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      nav.style.position = '';
+      nav.style.top = '';
+      nav.style.bottom = '';
+      nav.style.visibility = '';
+      delete nav.dataset.iosViewportMode;
     };
   }, [pathname]);
   const clubsActive = pathname === '/';
