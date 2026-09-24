@@ -13,6 +13,7 @@ function assert(condition, message) {
 
 assert(!filterBar.includes('<SearchFilter key={searchQuery} />'), 'SearchFilter must not remount whenever the q parameter changes.');
 assert(filterBar.includes('<SearchFilter />'), 'FilterBar must render a stable SearchFilter instance.');
+assert(!filterBar.includes('🔥 Təkliflər'), 'Mobile filter row must stay focused on search/filter controls; offers remain in the homepage offers section.');
 assert(searchFilter.includes('lastRequestedQueryRef'), 'SearchFilter must preserve local typing while URL navigation catches up.');
 assert(searchFilter.includes('lastTrackedQueryRef'), 'Search analytics must deduplicate settled queries independently from URL navigation.');
 assert(searchFilter.includes('currentQueryRef'), 'SearchFilter must track the latest committed query without restarting the typing debounce.');
