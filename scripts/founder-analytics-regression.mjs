@@ -18,6 +18,11 @@ const databaseTypes = await readFile(new URL('../src/types/database.ts', import.
 
 assert.match(page, /await requireAdmin\(\)/, 'Founder analytics must enforce admin and MFA authorization in the page.');
 assert.match(posthog, /^import 'server-only';/m, 'PostHog private API adapter must remain server-only.');
+assert.match(posthog, /argMinIf\(/, 'Founder acquisition must recover session-level attribution from landing pageviews.');
+assert.match(posthog, /positionCaseInsensitive[\s\S]*google\./, 'Founder acquisition must recognize Google organic referrers.');
+assert.match(posthog, /'paid_social'/, 'Founder acquisition must preserve paid-social attribution.');
+assert.doesNotMatch(posthog, /coalesce\(nullIf\(properties\.gameyer_first_utm_source, ''\), if\(notEmpty\(properties\.gameyer_first_fbclid\), 'facebook', 'direct'\)\)/, 'Founder acquisition must not force untagged organic sessions to direct.');
+// session-level attribution regression
 assert.match(meta, /^import 'server-only';/m, 'Meta Ads private API adapter must remain server-only.');
 assert.match(ga4, /^import 'server-only';/m, 'GA4 private API adapter must remain server-only.');
 assert.match(gsc, /^import 'server-only';/m, 'GSC private API adapter must remain server-only.');

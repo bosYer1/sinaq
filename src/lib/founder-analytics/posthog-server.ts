@@ -226,11 +226,10 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           source,
           medium,
           campaign,
-          count() AS visitors,
-          sum(person_sessions) AS sessions,
-          countIf(person_id IN (
-            SELECT person_id
-            FROM events
+          uniq(person_id) AS visitors,
+          count() AS sessions,
+          uniqIf(person_id, person_id IN (
+            SELECT person_id FROM events
             WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
               AND timestamp < toDateTime('${from}')
               AND ${publicScope}
@@ -245,11 +244,38 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           sum(cta_sessions) AS cta_sessions
         FROM (
           SELECT
-            coalesce(nullIf(properties.gameyer_first_utm_source, ''), if(notEmpty(properties.gameyer_first_fbclid), 'facebook', 'direct')) AS source,
-            coalesce(nullIf(properties.gameyer_first_utm_medium, ''), '—') AS medium,
-            coalesce(nullIf(properties.gameyer_first_utm_campaign, ''), '(kampaniyasız)') AS campaign,
-            person_id,
-            uniq(properties.$session_id) AS person_sessions,
+            properties.$session_id AS session_id,
+            argMin(person_id, timestamp) AS person_id,
+            argMinIf(
+              multiIf(
+                notEmpty(coalesce(nullIf(properties.gameyer_session_utm_source, ''), nullIf(properties.gameyer_first_utm_source, ''), nullIf(properties.utm_source, ''))), lower(coalesce(nullIf(properties.gameyer_session_utm_source, ''), nullIf(properties.gameyer_first_utm_source, ''), nullIf(properties.utm_source, ''))),
+                notEmpty(coalesce(nullIf(properties.gameyer_session_fbclid, ''), nullIf(properties.gameyer_first_fbclid, ''), nullIf(properties.fbclid, ''))), 'facebook',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'google.') > 0, 'google',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'bing.') > 0, 'bing',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'yandex.') > 0, 'yandex',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'instagram.com') > 0, 'instagram',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'facebook.com') > 0, 'facebook',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'tiktok.com') > 0, 'tiktok',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'chatgpt.com') > 0 OR positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'openai.com') > 0, 'chatgpt',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'perplexity.ai') > 0, 'perplexity',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'claude.ai') > 0, 'claude',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'gameyer.az') > 0, 'direct',
+                notEmpty(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, ''))), 'referral',
+                'direct'
+              ), timestamp, event = '$pageview'
+            ) AS source,
+            argMinIf(
+              multiIf(
+                notEmpty(coalesce(nullIf(properties.gameyer_session_utm_medium, ''), nullIf(properties.gameyer_first_utm_medium, ''), nullIf(properties.utm_medium, ''))), lower(coalesce(nullIf(properties.gameyer_session_utm_medium, ''), nullIf(properties.gameyer_first_utm_medium, ''), nullIf(properties.utm_medium, ''))),
+                notEmpty(coalesce(nullIf(properties.gameyer_session_fbclid, ''), nullIf(properties.gameyer_first_fbclid, ''), nullIf(properties.fbclid, ''))) OR lower(coalesce(nullIf(properties.gameyer_session_utm_source, ''), nullIf(properties.gameyer_first_utm_source, ''), nullIf(properties.utm_source, ''))) IN ('ig','fb','msg','an'), 'paid_social',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'google.') > 0 OR positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'bing.') > 0 OR positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'yandex.') > 0, 'organic',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'instagram.com') > 0 OR positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'facebook.com') > 0 OR positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'tiktok.com') > 0, 'organic_social',
+                positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'chatgpt.com') > 0 OR positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'openai.com') > 0 OR positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'perplexity.ai') > 0 OR positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'claude.ai') > 0, 'ai',
+                notEmpty(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, ''))) AND positionCaseInsensitive(coalesce(nullIf(properties.gameyer_session_referrer, ''), nullIf(properties.gameyer_first_referrer, ''), nullIf(properties.$referrer, '')), 'gameyer.az') = 0, 'referral',
+                '—'
+              ), timestamp, event = '$pageview'
+            ) AS medium,
+            argMinIf(coalesce(nullIf(properties.gameyer_session_utm_campaign, ''), nullIf(properties.gameyer_first_utm_campaign, ''), nullIf(properties.utm_campaign, ''), '(kampaniyasız)'), timestamp, event = '$pageview') AS campaign,
             countIf(event = '$pageview') AS pageviews,
             countIf(event = 'club_view') AS club_views,
             uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)) AS club_view_sessions,
@@ -257,8 +283,9 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
             countIf(event IN ('phone_click','instagram_click','tiktok_click','maps_click','whatsapp_booking_click')) AS cta_clicks,
             uniqIf(properties.$session_id, event IN ('phone_click','instagram_click','tiktok_click','maps_click','whatsapp_booking_click') AND notEmpty(properties.$session_id)) AS cta_sessions
           FROM events
-          WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
-          GROUP BY source, medium, campaign, person_id
+          WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope} AND notEmpty(properties.$session_id)
+          GROUP BY session_id
+          HAVING countIf(event = '$pageview') > 0
         )
         GROUP BY source, medium, campaign
         ORDER BY cta_clicks DESC, visitors DESC
@@ -591,7 +618,7 @@ const getCachedPostHogMetrics = unstable_cache(
     if (result.status.status !== 'ready') throw new Error(result.status.detail);
     return result;
   },
-  ['founder-analytics-posthog-v10'],
+  ['founder-analytics-posthog-v11'],
   { revalidate: 300, tags: ['founder-analytics'] },
 );
 

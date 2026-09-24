@@ -7,7 +7,7 @@ import type { ClubFilters, ClubWithRelations } from '@/types/database';
 
 const CLUB_SELECT = `
   id, name, slug, description, district_id, address, latitude, longitude,
-  phone, instagram_url, profile_image_url, is_premium, premium_expires_at, is_active,
+  phone, instagram_url, tiktok_url, profile_image_url, is_premium, premium_expires_at, is_active,
   is_verified, verified_at, created_at, updated_at,
   district:districts ( id, name, slug ),
   type_assignments:club_type_assignments (
@@ -161,6 +161,50 @@ const getCachedClubs = unstable_cache(
 
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
   return getCachedClubs(filters);
+}
+
+async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
+  const supabase = createPublicClient();
+  let districtId: string | null = null;
+
+  if (filters.district) {
+    const { data: districtRow, error: districtError } = await supabase
+      .from('districts')
+      .select('id')
+      .eq('slug', filters.district)
+      .maybeSingle()
+      .returns<{ id: string }>();
+    if (districtError || !districtRow) return 0;
+    districtId = districtRow.id;
+  }
+
+  const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
+  let query = supabase
+    .from('clubs')
+    .select(`id, type_assignments:club_type_assignments!inner ( club_type:club_types!inner ( slug ) )`)
+    .eq('is_active', true)
+    .not('latitude', 'is', null)
+    .not('longitude', 'is', null);
+
+  if (districtId) query = query.eq('district_id', districtId);
+  if (requestedType === 'pc' || requestedType === 'playstation') query = query.eq('type_assignments.club_type.slug', requestedType);
+
+  const { data, error } = await query.returns<Array<{ id: string }>>();
+  if (error) {
+    console.error('getPublicClubCount xətası:', error.message);
+    return 0;
+  }
+  return new Set((data ?? []).map((row) => row.id)).size;
+}
+
+const getCachedPublicClubCount = unstable_cache(
+  async (filters: Pick<ClubFilters, 'district' | 'type'>) => queryPublicClubCount(filters),
+  ['gameyer-public-club-count-v1'],
+  { revalidate: 60, tags: ['public-clubs'] },
+);
+
+export async function getPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
+  return getCachedPublicClubCount(filters);
 }
 
 async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> {

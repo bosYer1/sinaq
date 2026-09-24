@@ -14,6 +14,7 @@ const discoveryLinks = [
   { href: '/bakida-gaming-klub-qiymetleri', title: 'Klub qiymətləri', description: 'Dərc olunan tarifləri müqayisə et' },
   { href: '/bakida-24-saat-gaming-klublari', title: '24 saat açıq klublar', description: '24/7 göstərilən məkanlar' },
   { href: '/rayon', title: 'Rayonlar', description: 'Klubları rayon üzrə kəşf et' },
+  { href: '/28-may-gaming-klublari', title: '28 May gaming klubları', description: '28 May axtarışına uyğun aktiv klublar' },
 ];
 
 const gameYerLinks = [

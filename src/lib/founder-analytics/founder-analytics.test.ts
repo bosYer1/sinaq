@@ -40,6 +40,7 @@ test('acquisition groups paid and organic campaign rows without losing totals', 
   const organic = normalizeCampaign({ source: 'google', medium: 'organic', campaign: '', visitors: 3, sessions: 3, club_views: 1, club_view_sessions: 1, cta_clicks: 0, cta_sessions: 0 });
   const grouped = aggregateAcquisition([paid, organic]);
   assert.equal(acquisitionChannel('ig', 'paid'), 'Paid');
+  assert.equal(acquisitionChannel('chatgpt', 'ai'), 'AI');
   assert.equal(grouped.find((row) => row.channel === 'Paid')?.sessions, 5);
   assert.equal(grouped.find((row) => row.channel === 'Organic')?.visitors, 3);
   assert.equal(grouped.find((row) => row.channel === 'Paid')?.ctaRate, 20);

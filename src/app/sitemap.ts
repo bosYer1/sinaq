@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { getSiteUrl } from '@/lib/site-url';
 
 interface SitemapClub {
+  name: string;
+  address: string;
   slug: string;
   updated_at: string | null;
   district: { slug: string } | null;
@@ -50,6 +52,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data, error } = await supabase
     .from('clubs')
     .select(`
+      name,
+      address,
       slug,
       updated_at,
       district:districts ( slug ),
@@ -86,6 +90,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let cheapPlayStationCount = 0;
   let open24Count = 0;
   let pricedClubCount = 0;
+  let twentyEightMayCount = 0;
+  let twentyEightMayLatest: string | null = null;
 
   for (const club of clubs) {
     overallLatest = newerIso(overallLatest, club.updated_at);
@@ -109,6 +115,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (hourlyPricing.some((item) => item.club_type?.slug === 'pc' && item.price_from <= 2)) cheapPcCount += 1;
     if (hourlyPricing.some((item) => item.club_type?.slug === 'playstation' && item.price_from <= 3)) cheapPlayStationCount += 1;
     if (isOpen24HoursEveryDay(club.opening_hours ?? [])) open24Count += 1;
+    const locationIdentity = `${club.name} ${club.address} ${club.slug}`.toLowerCase().replaceAll('-', ' ');
+    if (locationIdentity.includes('28 may')) {
+      twentyEightMayCount += 1;
+      twentyEightMayLatest = newerIso(twentyEightMayLatest, club.updated_at);
+    }
 
     if (!club.district?.slug) continue;
     const districtSlug = club.district.slug;
@@ -142,6 +153,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (cheapPcCount > 0) addLanding('/bakida-ucuz-pc-klublari', 0.9, typeLatest.get('pc') ?? null);
   if (cheapPlayStationCount > 0) addLanding('/bakida-ucuz-playstation-klublari', 0.9, typeLatest.get('playstation') ?? null);
   if (open24Count > 0) addLanding('/bakida-24-saat-gaming-klublari', 0.88, overallLatest);
+  if (twentyEightMayCount >= 2) addLanding('/28-may-gaming-klublari', 0.86, twentyEightMayLatest);
 
   const applyLatest = (url: string, latest: string | null) => {
     if (!latest) return;
