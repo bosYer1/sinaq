@@ -336,7 +336,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                     }}
                     className="absolute inset-0 z-[600] flex touch-pan-y items-center justify-center rounded-[18px] bg-transparent"
                   >
-                    <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-surface/95 px-4 py-2.5 text-xs font-bold text-primary shadow-[0_8px_24px_rgba(124,92,252,0.16)] backdrop-blur transition-transform active:scale-[0.98]"><span aria-hidden="true">⌖</span>Xəritəni aç</span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-surface/95 px-4 py-2.5 text-xs font-bold text-primary shadow-[0_8px_24px_rgba(124,92,252,0.16)] backdrop-blur transition-transform active:scale-[0.98]"><span aria-hidden="true">⌖</span>Xəritəyə toxunun</span>
                   </button>
                 ) : null}
               </div>
