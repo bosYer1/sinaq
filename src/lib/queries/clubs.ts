@@ -155,13 +155,18 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v6'],
+  ['gameyer-public-clubs-v7'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
   return getCachedClubs(filters);
 }
+
+type PublicClubCountRow = {
+  id: string;
+  type_assignments: Array<{ club_type: { slug: string } | null }>;
+};
 
 async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
   const supabase = createPublicClient();
@@ -178,23 +183,34 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
     districtId = districtRow.id;
   }
 
-  const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
   let query = supabase
     .from('clubs')
-    .select(`id, type_assignments:club_type_assignments!inner ( club_type:club_types!inner ( slug ) )`)
+    .select(`
+      id,
+      type_assignments:club_type_assignments (
+        club_type:club_types ( slug )
+      )
+    `)
     .eq('is_active', true)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null);
 
   if (districtId) query = query.eq('district_id', districtId);
-  if (requestedType === 'pc' || requestedType === 'playstation') query = query.eq('type_assignments.club_type.slug', requestedType);
 
-  const { data, error } = await query.returns<Array<{ id: string }>>();
+  const { data, error } = await query.returns<PublicClubCountRow[]>();
   if (error) {
     console.error('getPublicClubCount xətası:', error.message);
     return 0;
   }
-  return new Set((data ?? []).map((row) => row.id)).size;
+
+  const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
+  return (data ?? []).filter((club) => {
+    const slugs = (club.type_assignments ?? [])
+      .map((assignment) => assignment.club_type?.slug)
+      .filter((slug): slug is string => Boolean(slug));
+    if (requestedType === 'pc' || requestedType === 'playstation') return slugs.includes(requestedType);
+    return slugs.includes('pc') || slugs.includes('playstation');
+  }).length;
 }
 
 const getCachedPublicClubCount = unstable_cache(
@@ -232,7 +248,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
 
 const getCachedClubBySlug = unstable_cache(
   async (slug: string) => queryClubBySlug(slug),
-  ['gameyer-public-club-by-slug-v3'],
+  ['gameyer-public-club-by-slug-v4'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 

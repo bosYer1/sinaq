@@ -112,7 +112,7 @@ export default async function HomePage({ searchParams }: PageProps) {
               id="home-title"
               className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-ink sm:text-3xl"
             >
-              Bakıda PC və PlayStation klubları
+              Gaming klubunu tap
             </h1>
             <p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">
               Axtar, filtr et, xəritədə bax və sənə uyğun klubu seç.
