@@ -46,6 +46,9 @@ assert(searchFilter.includes('resultRevealRequest'), 'Search submit must have an
 assert(searchFilter.includes("document.getElementById('club-results')"), 'Search submit must target the committed result block.');
 assert(searchFilter.includes("results.scrollIntoView({ behavior: 'smooth', block: 'start' })"), 'Search submit must reveal the committed result block without a hard jump.');
 assert(searchFilter.includes('setResultRevealRequest((request) => request + 1)'), 'Enter/Search must request result reveal after committing the query.');
+assert(searchFilter.includes('const navigationPending = value.trim() !== currentQuery;'), 'Search input must expose pending navigation state while committed results catch up.');
+assert(searchFilter.includes('aria-label="Axtarılır"'), 'Search input must provide accessible pending feedback.');
+assert(searchFilter.includes('animate-spin'), 'Pending search feedback must remain visually lightweight and recognizable.');
 assert(searchFilter.includes("inputRef.current?.focus({ preventScroll: true })"), 'Clearing search must keep typing flow ready without shifting the page.');
 assert(exploreView.includes('id="club-results"'), 'Discovery must expose a stable search-result reveal target.');
 assert(exploreView.includes("searchActive ? 'h-[220px] sm:h-[280px]' : 'h-[340px] sm:h-[400px]'"), 'Search mode must keep map-first while reducing the map obstruction before results.');
