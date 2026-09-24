@@ -148,8 +148,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Link href="/klub-sahibi" className="hidden rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark sm:inline-flex">+ Klubunu əlavə et</Link>
-              <Link href="/elaqe" className="inline-flex h-10 items-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary sm:hidden">Əlaqə</Link>
+              <Link href="/elaqe#new-club" className="hidden rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark sm:inline-flex">+ Klubunu əlavə et</Link>
+              <Link href="/elaqe#new-club" className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-xl border border-primary/25 bg-primary/10 px-3 text-[11px] font-bold text-primary transition hover:border-primary hover:bg-primary/15 sm:hidden">+ Klubunu əlavə et</Link>
             </div>
           </div>
         </header>
