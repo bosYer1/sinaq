@@ -53,7 +53,7 @@ assert(searchFilter.includes('aria-label="Axtarılır"'), 'Search input must pro
 assert(searchFilter.includes('animate-spin'), 'Pending search feedback must remain visually lightweight and recognizable.');
 assert(searchFilter.includes("inputRef.current?.focus({ preventScroll: true })"), 'Clearing search must keep typing flow ready without shifting the page.');
 assert(exploreView.includes('id="club-results"'), 'Discovery must expose a stable search-result reveal target.');
-assert(exploreView.includes("searchActive ? 'h-[220px] sm:h-[280px]' : 'h-[280px] sm:h-[340px]'"), 'Mobile discovery must keep map-first while exposing club cards sooner, with an even more compact search state.');
+assert(exploreView.includes("searchActive ? 'h-[190px] sm:h-[260px]' : 'h-[230px] sm:h-[320px]'"), 'Mobile discovery must keep map-first while exposing club cards sooner, with an even more compact search state.');
 assert(exploreView.includes('Axtarış nəticələri ('), 'Active search must label the result count explicitly.');
 assert(exploreView.includes('“${searchQuery}” üçün uyğun klublar'), 'Active search must echo the committed query in the result context.');
 assert(exploreView.includes('const hasStructuredFilters = Boolean(filters.district || filters.type || filters.priceMax);'), 'Search empty state must know whether structured filters are also active.');
