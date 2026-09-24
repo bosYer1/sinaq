@@ -57,7 +57,7 @@ export default async function DistrictIndexPage() {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-64px)] bg-bg-elevated">
+    <div className="min-h-full md:min-h-[calc(100vh-64px)] bg-bg-elevated">
       <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 sm:py-10 lg:px-8">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
         <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb">
