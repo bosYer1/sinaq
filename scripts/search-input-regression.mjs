@@ -48,16 +48,13 @@ assert(searchFilter.includes("trackGaEvent('search_cleared'"), 'Settled clear ac
 assert(searchFilter.includes('lastTrackedQueryRef.current = currentQuery;'), 'External query synchronization must not be misclassified as fresh user search intent.');
 assert(searchFilter.includes('}, [value, pathname, router]);'), 'Typing debounce must not restart when stale server search params arrive.');
 assert(searchFilter.includes('setValue(currentQuery)'), 'SearchFilter must still sync genuine external query changes such as clear-all/back navigation.');
-assert(searchFilter.includes('resultRevealRequest'), 'Search submit must have an explicit result-reveal request state.');
-assert(searchFilter.includes("document.getElementById('club-results') ?? document.querySelector('[data-explore-view]')"), 'Search submit must target the committed result block or the active map discovery view.');
-assert(searchFilter.includes("resultsTarget.scrollIntoView({ behavior: 'smooth', block: 'start' })"), 'Search submit must reveal the committed discovery target without a hard jump.');
-assert(searchFilter.includes('setResultRevealRequest((request) => request + 1)'), 'Enter/Search must request result reveal after committing the query.');
+assert(!searchFilter.includes('resultRevealRequest'), 'Search submit must not force-scroll away from the map-first discovery surface.');
+assert(exploreView.includes('className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px] [contain:layout_paint_style]"'), 'Mobile list map must keep its original map-first height.');
 assert(searchFilter.includes('const navigationPending = value.trim() !== currentQuery;'), 'Search input must expose pending navigation state while committed results catch up.');
 assert(searchFilter.includes('aria-label="Axtarılır"'), 'Search input must provide accessible pending feedback.');
 assert(searchFilter.includes('animate-spin'), 'Pending search feedback must remain visually lightweight and recognizable.');
 assert(searchFilter.includes("inputRef.current?.focus({ preventScroll: true })"), 'Clearing search must keep typing flow ready without shifting the page.');
 assert(exploreView.includes('id="club-results"'), 'Discovery must expose a stable search-result reveal target.');
-assert(exploreView.includes("searchActive ? 'h-[180px] sm:h-[250px]' : 'h-[210px] sm:h-[300px]'"), 'Mobile discovery must keep map-first while exposing club cards sooner, with an even more compact search state.');
 assert(exploreView.includes('Axtarış nəticələri ('), 'Active search must label the result count explicitly.');
 assert(exploreView.includes('“${searchQuery}” üçün uyğun klublar'), 'Active search must echo the committed query in the result context.');
 assert(exploreView.includes('const hasStructuredFilters = Boolean(filters.district || filters.type || filters.priceMax);'), 'Search empty state must know whether structured filters are also active.');

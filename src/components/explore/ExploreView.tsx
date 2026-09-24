@@ -179,25 +179,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
   function handleSelectMarker(id: string) {
     setActiveClubId(id);
-
-    const selectedIndex = clubsWithDistance.findIndex((club) => club.id === id);
-    const needsMobileExpansion =
-      !isDesktop &&
-      view === 'list' &&
-      !mobileExpanded &&
-      selectedIndex >= MOBILE_INITIAL_CLUB_COUNT;
-
-    if (needsMobileExpansion) {
-      setMobileExpanded(true);
-      saveMobileExpandedState(window.scrollY);
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-      });
-      return;
-    }
-
     cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
@@ -349,7 +330,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <section>
               <div
                 data-mobile-list-map-container="true"
-                className={`relative mb-3 overflow-hidden rounded-[18px] [contain:layout_paint_style] ${searchActive ? 'h-[180px] sm:h-[250px]' : 'h-[210px] sm:h-[300px]'}`}
+                className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px] [contain:layout_paint_style]"
               >
                 {mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />}
                 {!mobileListMapActive ? (
@@ -385,7 +366,6 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 clubs={mobileClubs}
                 activeClubId={activeClubId}
                 onHoverClub={handleHoverCard}
-                cardRefs={cardRefs}
                 searchActive={searchActive}
                 searchQuery={searchQuery}
                 hasStructuredFilters={hasStructuredFilters}
