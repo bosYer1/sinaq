@@ -158,7 +158,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
 
         <main className="pb-[76px] md:pb-0">{children}</main>
-        <div data-mobile-content-end="true" aria-hidden="true" className="h-0 md:hidden" />
 
         <footer className="hidden border-t border-border bg-surface md:block">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6 lg:px-8">
