@@ -179,7 +179,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
   function handleSelectMarker(id: string) {
     setActiveClubId(id);
-    cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (isDesktop) cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   function handleMobileExpandedToggle() {
