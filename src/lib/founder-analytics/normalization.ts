@@ -39,6 +39,7 @@ export function acquisitionChannel(sourceInput: string, mediumInput: string): st
   const source = sourceInput.toLowerCase();
   const medium = mediumInput.toLowerCase();
   if (medium.includes('paid') || medium === 'cpc' || medium === 'ppc') return 'Paid';
+  if (medium === 'ai' || source.includes('chatgpt') || source.includes('openai') || source.includes('perplexity') || source.includes('claude') || source.includes('copilot') || source.includes('gemini')) return 'AI';
   if (source.includes('instagram') || source === 'ig') return 'Instagram';
   if (source.includes('facebook') || source === 'fb') return 'Facebook';
   if (source.includes('google')) return medium.includes('organic') ? 'Organic' : 'Google';
