@@ -18,7 +18,8 @@ assert.ok(!mobileNav.includes('window.innerHeight'), 'Mobile navigation must not
 assert.ok(!mobileNav.includes('getMobileNavVisualTop'), 'The failed fixed-top visual viewport workaround must stay removed.');
 assert.ok(mobileNav.includes('isPhantomBottomScroll'), 'iOS navigation must detect browser-created bottom scroll overflow.');
 assert.ok(mobileNav.includes('getRealPageMaxTop'), 'iOS navigation must clamp scrolling to the real page content end.');
-assert.ok(mobileNav.includes("window.scrollTo({ top: maxPageTop, left: 0, behavior: 'auto' })"), 'Phantom iOS bottom scrolling must be corrected without smooth-scroll feedback.');
+assert.ok(mobileNav.includes('getLayoutScrollTopForVisualPageTop'), 'Phantom clamp must translate visual pageTop into layout scroll coordinates.');
+assert.ok(mobileNav.includes("window.scrollTo({ top: layoutScrollTop, left: 0, behavior: 'auto' })"), 'Phantom iOS bottom scrolling must be corrected without smooth-scroll feedback.');
 assert.ok(layout.includes('data-mobile-content-end="true"'), 'Root layout must expose a sentinel for the real mobile content end.');
 assert.ok(mobileNav.includes("document.addEventListener('focusin', handleFocusIn, true)"), 'Bottom navigation must hide while the iOS keyboard/input is active.');
 assert.ok(mobileNav.includes("document.addEventListener('focusout', handleFocusOut, true)"), 'Bottom navigation must settle after the iOS keyboard closes.');
