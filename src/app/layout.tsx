@@ -8,6 +8,7 @@ import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { PostHogAnalytics } from '@/components/analytics/PostHogAnalytics';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { MobileNav } from '@/components/navigation/MobileNav';
 import './globals.css';
 
 const bodyFont = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
@@ -149,7 +150,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <main className="pb-[76px] md:pb-0">{children}</main>
 
-        <footer className="border-t border-border bg-surface pb-[68px] md:pb-0">
+        <footer className="hidden border-t border-border bg-surface md:block">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6 lg:px-8">
             <span className="font-semibold text-ink">© 2026 GameYer</span>
             <Link href="/populyar-klublar" className="hover:text-ink">Populyar klublar</Link>
@@ -170,30 +171,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </footer>
 
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[68px] grid-cols-5 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] md:hidden" aria-label="Mobil naviqasiya">
-          <Link href="/" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7.5 8h9a4 4 0 0 1 3.7 5.5l-1.3 3.2a2 2 0 0 1-3.2.7L14 16h-4l-1.7 1.4a2 2 0 0 1-3.2-.7l-1.3-3.2A4 4 0 0 1 7.5 8Z"/><path d="M8 11v4M6 13h4M16.5 12h.01M18 14h.01"/></svg>
-            <span>Klublar</span>
-          </Link>
-          <Link href="/rayon" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m3.5 6.5 5-2 7 2 5-2v13l-5 2-7-2-5 2v-13Z"/><path d="M8.5 4.5v13M15.5 6.5v13"/><path d="M12 8.2a2.4 2.4 0 0 1 2.4 2.4c0 1.8-2.4 4.3-2.4 4.3s-2.4-2.5-2.4-4.3A2.4 2.4 0 0 1 12 8.2Z"/><circle cx="12" cy="10.6" r=".7"/></svg>
-            <span>Rayonlar</span>
-          </Link>
-          <Link href="/#club-search" className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-primary">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-[0_5px_16px_rgba(124,92,252,0.3)]">
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
-            </span>
-            <span>Axtar</span>
-          </Link>
-          <Link href="/yenilikler" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
-            <span>Yeniliklər</span>
-          </Link>
-          <Link href="/tip" className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-            <span>Menyu</span>
-          </Link>
-        </nav>
+        <MobileNav />
       </body>
     </html>
   );
