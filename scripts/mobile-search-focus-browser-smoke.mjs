@@ -146,6 +146,13 @@ try {
   assert(firstFocus.inputFocused, 'Cross-page mobile search navigation did not focus the input', firstFocus);
   assert(firstFocus.searchTop != null && firstFocus.searchBottom > 0 && firstFocus.searchTop < firstFocus.viewportHeight, 'Search controls are not visible after navigation', firstFocus);
 
+  const mobileSearchTypography = await evaluate(client, `(() => {
+    const input = document.querySelector('input[aria-label="Klub axtar"]');
+    if (!(input instanceof HTMLInputElement)) return null;
+    return { fontSize: Number.parseFloat(getComputedStyle(input).fontSize) };
+  })()`);
+  assert(mobileSearchTypography?.fontSize >= 16, 'Mobile search input must stay at least 16px to prevent iOS Safari focus zoom', mobileSearchTypography);
+
   // Repeated tapping while already on the same hash must still provide immediate focus feedback.
   await evaluate(client, `document.querySelector('input[aria-label="Klub axtar"]')?.blur()`);
   await waitFor(client, `document.activeElement?.getAttribute('aria-label') !== 'Klub axtar'`, 'search input blur');
@@ -168,7 +175,7 @@ try {
     await screenshotFile.close();
   }
 
-  console.log('Mobile search focus browser regression passed: cross-page and repeated same-hash taps focus the input.');
+  console.log('Mobile search focus browser regression passed: focus works and mobile input font prevents iOS focus zoom.');
 } finally {
   client.close();
   chrome.kill('SIGTERM');
