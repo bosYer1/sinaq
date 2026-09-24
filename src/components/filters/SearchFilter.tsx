@@ -212,11 +212,16 @@ export function SearchFilter() {
         type="search"
         value={value}
         onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.currentTarget.blur();
+          }
+        }}
         placeholder="Klub adı və ya ünvan axtar"
         aria-label="Klub axtar"
         enterKeyHint="search"
         autoComplete="off"
-        className="h-12 w-full rounded-xl border border-border-strong bg-surface pl-11 pr-11 text-base text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 sm:text-sm lg:h-11"
+        className="h-12 w-full touch-manipulation rounded-xl border border-border-strong bg-surface pl-11 pr-11 text-base text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 sm:text-sm lg:h-11"
       />
 
       {value ? (
