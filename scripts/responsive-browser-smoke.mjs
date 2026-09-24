@@ -375,133 +375,120 @@ async function assertIOSChromeNavFallback(client) {
   });
   await setViewport(client, 390, 844, true);
   await navigate(client, '/');
+  await waitForPage(client, '[data-mobile-nav-overlay="true"]');
   await waitForPage(client, 'nav[aria-label="Mobil naviqasiya"]');
-  await sleep(650);
+  await sleep(250);
 
   const initial = await evaluate(client, `(() => {
+    const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
     const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-    const sentinel = document.querySelector('[data-mobile-content-end="true"]');
-    const rect = nav?.getBoundingClientRect();
     const vv = window.visualViewport;
-    return {
-      mode: nav?.getAttribute('data-ios-viewport-mode') ?? null,
-      position: nav ? getComputedStyle(nav).position : null,
-      visibility: nav ? getComputedStyle(nav).visibility : null,
-      navBottom: rect?.bottom ?? null,
-      visualBottom: vv ? vv.offsetTop + vv.height : null,
-      sentinel: Boolean(sentinel),
-    };
-  })()`);
-  assert(initial.mode === 'absolute', 'iOS Chrome fallback must bypass position:fixed', initial);
-  assert(initial.position === 'absolute', 'iOS Chrome fallback must render nav with position:absolute', initial);
-  assert(initial.sentinel, 'iOS Chrome fallback requires the real-content sentinel', initial);
-  assert(initial.navBottom != null && initial.visualBottom != null && Math.abs(initial.navBottom - initial.visualBottom) <= 2, 'iOS absolute nav must align to visual viewport bottom', initial);
-
-  await evaluate(client, `(() => {
-    const spacer = document.createElement('div');
-    spacer.id = 'ios-phantom-scroll-regression';
-    spacer.style.height = '640px';
-    spacer.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(spacer);
-    window.scrollTo(0, document.documentElement.scrollHeight);
-  })()`);
-  await sleep(700);
-
-  const corrected = await evaluate(client, `(() => {
-    const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-    const sentinel = document.querySelector('[data-mobile-content-end="true"]');
-    const vv = window.visualViewport;
+    const overlayRect = overlay?.getBoundingClientRect();
     const navRect = nav?.getBoundingClientRect();
-    const contentBottom = vv && sentinel ? window.scrollY + sentinel.getBoundingClientRect().top : null;
-    const maxLayoutScrollTop = vv && contentBottom != null
-      ? Math.max(0, contentBottom - vv.offsetTop - vv.height)
-      : null;
+    const overlayStyle = overlay ? getComputedStyle(overlay) : null;
+    const navStyle = nav ? getComputedStyle(nav) : null;
     return {
-      scrollY: window.scrollY,
-      maxLayoutScrollTop,
+      overlayPosition: overlayStyle?.position ?? null,
+      overlayTop: overlayRect?.top ?? null,
+      overlayHeight: overlayRect?.height ?? null,
+      navPosition: navStyle?.position ?? null,
       navBottom: navRect?.bottom ?? null,
       visualBottom: vv ? vv.offsetTop + vv.height : null,
-      visibility: nav ? getComputedStyle(nav).visibility : null,
+      visualHeight: vv?.height ?? null,
+      scrollHeight: document.documentElement.scrollHeight,
+      viewportMeta: document.querySelector('meta[name="viewport"]')?.getAttribute('content') ?? '',
+      sentinelPresent: Boolean(document.querySelector('[data-mobile-content-end="true"]')),
     };
   })()`);
-  assert(corrected.scrollY != null && corrected.maxLayoutScrollTop != null && corrected.scrollY <= corrected.maxLayoutScrollTop + 3, 'iOS phantom bottom scroll must be clamped to real layout content', corrected);
-  assert(corrected.visibility === 'visible', 'iOS nav must become visible again after phantom-scroll correction', corrected);
-  assert(corrected.navBottom != null && corrected.visualBottom != null && Math.abs(corrected.navBottom - corrected.visualBottom) <= 2, 'iOS nav must remain aligned after phantom-scroll correction', corrected);
 
-  await evaluate(client, `(() => {
-    window.__gameyerFocusTrace = [];
-    const record = (event) => {
-      const target = event.target;
-      window.__gameyerFocusTrace.push({
-        type: event.type,
-        tag: target?.tagName ?? null,
-        aria: target?.getAttribute?.('aria-label') ?? null,
-        href: target?.getAttribute?.('href') ?? null,
-        at: performance.now(),
-      });
-    };
-    document.addEventListener('focusin', record, true);
-    document.addEventListener('focusout', record, true);
+  assert(initial.overlayPosition === 'fixed', 'iOS mobile nav must use a fixed viewport overlay', initial);
+  assert(initial.navPosition === 'absolute', 'iOS nav must only be absolute inside the fixed overlay', initial);
+  assert(initial.overlayTop != null && Math.abs(initial.overlayTop) <= 1, 'iOS nav overlay must stay pinned to viewport top', initial);
+  assert(initial.overlayHeight != null && initial.visualHeight != null && Math.abs(initial.overlayHeight - initial.visualHeight) <= 2, 'iOS nav overlay must match dynamic viewport height', initial);
+  assert(initial.navBottom != null && initial.visualBottom != null && Math.abs(initial.navBottom - initial.visualBottom) <= 2, 'iOS nav must align to visual viewport bottom', initial);
+  assert(/viewport-fit\s*=\s*cover/i.test(initial.viewportMeta), 'iOS viewport must remain edge-to-edge', initial);
+  assert(!initial.sentinelPresent, 'obsolete phantom-scroll sentinel must not remain in the document', initial);
+
+  const overlayScrollImpact = await evaluate(client, `(() => {
+    const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
+    if (!(overlay instanceof HTMLElement)) return null;
+    const before = document.documentElement.scrollHeight;
+    const previousDisplay = overlay.style.display;
+    overlay.style.display = 'none';
+    const withoutOverlay = document.documentElement.scrollHeight;
+    overlay.style.display = previousDisplay;
+    const restored = document.documentElement.scrollHeight;
+    return { before, withoutOverlay, restored };
   })()`);
+  assert(overlayScrollImpact != null, 'iOS overlay scroll-impact probe could not run');
+  assert(Math.abs(overlayScrollImpact.before - overlayScrollImpact.withoutOverlay) <= 1, 'mobile nav overlay must not contribute to document scroll height', overlayScrollImpact);
+  assert(Math.abs(overlayScrollImpact.before - overlayScrollImpact.restored) <= 1, 'restoring nav overlay must not change document scroll height', overlayScrollImpact);
 
-  const input = await evaluate(client, `(() => {
+  const initialScrollHeight = initial.scrollHeight;
+  for (const fraction of [0.35, 0.7, 1]) {
+    await evaluate(client, `window.scrollTo(0, Math.max(0, (document.documentElement.scrollHeight - window.innerHeight) * ${fraction}))`);
+    await sleep(180);
+    const scrolled = await evaluate(client, `(() => {
+      const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+      const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
+      const vv = window.visualViewport;
+      const navRect = nav?.getBoundingClientRect();
+      const overlayRect = overlay?.getBoundingClientRect();
+      return {
+        scrollY: window.scrollY,
+        scrollHeight: document.documentElement.scrollHeight,
+        navBottom: navRect?.bottom ?? null,
+        visualBottom: vv ? vv.offsetTop + vv.height : null,
+        overlayTop: overlayRect?.top ?? null,
+      };
+    })()`);
+    assert(Math.abs(scrolled.scrollHeight - initialScrollHeight) <= 1, 'scrolling must not grow document height through mobile nav positioning', { initialScrollHeight, scrolled, fraction });
+    assert(scrolled.navBottom != null && scrolled.visualBottom != null && Math.abs(scrolled.navBottom - scrolled.visualBottom) <= 2, 'iOS nav drifted during scroll', { scrolled, fraction });
+    assert(scrolled.overlayTop != null && Math.abs(scrolled.overlayTop) <= 1, 'iOS overlay drifted from viewport top during scroll', { scrolled, fraction });
+  }
+
+  await evaluate(client, `window.scrollTo(0, 0)`);
+  await sleep(120);
+  const focused = await evaluate(client, `(() => {
     const field = document.querySelector('input[aria-label="Klub axtar"]');
-    if (!(field instanceof HTMLInputElement)) return false;
+    if (!(field instanceof HTMLInputElement)) return null;
     field.focus();
-    return document.activeElement === field;
-  })()`);
-  assert(input, 'iOS keyboard regression requires a focusable search input');
-  await sleep(80);
-  const hidden = await evaluate(client, `getComputedStyle(document.querySelector('nav[aria-label="Mobil naviqasiya"]')).visibility`);
-  assert(hidden === 'hidden', 'iOS nav must hide while the keyboard/input is active', { hidden });
-
-  await evaluate(client, `document.querySelector('input[aria-label="Klub axtar"]')?.blur()`);
-  await sleep(800);
-  const restored = await evaluate(client, `(() => {
-    document.getElementById('ios-phantom-scroll-regression')?.remove();
     const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-    const sentinel = document.querySelector('[data-mobile-content-end="true"]');
     const vv = window.visualViewport;
     const rect = nav?.getBoundingClientRect();
-    const contentBottom = sentinel ? window.scrollY + sentinel.getBoundingClientRect().top : null;
-    const maxLayoutScrollTop = vv && contentBottom != null
-      ? Math.max(0, contentBottom - vv.offsetTop - vv.height)
-      : null;
     return {
+      active: document.activeElement === field,
       visibility: nav ? getComputedStyle(nav).visibility : null,
-      position: nav ? getComputedStyle(nav).position : null,
-      inlineTop: nav?.style.top ?? null,
-      inlineBottom: nav?.style.bottom ?? null,
-      mode: nav?.getAttribute('data-ios-viewport-mode') ?? null,
       navBottom: rect?.bottom ?? null,
       visualBottom: vv ? vv.offsetTop + vv.height : null,
-      scrollY: window.scrollY,
-      pageTop: vv?.pageTop ?? null,
-      offsetTop: vv?.offsetTop ?? null,
-      visualHeight: vv?.height ?? null,
-      maxLayoutScrollTop,
-      activeTag: document.activeElement?.tagName ?? null,
-      activeAria: document.activeElement?.getAttribute?.('aria-label') ?? null,
-      focusTrace: window.__gameyerFocusTrace ?? [],
     };
   })()`);
-  assert(restored.visibility === 'visible', 'iOS nav must restore after keyboard dismissal settling', restored);
-  assert(restored.navBottom != null && restored.visualBottom != null && Math.abs(restored.navBottom - restored.visualBottom) <= 2, 'iOS nav must realign after keyboard dismissal', restored);
+  assert(focused?.active, 'iOS keyboard regression requires a focusable search input', focused);
+  assert(focused?.visibility === 'visible', 'CSS viewport overlay must not hide the nav during focus lifecycle', focused);
 
-  await evaluate(client, `document.querySelector('nav[aria-label="Mobil naviqasiya"] a[href="/rayon"]')?.focus()`);
-  await sleep(120);
-  const afterLinkFocus = await evaluate(client, `(() => {
+  await evaluate(client, `document.querySelector('input[aria-label="Klub axtar"]')?.blur()`);
+  await navigate(client, '/rayon');
+  await waitForPage(client, 'nav[aria-label="Mobil naviqasiya"]');
+  await sleep(200);
+  const afterRoute = await evaluate(client, `(() => {
+    const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
     const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+    const vv = window.visualViewport;
+    const overlayRect = overlay?.getBoundingClientRect();
+    const navRect = nav?.getBoundingClientRect();
     return {
-      visibility: nav ? getComputedStyle(nav).visibility : null,
-      activeTag: document.activeElement?.tagName ?? null,
-      activeHref: document.activeElement?.getAttribute?.('href') ?? null,
+      overlayPosition: overlay ? getComputedStyle(overlay).position : null,
+      navPosition: nav ? getComputedStyle(nav).position : null,
+      overlayTop: overlayRect?.top ?? null,
+      navBottom: navRect?.bottom ?? null,
+      visualBottom: vv ? vv.offsetTop + vv.height : null,
     };
   })()`);
-  assert(afterLinkFocus.activeTag === 'A' && afterLinkFocus.activeHref === '/rayon', 'iOS non-editable focus regression must actually focus a nav link', afterLinkFocus);
-  assert(afterLinkFocus.visibility === 'visible', 'Focusing a normal navigation link must never trigger keyboard hiding', afterLinkFocus);
+  assert(afterRoute.overlayPosition === 'fixed' && afterRoute.navPosition === 'absolute', 'route changes must preserve overlay architecture', afterRoute);
+  assert(afterRoute.overlayTop != null && Math.abs(afterRoute.overlayTop) <= 1, 'route changes must keep overlay pinned to top', afterRoute);
+  assert(afterRoute.navBottom != null && afterRoute.visualBottom != null && Math.abs(afterRoute.navBottom - afterRoute.visualBottom) <= 2, 'route changes must keep nav aligned to visible bottom', afterRoute);
 
-  console.log('iOS Chrome absolute-nav and phantom-scroll regression passed.');
+  console.log('iOS Chrome dynamic-viewport overlay regression passed: stable bottom nav with no scroll-height feedback.');
 }
 
 async function runViewport(client, viewport, criticalPaths) {
