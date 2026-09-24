@@ -19,6 +19,8 @@ assert(searchFilter.includes('currentQueryRef'), 'SearchFilter must track the la
 assert(searchFilter.includes('paramsStringRef'), 'SearchFilter must preserve the latest URL parameters without making them debounce dependencies.');
 assert(searchFilter.includes('pendingSearchAnalytics'), 'Search analytics must wait for committed result state before capture.');
 assert(searchFilter.includes('readRenderedResultCount'), 'Search analytics must read the committed rendered result count.');
+assert(searchFilter.includes("getAttribute('data-result-count')"), 'Search result count must use a stable data contract instead of visible copy.');
+assert(exploreView.includes('data-result-count={clubsWithDistance.length}'), 'Discovery must expose the stable committed result count contract.');
 assert(searchFilter.includes('result_count: resultCount'), 'search_query must include committed result_count.');
 assert(searchFilter.includes('no_results: resultCount === 0'), 'search_query must include derived no_results.');
 assert(searchFilter.includes('const currentQueryAtDispatch = currentQueryRef.current;'), 'Search dispatch must compare against the latest committed query at timer execution time.');
