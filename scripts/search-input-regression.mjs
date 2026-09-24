@@ -1,8 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
-const [filterBar, searchFilter, clubsQuery] = await Promise.all([
+const [filterBar, searchFilter, exploreView, clubsQuery] = await Promise.all([
   readFile(new URL('../src/components/filters/FilterBar.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/filters/SearchFilter.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/explore/ExploreView.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/queries/clubs.ts', import.meta.url), 'utf8'),
 ]);
 
@@ -39,6 +40,15 @@ assert(searchFilter.includes("trackGaEvent('search_cleared'"), 'Settled clear ac
 assert(searchFilter.includes('lastTrackedQueryRef.current = currentQuery;'), 'External query synchronization must not be misclassified as fresh user search intent.');
 assert(searchFilter.includes('}, [value, pathname, router]);'), 'Typing debounce must not restart when stale server search params arrive.');
 assert(searchFilter.includes('setValue(currentQuery)'), 'SearchFilter must still sync genuine external query changes such as clear-all/back navigation.');
+assert(searchFilter.includes('resultRevealRequest'), 'Search submit must have an explicit result-reveal request state.');
+assert(searchFilter.includes("document.getElementById('club-results')"), 'Search submit must target the committed result block.');
+assert(searchFilter.includes("results.scrollIntoView({ behavior: 'smooth', block: 'start' })"), 'Search submit must reveal the committed result block without a hard jump.');
+assert(searchFilter.includes('setResultRevealRequest((request) => request + 1)'), 'Enter/Search must request result reveal after committing the query.');
+assert(searchFilter.includes("inputRef.current?.focus({ preventScroll: true })"), 'Clearing search must keep typing flow ready without shifting the page.');
+assert(exploreView.includes('id="club-results"'), 'Discovery must expose a stable search-result reveal target.');
+assert(exploreView.includes("searchActive ? 'h-[220px] sm:h-[280px]' : 'h-[340px] sm:h-[400px]'"), 'Search mode must keep map-first while reducing the map obstruction before results.');
+assert(exploreView.includes('Axtarış nəticələri ('), 'Active search must label the result count explicitly.');
+assert(exploreView.includes('“${searchQuery}” üçün uyğun klublar'), 'Active search must echo the committed query in the result context.');
 
 assert(clubsQuery.includes("const searchTerms = sanitized.split(/\\s+/).filter(Boolean).slice(0, 6);"), 'Club search must tokenize settled multi-word queries with a bounded term count.');
 assert(clubsQuery.includes('for (const term of searchTerms)'), 'Club search must apply every sanitized search term.');
