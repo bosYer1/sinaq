@@ -25,6 +25,11 @@ function currentOrigin() {
   return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 }
 
+function currentDiscoveryScrollTop() {
+  const scrollRoot = document.querySelector<HTMLElement>('[data-mobile-scroll-root="true"]');
+  return Math.max(0, scrollRoot?.scrollTop ?? window.scrollY);
+}
+
 export function rememberClubEntryOrigin(clubSlug: string) {
   if (typeof window === 'undefined') return;
 
@@ -43,7 +48,7 @@ export function rememberClubEntryOrigin(clubSlug: string) {
       if (expandedState.origin === origin) {
         window.sessionStorage.setItem(MOBILE_EXPANDED_STATE_KEY, JSON.stringify({
           origin,
-          scrollY: Math.max(0, window.scrollY),
+          scrollY: currentDiscoveryScrollTop(),
         }));
       }
     }
