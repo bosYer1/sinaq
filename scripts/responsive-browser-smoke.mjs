@@ -417,6 +417,22 @@ async function assertIOSChromeNavFallback(client) {
   assert(corrected.visibility === 'visible', 'iOS nav must become visible again after phantom-scroll correction', corrected);
   assert(corrected.navBottom != null && corrected.visualBottom != null && Math.abs(corrected.navBottom - corrected.visualBottom) <= 2, 'iOS nav must remain aligned after phantom-scroll correction', corrected);
 
+  await evaluate(client, `(() => {
+    window.__gameyerFocusTrace = [];
+    const record = (event) => {
+      const target = event.target;
+      window.__gameyerFocusTrace.push({
+        type: event.type,
+        tag: target?.tagName ?? null,
+        aria: target?.getAttribute?.('aria-label') ?? null,
+        href: target?.getAttribute?.('href') ?? null,
+        at: performance.now(),
+      });
+    };
+    document.addEventListener('focusin', record, true);
+    document.addEventListener('focusout', record, true);
+  })()`);
+
   const input = await evaluate(client, `(() => {
     const field = document.querySelector('input[aria-label="Klub axtar"]');
     if (!(field instanceof HTMLInputElement)) return false;
@@ -433,12 +449,29 @@ async function assertIOSChromeNavFallback(client) {
   const restored = await evaluate(client, `(() => {
     document.getElementById('ios-phantom-scroll-regression')?.remove();
     const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+    const sentinel = document.querySelector('[data-mobile-content-end="true"]');
     const vv = window.visualViewport;
     const rect = nav?.getBoundingClientRect();
+    const contentBottom = sentinel ? window.scrollY + sentinel.getBoundingClientRect().top : null;
+    const maxLayoutScrollTop = vv && contentBottom != null
+      ? Math.max(0, contentBottom - vv.offsetTop - vv.height)
+      : null;
     return {
       visibility: nav ? getComputedStyle(nav).visibility : null,
+      position: nav ? getComputedStyle(nav).position : null,
+      inlineTop: nav?.style.top ?? null,
+      inlineBottom: nav?.style.bottom ?? null,
+      mode: nav?.getAttribute('data-ios-viewport-mode') ?? null,
       navBottom: rect?.bottom ?? null,
       visualBottom: vv ? vv.offsetTop + vv.height : null,
+      scrollY: window.scrollY,
+      pageTop: vv?.pageTop ?? null,
+      offsetTop: vv?.offsetTop ?? null,
+      visualHeight: vv?.height ?? null,
+      maxLayoutScrollTop,
+      activeTag: document.activeElement?.tagName ?? null,
+      activeAria: document.activeElement?.getAttribute?.('aria-label') ?? null,
+      focusTrace: window.__gameyerFocusTrace ?? [],
     };
   })()`);
   assert(restored.visibility === 'visible', 'iOS nav must restore after keyboard dismissal settling', restored);
