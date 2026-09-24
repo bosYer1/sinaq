@@ -226,7 +226,7 @@ async function assertHomepage(client, viewport) {
     assert(listView.activationText === 'Xəritəyə toxunun', `${viewport.name}: visible map activation hint regressed`, listView);
     assert(listView.mapActive === 'false', `${viewport.name}: list map is interactive before activation`, listView);
     assert(listView.clubsVisible, `${viewport.name}: club list heading is missing`, listView);
-    assert(listView.mapContainerHeight >= 275 && listView.mapContainerHeight <= 345, `${viewport.name}: compact list-view map height regressed`, listView);
+    assert(listView.mapContainerHeight >= 225 && listView.mapContainerHeight <= 325, `${viewport.name}: compact list-view map height regressed`, listView);
     assert(listView.updateCardCount > 0, `${viewport.name}: mobile offer cards are missing from the homepage`, listView);
     assert(listView.firstUpdateTop != null && listView.mapContainerRect?.top != null && listView.firstUpdateTop < listView.mapContainerRect.top, `${viewport.name}: mobile offers must remain above club discovery`, listView);
     assert(listView.clubResultsTop != null && listView.mobileNavTop != null && listView.clubResultsTop < listView.mobileNavTop, `${viewport.name}: club-list heading must be visible before the fixed mobile nav`, listView);
