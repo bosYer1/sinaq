@@ -7,7 +7,7 @@ import type { ClubFilters, ClubWithRelations } from '@/types/database';
 
 const CLUB_SELECT = `
   id, name, slug, description, district_id, address, latitude, longitude,
-  phone, instagram_url, profile_image_url, is_premium, premium_expires_at, is_active,
+  phone, instagram_url, tiktok_url, profile_image_url, is_premium, premium_expires_at, is_active,
   is_verified, verified_at, created_at, updated_at,
   district:districts ( id, name, slug ),
   type_assignments:club_type_assignments (
@@ -155,12 +155,72 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v6'],
+  ['gameyer-public-clubs-v7'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
   return getCachedClubs(filters);
+}
+
+type PublicClubCountRow = {
+  id: string;
+  type_assignments: Array<{ club_type: { slug: string } | null }>;
+};
+
+async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
+  const supabase = createPublicClient();
+  let districtId: string | null = null;
+
+  if (filters.district) {
+    const { data: districtRow, error: districtError } = await supabase
+      .from('districts')
+      .select('id')
+      .eq('slug', filters.district)
+      .maybeSingle()
+      .returns<{ id: string }>();
+    if (districtError || !districtRow) return 0;
+    districtId = districtRow.id;
+  }
+
+  let query = supabase
+    .from('clubs')
+    .select(`
+      id,
+      type_assignments:club_type_assignments (
+        club_type:club_types ( slug )
+      )
+    `)
+    .eq('is_active', true)
+    .not('latitude', 'is', null)
+    .not('longitude', 'is', null);
+
+  if (districtId) query = query.eq('district_id', districtId);
+
+  const { data, error } = await query.returns<PublicClubCountRow[]>();
+  if (error) {
+    console.error('getPublicClubCount xətası:', error.message);
+    return 0;
+  }
+
+  const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
+  return (data ?? []).filter((club) => {
+    const slugs = (club.type_assignments ?? [])
+      .map((assignment) => assignment.club_type?.slug)
+      .filter((slug): slug is string => Boolean(slug));
+    if (requestedType === 'pc' || requestedType === 'playstation') return slugs.includes(requestedType);
+    return slugs.includes('pc') || slugs.includes('playstation');
+  }).length;
+}
+
+const getCachedPublicClubCount = unstable_cache(
+  async (filters: Pick<ClubFilters, 'district' | 'type'>) => queryPublicClubCount(filters),
+  ['gameyer-public-club-count-v1'],
+  { revalidate: 60, tags: ['public-clubs'] },
+);
+
+export async function getPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
+  return getCachedPublicClubCount(filters);
 }
 
 async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> {
@@ -188,7 +248,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
 
 const getCachedClubBySlug = unstable_cache(
   async (slug: string) => queryClubBySlug(slug),
-  ['gameyer-public-club-by-slug-v3'],
+  ['gameyer-public-club-by-slug-v4'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
