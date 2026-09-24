@@ -90,8 +90,10 @@ const expandAndOpenLowerClub = async (originPath) => {
   })()`);
   assert(expanded.count > 8 && expanded.href?.startsWith('/klub/'), 'Expanded list did not provide a lower visible club destination', expanded);
   await sleep(300);
-  const savedScrollY = await evaluate('window.scrollY');
-  assert(savedScrollY > 0, 'Regression scenario failed to move below the top of the expanded list', { savedScrollY });
+  const savedScrollY = await evaluate(`document.querySelector('[data-mobile-scroll-root="true"]')?.scrollTop ?? 0`);
+  const rootScrollY = await evaluate('window.scrollY');
+  assert(savedScrollY > 0, 'Regression scenario failed to move below the top of the expanded list', { savedScrollY, rootScrollY });
+  assert(Math.abs(rootScrollY) <= 1, 'Expanded mobile list must scroll inside the app shell, not the root document', { savedScrollY, rootScrollY });
   await evaluate(`(${visibleClubLinks}).find((a) => a.getAttribute('href') === window.__gameyerTestClubHref)?.click()`);
   await waitForPath(expanded.href, 'club detail navigation');
   return { expanded, savedScrollY };
@@ -101,21 +103,29 @@ const assertReturnedDiscovery = async (originPath, savedScrollY, label) => {
   await wait(`Boolean(Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər')))`, `${label}: expanded state restored`);
   await wait(`(${visibleClubLinks}).length > 8`, `${label}: expanded visible club cards restored`);
   await sleep(500);
-  const restored = await evaluate(`({
-    path: location.pathname + location.search + location.hash,
-    scrollY: window.scrollY,
-    clubLinks: (${visibleClubLinks}).length,
-    scrollProbeBefore: window.scrollY,
-  })`);
+  const restored = await evaluate(`(() => {
+    const root = document.querySelector('[data-mobile-scroll-root="true"]');
+    return {
+      path: location.pathname + location.search + location.hash,
+      scrollY: root?.scrollTop ?? 0,
+      rootScrollY: window.scrollY,
+      clubLinks: (${visibleClubLinks}).length,
+      scrollProbeBefore: root?.scrollTop ?? 0,
+    };
+  })()`);
   assert(restored.path === originPath, `${label}: search/filter query parameters were lost`, restored);
   assert(restored.clubLinks > 8, `${label}: returned visible list collapsed back to eight clubs`, restored);
   assert(Math.abs(restored.scrollY - savedScrollY) <= 180, `${label}: scroll position was not restored close enough`, { savedScrollY, ...restored });
+  assert(Math.abs(restored.rootScrollY) <= 1, `${label}: return restoration leaked to root document scroll`, restored);
   const scrollProbe = await evaluate(`(() => {
-    const before = window.scrollY;
-    window.scrollBy(0, 120);
-    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve({ before, after: window.scrollY }))));
+    const root = document.querySelector('[data-mobile-scroll-root="true"]');
+    if (!(root instanceof HTMLElement)) return { before: 0, after: 0, rootScrollY: window.scrollY };
+    const before = root.scrollTop;
+    root.scrollBy(0, 120);
+    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve({ before, after: root.scrollTop, rootScrollY: window.scrollY }))));
   })()`);
-  assert(scrollProbe.after > scrollProbe.before, `${label}: page remained scroll-locked/frozen after return`, scrollProbe);
+  assert(scrollProbe.after > scrollProbe.before, `${label}: inner page remained scroll-locked/frozen after return`, scrollProbe);
+  assert(Math.abs(scrollProbe.rootScrollY) <= 1, `${label}: scroll probe escaped to root document`, scrollProbe);
 };
 
 await send('Page.enable');
