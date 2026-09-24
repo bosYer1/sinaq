@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { getMobileNavVisualTop } from '@/lib/mobileViewport';
+import { getMobileNavDocumentTop, getRealPageMaxTop, isIOSWebKit, isPhantomBottomScroll } from '@/lib/mobileViewport';
 
 const baseClass = 'flex flex-col items-center justify-center gap-1 text-[10px] transition';
 const activeClass = 'font-semibold text-primary';
@@ -22,7 +22,25 @@ export function MobileNav() {
     if (!nav) return;
 
     const visualViewport = window.visualViewport;
+    const iosWebKit = isIOSWebKit(
+      window.navigator.userAgent,
+      window.navigator.platform,
+      window.navigator.maxTouchPoints,
+    );
+
+    if (!iosWebKit || !visualViewport) {
+      nav.style.position = '';
+      nav.style.top = '';
+      nav.style.bottom = '';
+      nav.style.visibility = '';
+      delete nav.dataset.iosViewportMode;
+      return;
+    }
+
+    nav.dataset.iosViewportMode = 'absolute';
+
     let frame = 0;
+    let keyboardSettling = false;
     const settleTimers = new Set<number>();
 
     const clearSettleTimers = () => {
@@ -30,32 +48,80 @@ export function MobileNav() {
       settleTimers.clear();
     };
 
-    const syncVisualViewport = () => {
+    const isEditableFocused = () => {
+      const active = document.activeElement;
+      return active instanceof HTMLInputElement
+        || active instanceof HTMLTextAreaElement
+        || (active instanceof HTMLElement && active.isContentEditable);
+    };
+
+    const getRealContentBottom = () => {
+      const sentinel = document.querySelector<HTMLElement>('[data-mobile-content-end="true"]');
+      if (!sentinel) return null;
+      return visualViewport.pageTop + sentinel.getBoundingClientRect().top;
+    };
+
+    const syncNav = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        if (!visualViewport) {
-          nav.style.top = '';
-          nav.style.bottom = '0px';
+        const keyboardActive = isEditableFocused() || keyboardSettling;
+        nav.style.position = 'absolute';
+        nav.style.bottom = 'auto';
+
+        if (keyboardActive) {
+          nav.style.visibility = 'hidden';
           return;
         }
 
-        const visualTop = getMobileNavVisualTop(
-          visualViewport.offsetTop,
+        const contentBottom = getRealContentBottom();
+        if (contentBottom != null) {
+          const maxPageTop = getRealPageMaxTop(contentBottom, visualViewport.height);
+          if (isPhantomBottomScroll(visualViewport.pageTop, maxPageTop)) {
+            window.scrollTo({ top: maxPageTop, left: 0, behavior: 'auto' });
+            nav.style.visibility = 'hidden';
+            window.requestAnimationFrame(syncNav);
+            return;
+          }
+        }
+
+        const top = getMobileNavDocumentTop(
+          visualViewport.pageTop,
           visualViewport.height,
           nav.offsetHeight,
         );
-        nav.style.top = `${visualTop}px`;
-        nav.style.bottom = 'auto';
+        nav.style.top = `${top}px`;
+        nav.style.visibility = 'visible';
       });
     };
 
     const settleViewport = () => {
       clearSettleTimers();
-      syncVisualViewport();
+      syncNav();
       for (const delay of [50, 150, 300]) {
         const timer = window.setTimeout(() => {
           settleTimers.delete(timer);
-          syncVisualViewport();
+          syncNav();
+        }, delay);
+        settleTimers.add(timer);
+      }
+    };
+
+    const handleFocusIn = () => {
+      keyboardSettling = true;
+      nav.style.visibility = 'hidden';
+      settleViewport();
+    };
+
+    const handleFocusOut = () => {
+      keyboardSettling = true;
+      nav.style.visibility = 'hidden';
+      clearSettleTimers();
+
+      for (const delay of [50, 150, 300, 450]) {
+        const timer = window.setTimeout(() => {
+          settleTimers.delete(timer);
+          if (delay === 450) keyboardSettling = false;
+          syncNav();
         }, delay);
         settleTimers.add(timer);
       }
@@ -66,24 +132,33 @@ export function MobileNav() {
     };
 
     settleViewport();
-    visualViewport?.addEventListener('resize', settleViewport);
-    visualViewport?.addEventListener('scroll', syncVisualViewport);
+    visualViewport.addEventListener('resize', settleViewport);
+    visualViewport.addEventListener('scroll', syncNav);
+    window.addEventListener('scroll', syncNav, { passive: true });
     window.addEventListener('resize', settleViewport);
     window.addEventListener('orientationchange', settleViewport);
     window.addEventListener('pageshow', settleViewport);
-    document.addEventListener('focusout', settleViewport, true);
+    document.addEventListener('focusin', handleFocusIn, true);
+    document.addEventListener('focusout', handleFocusOut, true);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.cancelAnimationFrame(frame);
       clearSettleTimers();
-      visualViewport?.removeEventListener('resize', settleViewport);
-      visualViewport?.removeEventListener('scroll', syncVisualViewport);
+      visualViewport.removeEventListener('resize', settleViewport);
+      visualViewport.removeEventListener('scroll', syncNav);
+      window.removeEventListener('scroll', syncNav);
       window.removeEventListener('resize', settleViewport);
       window.removeEventListener('orientationchange', settleViewport);
       window.removeEventListener('pageshow', settleViewport);
-      document.removeEventListener('focusout', settleViewport, true);
+      document.removeEventListener('focusin', handleFocusIn, true);
+      document.removeEventListener('focusout', handleFocusOut, true);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      nav.style.position = '';
+      nav.style.top = '';
+      nav.style.bottom = '';
+      nav.style.visibility = '';
+      delete nav.dataset.iosViewportMode;
     };
   }, [pathname]);
   const clubsActive = pathname === '/';
