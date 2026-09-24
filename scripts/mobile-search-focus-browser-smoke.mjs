@@ -192,6 +192,44 @@ try {
   })`);
   assert(!submitState.inputFocused, 'Mobile Search/Enter must end input focus', submitState);
 
+  const realClubName = await evaluate(client, `document.querySelector('a[href^="/klub/"] h3')?.textContent?.trim() || ''`);
+  assert(realClubName.length > 0, 'A real club name is required for committed-result reveal regression', { realClubName });
+
+  await evaluate(client, `(() => {
+    const input = document.querySelector('input[aria-label="Klub axtar"]');
+    if (!(input instanceof HTMLInputElement)) return;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    setter?.call(input, ${JSON.stringify(realClubName)});
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  })()`);
+  await waitFor(client, `new URLSearchParams(location.search).get('q') === ${JSON.stringify(realClubName)}`, 'committed search query before result reveal');
+  await evaluate(client, `document.querySelector('input[aria-label="Klub axtar"]')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))`);
+  await waitFor(client, `(() => {
+    const results = document.getElementById('club-results');
+    if (!results) return false;
+    const rect = results.getBoundingClientRect();
+    return rect.top >= 0 && rect.top < innerHeight;
+  })()`, 'search result block reveal after Enter');
+
+  const resultRevealState = await evaluate(client, `(() => {
+    const results = document.getElementById('club-results');
+    const map = document.querySelector('[data-mobile-list-map-container="true"]');
+    const resultCount = Number(document.querySelector('[data-explore-view]')?.getAttribute('data-result-count') || '-1');
+    const resultsRect = results?.getBoundingClientRect();
+    const mapRect = map?.getBoundingClientRect();
+    return {
+      heading: results?.textContent?.replace(/\\s+/g, ' ').trim() || '',
+      resultCount,
+      resultsTop: resultsRect?.top ?? null,
+      viewportHeight: innerHeight,
+      mapHeight: mapRect?.height ?? null,
+    };
+  })()`);
+  assert(resultRevealState.heading.includes('Axtarış nəticələri'), 'Committed search must expose explicit result context', resultRevealState);
+  assert(resultRevealState.resultCount > 0, 'Committed real-club search must expose a positive result count', resultRevealState);
+  assert(resultRevealState.resultsTop != null && resultRevealState.resultsTop < resultRevealState.viewportHeight, 'Committed results must be visible after Search/Enter', resultRevealState);
+  assert(resultRevealState.mapHeight != null && resultRevealState.mapHeight <= 280.5, 'Search mode map must stay compact before mobile results', resultRevealState);
+
   const screenshot = await client.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
   const screenshotFile = await open(`${ARTIFACT_DIR}/mobile-search-focus.png`, 'wx', 0o600);
   try {
@@ -200,7 +238,7 @@ try {
     await screenshotFile.close();
   }
 
-  console.log('Mobile search focus browser regression passed: focus works and mobile input font prevents iOS focus zoom.');
+  console.log('Mobile search focus browser regression passed: focus, zoom guards, and committed result reveal are healthy.');
 } finally {
   client.close();
   chrome.kill('SIGTERM');
