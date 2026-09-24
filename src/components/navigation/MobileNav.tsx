@@ -64,7 +64,7 @@ export function MobileNav() {
       className="pointer-events-none fixed inset-x-0 top-0 z-40 h-[100dvh] md:hidden"
     >
       <nav
-        className="pointer-events-auto absolute inset-x-0 bottom-0 grid h-[68px] grid-cols-5 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)]"
+        className="pointer-events-auto absolute inset-x-0 bottom-0 grid h-[68px] grid-cols-5 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] md:hidden"
         aria-label="Mobil naviqasiya"
       >
       <Link href="/" className={navClass(clubsActive)}>
