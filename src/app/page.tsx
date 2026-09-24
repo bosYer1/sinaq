@@ -107,16 +107,25 @@ export default async function HomePage({ searchParams }: PageProps) {
         ) : null}
 
         <div className="mx-auto max-w-[1440px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-8">
-          <section className="mb-4 sm:mb-5" aria-labelledby="home-title">
-            <h1
-              id="home-title"
-              className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-ink sm:text-3xl"
+          <section className="mb-4 flex items-start justify-between gap-3 sm:mb-5" aria-labelledby="home-title">
+            <div className="min-w-0">
+              <h1
+                id="home-title"
+                className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-ink sm:text-3xl"
+              >
+                Gaming klubunu tap
+              </h1>
+              <p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">
+                Axtar, filtr et, xəritədə bax və sənə uyğun klubu seç.
+              </p>
+            </div>
+            <a
+              href="#club-discovery"
+              data-home-club-jump="true"
+              className="inline-flex h-9 shrink-0 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-bold text-primary no-underline transition active:scale-[0.98] sm:h-10 sm:px-4 sm:text-sm"
             >
-              Gaming klubunu tap
-            </h1>
-            <p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">
-              Axtar, filtr et, xəritədə bax və sənə uyğun klubu seç.
-            </p>
+              {discoveryClubs.length} klub ↓
+            </a>
           </section>
 
           <section id="club-search" className="scroll-mt-20" aria-label="Klub axtarışı və filtrlər">
