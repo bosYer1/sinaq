@@ -18,6 +18,7 @@ const textareaClass = 'mt-1 w-full rounded-control border border-border bg-surfa
 
 export function SubmissionForm({ kind, clubName, clubSlug, returnTo, submitLabel }: SubmissionFormProps) {
   const ownerClaim = kind === 'owner_claim';
+  const simpleContact = !ownerClaim;
 
   return (
     <form action={submitClubSubmission} className="mt-5 space-y-4">
@@ -90,49 +91,73 @@ export function SubmissionForm({ kind, clubName, clubSlug, returnTo, submitLabel
         </>
       ) : null}
 
-      <div>
-        <label htmlFor={`${kind}-message`} className="text-sm font-medium text-ink">{ownerClaim ? 'Əlavə qeyd' : 'Məlumat'}</label>
-        <textarea
-          id={`${kind}-message`}
-          name="message"
-          required={!ownerClaim}
-          minLength={ownerClaim ? undefined : 10}
-          maxLength={3000}
-          rows={5}
-          className={textareaClass}
-          placeholder={ownerClaim ? 'Məsələn: qiymət VIP zonaya görə dəyişir, yeni ünvan budur və s.' : kind === 'new_club' ? 'Ünvan, PC/PlayStation tipi, iş saatı və bildiyiniz digər məlumatları yazın.' : 'Səhv olan məlumatı və düzgün variantını yazın.'}
-        />
-      </div>
+      {ownerClaim ? (
+        <>
+          <div>
+            <label htmlFor={`${kind}-message`} className="text-sm font-medium text-ink">Əlavə qeyd</label>
+            <textarea
+              id={`${kind}-message`}
+              name="message"
+              maxLength={3000}
+              rows={5}
+              className={textareaClass}
+              placeholder="Məsələn: qiymət VIP zonaya görə dəyişir, yeni ünvan budur və s."
+            />
+          </div>
 
-      <div className="grid gap-3 sm:grid-cols-[160px_1fr]">
-        <div>
-          <label htmlFor={`${kind}-contact-type`} className="text-sm font-medium text-ink">Əlaqə üsulu</label>
-          <select
-            id={`${kind}-contact-type`}
-            name="contact_type"
-            defaultValue="instagram"
-            className={inputClass}
-          >
-            <option value="instagram">Instagram</option>
-            <option value="phone">Telefon</option>
-            <option value="email">E-poçt</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor={`${kind}-contact-value`} className="text-sm font-medium text-ink">Əlaqə məlumatı</label>
-          <input
-            id={`${kind}-contact-value`}
-            name="contact_value"
-            required
-            maxLength={200}
-            className={inputClass}
-            placeholder="@username, +994... və ya email"
-          />
-        </div>
-      </div>
+          <div className="grid gap-3 sm:grid-cols-[160px_1fr]">
+            <div>
+              <label htmlFor={`${kind}-contact-type`} className="text-sm font-medium text-ink">Əlaqə üsulu</label>
+              <select
+                id={`${kind}-contact-type`}
+                name="contact_type"
+                defaultValue="instagram"
+                className={inputClass}
+              >
+                <option value="instagram">Instagram</option>
+                <option value="phone">Telefon</option>
+                <option value="email">E-poçt</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor={`${kind}-contact-value`} className="text-sm font-medium text-ink">Əlaqə məlumatı</label>
+              <input
+                id={`${kind}-contact-value`}
+                name="contact_value"
+                required
+                maxLength={200}
+                className={inputClass}
+                placeholder="@username, +994... və ya email"
+              />
+            </div>
+          </div>
+        </>
+      ) : null}
+
+      {simpleContact ? (
+        <>
+          <input type="hidden" name="contact_type" value="phone" />
+          <div>
+            <label htmlFor={`${kind}-contact-value`} className="text-sm font-medium text-ink">Əlaqə nömrəsi</label>
+            <input
+              id={`${kind}-contact-value`}
+              name="contact_value"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              required
+              maxLength={24}
+              className={inputClass}
+              placeholder="+994 50 123 45 67"
+            />
+          </div>
+        </>
+      ) : null}
 
       <p className="text-xs leading-5 text-muted">
-        Müraciət yalnız məlumatın yoxlanması və sizinlə əlaqə üçün istifadə olunur. Şifrə, SMS kodu və ya hesab giriş məlumatı göndərməyin.
+        {simpleContact
+          ? 'Nömrə yalnız müraciəti dəqiqləşdirmək və sizinlə əlaqə saxlamaq üçün istifadə olunur.'
+          : 'Müraciət yalnız məlumatın yoxlanması və sizinlə əlaqə üçün istifadə olunur. Şifrə, SMS kodu və ya hesab giriş məlumatı göndərməyin.'}
       </p>
 
       <SubmissionSubmitButton label={submitLabel} />

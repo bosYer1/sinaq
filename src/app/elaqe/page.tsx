@@ -79,7 +79,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
       <section className="mt-8 rounded-xl border border-border bg-surface p-5 shadow-card sm:p-6">
         <h2 className="font-display text-xl font-bold text-ink">Məlumat düzəlişi</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Telefon, ünvan, iş saatı, qiymət, Instagram, klub tipi və ya xəritə mövqeyində səhv varsa düzgün məlumatı yazın.
+          Klubun adını və əlaqə nömrənizi yazın. Düzəlişi dəqiqləşdirmək üçün sizinlə əlaqə saxlanılacaq.
         </p>
         <SubmissionForm
           kind="correction"
@@ -93,7 +93,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
       <section id="new-club" className="mt-6 scroll-mt-24 rounded-xl border border-border bg-surface p-5 shadow-card sm:p-6">
         <h2 className="font-display text-xl font-bold text-ink">Yeni klub təklif et</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
-          GameYer-də olmayan real PC və ya PlayStation klubunu bildir. Məlumat təsdiqlənmədən saytda fakt kimi yayımlanmayacaq.
+          Klubun adını və əlaqə nömrənizi yazın. Klubu yoxlayıb məlumatları dəqiqləşdirmək üçün sizinlə əlaqə saxlanılacaq.
         </p>
         <SubmissionForm
           kind="new_club"
