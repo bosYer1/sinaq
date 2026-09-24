@@ -48,7 +48,7 @@ const gameYerLinks: Array<{ href: string; title: string; description: string; ic
   { href: '/yenilikler', title: 'Yeniliklər', description: 'Turnirlər və xüsusi təkliflər', icon: 'spark' },
   { href: '/haqqimizda', title: 'GameYer haqqında', description: 'Platformanın məqsədi', icon: 'info' },
   { href: '/melumat-metodologiyasi', title: 'Məlumat yoxlaması', description: 'Məlumatları necə təsdiqləyirik', icon: 'shield' },
-  { href: '/klub-sahibi', title: 'Klub sahibləri üçün', description: 'Klubunu təsdiqlə və məlumat göndər', icon: 'owner' },
+  { href: '/elaqe#new-club', title: 'Klub əlavə et', description: 'Klubun adı və əlaqə nömrəsini göndər', icon: 'owner' },
   { href: '/elaqe', title: 'Əlaqə', description: 'Klub təklif et və ya düzəliş bildir', icon: 'contact' },
   { href: '/mexfilik', title: 'Məxfilik', description: 'Məlumatların istifadəsi', icon: 'privacy' },
 ];
