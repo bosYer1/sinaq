@@ -72,7 +72,7 @@ export default async function DistrictPage({ params }: DistrictPageProps) {
 
   if (clubs.length === 0) {
     return (
-      <div className="min-h-[calc(100dvh-64px)] bg-[#F8F9FC]" data-district-state="empty">
+      <div className="min-h-full md:min-h-[calc(100vh-64px)] bg-[#F8F9FC]" data-district-state="empty">
         <div className="mx-auto max-w-[900px] px-4 py-7 sm:px-6 sm:py-12 lg:px-8">
           <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-ink">GameYer</Link> <span aria-hidden="true">/</span> <Link href="/rayon" className="hover:text-ink">Rayonlar</Link> <span aria-hidden="true">/</span> <span>{district.name}</span>
@@ -116,7 +116,7 @@ export default async function DistrictPage({ params }: DistrictPageProps) {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-64px)] bg-[#F8F9FC]">
+    <div className="min-h-full md:min-h-[calc(100vh-64px)] bg-[#F8F9FC]">
       <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 sm:py-10 lg:px-8">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
         <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb">

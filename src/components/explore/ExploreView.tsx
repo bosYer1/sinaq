@@ -23,6 +23,24 @@ function getCurrentExploreOrigin() {
   return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 }
 
+function getMobileScrollRoot() {
+  return document.querySelector<HTMLElement>('[data-mobile-scroll-root="true"]');
+}
+
+function getMobileScrollTop() {
+  return Math.max(0, getMobileScrollRoot()?.scrollTop ?? window.scrollY);
+}
+
+function restoreMobileScrollTop(scrollTop: number) {
+  const target = Math.max(0, scrollTop);
+  const scrollRoot = getMobileScrollRoot();
+  if (scrollRoot) {
+    scrollRoot.scrollTo({ top: target, left: 0, behavior: 'auto' });
+    return;
+  }
+  window.scrollTo({ top: target, left: 0, behavior: 'auto' });
+}
+
 function saveMobileExpandedState(scrollY: number) {
   try {
     const state: MobileExpandedState = {
@@ -113,7 +131,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     let secondFrame = 0;
     const firstFrame = window.requestAnimationFrame(() => {
       secondFrame = window.requestAnimationFrame(() => {
-        window.scrollTo({ top: restoredScrollY, left: 0, behavior: 'auto' });
+        restoreMobileScrollTop(restoredScrollY);
       });
     });
 
@@ -186,7 +204,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     const nextExpanded = !mobileExpanded;
     trackPostHogEvent('mobile_more_clubs_clicked', { action: nextExpanded ? 'expand' : 'collapse', surface: 'mobile_list' });
     setMobileExpanded(nextExpanded);
-    if (nextExpanded) saveMobileExpandedState(window.scrollY);
+    if (nextExpanded) saveMobileExpandedState(getMobileScrollTop());
     else clearMobileExpandedState();
   }
 

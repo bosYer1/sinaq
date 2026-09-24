@@ -9,6 +9,7 @@ import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { PostHogAnalytics } from '@/components/analytics/PostHogAnalytics';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { MobileNav } from '@/components/navigation/MobileNav';
+import { MobileViewportSync } from '@/components/navigation/MobileViewportSync';
 import './globals.css';
 
 const bodyFont = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
@@ -118,14 +119,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="bg-bg font-body text-ink antialiased">
+      <body className="overflow-hidden bg-bg font-body text-ink antialiased md:overflow-auto">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, '\\u003c') }} />
         <MetaPixel pixelId={metaPixelId} />
         <GoogleAnalytics measurementId={gaMeasurementId} />
         <PostHogAnalytics />
         <PageViewTracker />
+        <MobileViewportSync />
 
-        <header className="sticky top-0 z-30 border-b border-border/80 bg-surface md:bg-surface/95 md:backdrop-blur">
+        <div
+          data-mobile-app-shell="true"
+          className="flex h-[var(--gameyer-mobile-vh,100svh)] flex-col overflow-hidden md:min-h-screen md:h-auto md:overflow-visible"
+        >
+        <header className="sticky top-0 z-30 shrink-0 border-b border-border/80 bg-surface md:bg-surface/95 md:backdrop-blur">
           <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link href="/" className="flex items-center gap-2.5" aria-label="GameYer ana səhifə">
               <Image
@@ -157,7 +163,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <main className="pb-[76px] md:pb-0">{children}</main>
+        <main
+          data-mobile-scroll-root="true"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain md:overflow-visible md:overscroll-auto"
+        >
+          {children}
+        </main>
 
         <footer className="hidden border-t border-border bg-surface md:block">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6 lg:px-8">
@@ -181,6 +192,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </footer>
 
         <MobileNav />
+        </div>
       </body>
     </html>
   );

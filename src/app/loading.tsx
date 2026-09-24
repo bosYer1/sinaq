@@ -2,7 +2,7 @@ import { Skeleton, ClubCardSkeleton } from '@/components/ui/Skeleton';
 
 export default function Loading() {
   return (
-    <div className="min-h-[calc(100dvh-64px)] bg-[#F8F9FC]">
+    <div className="min-h-full md:min-h-[calc(100vh-64px)] bg-[#F8F9FC]">
       <div className="mx-auto max-w-[1440px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-8">
         <div className="mb-4 flex items-end justify-between gap-3 sm:mb-5">
           <div className="min-w-0 flex-1">

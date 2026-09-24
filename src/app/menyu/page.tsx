@@ -97,7 +97,7 @@ function MenuIcon({ name, className = 'h-5 w-5' }: { name: IconName; className?:
 
 export default function MenuPage() {
   return (
-    <div className="min-h-[calc(100dvh-64px)] bg-bg-elevated">
+    <div className="min-h-full md:min-h-[calc(100vh-64px)] bg-bg-elevated">
       <div className="mx-auto max-w-4xl px-4 pb-10 pt-4 sm:px-6 sm:pb-12 sm:pt-8">
         <header className="relative overflow-hidden rounded-[28px] border border-primary/15 bg-surface px-5 py-5 shadow-[0_18px_50px_rgba(31,35,48,0.06)] sm:px-6 sm:py-6">
           <div className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />

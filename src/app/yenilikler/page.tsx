@@ -16,7 +16,7 @@ export default async function UpdatesPage() {
   const updates = await getActiveClubUpdates();
 
   return (
-    <main className="min-h-[calc(100dvh-64px)] bg-bg-elevated">
+    <main className="min-h-full md:min-h-[calc(100vh-64px)] bg-bg-elevated">
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8">
         <section className="mb-5 overflow-hidden rounded-[28px] border border-primary/10 bg-surface p-5 shadow-[0_10px_34px_rgba(31,35,48,0.05)] sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
