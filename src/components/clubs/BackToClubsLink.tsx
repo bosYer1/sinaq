@@ -1,6 +1,6 @@
 'use client';
 
-import type { MouseEvent } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
 
 const CLUB_ENTRY_ORIGIN_KEY = 'gameyer:club-entry-origin';
@@ -51,7 +51,43 @@ export function rememberClubEntryOrigin(clubSlug: string) {
   }
 }
 
+function returnLabel(origin: string) {
+  try {
+    const url = new URL(origin, 'https://gameyer.az');
+    const params = url.searchParams;
+    if (params.get('q')?.trim()) return 'Axtarış nəticələrinə qayıt';
+    if (params.get('view') === 'map') return 'Xəritəyə qayıt';
+    if (params.get('district') || params.get('type') || params.get('price_max')) return 'Filtrlənmiş klublara qayıt';
+  } catch {
+    // Fall back to the generic discovery label.
+  }
+  return 'Klublara qayıt';
+}
+
 export function BackToClubsLink({ className }: { className?: string }) {
+  const [label, setLabel] = useState('Klublara qayıt');
+  const [fallbackHref, setFallbackHref] = useState('/');
+
+  useEffect(() => {
+    try {
+      const rawEntry = window.sessionStorage.getItem(CLUB_ENTRY_ORIGIN_KEY);
+      if (!rawEntry) return;
+      const entry = JSON.parse(rawEntry) as ClubEntryOrigin;
+      if (
+        entry.destination !== window.location.pathname ||
+        !entry.origin.startsWith('/') ||
+        entry.origin.startsWith('/klub/')
+      ) {
+        return;
+      }
+
+      setLabel(returnLabel(entry.origin));
+      setFallbackHref(entry.origin);
+    } catch {
+      // Keep the generic fallback when the remembered origin is unavailable.
+    }
+  }, []);
+
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     if (!isPlainLeftClick(event)) return;
 
@@ -86,8 +122,8 @@ export function BackToClubsLink({ className }: { className?: string }) {
   }
 
   return (
-    <Link href="/" onClick={handleClick} className={className}>
-      ← Klublara qayıt
+    <Link href={fallbackHref} onClick={handleClick} className={className}>
+      ← {label}
     </Link>
   );
 }
