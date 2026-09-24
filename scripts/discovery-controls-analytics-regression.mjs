@@ -14,7 +14,7 @@ assert.ok(explore.includes("action: nextExpanded ? 'expand' : 'collapse'"), 'Exp
 assert.ok(!analytics.includes("'mobile_map_preview_activated'"), 'Delegated analytics must not double-capture map preview activation');
 assert.ok(!analytics.includes("'mobile_more_clubs_clicked'"), 'Delegated analytics must not infer expand/collapse from mutable button text');
 
-for (const event of ['location_sort_clicked', 'map_location_clicked']) {
+for (const event of ['location_sort_clicked', 'map_location_clicked', 'home_club_jump_clicked']) {
   assert.ok(analytics.includes(`'${event}'`), `${event} must stay wired to PostHog`);
 }
 assert.ok(analytics.includes("document.addEventListener('click', onDocumentClick)"), 'Remaining discovery controls keep delegated tracking');
@@ -31,6 +31,7 @@ for (const uiContract of [
 }
 assert.ok(home.includes('id="club-search"'), 'Homepage search anchor must remain stable');
 assert.ok(home.includes('id="club-discovery"'), 'Homepage club discovery anchor must remain stable');
+assert.ok(home.includes('data-home-club-jump="true"'), 'Homepage must keep the direct club discovery jump measurable.');
 assert.ok(clubMap.includes("trackPostHogEvent('club_card_click'"), 'Map popup club opens must stay measurable');
 assert.ok(clubMap.includes("discovery_surface: 'map_popup'"), 'Map popup clicks must preserve their discovery surface');
 assert.ok(clubMap.includes("transport: 'sendBeacon'"), 'Map popup navigation tracking must use unload-safe transport');
