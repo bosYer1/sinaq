@@ -353,7 +353,6 @@ try {
     '/bakida-playstation-klublari',
     '/bakida-24-saat-gaming-klublari',
     '/elaqe',
-    '/klub-sahibi',
     clubMatch,
   ];
 
