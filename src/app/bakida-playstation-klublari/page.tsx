@@ -81,6 +81,7 @@ export default async function BakuPlayStationClubsPage() {
       <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">PlayStation qiymətlərini müqayisə et</Link>
       <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">Ucuz PlayStation klubları — 3 AZN-dək</Link>
       <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">24 saat PlayStation klubları</Link>
+      <Link href="/28-may-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">28 May gaming klubları</Link>
     </div>
 
     {strongDistricts.length > 0 ? (
