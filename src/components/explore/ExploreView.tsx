@@ -189,15 +189,12 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     if (needsMobileExpansion) {
       setMobileExpanded(true);
       saveMobileExpandedState(window.scrollY);
-      let secondFrame = 0;
       window.requestAnimationFrame(() => {
-        secondFrame = window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
           cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
       });
-      return () => {
-        if (secondFrame) window.cancelAnimationFrame(secondFrame);
-      };
+      return;
     }
 
     cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
