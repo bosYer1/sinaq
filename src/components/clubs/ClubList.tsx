@@ -10,6 +10,7 @@ interface ClubListProps {
   onHoverClub?: (id: string) => void;
   cardRefs?: MutableRefObject<Record<string, HTMLAnchorElement | null>>;
   searchActive?: boolean;
+  searchQuery?: string;
   hasStructuredFilters?: boolean;
   onClearFilters?: () => void;
 }
@@ -19,7 +20,7 @@ interface ClubListProps {
  * ExploreView (client) vasitəsilə buraya ötürülür; bura yalnız render +
  * hover/aktiv vəziyyəti xəritəyə ötürmək üçün lazımi əlaqələndirməni edir.
  */
-export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchActive, hasStructuredFilters, onClearFilters }: ClubListProps) {
+export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchActive, searchQuery, hasStructuredFilters, onClearFilters }: ClubListProps) {
   if (clubs.length === 0) {
     const title = searchActive
       ? 'Axtarışa uyğun klub tapılmadı'
@@ -51,7 +52,10 @@ export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchAct
         />
         {searchActive ? (
           <div className="mt-3 text-center">
-            <Link href="/elaqe#new-club" className="text-sm font-semibold text-primary hover:underline">
+            <Link
+              href={searchQuery ? `/elaqe?suggest=${encodeURIComponent(searchQuery)}#new-club` : '/elaqe#new-club'}
+              className="text-sm font-semibold text-primary hover:underline"
+            >
               Klub siyahıda yoxdur? Təklif et
             </Link>
           </div>
