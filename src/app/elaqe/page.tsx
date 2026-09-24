@@ -19,6 +19,7 @@ interface ContactPageProps {
   searchParams: Promise<{
     club?: string;
     slug?: string;
+    suggest?: string;
     sent?: string;
     error?: string;
     rate?: string;
@@ -29,6 +30,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
   const params = await searchParams;
   const selectedClub = params.club?.trim().slice(0, 120) || null;
   const selectedSlug = params.slug?.trim().slice(0, 120) || null;
+  const suggestedClub = params.suggest?.trim().slice(0, 120) || null;
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <Link href="/" className="text-sm font-semibold text-primary hover:underline">
@@ -92,6 +94,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
         </p>
         <SubmissionForm
           kind="new_club"
+          clubName={suggestedClub}
           returnTo="/elaqe"
           submitLabel="Klubu təklif et"
         />
