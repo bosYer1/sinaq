@@ -1,10 +1,19 @@
-export function getMobileNavVisualTop(
-  visualOffsetTop: number,
+export function isIOSWebKit(
+  userAgent: string,
+  platform = '',
+  maxTouchPoints = 0,
+) {
+  return /iPhone|iPad|iPod/i.test(userAgent)
+    || (platform === 'MacIntel' && maxTouchPoints > 1);
+}
+
+export function getMobileNavDocumentTop(
+  visualPageTop: number,
   visualHeight: number,
   navHeight: number,
 ) {
   if (
-    !Number.isFinite(visualOffsetTop) ||
+    !Number.isFinite(visualPageTop) ||
     !Number.isFinite(visualHeight) ||
     !Number.isFinite(navHeight) ||
     visualHeight <= 0 ||
@@ -13,5 +22,31 @@ export function getMobileNavVisualTop(
     return 0;
   }
 
-  return Math.max(visualOffsetTop, visualOffsetTop + visualHeight - navHeight);
+  return Math.max(visualPageTop, visualPageTop + visualHeight - navHeight);
+}
+
+export function getRealPageMaxTop(
+  contentBottom: number,
+  visualHeight: number,
+) {
+  if (
+    !Number.isFinite(contentBottom) ||
+    !Number.isFinite(visualHeight) ||
+    contentBottom <= 0 ||
+    visualHeight <= 0
+  ) {
+    return 0;
+  }
+
+  return Math.max(0, contentBottom - visualHeight);
+}
+
+export function isPhantomBottomScroll(
+  visualPageTop: number,
+  maxPageTop: number,
+  tolerance = 2,
+) {
+  return Number.isFinite(visualPageTop)
+    && Number.isFinite(maxPageTop)
+    && visualPageTop > maxPageTop + tolerance;
 }
