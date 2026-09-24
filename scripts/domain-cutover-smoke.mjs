@@ -90,7 +90,7 @@ async function main() {
   }
 
   const sitemapPaths = urls.map((value) => new URL(value).pathname);
-  const representativePaths = ['/', '/yaxinliqda-gaming-klublari', '/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/bakida-internet-klublari', '/bakida-gaming-klub-qiymetleri', '/rayon', '/tip', '/haqqimizda', '/elaqe', '/klub-sahibi'];
+  const representativePaths = ['/', '/yaxinliqda-gaming-klublari', '/bakida-pc-klublari', '/bakida-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/bakida-internet-klublari', '/bakida-gaming-klub-qiymetleri', '/rayon', '/tip', '/haqqimizda', '/elaqe'];
   const firstClub = sitemapPaths.find((path) => path.startsWith('/klub/'));
   const firstDistrict = sitemapPaths.find((path) => /^\/rayon\/[^/]+$/.test(path));
   const firstDistrictType = sitemapPaths.find((path) => /^\/rayon\/[^/]+\/(pc|playstation)$/.test(path));
