@@ -41,6 +41,7 @@ export function MobileNav() {
 
     let frame = 0;
     let keyboardSettling = false;
+    let keyboardReleaseTimer = 0;
     const settleTimers = new Set<number>();
 
     const clearSettleTimers = () => {
@@ -111,6 +112,10 @@ export function MobileNav() {
     };
 
     const handleFocusIn = () => {
+      if (keyboardReleaseTimer) {
+        window.clearTimeout(keyboardReleaseTimer);
+        keyboardReleaseTimer = 0;
+      }
       keyboardSettling = true;
       nav.style.visibility = 'hidden';
       settleViewport();
@@ -121,14 +126,12 @@ export function MobileNav() {
       nav.style.visibility = 'hidden';
       clearSettleTimers();
 
-      for (const delay of [50, 150, 300, 450]) {
-        const timer = window.setTimeout(() => {
-          settleTimers.delete(timer);
-          if (delay === 450) keyboardSettling = false;
-          syncNav();
-        }, delay);
-        settleTimers.add(timer);
-      }
+      if (keyboardReleaseTimer) window.clearTimeout(keyboardReleaseTimer);
+      keyboardReleaseTimer = window.setTimeout(() => {
+        keyboardReleaseTimer = 0;
+        keyboardSettling = false;
+        settleViewport();
+      }, 500);
     };
 
     const handleVisibilityChange = () => {
@@ -149,6 +152,7 @@ export function MobileNav() {
     return () => {
       window.cancelAnimationFrame(frame);
       clearSettleTimers();
+      if (keyboardReleaseTimer) window.clearTimeout(keyboardReleaseTimer);
       visualViewport.removeEventListener('resize', settleViewport);
       visualViewport.removeEventListener('scroll', syncNav);
       window.removeEventListener('scroll', syncNav);
