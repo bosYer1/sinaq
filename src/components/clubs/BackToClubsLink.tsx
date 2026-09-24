@@ -127,7 +127,7 @@ export function BackToClubsLink({ className }: { className?: string }) {
   }
 
   return (
-    <Link href={fallbackHref} onClick={handleClick} className={className}>
+    <Link href={fallbackHref} onClick={handleClick} className={className} data-back-to-clubs="true">
       ← {label}
     </Link>
   );
