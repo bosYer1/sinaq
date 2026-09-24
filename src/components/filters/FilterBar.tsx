@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import ReactDOM from 'react-dom';
 import type { District, ClubType } from '@/types/database';
 import { SearchFilter } from './SearchFilter';
@@ -30,9 +29,6 @@ export function FilterBar({ districts, types }: FilterBarProps) {
 
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:overflow-visible xl:pb-0" aria-label="Klub filtrləri">
           <ViewToggle />
-          <Link href="/yenilikler" className="inline-flex h-10 shrink-0 items-center rounded-xl border border-primary/20 bg-primary/10 px-3 text-xs font-semibold text-primary no-underline transition hover:border-primary sm:hidden">
-            🔥 Təkliflər
-          </Link>
           <TypeFilter types={types} />
           <DistrictFilter districts={districts} />
           <PriceFilter />
