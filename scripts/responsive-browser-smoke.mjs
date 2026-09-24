@@ -153,6 +153,7 @@ const commonLayoutExpression = `(() => {
     visualViewportBottom: window.visualViewport
       ? window.visualViewport.offsetTop + window.visualViewport.height
       : window.innerHeight,
+    visualViewportHeight: window.visualViewport?.height ?? window.innerHeight,
     viewportMeta: document.querySelector('meta[name="viewport"]')?.getAttribute('content') ?? '',
     scrollWidth: document.documentElement.scrollWidth,
     scrollHeight: document.documentElement.scrollHeight,
@@ -197,7 +198,7 @@ async function assertCommonLayout(client, viewport, path) {
       };
     })()`);
     assert(overlayContract?.overlayPosition === 'fixed', `${viewport.name} ${path}: mobile navigation overlay must use fixed positioning`, overlayContract);
-    assert(overlayContract?.overlayHeight != null && Math.abs(overlayContract.overlayHeight - layout.visualViewportBottom) <= 2, `${viewport.name} ${path}: dynamic viewport overlay height does not match the visible viewport`, { overlayContract, layout });
+    assert(overlayContract?.overlayHeight != null && Math.abs(overlayContract.overlayHeight - layout.visualViewportHeight) <= 2, `${viewport.name} ${path}: dynamic viewport overlay height does not match the visible viewport`, { overlayContract, layout });
     assert(overlayContract?.navPosition === 'absolute', `${viewport.name} ${path}: nav must be absolute only inside the fixed overlay`, overlayContract);
     assert(overlayContract?.inlineNavTop === '' && overlayContract?.inlineNavBottom === '', `${viewport.name} ${path}: nav must not receive runtime inline positioning`, overlayContract);
 
