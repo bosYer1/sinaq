@@ -220,8 +220,12 @@ export async function submitClubSubmission(formData: FormData) {
     redirect(resultUrl(formData, 'error'));
   }
 
-  const message = kind === 'owner_claim' ? ownerClaimMessage(formData, freeMessage) : freeMessage;
-  if (!message || (kind !== 'owner_claim' && message.length < 10)) redirect(resultUrl(formData, 'error'));
+  const message = kind === 'owner_claim'
+    ? ownerClaimMessage(formData, freeMessage)
+    : kind === 'new_club'
+      ? '[SADƏLƏŞDİRİLMİŞ YENİ KLUB TƏKLİFİ] Klubun adı və əlaqə nömrəsi təqdim edildi.'
+      : '[SADƏLƏŞDİRİLMİŞ DÜZƏLİŞ MÜRACİƏTİ] Klubun adı və əlaqə nömrəsi təqdim edildi.';
+  if (!message) redirect(resultUrl(formData, 'error'));
 
   try {
     if (kind === 'owner_claim') {
