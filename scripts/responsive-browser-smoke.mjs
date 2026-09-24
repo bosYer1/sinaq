@@ -145,6 +145,7 @@ const commonLayoutExpression = `(() => {
   } : null;
   const header = document.querySelector('header');
   const mobileNav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+  const mobileNavOverlay = document.querySelector('[data-mobile-nav-overlay="true"]');
   return {
     scrollY: window.scrollY,
     innerWidth: window.innerWidth,
@@ -154,10 +155,13 @@ const commonLayoutExpression = `(() => {
       : window.innerHeight,
     viewportMeta: document.querySelector('meta[name="viewport"]')?.getAttribute('content') ?? '',
     scrollWidth: document.documentElement.scrollWidth,
+    scrollHeight: document.documentElement.scrollHeight,
     clientWidth: document.documentElement.clientWidth,
     header: rect(header),
     mobileNav: rect(mobileNav),
     mobileNavDisplay: mobileNav ? getComputedStyle(mobileNav).display : null,
+    mobileNavOverlay: rect(mobileNavOverlay),
+    mobileNavOverlayDisplay: mobileNavOverlay ? getComputedStyle(mobileNavOverlay).display : null,
   };
 })()`;
 
@@ -176,21 +180,26 @@ async function assertCommonLayout(client, viewport, path) {
     assert(layout.mobileNavDisplay !== 'none', `${viewport.name} ${path}: mobile navigation is hidden`, layout);
     assert(layout.mobileNav && Math.abs(layout.mobileNav.bottom - layout.visualViewportBottom) <= 2, `${viewport.name} ${path}: mobile navigation is not pinned to the visual viewport bottom`, layout);
 
-    const fixedContract = await evaluate(client, `(() => {
+    const overlayContract = await evaluate(client, `(() => {
+      const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
       const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-      if (!nav) return null;
-      const style = getComputedStyle(nav);
+      if (!overlay || !nav) return null;
+      const overlayStyle = getComputedStyle(overlay);
+      const navStyle = getComputedStyle(nav);
       return {
-        position: style.position,
-        inlineTop: nav.style.top,
-        inlineBottom: nav.style.bottom,
-        computedTop: style.top,
-        computedBottom: style.bottom,
+        overlayPosition: overlayStyle.position,
+        overlayTop: overlayStyle.top,
+        overlayHeight: overlay.getBoundingClientRect().height,
+        navPosition: navStyle.position,
+        navBottom: navStyle.bottom,
+        inlineNavTop: nav.style.top,
+        inlineNavBottom: nav.style.bottom,
       };
     })()`);
-    assert(fixedContract?.position === 'fixed', `${viewport.name} ${path}: non-iOS mobile navigation must keep native fixed positioning`, fixedContract);
-    assert(fixedContract?.inlineTop === '', `${viewport.name} ${path}: non-iOS navigation must not receive the iOS absolute top override`, fixedContract);
-    assert(fixedContract?.inlineBottom === '', `${viewport.name} ${path}: non-iOS navigation must not receive an inline bottom override`, fixedContract);
+    assert(overlayContract?.overlayPosition === 'fixed', `${viewport.name} ${path}: mobile navigation overlay must use fixed positioning`, overlayContract);
+    assert(overlayContract?.overlayHeight != null && Math.abs(overlayContract.overlayHeight - layout.visualViewportBottom) <= 2, `${viewport.name} ${path}: dynamic viewport overlay height does not match the visible viewport`, { overlayContract, layout });
+    assert(overlayContract?.navPosition === 'absolute', `${viewport.name} ${path}: nav must be absolute only inside the fixed overlay`, overlayContract);
+    assert(overlayContract?.inlineNavTop === '' && overlayContract?.inlineNavBottom === '', `${viewport.name} ${path}: nav must not receive runtime inline positioning`, overlayContract);
 
     await evaluate(client, `window.scrollTo(0, Math.max(0, document.documentElement.scrollHeight - window.innerHeight))`);
     await sleep(120);
