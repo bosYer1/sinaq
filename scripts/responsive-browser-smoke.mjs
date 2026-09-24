@@ -310,10 +310,14 @@ async function assertHomepage(client, viewport) {
   const stacking = await evaluate(client, `(() => {
     const topElement = document.elementFromPoint(Math.floor(window.innerWidth / 2), 24);
     const bottomElement = document.elementFromPoint(Math.floor(window.innerWidth / 2), window.innerHeight - 16);
+    const mapRect = document.querySelector('[aria-label="GameYer klub xəritəsi"]')?.getBoundingClientRect();
+    const mobileNavRect = document.querySelector('nav[aria-label="Mobil naviqasiya"]')?.getBoundingClientRect();
     return {
       scrollY: window.scrollY,
       topIsHeader: Boolean(topElement?.closest('header')),
       bottomIsMobileNav: Boolean(bottomElement?.closest('nav[aria-label="Mobil naviqasiya"]')),
+      mapBottom: mapRect?.bottom ?? null,
+      mobileNavTop: mobileNavRect?.top ?? null,
       topTag: topElement?.tagName || null,
       topClass: topElement?.className || null,
       bottomTag: bottomElement?.tagName || null,
@@ -323,7 +327,14 @@ async function assertHomepage(client, viewport) {
 
   assert(stacking.scrollY > 0, `${viewport.name}: stacking test did not scroll`, stacking);
   assert(stacking.topIsHeader, `${viewport.name}: Leaflet/map content covers the sticky header`, stacking);
-  if (viewport.mobile) assert(stacking.bottomIsMobileNav, `${viewport.name}: map/content covers the mobile navigation`, stacking);
+  if (viewport.mobile) {
+    assert(stacking.bottomIsMobileNav, `${viewport.name}: map/content covers the mobile navigation`, stacking);
+    const gapAboveNav =
+      stacking.mapBottom != null && stacking.mobileNavTop != null
+        ? stacking.mobileNavTop - stacking.mapBottom
+        : null;
+    assert(gapAboveNav != null && gapAboveNav >= -1 && gapAboveNav <= 12, `${viewport.name}: visible blank gap remains between the map and mobile navigation`, { ...stacking, gapAboveNav });
+  }
   await capture(client, `${viewport.name}-home-map-scrolled`);
 }
 
