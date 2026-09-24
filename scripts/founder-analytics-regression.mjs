@@ -62,7 +62,7 @@ assert.ok(ga4.includes("['founder-analytics-ga4-v3']"), 'GA4 cache key must be b
 assert.match(gsc, /revalidate: 300/, 'GSC provider must use bounded caching.');
 
 assert.ok(posthog.includes("countIf(first_seen < toDateTime('${from}')) AS returning_users"), 'Returning users must have a public visit before the selected interval.');
-assert.ok(posthog.includes('countIf(person_id IN ('), 'Campaign returning users must use a prior-visit person set.');
+assert.ok(posthog.includes('uniqIf(person_id, person_id IN ('), 'Campaign returning users must use a prior-visit person set without double-counting users across sessions.');
 assert.ok(posthog.includes("timestamp < toDateTime('${from}')"), 'Prior-visit queries must end before the selected interval starts.');
 assert.ok(posthog.includes("uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions"), 'Attribution denominator must deduplicate public pageview sessions.');
 assert.ok(posthog.includes('attributionCompleteness: rate(publicPageviewSessions - numberValue(health.source_missing_sessions), publicPageviewSessions)'), 'Attribution completeness must measure sessions with known traffic source, not landing-path completeness.');
