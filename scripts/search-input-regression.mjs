@@ -43,8 +43,8 @@ assert(searchFilter.includes('lastTrackedQueryRef.current = currentQuery;'), 'Ex
 assert(searchFilter.includes('}, [value, pathname, router]);'), 'Typing debounce must not restart when stale server search params arrive.');
 assert(searchFilter.includes('setValue(currentQuery)'), 'SearchFilter must still sync genuine external query changes such as clear-all/back navigation.');
 assert(searchFilter.includes('resultRevealRequest'), 'Search submit must have an explicit result-reveal request state.');
-assert(searchFilter.includes("document.getElementById('club-results')"), 'Search submit must target the committed result block.');
-assert(searchFilter.includes("results.scrollIntoView({ behavior: 'smooth', block: 'start' })"), 'Search submit must reveal the committed result block without a hard jump.');
+assert(searchFilter.includes("document.getElementById('club-results') ?? document.querySelector('[data-explore-view]')"), 'Search submit must target the committed result block or the active map discovery view.');
+assert(searchFilter.includes("resultsTarget.scrollIntoView({ behavior: 'smooth', block: 'start' })"), 'Search submit must reveal the committed discovery target without a hard jump.');
 assert(searchFilter.includes('setResultRevealRequest((request) => request + 1)'), 'Enter/Search must request result reveal after committing the query.');
 assert(searchFilter.includes('const navigationPending = value.trim() !== currentQuery;'), 'Search input must expose pending navigation state while committed results catch up.');
 assert(searchFilter.includes('aria-label="Axtarılır"'), 'Search input must provide accessible pending feedback.');
