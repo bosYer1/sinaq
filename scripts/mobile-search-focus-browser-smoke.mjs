@@ -228,7 +228,7 @@ try {
   assert(resultRevealState.heading.includes('Axtarış nəticələri'), 'Committed search must expose explicit result context', resultRevealState);
   assert(resultRevealState.resultCount > 0, 'Committed real-club search must expose a positive result count', resultRevealState);
   assert(resultRevealState.resultsTop != null && resultRevealState.resultsTop < resultRevealState.viewportHeight, 'Committed results must be visible after Search/Enter', resultRevealState);
-  assert(resultRevealState.mapHeight != null && resultRevealState.mapHeight <= 280.5, 'Search mode map must stay compact before mobile results', resultRevealState);
+  assert(resultRevealState.mapHeight != null && resultRevealState.mapHeight <= 200.5, 'Search mode map must stay compact before mobile results', resultRevealState);
 
   const screenshot = await client.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
   const screenshotFile = await open(`${ARTIFACT_DIR}/mobile-search-focus.png`, 'wx', 0o600);
