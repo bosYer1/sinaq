@@ -29,6 +29,8 @@ assert.match(formSource, /name="official_tiktok"/, 'owner claim form must accept
 assert.match(actionSource, /function validTikTok\(value: string\)/, 'owner claim action must validate TikTok evidence before storing it in the structured message.');
 assert.match(actionSource, /Rəsmi TikTok:/, 'owner claim structured evidence must preserve the official TikTok source.');
 assert.match(contactSource, /kind="new_club"/, 'contact page must continue exposing new club submissions');
+assert.match(contactSource, /suggest\?: string/, 'contact page must accept a missing-club suggestion query for prefill.');
+assert.match(contactSource, /clubName=\{suggestedClub\}/, 'new-club form must prefill the search suggestion without changing the correction form.');
 assert.match(contactSource, /Klubun adını və əlaqə nömrənizi yazın\./, 'contact page must explain the simplified two-field flow');
 assert.match(contactSource, /params\.sent === '1'/, 'contact page must render success feedback');
 assert.match(contactSource, /params\.error === '1'/, 'contact page must render failure feedback');
