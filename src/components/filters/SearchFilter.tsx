@@ -35,7 +35,6 @@ export function SearchFilter() {
   const currentQuery = searchParams.get('q') ?? '';
   const [value, setValue] = useState(currentQuery);
   const [pendingSearchAnalytics, setPendingSearchAnalytics] = useState<PendingSearchAnalytics | null>(null);
-  const [resultRevealRequest, setResultRevealRequest] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const lastRequestedQueryRef = useRef(currentQuery);
   const lastTrackedQueryRef = useRef(currentQuery);
@@ -126,38 +125,6 @@ export function SearchFilter() {
   }, [value]);
 
   useEffect(() => {
-    if (resultRevealRequest === 0) return;
-
-    const submittedQuery = value.trim();
-    let retryTimer = 0;
-    let cancelled = false;
-    const startedAt = Date.now();
-
-    const revealResults = () => {
-      if (cancelled) return;
-
-      const committedQuery = currentQueryRef.current;
-      const resultsTarget = document.getElementById('club-results') ?? document.querySelector('[data-explore-view]');
-      const resultCount = readRenderedResultCount();
-
-      if (committedQuery === submittedQuery && resultsTarget && resultCount != null) {
-        resultsTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        return;
-      }
-
-      if (Date.now() - startedAt < SEARCH_RESULT_READ_TIMEOUT_MS) {
-        retryTimer = window.setTimeout(revealResults, SEARCH_RESULT_READ_INTERVAL_MS);
-      }
-    };
-
-    retryTimer = window.setTimeout(revealResults, 0);
-    return () => {
-      cancelled = true;
-      if (retryTimer) window.clearTimeout(retryTimer);
-    };
-  }, [resultRevealRequest, value]);
-
-  useEffect(() => {
     const pending = pendingSearchAnalytics;
     if (!pending || currentQuery !== pending.query) return;
 
@@ -246,7 +213,6 @@ export function SearchFilter() {
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
-            setResultRevealRequest((request) => request + 1);
             event.currentTarget.blur();
           }
         }}
