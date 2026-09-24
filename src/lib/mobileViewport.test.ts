@@ -1,26 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getMobileNavVisualTop } from './mobileViewport.ts';
+import {
+  getMobileNavDocumentTop,
+  getRealPageMaxTop,
+  isIOSWebKit,
+  isPhantomBottomScroll,
+} from './mobileViewport.ts';
 
-test('mobile nav aligns to the visual viewport bottom without layout viewport input', () => {
-  assert.equal(getMobileNavVisualTop(0, 844, 68), 776);
+test('detects iPhone Chrome/Safari as iOS WebKit hosts', () => {
+  assert.equal(isIOSWebKit('Mozilla/5.0 (iPhone; CPU iPhone OS 26_6 like Mac OS X) CriOS/153 Mobile/15E148 Safari/604.1'), true);
+  assert.equal(isIOSWebKit('Mozilla/5.0 (iPhone; CPU iPhone OS 26_6 like Mac OS X) Version/26.0 Mobile/15E148 Safari/604.1'), true);
 });
 
-test('mobile nav follows dynamic browser chrome offsets', () => {
-  assert.equal(getMobileNavVisualTop(44, 700, 68), 676);
+test('detects touch iPad desktop UA fallback', () => {
+  assert.equal(isIOSWebKit('Mozilla/5.0 Macintosh', 'MacIntel', 5), true);
+  assert.equal(isIOSWebKit('Mozilla/5.0 Macintosh', 'MacIntel', 0), false);
 });
 
-test('mobile nav follows the keyboard-resized visual viewport', () => {
-  assert.equal(getMobileNavVisualTop(0, 500, 68), 432);
+test('absolute mobile nav follows visual viewport in document coordinates', () => {
+  assert.equal(getMobileNavDocumentTop(1200, 844, 68), 1976);
+  assert.equal(getMobileNavDocumentTop(0, 500, 68), 432);
 });
 
-test('mobile nav never places its top above the visual viewport', () => {
-  assert.equal(getMobileNavVisualTop(20, 60, 100), 20);
+test('real page max top ignores browser-created bottom overflow', () => {
+  assert.equal(getRealPageMaxTop(2200, 844), 1356);
+  assert.equal(getRealPageMaxTop(600, 844), 0);
 });
 
-test('mobile nav ignores invalid visual viewport metrics', () => {
-  assert.equal(getMobileNavVisualTop(Number.NaN, 844, 68), 0);
-  assert.equal(getMobileNavVisualTop(0, Number.NaN, 68), 0);
-  assert.equal(getMobileNavVisualTop(0, 844, Number.NaN), 0);
-  assert.equal(getMobileNavVisualTop(0, 0, 68), 0);
+test('phantom scroll is detected only past real content end', () => {
+  assert.equal(isPhantomBottomScroll(1500, 1356), true);
+  assert.equal(isPhantomBottomScroll(1357, 1356), false);
+  assert.equal(isPhantomBottomScroll(1359, 1356), true);
 });
