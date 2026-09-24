@@ -331,7 +331,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                     onClick={() => setMobileListMapActive(true)}
                     className="absolute inset-0 z-[600] flex touch-pan-y items-center justify-center rounded-[18px] bg-transparent"
                   >
-                    <span className="rounded-full border border-border bg-surface/95 px-4 py-2 text-xs font-semibold text-ink shadow-card backdrop-blur">Xəritəyə toxunun</span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-surface/95 px-4 py-2.5 text-xs font-bold text-primary shadow-[0_8px_24px_rgba(124,92,252,0.16)] backdrop-blur transition-transform active:scale-[0.98]"><span aria-hidden="true">⌖</span>Xəritəni aç</span>
                   </button>
                 ) : null}
               </div>
@@ -361,9 +361,9 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 <button
                   type="button"
                   onClick={handleMobileExpandedToggle}
-                  className="mt-3 h-12 w-full rounded-xl border border-border bg-surface text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
+                  className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-primary/20 bg-gradient-to-r from-primary to-primary-dark px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(124,92,252,0.22)] transition hover:shadow-[0_12px_28px_rgba(124,92,252,0.28)] active:scale-[0.995]"
                 >
-                  {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT})`}
+                  {mobileExpanded ? 'Daha az klub göstər ↑' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT}) ↓`}
                 </button>
               ) : null}
             </section>
