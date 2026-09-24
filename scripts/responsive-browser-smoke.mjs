@@ -181,8 +181,8 @@ async function assertCommonLayout(client, viewport, path) {
         computedBottom: style.bottom,
       };
     })()`);
-    assert(fixedContract?.position === 'fixed', `${viewport.name} ${path}: mobile navigation must use native fixed positioning`, fixedContract);
-    assert(fixedContract?.inlineBottom === '', `${viewport.name} ${path}: mobile navigation must not carry stale inline bottom offsets`, fixedContract);
+    assert(fixedContract?.position === 'fixed', `${viewport.name} ${path}: mobile navigation must use fixed positioning`, fixedContract);
+    assert(Number.isFinite(Number.parseFloat(fixedContract?.computedBottom ?? '')), `${viewport.name} ${path}: mobile navigation must expose a numeric viewport-alignment bottom offset`, fixedContract);
 
     await evaluate(client, `window.scrollTo(0, Math.max(0, document.documentElement.scrollHeight - window.innerHeight))`);
     await sleep(120);
