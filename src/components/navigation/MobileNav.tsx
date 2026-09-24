@@ -40,7 +40,8 @@ export function MobileNav() {
     nav.dataset.iosViewportMode = 'absolute';
 
     let frame = 0;
-    let keyboardSettling = false;
+    let editableFocusSeen = false;
+    let keyboardPollTimer = 0;
     let keyboardReleaseTimer = 0;
     const settleTimers = new Set<number>();
 
@@ -66,12 +67,36 @@ export function MobileNav() {
     const syncNav = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        const keyboardActive = isEditableFocused() || keyboardSettling;
+        const editableFocused = isEditableFocused();
         nav.style.position = 'absolute';
         nav.style.bottom = 'auto';
 
-        if (keyboardActive) {
+        if (editableFocused) {
+          editableFocusSeen = true;
           nav.style.visibility = 'hidden';
+
+          if (keyboardReleaseTimer) {
+            window.clearTimeout(keyboardReleaseTimer);
+            keyboardReleaseTimer = 0;
+          }
+          if (!keyboardPollTimer) {
+            keyboardPollTimer = window.setTimeout(() => {
+              keyboardPollTimer = 0;
+              syncNav();
+            }, 100);
+          }
+          return;
+        }
+
+        if (editableFocusSeen) {
+          nav.style.visibility = 'hidden';
+          if (!keyboardReleaseTimer) {
+            keyboardReleaseTimer = window.setTimeout(() => {
+              keyboardReleaseTimer = 0;
+              editableFocusSeen = false;
+              settleViewport();
+            }, 500);
+          }
           return;
         }
 
@@ -114,29 +139,12 @@ export function MobileNav() {
 
     const handleFocusIn = (event: FocusEvent) => {
       if (!isEditableElement(event.target)) return;
-
-      if (keyboardReleaseTimer) {
-        window.clearTimeout(keyboardReleaseTimer);
-        keyboardReleaseTimer = 0;
-      }
-      keyboardSettling = true;
-      nav.style.visibility = 'hidden';
-      settleViewport();
+      syncNav();
     };
 
     const handleFocusOut = (event: FocusEvent) => {
       if (!isEditableElement(event.target)) return;
-
-      keyboardSettling = true;
-      nav.style.visibility = 'hidden';
-      clearSettleTimers();
-
-      if (keyboardReleaseTimer) window.clearTimeout(keyboardReleaseTimer);
-      keyboardReleaseTimer = window.setTimeout(() => {
-        keyboardReleaseTimer = 0;
-        keyboardSettling = false;
-        settleViewport();
-      }, 500);
+      syncNav();
     };
 
     const handleVisibilityChange = () => {
@@ -157,6 +165,7 @@ export function MobileNav() {
     return () => {
       window.cancelAnimationFrame(frame);
       clearSettleTimers();
+      if (keyboardPollTimer) window.clearTimeout(keyboardPollTimer);
       if (keyboardReleaseTimer) window.clearTimeout(keyboardReleaseTimer);
       visualViewport.removeEventListener('resize', settleViewport);
       visualViewport.removeEventListener('scroll', syncNav);
