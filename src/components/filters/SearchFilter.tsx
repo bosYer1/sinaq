@@ -37,6 +37,7 @@ export function SearchFilter() {
   const currentQuery = searchParams.get('q') ?? '';
   const [value, setValue] = useState(currentQuery);
   const [pendingSearchAnalytics, setPendingSearchAnalytics] = useState<PendingSearchAnalytics | null>(null);
+  const [resultRevealRequest, setResultRevealRequest] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const lastRequestedQueryRef = useRef(currentQuery);
   const lastTrackedQueryRef = useRef(currentQuery);
@@ -124,6 +125,38 @@ export function SearchFilter() {
 
     return () => window.clearTimeout(timer);
   }, [value]);
+
+  useEffect(() => {
+    if (resultRevealRequest === 0) return;
+
+    const submittedQuery = value.trim();
+    let retryTimer = 0;
+    let cancelled = false;
+    const startedAt = Date.now();
+
+    const revealResults = () => {
+      if (cancelled) return;
+
+      const committedQuery = currentQueryRef.current;
+      const results = document.getElementById('club-results');
+      const resultCount = readRenderedResultCount();
+
+      if (committedQuery === submittedQuery && results && resultCount != null) {
+        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      if (Date.now() - startedAt < SEARCH_RESULT_READ_TIMEOUT_MS) {
+        retryTimer = window.setTimeout(revealResults, SEARCH_RESULT_READ_INTERVAL_MS);
+      }
+    };
+
+    retryTimer = window.setTimeout(revealResults, 0);
+    return () => {
+      cancelled = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+    };
+  }, [resultRevealRequest, value]);
 
   useEffect(() => {
     const pending = pendingSearchAnalytics;
@@ -214,6 +247,7 @@ export function SearchFilter() {
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
+            setResultRevealRequest((request) => request + 1);
             event.currentTarget.blur();
           }
         }}
@@ -227,7 +261,10 @@ export function SearchFilter() {
       {value ? (
         <button
           type="button"
-          onClick={() => setValue('')}
+          onClick={() => {
+            setValue('');
+            window.requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+          }}
           aria-label="Axtarışı təmizlə"
           className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-xl leading-none text-faint transition hover:bg-surface-alt hover:text-ink"
         >
