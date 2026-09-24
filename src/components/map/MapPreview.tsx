@@ -21,7 +21,7 @@ type PreviewSize = {
   height: number;
 };
 
-const INITIAL_PREVIEW_SIZE: PreviewSize = { width: 390, height: 210 };
+const INITIAL_PREVIEW_SIZE: PreviewSize = { width: 390, height: 340 };
 
 function PreviewMarker({
   id,
