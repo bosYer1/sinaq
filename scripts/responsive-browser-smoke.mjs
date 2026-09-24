@@ -427,7 +427,7 @@ async function assertIOSChromeNavFallback(client) {
   assert(hidden === 'hidden', 'iOS nav must hide while the keyboard/input is active', { hidden });
 
   await evaluate(client, `document.querySelector('input[aria-label="Klub axtar"]')?.blur()`);
-  await sleep(550);
+  await sleep(800);
   const restored = await evaluate(client, `(() => {
     document.getElementById('ios-phantom-scroll-regression')?.remove();
     const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
