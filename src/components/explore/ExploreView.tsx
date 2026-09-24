@@ -59,7 +59,7 @@ interface ExploreViewProps {
 
 export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const { location, status, requestLocation } = useUserLocation();
-  const { clearAll, hasActiveFilters } = useFilters();
+  const { filters, clearAll, hasActiveFilters } = useFilters();
   const [sortByDistance, setSortByDistance] = useState(false);
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
@@ -149,6 +149,9 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   }, [clubsWithDistance, location]);
 
   const mobileClubs = mobileExpanded ? clubsWithDistance : clubsWithDistance.slice(0, MOBILE_INITIAL_CLUB_COUNT);
+  const searchQuery = filters.q?.trim() ?? '';
+  const resultsTitle = searchActive ? `Axtarış nəticələri (${clubsWithDistance.length})` : `Klublar (${clubsWithDistance.length})`;
+  const resultsSubtitle = searchActive && searchQuery ? `“${searchQuery}” üçün uyğun klublar` : 'Klubları müqayisə et';
 
   function handleLocationSort() {
     if (location) {
@@ -280,10 +283,10 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       {isDesktop ? (
         <div className="grid h-[clamp(590px,68vh,660px)] min-h-0 grid-cols-[390px_minmax(0,1fr)] gap-4">
           <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-border bg-bg-elevated">
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
+            <div id="club-results" className="scroll-mt-24 flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3" aria-live="polite">
               <div className="min-w-0">
-                <p className="truncate text-base font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
-                <p className="mt-0.5 text-[11px] text-muted">Klubu seç, xəritədə yerini gör</p>
+                <p className="truncate text-base font-bold text-ink">{resultsTitle}</p>
+                <p className="mt-0.5 truncate text-[11px] text-muted">{searchActive ? resultsSubtitle : 'Klubu seç, xəritədə yerini gör'}</p>
               </div>
               <button
                 type="button"
@@ -323,7 +326,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <section>
               <div
                 data-mobile-list-map-container="true"
-                className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px] [contain:layout_paint_style]"
+                className={`relative mb-3 overflow-hidden rounded-[18px] [contain:layout_paint_style] ${searchActive ? 'h-[220px] sm:h-[280px]' : 'h-[340px] sm:h-[400px]'}`}
               >
                 {mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />}
                 {!mobileListMapActive ? (
@@ -340,10 +343,10 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                   </button>
                 ) : null}
               </div>
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
-                  <p className="text-xs text-muted">Klubları müqayisə et</p>
+              <div id="club-results" className="scroll-mt-24 mb-3 flex items-center justify-between gap-3" aria-live="polite">
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-bold text-ink">{resultsTitle}</p>
+                  <p className="truncate text-xs text-muted">{resultsSubtitle}</p>
                 </div>
                 <button
                   type="button"
