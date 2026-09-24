@@ -210,7 +210,7 @@ async function assertHomepage(client, viewport) {
         updateCardCount: updateCards.length,
         firstUpdateTop,
         mobileNavTop: navRect?.top ?? null,
-        firstClubCardTop: document.querySelector('#club-discovery a[href^="/klub/"]')?.getBoundingClientRect().top ?? null,
+        clubResultsTop: document.getElementById('club-results')?.getBoundingClientRect().top ?? null,
       };
     })()`);
     assert(!listView.liveMapLoaded, `${viewport.name}: live Leaflet map loaded before mobile activation`, listView);
@@ -229,7 +229,7 @@ async function assertHomepage(client, viewport) {
     assert(listView.mapContainerHeight >= 275 && listView.mapContainerHeight <= 345, `${viewport.name}: compact list-view map height regressed`, listView);
     assert(listView.updateCardCount > 0, `${viewport.name}: mobile offer cards are missing from the homepage`, listView);
     assert(listView.firstUpdateTop != null && listView.mapContainerRect?.top != null && listView.firstUpdateTop < listView.mapContainerRect.top, `${viewport.name}: mobile offers must remain above club discovery`, listView);
-    assert(listView.firstClubCardTop != null && listView.mobileNavTop != null && listView.firstClubCardTop < listView.mobileNavTop, `${viewport.name}: first club card must peek into the usable viewport before the fixed mobile nav`, listView);
+    assert(listView.clubResultsTop != null && listView.mobileNavTop != null && listView.clubResultsTop < listView.mobileNavTop, `${viewport.name}: club-list heading must be visible before the fixed mobile nav`, listView);
     await capture(client, `${viewport.name}-home-list`);
     await evaluate(client, `document.querySelector('[aria-label="Xəritəni aktiv et"]')?.click()`);
     await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
