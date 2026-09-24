@@ -363,7 +363,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                   onClick={handleMobileExpandedToggle}
                   className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-primary/20 bg-gradient-to-r from-primary to-primary-dark px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(124,92,252,0.22)] transition hover:shadow-[0_12px_28px_rgba(124,92,252,0.28)] active:scale-[0.995]"
                 >
-                  {mobileExpanded ? 'Daha az klub göstər ↑' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT}) ↓`}
+                  {mobileExpanded ? 'Daha az klub göstər' : `Daha çox klub göstər (${clubsWithDistance.length - MOBILE_INITIAL_CLUB_COUNT})`}
                 </button>
               ) : null}
             </section>
