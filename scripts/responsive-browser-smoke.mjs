@@ -466,10 +466,32 @@ async function assertIOSChromeAppShell(client) {
   assert(restored.shellHeight != null && restored.visualHeight != null && Math.abs(restored.shellHeight - restored.visualHeight) <= 2, 'iOS shell must recover after visual viewport restoration', restored);
   assert(restored.documentScrollHeight <= restored.visualHeight + 2, 'restored iOS viewport must remain free of root black-gap overflow', restored);
 
-  await navigate(client, '/menyu');
+  await evaluate(client, `(() => {
+    const root = document.querySelector('[data-mobile-scroll-root="true"]');
+    if (root) root.scrollTop = root.scrollHeight;
+    window.__gameyerClientNavMarker = 'alive';
+  })()`);
+  await sleep(180);
+  const beforeClientRoute = await readShell();
+  assert(beforeClientRoute.rootScrollTop != null && beforeClientRoute.rootScrollTop > 0, 'client-route regression must start from a scrolled inner page', beforeClientRoute);
+
+  const clickedMenuLink = await evaluate(client, `(() => {
+    const link = [...document.querySelectorAll('a[href="/menyu"]')]
+      .find((candidate) => candidate instanceof HTMLAnchorElement);
+    if (!(link instanceof HTMLAnchorElement)) return false;
+    link.click();
+    return true;
+  })()`);
+  assert(clickedMenuLink, 'client-route regression could not click the real /menyu Next link');
+
+  await waitFor(client, `location.pathname === '/menyu'`, 'client-side /menyu route');
   await waitForPage(client, '[data-mobile-scroll-root="true"]');
   await sleep(500);
+  const routeMarker = await evaluate(client, `window.__gameyerClientNavMarker ?? null`);
+  assert(routeMarker === 'alive', 'menu navigation must remain a client-side route transition', { routeMarker });
+
   const afterRoute = await readShell();
+  assert(afterRoute.rootScrollTop != null && afterRoute.rootScrollTop <= 2, 'client route must reset the persistent mobile scroll root to the top', afterRoute);
   assert(afterRoute.shellHeight != null && afterRoute.visualHeight != null && Math.abs(afterRoute.shellHeight - afterRoute.visualHeight) <= 2, 'client route must resettle shell to visual viewport height', afterRoute);
   assert(afterRoute.documentScrollHeight <= afterRoute.visualHeight + 2, 'menu route must not recreate document-level black gap', afterRoute);
   assert(afterRoute.navBottom != null && afterRoute.shellBottom != null && Math.abs(afterRoute.navBottom - afterRoute.shellBottom) <= 2, 'menu route must keep nav in the shell bottom row', afterRoute);
