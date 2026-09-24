@@ -178,6 +178,28 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
   function handleSelectMarker(id: string) {
     setActiveClubId(id);
+
+    const selectedIndex = clubsWithDistance.findIndex((club) => club.id === id);
+    const needsMobileExpansion =
+      !isDesktop &&
+      view === 'list' &&
+      !mobileExpanded &&
+      selectedIndex >= MOBILE_INITIAL_CLUB_COUNT;
+
+    if (needsMobileExpansion) {
+      setMobileExpanded(true);
+      saveMobileExpandedState(window.scrollY);
+      let secondFrame = 0;
+      window.requestAnimationFrame(() => {
+        secondFrame = window.requestAnimationFrame(() => {
+          cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      });
+      return () => {
+        if (secondFrame) window.cancelAnimationFrame(secondFrame);
+      };
+    }
+
     cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
@@ -362,6 +384,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 clubs={mobileClubs}
                 activeClubId={activeClubId}
                 onHoverClub={handleHoverCard}
+                cardRefs={cardRefs}
                 searchActive={searchActive}
                 onClearFilters={hasActiveFilters ? clearAll : undefined}
               />
