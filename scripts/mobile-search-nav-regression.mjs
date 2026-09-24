@@ -15,6 +15,8 @@ assert.ok(!mobileNav.includes('window.innerHeight'), 'Mobile navigation must not
 assert.ok(!mobileNav.includes('getMobileNavBottomOffset'), 'The failed signed bottom-offset workaround must stay removed.');
 assert.ok(mobileNav.includes("document.addEventListener('focusout', settleViewport, true)"), 'Mobile navigation must re-settle after the keyboard/input focus closes.');
 assert.ok(mobileNav.includes('for (const delay of [50, 150, 300])'), 'Mobile navigation must tolerate delayed WebKit visual viewport updates.');
+assert.ok(mobileNav.includes("window.addEventListener('pageshow', settleViewport)"), 'Mobile navigation must re-anchor after iOS page-cache restores.');
+assert.ok(mobileNav.includes("document.addEventListener('visibilitychange', handleVisibilityChange)"), 'Mobile navigation must re-anchor when the browser tab becomes visible again.');
 assert.ok(mobileNav.includes('}, [pathname]);'), 'Mobile navigation must re-anchor after every client-side route transition.');
 assert.ok(searchFilter.includes('a[href="/#club-search"]'), 'SearchFilter must intercept same-page mobile search navigation');
 assert.ok(searchFilter.includes('event.preventDefault()'), 'Same-page mobile search navigation must prevent the no-op hash navigation');
