@@ -20,11 +20,9 @@ const SEARCH_RESULT_READ_INTERVAL_MS = 100;
 const SEARCH_RESULT_READ_TIMEOUT_MS = 10_000;
 
 function readRenderedResultCount() {
-  const exploreText = document.querySelector('[data-explore-view]')?.textContent ?? '';
-  const match = exploreText.match(/Klublar \((\d+)\)/);
-  if (!match) return null;
-
-  const count = Number(match[1]);
+  const explore = document.querySelector('[data-explore-view]');
+  const rawCount = explore?.getAttribute('data-result-count') ?? '';
+  const count = Number(rawCount);
   return Number.isInteger(count) && count >= 0 ? count : null;
 }
 
