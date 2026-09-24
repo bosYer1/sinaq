@@ -484,7 +484,16 @@ async function assertIOSChromeAppShell(client) {
   })()`);
   assert(clickedMenuLink, 'client-route regression could not click the real /menyu Next link');
 
-  await waitFor(client, `location.pathname === '/menyu'`, 'client-side /menyu route');
+  let clientRouteArrived = false;
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const pathname = await evaluate(client, `location.pathname`);
+    if (pathname === '/menyu') {
+      clientRouteArrived = true;
+      break;
+    }
+    await sleep(100);
+  }
+  assert(clientRouteArrived, 'client-side /menyu route did not complete');
   await waitForPage(client, '[data-mobile-scroll-root="true"]');
   await sleep(500);
   const routeMarker = await evaluate(client, `window.__gameyerClientNavMarker ?? null`);
