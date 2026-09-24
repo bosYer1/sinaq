@@ -39,6 +39,6 @@ console.log('Premium placement + organic popularity regression: PASS');
 assert.ok(popularity.includes('queryPostHogPopularity'), 'Popularity must have a PostHog fallback when server-admin page_views access is unavailable.');
 assert.ok(popularity.includes("event = 'club_view'"), 'PostHog fallback must use real club profile views.');
 assert.ok(popularity.includes("['gameyer-club-popularity-30d-v4']"), 'Popularity cache key must be bumped when empty-cache recovery semantics change.');
-assert.ok(clubs.includes("['gameyer-public-clubs-v6']"), 'Public club cache key must be bumped for profile-image discovery ranking semantics.');
+assert.ok(clubs.includes("['gameyer-public-clubs-v7']"), 'Public club cache key must remain bumped for discovery ranking and public club shape semantics.');
 assert.ok(clubs.includes('const profileImageDelta') && clubs.includes('profile_image_url?.trim()'), 'Incomplete discovery cards must rank below clubs with a real profile image.');
 assert.ok(clubs.includes('const recencyDelta'), 'Alphabetical ordering must not be the default fallback when popularity data ties or is unavailable.');
