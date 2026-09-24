@@ -192,6 +192,82 @@ try {
   })`);
   assert(!submitState.inputFocused, 'Mobile Search/Enter must end input focus', submitState);
 
+  const realClubName = await evaluate(client, `document.querySelector('#club-results a[href^="/klub/"] h3')?.textContent?.trim() || ''`);
+  assert(realClubName.length > 0, 'A real club name is required for Search/Enter discovery reveal regression', { realClubName });
+
+  // Explicit Search/Enter in list mode must commit immediately and reveal the list result context.
+  await evaluate(client, `(() => {
+    const input = document.querySelector('input[aria-label="Klub axtar"]');
+    if (!(input instanceof HTMLInputElement)) return;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    setter?.call(input, ${JSON.stringify(realClubName)});
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  })()`);
+  await waitFor(client, `new URLSearchParams(location.search).get('q') === ${JSON.stringify(realClubName)}`, 'list-mode Search/Enter query commit');
+  await waitFor(client, `(() => {
+    const results = document.getElementById('club-results');
+    if (!results) return false;
+    const rect = results.getBoundingClientRect();
+    return rect.top >= 0 && rect.top < Math.min(innerHeight, 180);
+  })()`, 'list-mode committed result reveal');
+
+  const listRevealState = await evaluate(client, `(() => {
+    const explore = document.querySelector('[data-explore-view]');
+    const results = document.getElementById('club-results');
+    const map = document.querySelector('[data-mobile-list-map-container="true"]');
+    const resultsRect = results?.getBoundingClientRect();
+    const mapRect = map?.getBoundingClientRect();
+    return {
+      view: explore?.getAttribute('data-explore-view') ?? null,
+      heading: results?.textContent?.replace(/\\s+/g, ' ').trim() || '',
+      resultCount: Number(explore?.getAttribute('data-result-count') || '-1'),
+      resultsTop: resultsRect?.top ?? null,
+      mapHeight: mapRect?.height ?? null,
+    };
+  })()`);
+  assert(listRevealState.view === 'list', 'List-mode Search/Enter must not change the discovery view', listRevealState);
+  assert(listRevealState.heading.includes('Axtarış nəticələri'), 'List-mode Search/Enter must expose explicit result context', listRevealState);
+  assert(listRevealState.resultCount > 0, 'Committed real-club search must expose a positive result count', listRevealState);
+  assert(listRevealState.resultsTop != null && listRevealState.resultsTop < 180, 'List-mode Search/Enter must align the result heading near the viewport top', listRevealState);
+  assert(listRevealState.mapHeight != null && listRevealState.mapHeight >= 335, 'List-mode search must preserve the founder-approved map-first height', listRevealState);
+
+  // The map-view edge case has no #club-results anchor. Search/Enter must reveal
+  // the active map discovery surface without switching the view.
+  await navigate(client, '/?view=map');
+  await waitFor(client, `Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'map-mode search input');
+  await evaluate(client, `(() => {
+    const input = document.querySelector('input[aria-label="Klub axtar"]');
+    if (!(input instanceof HTMLInputElement)) return;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    setter?.call(input, ${JSON.stringify(realClubName)});
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  })()`);
+  await waitFor(client, `new URLSearchParams(location.search).get('q') === ${JSON.stringify(realClubName)} && new URLSearchParams(location.search).get('view') === 'map'`, 'map-mode Search/Enter query commit');
+  await waitFor(client, `(() => {
+    const explore = document.querySelector('[data-explore-view="map"]');
+    if (!explore) return false;
+    const rect = explore.getBoundingClientRect();
+    return rect.top >= 0 && rect.top < Math.min(innerHeight, 180);
+  })()`, 'map-mode discovery reveal');
+
+  const mapRevealState = await evaluate(client, `(() => {
+    const explore = document.querySelector('[data-explore-view="map"]');
+    const rect = explore?.getBoundingClientRect();
+    return {
+      viewParam: new URLSearchParams(location.search).get('view'),
+      renderedView: explore?.getAttribute('data-explore-view') ?? null,
+      resultCount: Number(explore?.getAttribute('data-result-count') || '-1'),
+      resultAnchorPresent: Boolean(document.getElementById('club-results')),
+      exploreTop: rect?.top ?? null,
+    };
+  })()`);
+  assert(mapRevealState.viewParam === 'map' && mapRevealState.renderedView === 'map', 'Map-mode Search/Enter must preserve map view', mapRevealState);
+  assert(!mapRevealState.resultAnchorPresent, 'Map-mode regression must exercise the no-club-results-anchor edge case', mapRevealState);
+  assert(mapRevealState.resultCount > 0, 'Map-mode committed search must expose the filtered result count', mapRevealState);
+  assert(mapRevealState.exploreTop != null && mapRevealState.exploreTop < 180, 'Map-mode Search/Enter must reveal the active map discovery surface', mapRevealState);
+
   const screenshot = await client.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
   const screenshotFile = await open(`${ARTIFACT_DIR}/mobile-search-focus.png`, 'wx', 0o600);
   try {
@@ -200,7 +276,7 @@ try {
     await screenshotFile.close();
   }
 
-  console.log('Mobile search focus browser regression passed: focus works and mobile input font prevents iOS focus zoom.');
+  console.log('Mobile search focus browser regression passed: focus/zoom guards and view-aware Search/Enter reveal are healthy.');
 } finally {
   client.close();
   chrome.kill('SIGTERM');
