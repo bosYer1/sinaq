@@ -20,11 +20,9 @@ const SEARCH_RESULT_READ_INTERVAL_MS = 100;
 const SEARCH_RESULT_READ_TIMEOUT_MS = 10_000;
 
 function readRenderedResultCount() {
-  const exploreText = document.querySelector('[data-explore-view]')?.textContent ?? '';
-  const match = exploreText.match(/Klublar \((\d+)\)/);
-  if (!match) return null;
-
-  const count = Number(match[1]);
+  const explore = document.querySelector('[data-explore-view]');
+  const rawCount = explore?.getAttribute('data-result-count') ?? '';
+  const count = Number(rawCount);
   return Number.isInteger(count) && count >= 0 ? count : null;
 }
 
@@ -37,11 +35,13 @@ export function SearchFilter() {
   const currentQuery = searchParams.get('q') ?? '';
   const [value, setValue] = useState(currentQuery);
   const [pendingSearchAnalytics, setPendingSearchAnalytics] = useState<PendingSearchAnalytics | null>(null);
+  const [resultRevealRequest, setResultRevealRequest] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const lastRequestedQueryRef = useRef(currentQuery);
   const lastTrackedQueryRef = useRef(currentQuery);
   const currentQueryRef = useRef(currentQuery);
   const paramsStringRef = useRef(paramsString);
+  const navigationPending = value.trim() !== currentQuery;
 
   useEffect(() => {
     const focusSearch = () => {
@@ -124,6 +124,38 @@ export function SearchFilter() {
 
     return () => window.clearTimeout(timer);
   }, [value]);
+
+  useEffect(() => {
+    if (resultRevealRequest === 0) return;
+
+    const submittedQuery = value.trim();
+    let retryTimer = 0;
+    let cancelled = false;
+    const startedAt = Date.now();
+
+    const revealResults = () => {
+      if (cancelled) return;
+
+      const committedQuery = currentQueryRef.current;
+      const resultsTarget = document.getElementById('club-results') ?? document.querySelector('[data-explore-view]');
+      const resultCount = readRenderedResultCount();
+
+      if (committedQuery === submittedQuery && resultsTarget && resultCount != null) {
+        resultsTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      if (Date.now() - startedAt < SEARCH_RESULT_READ_TIMEOUT_MS) {
+        retryTimer = window.setTimeout(revealResults, SEARCH_RESULT_READ_INTERVAL_MS);
+      }
+    };
+
+    retryTimer = window.setTimeout(revealResults, 0);
+    return () => {
+      cancelled = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+    };
+  }, [resultRevealRequest, value]);
 
   useEffect(() => {
     const pending = pendingSearchAnalytics;
@@ -214,6 +246,7 @@ export function SearchFilter() {
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
+            setResultRevealRequest((request) => request + 1);
             event.currentTarget.blur();
           }
         }}
@@ -221,13 +254,29 @@ export function SearchFilter() {
         aria-label="Klub axtar"
         enterKeyHint="search"
         autoComplete="off"
-        className="h-12 w-full touch-manipulation rounded-xl border border-border-strong bg-surface pl-11 pr-11 text-base text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 sm:text-sm lg:h-11"
+        className="h-12 w-full touch-manipulation rounded-xl border border-border-strong bg-surface pl-11 pr-20 text-base text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 sm:text-sm lg:h-11"
       />
+
+      {navigationPending && value ? (
+        <span
+          role="status"
+          aria-label="Axtarılır"
+          className="pointer-events-none absolute right-11 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-primary"
+        >
+          <svg viewBox="0 0 20 20" className="h-4 w-4 animate-spin" fill="none" aria-hidden="true">
+            <circle cx="10" cy="10" r="7" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2" />
+            <path d="M10 3a7 7 0 0 1 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </span>
+      ) : null}
 
       {value ? (
         <button
           type="button"
-          onClick={() => setValue('')}
+          onClick={() => {
+            setValue('');
+            window.requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+          }}
           aria-label="Axtarışı təmizlə"
           className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-xl leading-none text-faint transition hover:bg-surface-alt hover:text-ink"
         >

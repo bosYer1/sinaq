@@ -1,8 +1,10 @@
 import { readFile } from 'node:fs/promises';
 
-const [filterBar, searchFilter, clubsQuery] = await Promise.all([
+const [filterBar, searchFilter, typeFilter, exploreView, clubsQuery] = await Promise.all([
   readFile(new URL('../src/components/filters/FilterBar.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/filters/SearchFilter.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/filters/TypeFilter.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/explore/ExploreView.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/queries/clubs.ts', import.meta.url), 'utf8'),
 ]);
 
@@ -12,12 +14,19 @@ function assert(condition, message) {
 
 assert(!filterBar.includes('<SearchFilter key={searchQuery} />'), 'SearchFilter must not remount whenever the q parameter changes.');
 assert(filterBar.includes('<SearchFilter />'), 'FilterBar must render a stable SearchFilter instance.');
+assert(!filterBar.includes('🔥 Təkliflər'), 'Mobile filter row must stay focused on search/filter controls; offers remain in the homepage offers section.');
+assert(filterBar.indexOf('Aktiv axtarış və filtrləri təmizlə') < filterBar.indexOf('<TypeFilter types={types} />'), 'Mobile clear action must appear before overflow-prone type/district/price controls.');
+assert(typeFilter.includes('<span className="sm:hidden">PS</span>'), 'Mobile PlayStation filter must use the compact PS label.');
+assert(typeFilter.includes('<span className="hidden sm:inline">{t.name}</span>'), 'Larger screens must retain the full PlayStation label.');
+assert(typeFilter.includes('aria-label={t.name}'), 'Compact mobile filter labels must preserve the full accessible name.');
 assert(searchFilter.includes('lastRequestedQueryRef'), 'SearchFilter must preserve local typing while URL navigation catches up.');
 assert(searchFilter.includes('lastTrackedQueryRef'), 'Search analytics must deduplicate settled queries independently from URL navigation.');
 assert(searchFilter.includes('currentQueryRef'), 'SearchFilter must track the latest committed query without restarting the typing debounce.');
 assert(searchFilter.includes('paramsStringRef'), 'SearchFilter must preserve the latest URL parameters without making them debounce dependencies.');
 assert(searchFilter.includes('pendingSearchAnalytics'), 'Search analytics must wait for committed result state before capture.');
 assert(searchFilter.includes('readRenderedResultCount'), 'Search analytics must read the committed rendered result count.');
+assert(searchFilter.includes("getAttribute('data-result-count')"), 'Search result count must use a stable data contract instead of visible copy.');
+assert(exploreView.includes('data-result-count={clubsWithDistance.length}'), 'Discovery must expose the stable committed result count contract.');
 assert(searchFilter.includes('result_count: resultCount'), 'search_query must include committed result_count.');
 assert(searchFilter.includes('no_results: resultCount === 0'), 'search_query must include derived no_results.');
 assert(searchFilter.includes('const currentQueryAtDispatch = currentQueryRef.current;'), 'Search dispatch must compare against the latest committed query at timer execution time.');
@@ -39,6 +48,20 @@ assert(searchFilter.includes("trackGaEvent('search_cleared'"), 'Settled clear ac
 assert(searchFilter.includes('lastTrackedQueryRef.current = currentQuery;'), 'External query synchronization must not be misclassified as fresh user search intent.');
 assert(searchFilter.includes('}, [value, pathname, router]);'), 'Typing debounce must not restart when stale server search params arrive.');
 assert(searchFilter.includes('setValue(currentQuery)'), 'SearchFilter must still sync genuine external query changes such as clear-all/back navigation.');
+assert(searchFilter.includes('resultRevealRequest'), 'Search submit must have an explicit result-reveal request state.');
+assert(searchFilter.includes("document.getElementById('club-results') ?? document.querySelector('[data-explore-view]')"), 'Search submit must target the committed result block or the active map discovery view.');
+assert(searchFilter.includes("resultsTarget.scrollIntoView({ behavior: 'smooth', block: 'start' })"), 'Search submit must reveal the committed discovery target without a hard jump.');
+assert(searchFilter.includes('setResultRevealRequest((request) => request + 1)'), 'Enter/Search must request result reveal after committing the query.');
+assert(searchFilter.includes('const navigationPending = value.trim() !== currentQuery;'), 'Search input must expose pending navigation state while committed results catch up.');
+assert(searchFilter.includes('aria-label="Axtarılır"'), 'Search input must provide accessible pending feedback.');
+assert(searchFilter.includes('animate-spin'), 'Pending search feedback must remain visually lightweight and recognizable.');
+assert(searchFilter.includes("inputRef.current?.focus({ preventScroll: true })"), 'Clearing search must keep typing flow ready without shifting the page.');
+assert(exploreView.includes('id="club-results"'), 'Discovery must expose a stable search-result reveal target.');
+assert(exploreView.includes("searchActive ? 'h-[180px] sm:h-[250px]' : 'h-[210px] sm:h-[300px]'"), 'Mobile discovery must keep map-first while exposing club cards sooner, with an even more compact search state.');
+assert(exploreView.includes('Axtarış nəticələri ('), 'Active search must label the result count explicitly.');
+assert(exploreView.includes('“${searchQuery}” üçün uyğun klublar'), 'Active search must echo the committed query in the result context.');
+assert(exploreView.includes('const hasStructuredFilters = Boolean(filters.district || filters.type || filters.priceMax);'), 'Search empty state must know whether structured filters are also active.');
+assert(exploreView.includes('searchQuery={searchQuery}'), 'Search empty state must receive the committed query for missing-club suggestions.');
 
 assert(clubsQuery.includes("const searchTerms = sanitized.split(/\\s+/).filter(Boolean).slice(0, 6);"), 'Club search must tokenize settled multi-word queries with a bounded term count.');
 assert(clubsQuery.includes('for (const term of searchTerms)'), 'Club search must apply every sanitized search term.');

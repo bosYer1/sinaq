@@ -10,6 +10,8 @@ interface ClubListProps {
   onHoverClub?: (id: string) => void;
   cardRefs?: MutableRefObject<Record<string, HTMLAnchorElement | null>>;
   searchActive?: boolean;
+  searchQuery?: string;
+  hasStructuredFilters?: boolean;
   onClearFilters?: () => void;
 }
 
@@ -18,29 +20,42 @@ interface ClubListProps {
  * ExploreView (client) vasitəsilə buraya ötürülür; bura yalnız render +
  * hover/aktiv vəziyyəti xəritəyə ötürmək üçün lazımi əlaqələndirməni edir.
  */
-export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchActive, onClearFilters }: ClubListProps) {
+export function ClubList({ clubs, activeClubId, onHoverClub, cardRefs, searchActive, searchQuery, hasStructuredFilters, onClearFilters }: ClubListProps) {
   if (clubs.length === 0) {
     const title = searchActive
       ? 'Axtarışa uyğun klub tapılmadı'
       : 'Bu filtrə uyğun klub tapılmadı';
 
-    const description = onClearFilters
-      ? 'Axtarış sözünü dəyiş və ya aktiv filtrləri təmizlə.'
-      : searchActive
-        ? 'Başqa klub adı, rayon və ya açar söz yoxla.'
+    const description = searchActive
+      ? hasStructuredFilters
+        ? 'Axtarış sözünü dəyiş və ya aktiv filtrləri birlikdə təmizlə.'
+        : 'Başqa klub adı, ünvan və ya açar söz yoxla.'
+      : onClearFilters
+        ? 'Aktiv filtrləri təmizləyib bütün klublara qayıt.'
         : 'Hazırda bu seçimə uyğun aktiv klub yoxdur.';
+
+    const actionLabel = onClearFilters
+      ? searchActive
+        ? hasStructuredFilters
+          ? 'Axtarış və filtrləri təmizlə'
+          : 'Axtarışı təmizlə'
+        : 'Filtrləri təmizlə'
+      : undefined;
 
     return (
       <div>
         <EmptyState
           title={title}
           description={description}
-          actionLabel={onClearFilters ? 'Filtrləri təmizlə' : undefined}
+          actionLabel={actionLabel}
           onAction={onClearFilters}
         />
         {searchActive ? (
           <div className="mt-3 text-center">
-            <Link href="/elaqe#new-club" className="text-sm font-semibold text-primary hover:underline">
+            <Link
+              href={searchQuery ? `/elaqe?suggest=${encodeURIComponent(searchQuery)}#new-club` : '/elaqe#new-club'}
+              className="text-sm font-semibold text-primary hover:underline"
+            >
               Klub siyahıda yoxdur? Təklif et
             </Link>
           </div>

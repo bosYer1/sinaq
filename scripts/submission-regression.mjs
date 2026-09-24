@@ -29,13 +29,15 @@ assert.match(formSource, /name="official_tiktok"/, 'owner claim form must accept
 assert.match(actionSource, /function validTikTok\(value: string\)/, 'owner claim action must validate TikTok evidence before storing it in the structured message.');
 assert.match(actionSource, /Rəsmi TikTok:/, 'owner claim structured evidence must preserve the official TikTok source.');
 assert.match(contactSource, /kind="new_club"/, 'contact page must continue exposing new club submissions');
+assert.match(contactSource, /suggest\?: string/, 'contact page must accept a missing-club suggestion query for prefill.');
+assert.match(contactSource, /clubName=\{suggestedClub\}/, 'new-club form must prefill the search suggestion without changing the correction form.');
 assert.match(contactSource, /Klubun adını və əlaqə nömrənizi yazın\./, 'contact page must explain the simplified two-field flow');
 assert.match(contactSource, /params\.sent === '1'/, 'contact page must render success feedback');
 assert.match(contactSource, /params\.error === '1'/, 'contact page must render failure feedback');
 assert.match(contactSource, /section id="new-club"/, 'contact page must expose a stable new-club anchor.');
-assert.match(clubListSource, /href="\/elaqe#new-club"/, 'search no-result state must link to the existing verified new-club form.');
+assert.match(clubListSource, /\/elaqe\?suggest=\$\{encodeURIComponent\(searchQuery\)\}#new-club/, 'search no-result state must carry the query only as an encoded suggestion prefill.');
 assert.match(clubListSource, /Klub siyahıda yoxdur\? Təklif et/, 'search no-result CTA copy must remain explicit.');
-assert.doesNotMatch(clubListSource, /club=.*search|q=.*new-club|new-club.*q=/, 'no-result proposal must not treat a free-text query as factual club identity.');
+assert.doesNotMatch(clubListSource, /\/elaqe\?club=/, 'search no-result proposal must not label free-text search as an existing club identity.');
 
 assert.doesNotMatch(contactSource, /\/klub-sahibi/, 'contact page must not link to the removed club-owner flow.');
 

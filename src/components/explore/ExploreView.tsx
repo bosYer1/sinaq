@@ -59,7 +59,7 @@ interface ExploreViewProps {
 
 export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const { location, status, requestLocation } = useUserLocation();
-  const { clearAll, hasActiveFilters } = useFilters();
+  const { filters, clearAll, hasActiveFilters } = useFilters();
   const [sortByDistance, setSortByDistance] = useState(false);
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
@@ -149,6 +149,10 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   }, [clubsWithDistance, location]);
 
   const mobileClubs = mobileExpanded ? clubsWithDistance : clubsWithDistance.slice(0, MOBILE_INITIAL_CLUB_COUNT);
+  const searchQuery = filters.q?.trim() ?? '';
+  const hasStructuredFilters = Boolean(filters.district || filters.type || filters.priceMax);
+  const resultsTitle = searchActive ? `Axtarış nəticələri (${clubsWithDistance.length})` : `Klublar (${clubsWithDistance.length})`;
+  const resultsSubtitle = searchActive && searchQuery ? `“${searchQuery}” üçün uyğun klublar` : 'Klubları müqayisə et';
 
   function handleLocationSort() {
     if (location) {
@@ -175,6 +179,25 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
   function handleSelectMarker(id: string) {
     setActiveClubId(id);
+
+    const selectedIndex = clubsWithDistance.findIndex((club) => club.id === id);
+    const needsMobileExpansion =
+      !isDesktop &&
+      view === 'list' &&
+      !mobileExpanded &&
+      selectedIndex >= MOBILE_INITIAL_CLUB_COUNT;
+
+    if (needsMobileExpansion) {
+      setMobileExpanded(true);
+      saveMobileExpandedState(window.scrollY);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      });
+      return;
+    }
+
     cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
@@ -275,15 +298,16 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     <div
       className="bg-surface"
       data-explore-view={view}
+      data-result-count={clubsWithDistance.length}
       data-mobile-map-active={view === 'map' || mobileListMapActive}
     >
       {isDesktop ? (
         <div className="grid h-[clamp(590px,68vh,660px)] min-h-0 grid-cols-[390px_minmax(0,1fr)] gap-4">
           <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-border bg-bg-elevated">
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
+            <div id="club-results" className="scroll-mt-24 flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3" aria-live="polite">
               <div className="min-w-0">
-                <p className="truncate text-base font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
-                <p className="mt-0.5 text-[11px] text-muted">Klubu seç, xəritədə yerini gör</p>
+                <p className="truncate text-base font-bold text-ink">{resultsTitle}</p>
+                <p className="mt-0.5 truncate text-[11px] text-muted">{searchActive ? resultsSubtitle : 'Klubu seç, xəritədə yerini gör'}</p>
               </div>
               <button
                 type="button"
@@ -302,6 +326,8 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 onHoverClub={handleHoverCard}
                 cardRefs={cardRefs}
                 searchActive={searchActive}
+                searchQuery={searchQuery}
+                hasStructuredFilters={hasStructuredFilters}
                 onClearFilters={hasActiveFilters ? clearAll : undefined}
               />
             </div>
@@ -323,7 +349,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <section>
               <div
                 data-mobile-list-map-container="true"
-                className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px] [contain:layout_paint_style]"
+                className={`relative mb-3 overflow-hidden rounded-[18px] [contain:layout_paint_style] ${searchActive ? 'h-[180px] sm:h-[250px]' : 'h-[210px] sm:h-[300px]'}`}
               >
                 {mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />}
                 {!mobileListMapActive ? (
@@ -340,16 +366,16 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                   </button>
                 ) : null}
               </div>
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-lg font-bold text-ink">Klublar ({clubsWithDistance.length})</p>
-                  <p className="text-xs text-muted">Klubları müqayisə et</p>
+              <div id="club-results" className="scroll-mt-24 mb-3 flex items-center justify-between gap-3" aria-live="polite">
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-bold text-ink">{resultsTitle}</p>
+                  <p className="truncate text-xs text-muted">{resultsSubtitle}</p>
                 </div>
                 <button
                   type="button"
                   onClick={handleLocationSort}
                   disabled={status === 'loading' || status === 'unsupported'}
-                  className={`rounded-xl border px-3 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted'}`}
+                  className={`shrink-0 whitespace-nowrap rounded-xl border px-2.5 py-2 text-xs font-semibold ${sortByDistance && location ? 'border-primary bg-pc-tint text-primary' : 'border-border bg-surface text-muted'}`}
                 >
                   {locationButtonLabel}
                 </button>
@@ -359,7 +385,10 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 clubs={mobileClubs}
                 activeClubId={activeClubId}
                 onHoverClub={handleHoverCard}
+                cardRefs={cardRefs}
                 searchActive={searchActive}
+                searchQuery={searchQuery}
+                hasStructuredFilters={hasStructuredFilters}
                 onClearFilters={hasActiveFilters ? clearAll : undefined}
               />
               {clubsWithDistance.length > MOBILE_INITIAL_CLUB_COUNT ? (

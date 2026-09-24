@@ -129,8 +129,8 @@ try {
   const originPath = '/?type=pc';
 
   const linkScenario = await expandAndOpenLowerClub(originPath);
-  await wait(`Boolean(Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt')))`, 'Klublara qayıt link');
-  await evaluate(`Array.from(document.querySelectorAll('a')).find((a) => (a.textContent || '').includes('Klublara qayıt'))?.click()`);
+  await wait(`Boolean(document.querySelector('a[data-back-to-clubs="true"]'))`, 'club return link');
+  await evaluate(`document.querySelector('a[data-back-to-clubs="true"]')?.click()`);
   await assertReturnedDiscovery(originPath, linkScenario.savedScrollY, 'in-page return link');
 
   await evaluate(`Array.from(document.querySelectorAll('button')).find((b) => (b.textContent || '').includes('Daha az klub göstər'))?.click()`);

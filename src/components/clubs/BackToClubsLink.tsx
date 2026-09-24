@@ -1,7 +1,8 @@
 'use client';
 
-import type { MouseEvent } from 'react';
+import { useSyncExternalStore, type MouseEvent } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const CLUB_ENTRY_ORIGIN_KEY = 'gameyer:club-entry-origin';
 const MOBILE_EXPANDED_STATE_KEY = 'gameyer:mobile-expanded-state';
@@ -51,26 +52,66 @@ export function rememberClubEntryOrigin(clubSlug: string) {
   }
 }
 
-export function BackToClubsLink({ className }: { className?: string }) {
-  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
-    if (!isPlainLeftClick(event)) return;
+function returnLabel(origin: string) {
+  try {
+    const url = new URL(origin, 'https://gameyer.az');
+    const params = url.searchParams;
+    if (params.get('q')?.trim()) return 'Axtarış nəticələrinə qayıt';
+    if (params.get('view') === 'map') return 'Xəritəyə qayıt';
+    if (params.get('district') || params.get('type') || params.get('price_max')) return 'Filtrlənmiş klublara qayıt';
+  } catch {
+    // Fall back to the generic discovery label.
+  }
+  return 'Klublara qayıt';
+}
 
-    let entry: ClubEntryOrigin | null = null;
-    try {
-      const rawEntry = window.sessionStorage.getItem(CLUB_ENTRY_ORIGIN_KEY);
-      if (rawEntry) entry = JSON.parse(rawEntry) as ClubEntryOrigin;
-    } catch {
-      entry = null;
-    }
+function subscribeClubEntryOrigin() {
+  return () => {};
+}
 
+function getClubEntryOriginSnapshot() {
+  try {
+    return window.sessionStorage.getItem(CLUB_ENTRY_ORIGIN_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function getServerClubEntryOriginSnapshot() {
+  return '';
+}
+
+function parseClubEntryOrigin(rawEntry: string, pathname: string): ClubEntryOrigin | null {
+  if (!rawEntry) return null;
+
+  try {
+    const entry = JSON.parse(rawEntry) as ClubEntryOrigin;
     if (
-      !entry ||
-      entry.destination !== window.location.pathname ||
+      entry.destination !== pathname ||
       !entry.origin.startsWith('/') ||
       entry.origin.startsWith('/klub/')
     ) {
-      return;
+      return null;
     }
+    return entry;
+  } catch {
+    return null;
+  }
+}
+
+export function BackToClubsLink({ className }: { className?: string }) {
+  const pathname = usePathname();
+  const rawEntry = useSyncExternalStore(
+    subscribeClubEntryOrigin,
+    getClubEntryOriginSnapshot,
+    getServerClubEntryOriginSnapshot,
+  );
+  const entry = parseClubEntryOrigin(rawEntry, pathname);
+  const label = entry ? returnLabel(entry.origin) : 'Klublara qayıt';
+  const fallbackHref = entry?.origin ?? '/';
+
+  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (!isPlainLeftClick(event) || !entry) return;
 
     event.preventDefault();
     try {
@@ -86,8 +127,8 @@ export function BackToClubsLink({ className }: { className?: string }) {
   }
 
   return (
-    <Link href="/" onClick={handleClick} className={className}>
-      ← Klublara qayıt
+    <Link href={fallbackHref} onClick={handleClick} className={className} data-back-to-clubs="true">
+      ← {label}
     </Link>
   );
 }
