@@ -137,11 +137,11 @@ export function SearchFilter() {
       if (cancelled) return;
 
       const committedQuery = currentQueryRef.current;
-      const results = document.getElementById('club-results');
+      const resultsTarget = document.getElementById('club-results') ?? document.querySelector('[data-explore-view]');
       const resultCount = readRenderedResultCount();
 
-      if (committedQuery === submittedQuery && results && resultCount != null) {
-        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (committedQuery === submittedQuery && resultsTarget && resultCount != null) {
+        resultsTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
       }
 
