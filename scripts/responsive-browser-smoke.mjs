@@ -145,7 +145,8 @@ const commonLayoutExpression = `(() => {
   } : null;
   const header = document.querySelector('header');
   const mobileNav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-  const mobileNavOverlay = document.querySelector('[data-mobile-nav-overlay="true"]');
+  const appShell = document.querySelector('[data-mobile-app-shell="true"]');
+  const scrollRoot = document.querySelector('[data-mobile-scroll-root="true"]');
   return {
     scrollY: window.scrollY,
     innerWidth: window.innerWidth,
@@ -158,11 +159,19 @@ const commonLayoutExpression = `(() => {
     scrollWidth: document.documentElement.scrollWidth,
     scrollHeight: document.documentElement.scrollHeight,
     clientWidth: document.documentElement.clientWidth,
+    clientHeight: document.documentElement.clientHeight,
     header: rect(header),
     mobileNav: rect(mobileNav),
     mobileNavDisplay: mobileNav ? getComputedStyle(mobileNav).display : null,
-    mobileNavOverlay: rect(mobileNavOverlay),
-    mobileNavOverlayDisplay: mobileNavOverlay ? getComputedStyle(mobileNavOverlay).display : null,
+    mobileNavPosition: mobileNav ? getComputedStyle(mobileNav).position : null,
+    appShell: rect(appShell),
+    appShellDisplay: appShell ? getComputedStyle(appShell).display : null,
+    appShellOverflow: appShell ? getComputedStyle(appShell).overflow : null,
+    scrollRoot: rect(scrollRoot),
+    scrollRootTop: scrollRoot?.scrollTop ?? null,
+    scrollRootHeight: scrollRoot?.scrollHeight ?? null,
+    scrollRootClientHeight: scrollRoot?.clientHeight ?? null,
+    scrollRootOverflowY: scrollRoot ? getComputedStyle(scrollRoot).overflowY : null,
   };
 })()`;
 
@@ -175,46 +184,40 @@ async function assertCommonLayout(client, viewport, path) {
   assert(layout.scrollWidth <= layout.clientWidth + 1, `${viewport.name} ${path}: horizontal overflow detected`, layout);
   assert(/viewport-fit\s*=\s*cover/i.test(layout.viewportMeta), `${viewport.name} ${path}: viewport-fit=cover is missing from generated viewport metadata`, layout);
   assert(layout.header && layout.header.height >= 60 && layout.header.height <= 68, `${viewport.name} ${path}: header geometry is invalid`, layout);
-  assert(layout.header.top >= -1 && layout.header.top <= 1, `${viewport.name} ${path}: sticky header is not pinned to viewport top`, layout);
+  assert(layout.header.top >= -1 && layout.header.top <= 1, `${viewport.name} ${path}: header is not pinned to the app-shell top`, layout);
 
   if (viewport.mobile) {
-    assert(layout.mobileNavOverlayDisplay !== 'none', `${viewport.name} ${path}: mobile navigation overlay is hidden`, layout);
+    assert(layout.appShellDisplay === 'flex', `${viewport.name} ${path}: mobile app shell is not active`, layout);
+    assert(layout.appShell && Math.abs(layout.appShell.height - layout.visualViewportHeight) <= 2, `${viewport.name} ${path}: app shell height does not match visualViewport.height`, layout);
+    assert(Math.abs(layout.scrollY) <= 1, `${viewport.name} ${path}: root document must not scroll on mobile`, layout);
+    assert(layout.scrollHeight <= layout.visualViewportHeight + 2, `${viewport.name} ${path}: root document contains scrollable overflow / black-gap space`, layout);
     assert(layout.mobileNavDisplay !== 'none', `${viewport.name} ${path}: mobile navigation is hidden`, layout);
-    assert(layout.mobileNav && Math.abs(layout.mobileNav.bottom - layout.visualViewportBottom) <= 2, `${viewport.name} ${path}: mobile navigation is not pinned to the visual viewport bottom`, layout);
+    assert(layout.mobileNavPosition === 'static', `${viewport.name} ${path}: mobile navigation must stay in normal flow, not fixed/absolute/sticky`, layout);
+    assert(layout.mobileNav && layout.appShell && Math.abs(layout.mobileNav.bottom - layout.appShell.bottom) <= 2, `${viewport.name} ${path}: mobile nav is not the final app-shell row`, layout);
+    assert(layout.scrollRootOverflowY === 'auto', `${viewport.name} ${path}: page scrolling is not isolated to the mobile main region`, layout);
+    assert(layout.scrollRoot && layout.header && Math.abs(layout.scrollRoot.top - layout.header.bottom) <= 2, `${viewport.name} ${path}: mobile scroll root does not start below header`, layout);
+    assert(layout.scrollRoot && layout.mobileNav && Math.abs(layout.scrollRoot.bottom - layout.mobileNav.top) <= 2, `${viewport.name} ${path}: mobile scroll root does not end above bottom nav`, layout);
 
-    const overlayContract = await evaluate(client, `(() => {
-      const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
-      const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-      if (!overlay || !nav) return null;
-      const overlayStyle = getComputedStyle(overlay);
-      const navStyle = getComputedStyle(nav);
-      return {
-        overlayPosition: overlayStyle.position,
-        overlayTop: overlayStyle.top,
-        overlayHeight: overlay.getBoundingClientRect().height,
-        navPosition: navStyle.position,
-        navBottom: navStyle.bottom,
-        inlineNavTop: nav.style.top,
-        inlineNavBottom: nav.style.bottom,
-      };
+    const maxInnerScroll = Math.max(0, (layout.scrollRootHeight ?? 0) - (layout.scrollRootClientHeight ?? 0));
+    await evaluate(client, `(() => {
+      const root = document.querySelector('[data-mobile-scroll-root="true"]');
+      if (root) root.scrollTop = root.scrollHeight;
     })()`);
-    assert(overlayContract?.overlayPosition === 'fixed', `${viewport.name} ${path}: mobile navigation overlay must use fixed positioning`, overlayContract);
-    assert(overlayContract?.overlayHeight != null && Math.abs(overlayContract.overlayHeight - layout.visualViewportHeight) <= 2, `${viewport.name} ${path}: dynamic viewport overlay height does not match the visible viewport`, { overlayContract, layout });
-    assert(overlayContract?.navPosition === 'absolute', `${viewport.name} ${path}: nav must be absolute only inside the fixed overlay`, overlayContract);
-    assert(overlayContract?.inlineNavTop === '' && overlayContract?.inlineNavBottom === '', `${viewport.name} ${path}: nav must not receive runtime inline positioning`, overlayContract);
-
-    await evaluate(client, `window.scrollTo(0, Math.max(0, document.documentElement.scrollHeight - window.innerHeight))`);
-    await sleep(120);
+    await sleep(160);
     const afterDown = await evaluate(client, commonLayoutExpression);
-    assert(afterDown.mobileNav && Math.abs(afterDown.mobileNav.bottom - afterDown.visualViewportBottom) <= 2, `${viewport.name} ${path}: mobile navigation drifted from the visual viewport after scrolling down`, afterDown);
+    assert(Math.abs(afterDown.scrollY) <= 1, `${viewport.name} ${path}: inner page scroll leaked into the root document`, { maxInnerScroll, afterDown });
+    assert(afterDown.scrollRootTop != null && afterDown.scrollRootTop >= Math.max(0, maxInnerScroll - 2), `${viewport.name} ${path}: mobile inner page did not reach its real content end`, { maxInnerScroll, afterDown });
+    assert(afterDown.scrollHeight <= afterDown.visualViewportHeight + 2, `${viewport.name} ${path}: scrolling inner content grew the root document / recreated black gap`, afterDown);
+    assert(afterDown.mobileNav && afterDown.appShell && Math.abs(afterDown.mobileNav.bottom - afterDown.appShell.bottom) <= 2, `${viewport.name} ${path}: mobile navigation moved while inner content scrolled`, afterDown);
 
-    await evaluate(client, `window.scrollTo(0, 0)`);
-    await sleep(120);
-    const afterUp = await evaluate(client, commonLayoutExpression);
-    assert(afterUp.mobileNav && Math.abs(afterUp.mobileNav.bottom - afterUp.visualViewportBottom) <= 2, `${viewport.name} ${path}: mobile navigation drifted from the visual viewport after scrolling back up`, afterUp);
+    await evaluate(client, `(() => {
+      const root = document.querySelector('[data-mobile-scroll-root="true"]');
+      if (root) root.scrollTop = 0;
+    })()`);
+    await sleep(100);
   } else {
-    assert(layout.mobileNavOverlayDisplay === 'none', `${viewport.name} ${path}: mobile navigation overlay leaked into desktop layout`, layout);
-    assert(layout.mobileNavOverlay?.width === 0 && layout.mobileNavOverlay?.height === 0, `${viewport.name} ${path}: hidden mobile overlay still occupies desktop geometry`, layout);
+    assert(layout.mobileNavDisplay === 'none', `${viewport.name} ${path}: mobile navigation leaked into desktop layout`, layout);
+    assert(layout.appShellDisplay === 'flex', `${viewport.name} ${path}: desktop app shell unexpectedly disappeared`, layout);
   }
 }
 
