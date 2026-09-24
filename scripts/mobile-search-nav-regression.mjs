@@ -17,9 +17,9 @@ assert.ok(mobileNav.includes("nav.style.bottom = 'auto'"), 'iOS absolute mode mu
 assert.ok(!mobileNav.includes('window.innerHeight'), 'Mobile navigation must not use stale layout viewport height for iOS positioning.');
 assert.ok(!mobileNav.includes('getMobileNavVisualTop'), 'The failed fixed-top visual viewport workaround must stay removed.');
 assert.ok(mobileNav.includes('isPhantomBottomScroll'), 'iOS navigation must detect browser-created bottom scroll overflow.');
-assert.ok(mobileNav.includes('getRealPageMaxTop'), 'iOS navigation must clamp scrolling to the real page content end.');
-assert.ok(mobileNav.includes('getLayoutScrollTopForVisualPageTop'), 'Phantom clamp must translate visual pageTop into layout scroll coordinates.');
-assert.ok(mobileNav.includes("window.scrollTo({ top: layoutScrollTop, left: 0, behavior: 'auto' })"), 'Phantom iOS bottom scrolling must be corrected without smooth-scroll feedback.');
+assert.ok(mobileNav.includes('getRealLayoutMaxScrollTop'), 'iOS navigation must compute the real maximum layout scroll from content and the visual viewport.');
+assert.ok(mobileNav.includes('isPhantomBottomScroll(window.scrollY, maxLayoutScrollTop)'), 'Phantom detection must use layout scroll rather than visualViewport.pageTop.');
+assert.ok(mobileNav.includes("window.scrollTo({ top: maxLayoutScrollTop, left: 0, behavior: 'auto' })"), 'Phantom iOS bottom scrolling must clamp directly in layout scroll coordinates.');
 assert.ok(layout.includes('data-mobile-content-end="true"'), 'Root layout must expose a sentinel for the real mobile content end.');
 assert.ok(mobileNav.includes("document.addEventListener('focusin', handleFocusIn, true)"), 'Bottom navigation must observe iOS editable focus.');
 assert.ok(mobileNav.includes("if (!isEditableElement(event.target)) return;"), 'Keyboard handling must ignore links, buttons and other non-editable focus targets.');
