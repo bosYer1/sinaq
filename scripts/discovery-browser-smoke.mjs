@@ -103,14 +103,24 @@ try {
 try {
   await navigate('/');
   await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input');
-  const initial = await evaluate(`(() => {
-    return {
-      count: document.body.innerText.match(/Klublar \\((\\d+)\\)/)?.[1] || document.body.innerText.match(/(\\d+) klub/)?.[1] || null,
-      districtSlug: Array.from(document.querySelectorAll('a[href^="/rayon/"]')).map((a) => a.getAttribute('href')?.split('/').filter(Boolean).pop()).find(Boolean) || null,
-    };
-  })()`);
+  const initial = await evaluate(`(() => ({
+    count: document.body.innerText.match(/Klublar \\((\\d+)\\)/)?.[1] || document.body.innerText.match(/(\\d+) klub/)?.[1] || null,
+  }))()`);
   assert(initial.count, 'Homepage club count missing', initial);
-  assert(initial.districtSlug, 'No active district available for regression', initial);
+
+  // District discovery intentionally lives on /rayon now; the homepage is kept focused on club discovery.
+  await navigate('/rayon');
+  await wait(`Boolean(Array.from(document.querySelectorAll('a[href^="/rayon/"]')).find((anchor) => /^\\/rayon\\/[^/]+$/.test(anchor.getAttribute('href') || '')))`, 'active district link');
+  const districtSlug = await evaluate(`Array.from(document.querySelectorAll('a[href^="/rayon/"]'))
+    .map((anchor) => anchor.getAttribute('href') || '')
+    .find((href) => /^\\/rayon\\/[^/]+$/.test(href))
+    ?.split('/')
+    .filter(Boolean)
+    .pop() || null`);
+  assert(districtSlug, 'No active district available for regression', { count: initial.count, districtSlug });
+
+  await navigate('/');
+  await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input after district discovery');
 
   const clubViewTarget = await evaluate(`Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((anchor) => {
     const rect = anchor.getBoundingClientRect();
@@ -205,9 +215,9 @@ try {
   assert(pcState.noindex.toLowerCase().includes('noindex'), 'Filtered homepage must be noindex', pcState);
   assert(pcState.canonical === 'https://gameyer.az/' || pcState.canonical === `${BASE_URL}/`, 'Filtered homepage canonical regressed', pcState);
 
-  await navigate(`/?district=${encodeURIComponent(initial.districtSlug)}`);
+  await navigate(`/?district=${encodeURIComponent(districtSlug)}`);
   const activeDistrict = await evaluate(`new URLSearchParams(location.search).get('district')`);
-  assert(activeDistrict === initial.districtSlug, 'District filter query did not remain active', { expected: initial.districtSlug, actual: activeDistrict });
+  assert(activeDistrict === districtSlug, 'District filter query did not remain active', { expected: districtSlug, actual: activeDistrict });
   assert(await evaluate(`document.querySelector('meta[name="robots"]')?.content?.toLowerCase().includes('noindex')`), 'District-filtered homepage must remain noindex');
 
   await navigate('/?price_max=2');

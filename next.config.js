@@ -37,6 +37,10 @@ const utilityQueryNoindexHeaders = utilityQueryNoindexPaths.flatMap((source) =>
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  env: {
+    POSTHOG_PROJECT_ID: '585472',
+    POSTHOG_API_HOST: 'https://us.posthog.com',
+  },
   images: {
     remotePatterns: [
       {
@@ -50,6 +54,9 @@ const nextConfig = {
         pathname: '/wp-content/uploads/2021/12/laliga-logo-sayt.jpg',
       },
     ],
+  },
+  async rewrites() {
+    return [{ source: '/favicon.ico', destination: '/gameyer-favicon.jpeg' }];
   },
   async redirects() {
     return [

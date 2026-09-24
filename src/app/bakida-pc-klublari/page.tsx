@@ -83,6 +83,7 @@ export default async function BakuPcClubsPage() {
       <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">PC klub qiymətlərini müqayisə et</Link>
       <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">Ucuz PC klubları — 2 AZN-dək</Link>
       <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">24 saat PC klubları</Link>
+      <Link href="/28-may-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">28 May gaming klubları</Link>
     </div>
 
     {strongDistricts.length > 0 ? <section className="mt-6" aria-labelledby="pc-districts-heading"><h2 id="pc-districts-heading" className="font-display text-base font-bold text-ink">Rayon üzrə PC klubları</h2><p className="mt-1 text-xs leading-5 text-muted">Ən azı 2 aktiv PC klubu olan rayonlara birbaşa keç.</p><div className="mt-3 flex flex-wrap gap-2">{strongDistricts.map((district) => <Link key={district.slug} href={`/rayon/${district.slug}/pc`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">{district.name} PC klubları ({district.count})</Link>)}</div></section> : null}

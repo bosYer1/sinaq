@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const layout = await readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8');
+const mobileNav = await readFile(new URL('../src/components/navigation/MobileNav.tsx', import.meta.url), 'utf8');
 const searchFilter = await readFile(new URL('../src/components/filters/SearchFilter.tsx', import.meta.url), 'utf8');
 
-assert.ok(layout.includes('href="/#club-search"'), 'Mobile search navigation must keep the #club-search destination');
+assert.ok(mobileNav.includes('href="/#club-search"'), 'Mobile search navigation must keep the #club-search destination');
 assert.ok(searchFilter.includes('a[href="/#club-search"]'), 'SearchFilter must intercept same-page mobile search navigation');
 assert.ok(searchFilter.includes('event.preventDefault()'), 'Same-page mobile search navigation must prevent the no-op hash navigation');
 assert.ok(searchFilter.includes("document.addEventListener('click', handleMobileSearchNavigation, true)"), 'Search navigation interception must run in capture phase before Next Link routing');

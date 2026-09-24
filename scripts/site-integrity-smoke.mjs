@@ -242,8 +242,8 @@ function checkHomepageClubCount(homeHtml, sitemapUrls) {
   const expected = sitemapUrls.filter((url) => new URL(url).pathname.startsWith('/klub/')).length;
   const rendered = homepageClubCounts(homeHtml);
   assert(expected > 0, 'Sitemap must expose public club detail URLs before count consistency can be checked');
-  assert(rendered.summary === expected, 'Homepage summary club count must match public sitemap clubs', { expected, rendered });
-  assert(rendered.lists.length > 0, 'Homepage must render at least one club list count', { expected, rendered });
+  assert(rendered.summary == null || rendered.summary === expected, 'If a homepage summary club count is rendered, it must match public sitemap clubs', { expected, rendered });
+  assert(rendered.lists.length > 0, 'Homepage discovery must render at least one club list count', { expected, rendered });
   assert(rendered.lists.every((count) => count === expected), 'Every homepage club list count must match public sitemap clubs', { expected, rendered });
 }
 

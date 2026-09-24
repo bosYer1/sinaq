@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getClubBySlug, getClubs } from '@/lib/queries/clubs';
-import { getClubTikTokUrl } from '@/lib/queries/club-social';
+import { getClubBySlug, getClubs, getPublicClubCount } from '@/lib/queries/clubs';
 import { ClubDetail } from '@/components/clubs/ClubDetail';
 import { ShareClubButton } from '@/components/clubs/ShareClubButton';
 import { getSiteUrl } from '@/lib/site-url';
@@ -94,7 +93,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const { slug } = await params;
   const club = await getClubBySlug(slug);
   if (!club) notFound();
-  const tiktokUrl = await getClubTikTokUrl(club.id);
+  const tiktokUrl = club.tiktok_url?.trim() || null;
   const siteUrl = getSiteUrl();
   const clubUrl = `${siteUrl}/klub/${club.slug}`;
   const typeAssignments = Array.isArray(club.type_assignments) ? club.type_assignments : [];
@@ -146,7 +145,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const localTypeResults = districtSlug
     ? await Promise.all(localTypeCandidates.map(async (type) => ({
         ...type,
-        count: (await getClubs({ district: districtSlug, type: type.slug })).length,
+        count: await getPublicClubCount({ district: districtSlug, type: type.slug }),
       })))
     : [];
   const localTypeLinks = localTypeResults.filter((type) => type.count >= 2);

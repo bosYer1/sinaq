@@ -18,6 +18,10 @@ const databaseTypes = await readFile(new URL('../src/types/database.ts', import.
 
 assert.match(page, /await requireAdmin\(\)/, 'Founder analytics must enforce admin and MFA authorization in the page.');
 assert.match(posthog, /^import 'server-only';/m, 'PostHog private API adapter must remain server-only.');
+assert.match(posthog, /argMinIf\(person_id, timestamp, event = '\$pageview'\)/, 'Acquisition must recover identity from the session landing pageview.');
+assert.match(posthog, /positionCaseInsensitive[\s\S]*google\./, 'Acquisition must recognize Google organic referrers.');
+assert.match(posthog, /'paid_social'/, 'Acquisition must preserve paid-social attribution.');
+assert.doesNotMatch(posthog, /coalesce\(nullIf\(properties\.gameyer_first_utm_source, ''\), if\(notEmpty\(properties\.gameyer_first_fbclid\), 'facebook', 'direct'\)\)/, 'Untagged organic sessions must not be forced to Direct.');
 assert.match(meta, /^import 'server-only';/m, 'Meta Ads private API adapter must remain server-only.');
 assert.match(ga4, /^import 'server-only';/m, 'GA4 private API adapter must remain server-only.');
 assert.match(gsc, /^import 'server-only';/m, 'GSC private API adapter must remain server-only.');
@@ -58,7 +62,7 @@ assert.ok(ga4.includes("['founder-analytics-ga4-v3']"), 'GA4 cache key must be b
 assert.match(gsc, /revalidate: 300/, 'GSC provider must use bounded caching.');
 
 assert.ok(posthog.includes("countIf(first_seen < toDateTime('${from}')) AS returning_users"), 'Returning users must have a public visit before the selected interval.');
-assert.ok(posthog.includes('countIf(person_id IN ('), 'Campaign returning users must use a prior-visit person set.');
+assert.ok(posthog.includes('uniqIf(person_id, person_id IN ('), 'Campaign returning users must use a prior-visit person set without double-counting users across sessions.');
 assert.ok(posthog.includes("timestamp < toDateTime('${from}')"), 'Prior-visit queries must end before the selected interval starts.');
 assert.ok(posthog.includes("uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions"), 'Attribution denominator must deduplicate public pageview sessions.');
 assert.ok(posthog.includes('attributionCompleteness: rate(publicPageviewSessions - numberValue(health.source_missing_sessions), publicPageviewSessions)'), 'Attribution completeness must measure sessions with known traffic source, not landing-path completeness.');
@@ -132,7 +136,7 @@ assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club tran
 assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
 assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
-assert.ok(posthog.includes("['founder-analytics-posthog-v10']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v11']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
 assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
@@ -165,7 +169,7 @@ assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0
   assert.ok(source.includes('createLimitedPostHogRunner'), 'PostHog queries must use a bounded runner.');
   assert.ok(source.includes('errors.push(detail);') && source.includes('return [];'), 'Extended PostHog query failures must fail soft instead of taking down the whole dashboard.');
   assert.ok(source.includes("if (overviewRows.length === 0)"), 'Core overview failure must still fail closed rather than showing invented zero metrics.');
-  assert.ok(source.includes("['founder-analytics-posthog-v10']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
+  assert.ok(source.includes("['founder-analytics-posthog-v11']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
 }
 
 assert.ok(posthog.includes('toFloatOrZero(toString(properties.metric_value))'), 'PostHog web-vitals query must use the supported HogQL float conversion helper.');
