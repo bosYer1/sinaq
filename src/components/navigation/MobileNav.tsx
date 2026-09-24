@@ -49,12 +49,13 @@ export function MobileNav() {
       settleTimers.clear();
     };
 
-    const isEditableFocused = () => {
-      const active = document.activeElement;
-      return active instanceof HTMLInputElement
-        || active instanceof HTMLTextAreaElement
-        || (active instanceof HTMLElement && active.isContentEditable);
-    };
+    const isEditableElement = (target: EventTarget | null) => (
+      target instanceof HTMLInputElement
+      || target instanceof HTMLTextAreaElement
+      || (target instanceof HTMLElement && target.isContentEditable)
+    );
+
+    const isEditableFocused = () => isEditableElement(document.activeElement);
 
     const getRealContentBottom = () => {
       const sentinel = document.querySelector<HTMLElement>('[data-mobile-content-end="true"]');
@@ -111,7 +112,9 @@ export function MobileNav() {
       }
     };
 
-    const handleFocusIn = () => {
+    const handleFocusIn = (event: FocusEvent) => {
+      if (!isEditableElement(event.target)) return;
+
       if (keyboardReleaseTimer) {
         window.clearTimeout(keyboardReleaseTimer);
         keyboardReleaseTimer = 0;
@@ -121,7 +124,9 @@ export function MobileNav() {
       settleViewport();
     };
 
-    const handleFocusOut = () => {
+    const handleFocusOut = (event: FocusEvent) => {
+      if (!isEditableElement(event.target)) return;
+
       keyboardSettling = true;
       nav.style.visibility = 'hidden';
       clearSettleTimers();
