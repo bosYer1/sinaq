@@ -25,12 +25,14 @@ export function getMobileNavDocumentTop(
   return Math.max(visualPageTop, visualPageTop + visualHeight - navHeight);
 }
 
-export function getRealPageMaxTop(
+export function getRealLayoutMaxScrollTop(
   contentBottom: number,
+  visualOffsetTop: number,
   visualHeight: number,
 ) {
   if (
     !Number.isFinite(contentBottom) ||
+    !Number.isFinite(visualOffsetTop) ||
     !Number.isFinite(visualHeight) ||
     contentBottom <= 0 ||
     visualHeight <= 0
@@ -38,24 +40,15 @@ export function getRealPageMaxTop(
     return 0;
   }
 
-  return Math.max(0, contentBottom - visualHeight);
+  return Math.max(0, contentBottom - visualOffsetTop - visualHeight);
 }
 
 export function isPhantomBottomScroll(
-  visualPageTop: number,
-  maxPageTop: number,
+  layoutScrollTop: number,
+  maxLayoutScrollTop: number,
   tolerance = 2,
 ) {
-  return Number.isFinite(visualPageTop)
-    && Number.isFinite(maxPageTop)
-    && visualPageTop > maxPageTop + tolerance;
-}
-
-
-export function getLayoutScrollTopForVisualPageTop(
-  visualPageTop: number,
-  visualOffsetTop: number,
-) {
-  if (!Number.isFinite(visualPageTop) || !Number.isFinite(visualOffsetTop)) return 0;
-  return Math.max(0, visualPageTop - visualOffsetTop);
+  return Number.isFinite(layoutScrollTop)
+    && Number.isFinite(maxLayoutScrollTop)
+    && layoutScrollTop > maxLayoutScrollTop + tolerance;
 }
