@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { getMobileNavDocumentTop, getRealPageMaxTop, isIOSWebKit, isPhantomBottomScroll } from '@/lib/mobileViewport';
+import { getLayoutScrollTopForVisualPageTop, getMobileNavDocumentTop, getRealPageMaxTop, isIOSWebKit, isPhantomBottomScroll } from '@/lib/mobileViewport';
 
 const baseClass = 'flex flex-col items-center justify-center gap-1 text-[10px] transition';
 const activeClass = 'font-semibold text-primary';
@@ -58,7 +58,7 @@ export function MobileNav() {
     const getRealContentBottom = () => {
       const sentinel = document.querySelector<HTMLElement>('[data-mobile-content-end="true"]');
       if (!sentinel) return null;
-      return visualViewport.pageTop + sentinel.getBoundingClientRect().top;
+      return window.scrollY + sentinel.getBoundingClientRect().top;
     };
 
     const syncNav = () => {
@@ -77,7 +77,11 @@ export function MobileNav() {
         if (contentBottom != null) {
           const maxPageTop = getRealPageMaxTop(contentBottom, visualViewport.height);
           if (isPhantomBottomScroll(visualViewport.pageTop, maxPageTop)) {
-            window.scrollTo({ top: maxPageTop, left: 0, behavior: 'auto' });
+            const layoutScrollTop = getLayoutScrollTopForVisualPageTop(
+              maxPageTop,
+              visualViewport.offsetTop,
+            );
+            window.scrollTo({ top: layoutScrollTop, left: 0, behavior: 'auto' });
             nav.style.visibility = 'hidden';
             window.requestAnimationFrame(syncNav);
             return;
