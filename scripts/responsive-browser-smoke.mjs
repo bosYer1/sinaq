@@ -152,6 +152,7 @@ const commonLayoutExpression = `(() => {
     visualViewportBottom: window.visualViewport
       ? window.visualViewport.offsetTop + window.visualViewport.height
       : window.innerHeight,
+    viewportMeta: document.querySelector('meta[name="viewport"]')?.getAttribute('content') ?? '',
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
     header: rect(header),
@@ -167,6 +168,7 @@ function assert(condition, message, context) {
 async function assertCommonLayout(client, viewport, path) {
   const layout = await evaluate(client, commonLayoutExpression);
   assert(layout.scrollWidth <= layout.clientWidth + 1, `${viewport.name} ${path}: horizontal overflow detected`, layout);
+  assert(/viewport-fit\s*=\s*cover/i.test(layout.viewportMeta), `${viewport.name} ${path}: viewport-fit=cover is missing from generated viewport metadata`, layout);
   assert(layout.header && layout.header.height >= 60 && layout.header.height <= 68, `${viewport.name} ${path}: header geometry is invalid`, layout);
   assert(layout.header.top >= -1 && layout.header.top <= 1, `${viewport.name} ${path}: sticky header is not pinned to viewport top`, layout);
 
