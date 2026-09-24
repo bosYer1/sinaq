@@ -349,7 +349,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
             <section>
               <div
                 data-mobile-list-map-container="true"
-                className={`relative mb-3 overflow-hidden rounded-[18px] [contain:layout_paint_style] ${searchActive ? 'h-[190px] sm:h-[260px]' : 'h-[230px] sm:h-[320px]'}`}
+                className={`relative mb-3 overflow-hidden rounded-[18px] [contain:layout_paint_style] ${searchActive ? 'h-[180px] sm:h-[250px]' : 'h-[210px] sm:h-[300px]'}`}
               >
                 {mobileListMapActive ? renderMapPanel() : <MapPreview clubs={clubsWithDistance} />}
                 {!mobileListMapActive ? (
