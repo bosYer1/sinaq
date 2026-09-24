@@ -29,14 +29,19 @@ export function FilterBar({ districts, types }: FilterBarProps) {
 
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:overflow-visible xl:pb-0" aria-label="Klub filtrləri">
           <ViewToggle />
-          <TypeFilter types={types} />
-          <DistrictFilter districts={districts} />
-          <PriceFilter />
           {hasActiveFilters ? (
-            <button type="button" onClick={clearAll} className="h-10 shrink-0 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary xl:hidden">
+            <button
+              type="button"
+              onClick={clearAll}
+              aria-label="Aktiv axtarış və filtrləri təmizlə"
+              className="h-10 shrink-0 rounded-xl border border-primary/20 bg-primary/10 px-3 text-xs font-semibold text-primary transition active:scale-[0.98] xl:hidden"
+            >
               Təmizlə
             </button>
           ) : null}
+          <TypeFilter types={types} />
+          <DistrictFilter districts={districts} />
+          <PriceFilter />
         </div>
 
         {hasActiveFilters ? (
