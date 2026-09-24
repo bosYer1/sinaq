@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  getLayoutScrollTopForVisualPageTop,
   getMobileNavDocumentTop,
   getRealPageMaxTop,
   isIOSWebKit,
@@ -31,4 +32,11 @@ test('phantom scroll is detected only past real content end', () => {
   assert.equal(isPhantomBottomScroll(1500, 1356), true);
   assert.equal(isPhantomBottomScroll(1357, 1356), false);
   assert.equal(isPhantomBottomScroll(1359, 1356), true);
+});
+
+
+test('visual pageTop clamp converts to layout scrollTop when browser chrome is offset', () => {
+  assert.equal(getLayoutScrollTopForVisualPageTop(1356, 44), 1312);
+  assert.equal(getLayoutScrollTopForVisualPageTop(1356, 0), 1356);
+  assert.equal(getLayoutScrollTopForVisualPageTop(20, 44), 0);
 });
