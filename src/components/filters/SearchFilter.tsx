@@ -41,6 +41,7 @@ export function SearchFilter() {
   const lastTrackedQueryRef = useRef(currentQuery);
   const currentQueryRef = useRef(currentQuery);
   const paramsStringRef = useRef(paramsString);
+  const navigationPending = value.trim() !== currentQuery;
 
   useEffect(() => {
     const focusSearch = () => {
@@ -253,8 +254,21 @@ export function SearchFilter() {
         aria-label="Klub axtar"
         enterKeyHint="search"
         autoComplete="off"
-        className="h-12 w-full touch-manipulation rounded-xl border border-border-strong bg-surface pl-11 pr-11 text-base text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 sm:text-sm lg:h-11"
+        className="h-12 w-full touch-manipulation rounded-xl border border-border-strong bg-surface pl-11 pr-20 text-base text-ink outline-none transition placeholder:text-faint hover:border-muted focus:border-primary focus:ring-2 focus:ring-primary/10 sm:text-sm lg:h-11"
       />
+
+      {navigationPending && value ? (
+        <span
+          role="status"
+          aria-label="Axtarılır"
+          className="pointer-events-none absolute right-11 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-primary"
+        >
+          <svg viewBox="0 0 20 20" className="h-4 w-4 animate-spin" fill="none" aria-hidden="true">
+            <circle cx="10" cy="10" r="7" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2" />
+            <path d="M10 3a7 7 0 0 1 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </span>
+      ) : null}
 
       {value ? (
         <button
