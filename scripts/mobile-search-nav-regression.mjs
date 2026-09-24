@@ -24,9 +24,13 @@ assert.ok(layout.includes('data-mobile-content-end="true"'), 'Root layout must e
 assert.ok(mobileNav.includes("document.addEventListener('focusin', handleFocusIn, true)"), 'Bottom navigation must observe iOS editable focus.');
 assert.ok(mobileNav.includes("if (!isEditableElement(event.target)) return;"), 'Keyboard handling must ignore links, buttons and other non-editable focus targets.');
 assert.ok(mobileNav.includes("document.addEventListener('focusout', handleFocusOut, true)"), 'Bottom navigation must settle after the iOS keyboard closes.');
+assert.ok(mobileNav.includes('let editableFocusSeen = false'), 'Keyboard recovery must remember that editable focus was observed even if focusout is missed.');
+assert.ok(mobileNav.includes('let keyboardPollTimer = 0'), 'Keyboard recovery must include an activeElement watchdog.');
+assert.ok(mobileNav.includes('keyboardPollTimer = window.setTimeout'), 'Editable focus must schedule independent polling so missed focusout events cannot strand the nav.');
+assert.ok(mobileNav.includes('}, 100);'), 'Editable focus watchdog must recheck promptly while the input remains focused.');
 assert.ok(mobileNav.includes('let keyboardReleaseTimer = 0'), 'Keyboard dismissal must use a dedicated release timer that viewport resize cannot cancel.');
 assert.ok(mobileNav.includes('keyboardReleaseTimer = window.setTimeout'), 'Keyboard dismissal must schedule an independent release.');
-assert.ok(mobileNav.includes('keyboardSettling = false;'), 'Keyboard release must explicitly restore normal nav positioning.');
+assert.ok(mobileNav.includes('editableFocusSeen = false;'), 'Keyboard release must explicitly clear editable-focus recovery state.');
 assert.ok(mobileNav.includes('}, 500);'), 'Keyboard release must wait for delayed iOS viewport restoration before showing the nav.');
 assert.ok(mobileNav.includes("window.addEventListener('pageshow', settleViewport)"), 'Mobile navigation must re-anchor after iOS page-cache restores.');
 assert.ok(mobileNav.includes("document.addEventListener('visibilitychange', handleVisibilityChange)"), 'Mobile navigation must re-anchor when the browser tab becomes visible again.');
