@@ -5,6 +5,10 @@ const mobileNav = await readFile(new URL('../src/components/navigation/MobileNav
 const searchFilter = await readFile(new URL('../src/components/filters/SearchFilter.tsx', import.meta.url), 'utf8');
 
 assert.ok(mobileNav.includes('href="/#club-search"'), 'Mobile search navigation must keep the #club-search destination');
+assert.ok(mobileNav.includes('window.visualViewport'), 'Mobile navigation must track the visual viewport on mobile browsers');
+assert.ok(mobileNav.includes('data-mobile-viewport-shell="true"'), 'Mobile navigation must render inside a visual-viewport shell');
+assert.ok(mobileNav.includes('className="pointer-events-auto absolute inset-x-0 bottom-0'), 'Mobile nav must dock inside the shell instead of using fixed bottom anchoring directly');
+assert.ok(!mobileNav.includes('className="fixed inset-x-0 bottom-0'), 'Mobile nav must not regress to iOS 26 fixed-bottom anchoring');
 assert.ok(searchFilter.includes('a[href="/#club-search"]'), 'SearchFilter must intercept same-page mobile search navigation');
 assert.ok(searchFilter.includes('event.preventDefault()'), 'Same-page mobile search navigation must prevent the no-op hash navigation');
 assert.ok(searchFilter.includes("document.addEventListener('click', handleMobileSearchNavigation, true)"), 'Search navigation interception must run in capture phase before Next Link routing');
