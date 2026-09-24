@@ -401,7 +401,7 @@ async function assertIOSChromeNavFallback(client) {
     const sentinel = document.querySelector('[data-mobile-content-end="true"]');
     const vv = window.visualViewport;
     const navRect = nav?.getBoundingClientRect();
-    const contentBottom = vv && sentinel ? vv.pageTop + sentinel.getBoundingClientRect().top : null;
+    const contentBottom = vv && sentinel ? window.scrollY + sentinel.getBoundingClientRect().top : null;
     const maxPageTop = vv && contentBottom != null ? Math.max(0, contentBottom - vv.height) : null;
     return {
       pageTop: vv?.pageTop ?? null,
