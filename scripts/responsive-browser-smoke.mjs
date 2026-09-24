@@ -356,6 +356,95 @@ async function assertHomepage(client, viewport) {
   await capture(client, `${viewport.name}-home-map-scrolled`);
 }
 
+async function assertIOSChromeNavFallback(client) {
+  await client.send('Network.enable');
+  await client.send('Network.setUserAgentOverride', {
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/153.0.8010.24 Mobile/15E148 Safari/604.1',
+    platform: 'iPhone',
+  });
+  await setViewport(client, 390, 844, true);
+  await navigate(client, '/');
+  await waitForPage(client, 'nav[aria-label="Mobil naviqasiya"]');
+  await sleep(650);
+
+  const initial = await evaluate(client, `(() => {
+    const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+    const sentinel = document.querySelector('[data-mobile-content-end="true"]');
+    const rect = nav?.getBoundingClientRect();
+    const vv = window.visualViewport;
+    return {
+      mode: nav?.getAttribute('data-ios-viewport-mode') ?? null,
+      position: nav ? getComputedStyle(nav).position : null,
+      visibility: nav ? getComputedStyle(nav).visibility : null,
+      navBottom: rect?.bottom ?? null,
+      visualBottom: vv ? vv.offsetTop + vv.height : null,
+      sentinel: Boolean(sentinel),
+    };
+  })()`);
+  assert(initial.mode === 'absolute', 'iOS Chrome fallback must bypass position:fixed', initial);
+  assert(initial.position === 'absolute', 'iOS Chrome fallback must render nav with position:absolute', initial);
+  assert(initial.sentinel, 'iOS Chrome fallback requires the real-content sentinel', initial);
+  assert(initial.navBottom != null && initial.visualBottom != null && Math.abs(initial.navBottom - initial.visualBottom) <= 2, 'iOS absolute nav must align to visual viewport bottom', initial);
+
+  await evaluate(client, `(() => {
+    const spacer = document.createElement('div');
+    spacer.id = 'ios-phantom-scroll-regression';
+    spacer.style.height = '640px';
+    spacer.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(spacer);
+    window.scrollTo(0, document.documentElement.scrollHeight);
+  })()`);
+  await sleep(700);
+
+  const corrected = await evaluate(client, `(() => {
+    const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+    const sentinel = document.querySelector('[data-mobile-content-end="true"]');
+    const vv = window.visualViewport;
+    const navRect = nav?.getBoundingClientRect();
+    const contentBottom = vv && sentinel ? vv.pageTop + sentinel.getBoundingClientRect().top : null;
+    const maxPageTop = vv && contentBottom != null ? Math.max(0, contentBottom - vv.height) : null;
+    return {
+      pageTop: vv?.pageTop ?? null,
+      maxPageTop,
+      navBottom: navRect?.bottom ?? null,
+      visualBottom: vv ? vv.offsetTop + vv.height : null,
+      visibility: nav ? getComputedStyle(nav).visibility : null,
+    };
+  })()`);
+  assert(corrected.pageTop != null && corrected.maxPageTop != null && corrected.pageTop <= corrected.maxPageTop + 3, 'iOS phantom bottom scroll must be clamped to real content', corrected);
+  assert(corrected.visibility === 'visible', 'iOS nav must become visible again after phantom-scroll correction', corrected);
+  assert(corrected.navBottom != null && corrected.visualBottom != null && Math.abs(corrected.navBottom - corrected.visualBottom) <= 2, 'iOS nav must remain aligned after phantom-scroll correction', corrected);
+
+  const input = await evaluate(client, `(() => {
+    const field = document.querySelector('input[aria-label="Klub axtar"]');
+    if (!(field instanceof HTMLInputElement)) return false;
+    field.focus();
+    return document.activeElement === field;
+  })()`);
+  assert(input, 'iOS keyboard regression requires a focusable search input');
+  await sleep(80);
+  const hidden = await evaluate(client, `getComputedStyle(document.querySelector('nav[aria-label="Mobil naviqasiya"]')).visibility`);
+  assert(hidden === 'hidden', 'iOS nav must hide while the keyboard/input is active', { hidden });
+
+  await evaluate(client, `document.querySelector('input[aria-label="Klub axtar"]')?.blur()`);
+  await sleep(550);
+  const restored = await evaluate(client, `(() => {
+    document.getElementById('ios-phantom-scroll-regression')?.remove();
+    const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+    const vv = window.visualViewport;
+    const rect = nav?.getBoundingClientRect();
+    return {
+      visibility: nav ? getComputedStyle(nav).visibility : null,
+      navBottom: rect?.bottom ?? null,
+      visualBottom: vv ? vv.offsetTop + vv.height : null,
+    };
+  })()`);
+  assert(restored.visibility === 'visible', 'iOS nav must restore after keyboard dismissal settling', restored);
+  assert(restored.navBottom != null && restored.visualBottom != null && Math.abs(restored.navBottom - restored.visualBottom) <= 2, 'iOS nav must realign after keyboard dismissal', restored);
+
+  console.log('iOS Chrome absolute-nav and phantom-scroll regression passed.');
+}
+
 async function runViewport(client, viewport, criticalPaths) {
   await setViewport(client, viewport.width, viewport.height, viewport.mobile);
   await assertHomepage(client, viewport);
@@ -397,6 +486,8 @@ try {
     await runViewport(client, viewport, criticalPaths);
     console.log(`Responsive browser checks passed: ${viewport.name}`);
   }
+
+  await assertIOSChromeNavFallback(client);
 
   console.log(`Responsive browser regression passed across ${viewports.length} viewports and ${criticalPaths.length + 1} critical routes per viewport.`);
 } finally {
