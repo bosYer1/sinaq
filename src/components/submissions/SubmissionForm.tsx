@@ -9,7 +9,7 @@ interface SubmissionFormProps {
   kind: SubmissionKind;
   clubName?: string | null;
   clubSlug?: string | null;
-  returnTo: '/elaqe' | '/klub-sahibi';
+  returnTo: '/elaqe';
   submitLabel: string;
 }
 
