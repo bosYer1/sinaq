@@ -19,7 +19,7 @@ export default function AboutPage() {
         <p className="mt-2 text-sm leading-6 text-muted">Klubun adı və yerləşməsi mümkün olduqda birdən çox ictimai mənbə ilə uyğunlaşdırılır. Sahib və ya rəsmi nümayəndə tərəfindən təsdiqlənən profillər ayrıca təsdiq nişanı alır. Qiymət və iş saatları dəyişə bildiyi üçün klub səhifəsində son yenilənmə tarixi göstərilir.</p>
         <Link href="/melumat-metodologiyasi" className="mt-4 inline-flex rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink hover:border-primary">Məlumat metodologiyasına bax</Link>
       </section>
-      <div className="mt-8 flex flex-wrap gap-2"><Link href="/" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Klubları tap</Link><Link href="/klub-sahibi" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Klub sahibiyəm</Link><Link href="/elaqe" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Əlaqə</Link></div>
+      <div className="mt-8 flex flex-wrap gap-2"><Link href="/" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Klubları tap</Link><Link href="/elaqe#new-club" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Klub əlavə et</Link><Link href="/elaqe" className="rounded-control border border-border px-4 py-2 text-sm font-semibold text-ink">Əlaqə</Link></div>
     </div>
   );
 }
