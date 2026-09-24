@@ -21,7 +21,8 @@ assert.ok(mobileNav.includes('getRealPageMaxTop'), 'iOS navigation must clamp sc
 assert.ok(mobileNav.includes('getLayoutScrollTopForVisualPageTop'), 'Phantom clamp must translate visual pageTop into layout scroll coordinates.');
 assert.ok(mobileNav.includes("window.scrollTo({ top: layoutScrollTop, left: 0, behavior: 'auto' })"), 'Phantom iOS bottom scrolling must be corrected without smooth-scroll feedback.');
 assert.ok(layout.includes('data-mobile-content-end="true"'), 'Root layout must expose a sentinel for the real mobile content end.');
-assert.ok(mobileNav.includes("document.addEventListener('focusin', handleFocusIn, true)"), 'Bottom navigation must hide while the iOS keyboard/input is active.');
+assert.ok(mobileNav.includes("document.addEventListener('focusin', handleFocusIn, true)"), 'Bottom navigation must observe iOS editable focus.');
+assert.ok(mobileNav.includes("if (!isEditableElement(event.target)) return;"), 'Keyboard handling must ignore links, buttons and other non-editable focus targets.');
 assert.ok(mobileNav.includes("document.addEventListener('focusout', handleFocusOut, true)"), 'Bottom navigation must settle after the iOS keyboard closes.');
 assert.ok(mobileNav.includes('let keyboardReleaseTimer = 0'), 'Keyboard dismissal must use a dedicated release timer that viewport resize cannot cancel.');
 assert.ok(mobileNav.includes('keyboardReleaseTimer = window.setTimeout'), 'Keyboard dismissal must schedule an independent release.');
