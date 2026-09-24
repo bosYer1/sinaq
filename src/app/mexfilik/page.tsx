@@ -40,7 +40,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="font-display text-lg font-bold">Müraciət və əlaqə məlumatları</h2>
-          <p className="mt-2 text-muted">Düzəliş və yeni klub təklifi formalarında yalnız klubun adı və əlaqə nömrəsi qəbul olunur. Klub sahibi təsdiq formasında isə təsdiq üçün təqdim etdiyiniz əlavə klub məlumatları və seçdiyiniz əlaqə vasitəsi saxlanıla bilər. Bu məlumatlar müraciəti yoxlamaq və lazım olduqda sizinlə əlaqə saxlamaq üçün istifadə olunur; public klub səhifəsində avtomatik yayımlanmır.</p>
+          <p className="mt-2 text-muted">Düzəliş və yeni klub təklifi formalarında klubun adı və əlaqə nömrəsi qəbul olunur. Bu məlumatlar müraciəti yoxlamaq və lazım olduqda sizinlə əlaqə saxlamaq üçün istifadə olunur; public klub səhifəsində avtomatik yayımlanmır.</p>
           <p className="mt-2 text-muted">Müraciətlərin məzmunu və əlaqə məlumatları admin panelində yalnız səlahiyyətli admin hesabları üçün görünür. Həll olunmuş və ya rədd edilmiş müraciətlərə artıq ehtiyac qalmadıqda admin tərəfindən silinə bilər. Şifrə, SMS kodu, bank kartı məlumatı və ya hesab giriş məlumatı göndərməyin.</p>
         </section>
 
