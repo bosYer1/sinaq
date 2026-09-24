@@ -175,6 +175,41 @@ async function assertCommonLayout(client, viewport, path) {
   }
 }
 
+async function assertMobileNavPinnedAcrossScroll(client, viewport, path) {
+  if (!viewport.mobile) return;
+
+  const page = await evaluate(client, `({
+    innerHeight: window.innerHeight,
+    scrollHeight: document.documentElement.scrollHeight,
+    maxScroll: Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+  })`);
+  const positions = [0, Math.floor(page.maxScroll / 2), page.maxScroll];
+
+  for (const position of positions) {
+    await evaluate(client, `window.scrollTo(0, ${position})`);
+    await sleep(220);
+
+    const sample = await evaluate(client, `(() => {
+      const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
+      const rect = nav?.getBoundingClientRect();
+      const bottomElement = document.elementFromPoint(Math.floor(window.innerWidth / 2), window.innerHeight - 8);
+      return {
+        requestedScrollY: ${position},
+        scrollY: window.scrollY,
+        innerHeight: window.innerHeight,
+        navTop: rect?.top ?? null,
+        navBottom: rect?.bottom ?? null,
+        navHeight: rect?.height ?? null,
+        bottomHitIsNav: Boolean(bottomElement?.closest('nav[aria-label="Mobil naviqasiya"]')),
+      };
+    })()`);
+
+    assert(sample.navBottom != null && Math.abs(sample.navBottom - sample.innerHeight) <= 2, `${viewport.name} ${path}: mobile nav drifted away from viewport bottom while scrolling`, sample);
+    assert(sample.navTop != null && sample.navTop >= 0 && sample.navTop < sample.innerHeight, `${viewport.name} ${path}: mobile nav floated outside visible viewport`, sample);
+    assert(sample.bottomHitIsNav, `${viewport.name} ${path}: viewport bottom is no longer covered by mobile navigation`, sample);
+  }
+}
+
 async function assertHomepage(client, viewport) {
   await navigate(client, '/');
   if (viewport.mobile) {
@@ -334,6 +369,7 @@ async function runViewport(client, viewport, criticalPaths) {
   for (const path of criticalPaths) {
     await navigate(client, path);
     await assertCommonLayout(client, viewport, path);
+    if (path === '/yenilikler') await assertMobileNavPinnedAcrossScroll(client, viewport, path);
   }
 }
 
@@ -353,6 +389,7 @@ try {
     '/bakida-pc-klublari',
     '/bakida-playstation-klublari',
     '/bakida-24-saat-gaming-klublari',
+    '/yenilikler',
     '/elaqe',
     clubMatch,
   ];
