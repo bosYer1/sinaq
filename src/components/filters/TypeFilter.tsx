@@ -25,8 +25,14 @@ export function TypeFilter({ types }: { types: ClubType[] }) {
                 : 'text-muted hover:text-ink',
             )}
             aria-pressed={active}
+            aria-label={t.name}
           >
-            {t.name}
+            {t.slug === 'playstation' ? (
+              <>
+                <span className="sm:hidden">PS</span>
+                <span className="hidden sm:inline">{t.name}</span>
+              </>
+            ) : t.name}
           </button>
         );
       })}
