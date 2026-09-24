@@ -5,11 +5,11 @@ const mobileNav = await readFile(new URL('../src/components/navigation/MobileNav
 const searchFilter = await readFile(new URL('../src/components/filters/SearchFilter.tsx', import.meta.url), 'utf8');
 
 assert.ok(mobileNav.includes('href="/#club-search"'), 'Mobile search navigation must keep the #club-search destination');
-assert.ok(mobileNav.includes('window.visualViewport'), 'Mobile navigation must track the visual viewport on mobile browsers');
-assert.ok(mobileNav.includes('const visualBottom = visualViewport.offsetTop + visualViewport.height'), 'Mobile navigation must compute the real visible viewport bottom');
-assert.ok(mobileNav.includes('const bottomInset = Math.max(0, window.innerHeight - visualBottom)'), 'Mobile navigation must convert visual viewport movement into a bottom inset');
-assert.ok(mobileNav.includes("nav.style.bottom = \`${bottomInset}px\`"), 'Mobile navigation must apply the visual viewport bottom inset directly');
-assert.ok(!mobileNav.includes('data-mobile-viewport-shell="true"'), 'Mobile navigation must not use the floating visual-viewport shell model');
+assert.ok(mobileNav.includes('fixed inset-x-0 bottom-0'), 'Mobile navigation must use native CSS fixed-bottom anchoring.');
+assert.ok(mobileNav.includes('[transform:translateZ(0)]'), 'Mobile navigation should stay on its own compositor layer during mobile browser scroll.');
+assert.ok(!mobileNav.includes('window.visualViewport'), 'Mobile navigation must not manually compensate for browser visual viewport movement.');
+assert.ok(!mobileNav.includes('nav.style.bottom'), 'Mobile navigation must not write inline bottom offsets during scroll.');
+assert.ok(!mobileNav.includes('useEffect'), 'Mobile navigation positioning must not depend on scroll or resize effects.');
 assert.ok(searchFilter.includes('a[href="/#club-search"]'), 'SearchFilter must intercept same-page mobile search navigation');
 assert.ok(searchFilter.includes('event.preventDefault()'), 'Same-page mobile search navigation must prevent the no-op hash navigation');
 assert.ok(searchFilter.includes("document.addEventListener('click', handleMobileSearchNavigation, true)"), 'Search navigation interception must run in capture phase before Next Link routing');
