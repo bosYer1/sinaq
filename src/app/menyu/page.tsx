@@ -125,7 +125,7 @@ export default function MenuPage() {
               href="/#club-search"
               className="mt-4 flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-semibold text-white no-underline shadow-[0_12px_28px_rgba(124,92,252,0.22)] transition active:scale-[0.99] sm:hidden"
             >
-              <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <circle cx="11" cy="11" r="6" />
                 <path d="m16 16 4 4" />
               </svg>
@@ -157,7 +157,7 @@ export default function MenuPage() {
                   <>
                     <div className="flex min-w-0 items-center gap-3.5">
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_8px_20px_rgba(124,92,252,0.2)]">
-                        <MenuIcon name={item.icon} className="h-5.5 w-5.5" />
+                        <MenuIcon name={item.icon} className="h-[22px] w-[22px]" />
                       </span>
                       <div className="min-w-0">
                         <h3 className="font-display text-base font-bold text-ink">{item.title}</h3>
@@ -172,7 +172,7 @@ export default function MenuPage() {
                       <MenuIcon name={item.icon} />
                     </span>
                     <h3 className="mt-4 text-sm font-bold text-ink">{item.title}</h3>
-                    <p className="mt-1 text-[11px] leading-4.5 text-muted sm:text-xs">{item.description}</p>
+                    <p className="mt-1 text-[11px] leading-[18px] text-muted sm:text-xs">{item.description}</p>
                   </>
                 )}
               </Link>
