@@ -402,16 +402,18 @@ async function assertIOSChromeNavFallback(client) {
     const vv = window.visualViewport;
     const navRect = nav?.getBoundingClientRect();
     const contentBottom = vv && sentinel ? window.scrollY + sentinel.getBoundingClientRect().top : null;
-    const maxPageTop = vv && contentBottom != null ? Math.max(0, contentBottom - vv.height) : null;
+    const maxLayoutScrollTop = vv && contentBottom != null
+      ? Math.max(0, contentBottom - vv.offsetTop - vv.height)
+      : null;
     return {
-      pageTop: vv?.pageTop ?? null,
-      maxPageTop,
+      scrollY: window.scrollY,
+      maxLayoutScrollTop,
       navBottom: navRect?.bottom ?? null,
       visualBottom: vv ? vv.offsetTop + vv.height : null,
       visibility: nav ? getComputedStyle(nav).visibility : null,
     };
   })()`);
-  assert(corrected.pageTop != null && corrected.maxPageTop != null && corrected.pageTop <= corrected.maxPageTop + 3, 'iOS phantom bottom scroll must be clamped to real content', corrected);
+  assert(corrected.scrollY != null && corrected.maxLayoutScrollTop != null && corrected.scrollY <= corrected.maxLayoutScrollTop + 3, 'iOS phantom bottom scroll must be clamped to real layout content', corrected);
   assert(corrected.visibility === 'visible', 'iOS nav must become visible again after phantom-scroll correction', corrected);
   assert(corrected.navBottom != null && corrected.visualBottom != null && Math.abs(corrected.navBottom - corrected.visualBottom) <= 2, 'iOS nav must remain aligned after phantom-scroll correction', corrected);
 
