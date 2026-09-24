@@ -50,3 +50,12 @@ export function isPhantomBottomScroll(
     && Number.isFinite(maxPageTop)
     && visualPageTop > maxPageTop + tolerance;
 }
+
+
+export function getLayoutScrollTopForVisualPageTop(
+  visualPageTop: number,
+  visualOffsetTop: number,
+) {
+  if (!Number.isFinite(visualPageTop) || !Number.isFinite(visualOffsetTop)) return 0;
+  return Math.max(0, visualPageTop - visualOffsetTop);
+}
