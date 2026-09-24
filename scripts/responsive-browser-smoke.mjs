@@ -186,9 +186,9 @@ async function assertCommonLayout(client, viewport, path) {
         computedBottom: style.bottom,
       };
     })()`);
-    assert(fixedContract?.position === 'fixed', `${viewport.name} ${path}: mobile navigation must use fixed positioning`, fixedContract);
-    assert(Number.isFinite(Number.parseFloat(fixedContract?.inlineTop ?? '')), `${viewport.name} ${path}: mobile navigation must expose an explicit visual-viewport top coordinate`, fixedContract);
-    assert(fixedContract?.inlineBottom === 'auto', `${viewport.name} ${path}: visual viewport mode must not rely on bottom anchoring`, fixedContract);
+    assert(fixedContract?.position === 'fixed', `${viewport.name} ${path}: non-iOS mobile navigation must keep native fixed positioning`, fixedContract);
+    assert(fixedContract?.inlineTop === '', `${viewport.name} ${path}: non-iOS navigation must not receive the iOS absolute top override`, fixedContract);
+    assert(fixedContract?.inlineBottom === '', `${viewport.name} ${path}: non-iOS navigation must not receive an inline bottom override`, fixedContract);
 
     await evaluate(client, `window.scrollTo(0, Math.max(0, document.documentElement.scrollHeight - window.innerHeight))`);
     await sleep(120);
