@@ -1,9 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  getLayoutScrollTopForVisualPageTop,
   getMobileNavDocumentTop,
-  getRealPageMaxTop,
+  getRealLayoutMaxScrollTop,
   isIOSWebKit,
   isPhantomBottomScroll,
 } from './mobileViewport.ts';
@@ -23,20 +22,14 @@ test('absolute mobile nav follows visual viewport in document coordinates', () =
   assert.equal(getMobileNavDocumentTop(0, 500, 68), 432);
 });
 
-test('real page max top ignores browser-created bottom overflow', () => {
-  assert.equal(getRealPageMaxTop(2200, 844), 1356);
-  assert.equal(getRealPageMaxTop(600, 844), 0);
+test('real layout max scroll accounts for visual viewport browser chrome offset', () => {
+  assert.equal(getRealLayoutMaxScrollTop(2200, 0, 844), 1356);
+  assert.equal(getRealLayoutMaxScrollTop(2200, 44, 700), 1456);
+  assert.equal(getRealLayoutMaxScrollTop(600, 44, 700), 0);
 });
 
-test('phantom scroll is detected only past real content end', () => {
-  assert.equal(isPhantomBottomScroll(1500, 1356), true);
-  assert.equal(isPhantomBottomScroll(1357, 1356), false);
-  assert.equal(isPhantomBottomScroll(1359, 1356), true);
-});
-
-
-test('visual pageTop clamp converts to layout scrollTop when browser chrome is offset', () => {
-  assert.equal(getLayoutScrollTopForVisualPageTop(1356, 44), 1312);
-  assert.equal(getLayoutScrollTopForVisualPageTop(1356, 0), 1356);
-  assert.equal(getLayoutScrollTopForVisualPageTop(20, 44), 0);
+test('phantom scroll ignores normal visual viewport toolbar offset', () => {
+  assert.equal(isPhantomBottomScroll(1456, 1456), false);
+  assert.equal(isPhantomBottomScroll(1457, 1456), false);
+  assert.equal(isPhantomBottomScroll(1459, 1456), true);
 });
