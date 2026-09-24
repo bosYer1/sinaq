@@ -6,6 +6,8 @@ const districtPage = fs.readFileSync('src/app/rayon/[slug]/page.tsx', 'utf8');
 const rootLayout = fs.readFileSync('src/app/layout.tsx', 'utf8');
 const manifest = fs.readFileSync('src/app/manifest.ts', 'utf8');
 const nearbyPage = fs.readFileSync('src/app/yaxinliqda-gaming-klublari/page.tsx', 'utf8');
+const twentyEightMayPage = fs.readFileSync('src/app/28-may-gaming-klublari/page.tsx', 'utf8');
+const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
 const indexNowWorkflow = fs.readFileSync('.github/workflows/indexnow-submit.yml', 'utf8');
 const rootFavicon = fs.readFileSync('public/favicon.jpeg');
@@ -33,6 +35,9 @@ const checks = [
   [nearbyPage.includes("const title = 'Yaxınlıqdakı PC və PlayStation klubları — Bakı xəritəsi';"), 'nearby landing keeps stable PC + PlayStation intent in the title'],
   [nextConfig.includes("source: '/favicon.ico'") && nextConfig.includes("destination: '/gameyer-favicon.jpeg'"), 'favicon.ico resolves to the locked GameYer favicon asset'],
   [indexNowWorkflow.includes('Wait for Vercel deployment') && indexNowWorkflow.includes('node scripts/indexnow-submit.mjs'), 'IndexNow workflow waits for production before notifying search engines'],
+  [twentyEightMayPage.includes("getClubs({ q: '28 May' })") && twentyEightMayPage.includes("canonical: '/28-may-gaming-klublari'"), '28 May landing is data-driven and canonicalized'],
+  [twentyEightMayPage.includes('clubs.length >= 2'), '28 May landing only becomes indexable with enough real public supply'],
+  [sitemapPage.includes("twentyEightMayCount >= 2") && sitemapPage.includes("/28-may-gaming-klublari"), '28 May sitemap entry is supply-gated'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
