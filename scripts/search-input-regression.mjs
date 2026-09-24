@@ -56,6 +56,7 @@ assert(exploreView.includes("searchActive ? 'h-[220px] sm:h-[280px]' : 'h-[340px
 assert(exploreView.includes('Axtarış nəticələri ('), 'Active search must label the result count explicitly.');
 assert(exploreView.includes('“${searchQuery}” üçün uyğun klublar'), 'Active search must echo the committed query in the result context.');
 assert(exploreView.includes('const hasStructuredFilters = Boolean(filters.district || filters.type || filters.priceMax);'), 'Search empty state must know whether structured filters are also active.');
+assert(exploreView.includes('searchQuery={searchQuery}'), 'Search empty state must receive the committed query for missing-club suggestions.');
 
 assert(clubsQuery.includes("const searchTerms = sanitized.split(/\\s+/).filter(Boolean).slice(0, 6);"), 'Club search must tokenize settled multi-word queries with a bounded term count.');
 assert(clubsQuery.includes('for (const term of searchTerms)'), 'Club search must apply every sanitized search term.');
