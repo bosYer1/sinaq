@@ -23,7 +23,10 @@ assert.ok(mobileNav.includes("window.scrollTo({ top: layoutScrollTop, left: 0, b
 assert.ok(layout.includes('data-mobile-content-end="true"'), 'Root layout must expose a sentinel for the real mobile content end.');
 assert.ok(mobileNav.includes("document.addEventListener('focusin', handleFocusIn, true)"), 'Bottom navigation must hide while the iOS keyboard/input is active.');
 assert.ok(mobileNav.includes("document.addEventListener('focusout', handleFocusOut, true)"), 'Bottom navigation must settle after the iOS keyboard closes.');
-assert.ok(mobileNav.includes('for (const delay of [50, 150, 300, 450])'), 'Keyboard dismissal must tolerate delayed WebKit viewport recovery.');
+assert.ok(mobileNav.includes('let keyboardReleaseTimer = 0'), 'Keyboard dismissal must use a dedicated release timer that viewport resize cannot cancel.');
+assert.ok(mobileNav.includes('keyboardReleaseTimer = window.setTimeout'), 'Keyboard dismissal must schedule an independent release.');
+assert.ok(mobileNav.includes('keyboardSettling = false;'), 'Keyboard release must explicitly restore normal nav positioning.');
+assert.ok(mobileNav.includes('}, 500);'), 'Keyboard release must wait for delayed iOS viewport restoration before showing the nav.');
 assert.ok(mobileNav.includes("window.addEventListener('pageshow', settleViewport)"), 'Mobile navigation must re-anchor after iOS page-cache restores.');
 assert.ok(mobileNav.includes("document.addEventListener('visibilitychange', handleVisibilityChange)"), 'Mobile navigation must re-anchor when the browser tab becomes visible again.');
 assert.ok(mobileNav.includes('}, [pathname]);'), 'Mobile navigation must re-anchor after every client-side route transition.');
