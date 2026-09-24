@@ -99,7 +99,11 @@ export default async function HomePage({ searchParams }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeStructuredData).replace(/</g, '\\u003c') }}
       />
-      <div className="min-h-[calc(100dvh-64px)] bg-bg-elevated">
+      <div
+        className={view === 'map'
+          ? 'min-h-0 bg-bg-elevated md:min-h-[calc(100dvh-64px)]'
+          : 'min-h-[calc(100dvh-64px)] bg-bg-elevated'}
+      >
         {!isSupabaseConfigured() ? (
           <div className="border-b border-warn/30 bg-warn-tint px-4 py-1.5 text-center text-xs font-medium text-warn sm:px-6">
             Supabase hələ qoşulmayıb — heç bir klub göstərilmir.
