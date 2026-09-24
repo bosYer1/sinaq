@@ -1,0 +1,86 @@
+name: IndexNow Notify
+
+on:
+  workflow_dispatch:
+    inputs:
+      full_bootstrap:
+        description: 'Submit the full current sitemap instead of recent changes only'
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/indexnow-submit.yml'
+      - 'scripts/indexnow-submit.mjs'
+      - 'src/app/**'
+      - 'public/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indexnow-notify
+  cancel-in-progress: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Wait for Vercel deployment
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for i in {1..60}; do
+            json="$(curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H 'Accept: application/vnd.github+json' \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status")"
+            state="$(STATUS_JSON="$json" node -e "const s=JSON.parse(process.env.STATUS_JSON); const v=s.statuses.find((x)=>x.context==='Vercel'); process.stdout.write(v?.state || 'pending')")"
+            if [ "$state" = 'success' ]; then
+              exit 0
+            fi
+            if [ "$state" = 'failure' ] || [ "$state" = 'error' ]; then
+              echo "Vercel deployment status: $state" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          echo 'Timed out waiting for Vercel deployment.' >&2
+          exit 1
+
+      - name: Verify public IndexNow ownership key
+        run: |
+          set -euo pipefail
+          expected='df8fa4723f76653caecfd894a38ef608'
+          actual="$(curl --fail --silent --show-error --retry 3 --retry-delay 2 https://gameyer.az/${expected}.txt | tr -d '\r\n')"
+          test "$actual" = "$expected"
+
+      - name: Verify production sitemap
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 https://gameyer.az/sitemap.xml > /tmp/sitemap.xml
+          grep '<urlset' /tmp/sitemap.xml > /dev/null
+          grep 'https://gameyer.az' /tmp/sitemap.xml > /dev/null
+
+      - name: Notify IndexNow
+        env:
+          FULL_BOOTSTRAP: ${{ inputs.full_bootstrap || false }}
+        run: |
+          set -euo pipefail
+          if [ "${FULL_BOOTSTRAP}" = 'true' ]; then
+            node scripts/indexnow-submit.mjs --all
+          else
+            node scripts/indexnow-submit.mjs
+          fi
