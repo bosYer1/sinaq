@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { getMobileNavBottomOffset } from '@/lib/mobileViewport';
 
 const baseClass = 'flex flex-col items-center justify-center gap-1 text-[10px] transition';
 const activeClass = 'font-semibold text-primary';
@@ -13,6 +15,61 @@ function navClass(active: boolean) {
 
 export function MobileNav() {
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const visualViewport = window.visualViewport;
+    let frame = 0;
+    const settleTimers = new Set<number>();
+
+    const syncViewportBottom = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        if (!visualViewport) {
+          nav.style.bottom = '0px';
+          return;
+        }
+
+        const bottomOffset = getMobileNavBottomOffset(
+          window.innerHeight,
+          visualViewport.offsetTop,
+          visualViewport.height,
+        );
+        nav.style.bottom = `${bottomOffset}px`;
+      });
+    };
+
+    const settleAfterKeyboard = () => {
+      syncViewportBottom();
+      for (const delay of [50, 150, 300]) {
+        const timer = window.setTimeout(() => {
+          settleTimers.delete(timer);
+          syncViewportBottom();
+        }, delay);
+        settleTimers.add(timer);
+      }
+    };
+
+    syncViewportBottom();
+    visualViewport?.addEventListener('resize', syncViewportBottom);
+    visualViewport?.addEventListener('scroll', syncViewportBottom);
+    window.addEventListener('resize', syncViewportBottom);
+    window.addEventListener('orientationchange', settleAfterKeyboard);
+    document.addEventListener('focusout', settleAfterKeyboard, true);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      for (const timer of settleTimers) window.clearTimeout(timer);
+      visualViewport?.removeEventListener('resize', syncViewportBottom);
+      visualViewport?.removeEventListener('scroll', syncViewportBottom);
+      window.removeEventListener('resize', syncViewportBottom);
+      window.removeEventListener('orientationchange', settleAfterKeyboard);
+      document.removeEventListener('focusout', settleAfterKeyboard, true);
+    };
+  }, []);
   const clubsActive = pathname === '/';
   const districtsActive = pathname === '/rayon' || pathname.startsWith('/rayon/');
   const updatesActive = pathname === '/yenilikler' || pathname.startsWith('/yenilikler/');
@@ -20,7 +77,8 @@ export function MobileNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 grid min-h-[68px] grid-cols-5 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] [transform:translateZ(0)] md:hidden"
+      ref={navRef}
+      className="fixed inset-x-0 bottom-0 z-40 grid min-h-[68px] grid-cols-5 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(31,35,48,0.06)] md:hidden"
       aria-label="Mobil naviqasiya"
     >
       <Link href="/" className={navClass(clubsActive)}>
