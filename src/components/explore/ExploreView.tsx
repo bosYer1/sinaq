@@ -150,6 +150,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
 
   const mobileClubs = mobileExpanded ? clubsWithDistance : clubsWithDistance.slice(0, MOBILE_INITIAL_CLUB_COUNT);
   const searchQuery = filters.q?.trim() ?? '';
+  const hasStructuredFilters = Boolean(filters.district || filters.type || filters.priceMax);
   const resultsTitle = searchActive ? `Axtarış nəticələri (${clubsWithDistance.length})` : `Klublar (${clubsWithDistance.length})`;
   const resultsSubtitle = searchActive && searchQuery ? `“${searchQuery}” üçün uyğun klublar` : 'Klubları müqayisə et';
 
@@ -324,6 +325,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 onHoverClub={handleHoverCard}
                 cardRefs={cardRefs}
                 searchActive={searchActive}
+                hasStructuredFilters={hasStructuredFilters}
                 onClearFilters={hasActiveFilters ? clearAll : undefined}
               />
             </div>
@@ -383,6 +385,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                 onHoverClub={handleHoverCard}
                 cardRefs={cardRefs}
                 searchActive={searchActive}
+                hasStructuredFilters={hasStructuredFilters}
                 onClearFilters={hasActiveFilters ? clearAll : undefined}
               />
               {clubsWithDistance.length > MOBILE_INITIAL_CLUB_COUNT ? (
