@@ -389,7 +389,7 @@ async function assertHomepage(client, viewport) {
   await capture(client, `${viewport.name}-home-map-scrolled`);
 }
 
-async function assertIOSChromeNavFallback(client) {
+async function assertIOSChromeAppShell(client) {
   await client.send('Network.enable');
   await client.send('Network.setUserAgentOverride', {
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/153.0.8010.24 Mobile/15E148 Safari/604.1',
@@ -397,120 +397,84 @@ async function assertIOSChromeNavFallback(client) {
   });
   await setViewport(client, 390, 844, true);
   await navigate(client, '/');
-  await waitForPage(client, '[data-mobile-nav-overlay="true"]');
+  await waitForPage(client, '[data-mobile-app-shell="true"]');
+  await waitForPage(client, '[data-mobile-scroll-root="true"]');
   await waitForPage(client, 'nav[aria-label="Mobil naviqasiya"]');
-  await sleep(250);
+  await sleep(450);
 
-  const initial = await evaluate(client, `(() => {
-    const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
+  const readShell = () => evaluate(client, `(() => {
+    const shell = document.querySelector('[data-mobile-app-shell="true"]');
+    const root = document.querySelector('[data-mobile-scroll-root="true"]');
     const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
     const vv = window.visualViewport;
-    const overlayRect = overlay?.getBoundingClientRect();
+    const shellRect = shell?.getBoundingClientRect();
+    const rootRect = root?.getBoundingClientRect();
     const navRect = nav?.getBoundingClientRect();
-    const overlayStyle = overlay ? getComputedStyle(overlay) : null;
-    const navStyle = nav ? getComputedStyle(nav) : null;
     return {
-      overlayPosition: overlayStyle?.position ?? null,
-      overlayTop: overlayRect?.top ?? null,
-      overlayHeight: overlayRect?.height ?? null,
-      navPosition: navStyle?.position ?? null,
-      navBottom: navRect?.bottom ?? null,
-      visualBottom: vv ? vv.offsetTop + vv.height : null,
+      windowScrollY: window.scrollY,
+      documentScrollHeight: document.documentElement.scrollHeight,
+      documentClientHeight: document.documentElement.clientHeight,
+      shellHeight: shellRect?.height ?? null,
+      shellTop: shellRect?.top ?? null,
+      shellBottom: shellRect?.bottom ?? null,
       visualHeight: vv?.height ?? null,
-      scrollHeight: document.documentElement.scrollHeight,
-      viewportMeta: document.querySelector('meta[name="viewport"]')?.getAttribute('content') ?? '',
-      sentinelPresent: Boolean(document.querySelector('[data-mobile-content-end="true"]')),
-    };
-  })()`);
-
-  assert(initial.overlayPosition === 'fixed', 'iOS mobile nav must use a fixed viewport overlay', initial);
-  assert(initial.navPosition === 'absolute', 'iOS nav must only be absolute inside the fixed overlay', initial);
-  assert(initial.overlayTop != null && Math.abs(initial.overlayTop) <= 1, 'iOS nav overlay must stay pinned to viewport top', initial);
-  assert(initial.overlayHeight != null && initial.visualHeight != null && Math.abs(initial.overlayHeight - initial.visualHeight) <= 2, 'iOS nav overlay must match dynamic viewport height', initial);
-  assert(initial.navBottom != null && initial.visualBottom != null && Math.abs(initial.navBottom - initial.visualBottom) <= 2, 'iOS nav must align to visual viewport bottom', initial);
-  assert(/viewport-fit\s*=\s*cover/i.test(initial.viewportMeta), 'iOS viewport must remain edge-to-edge', initial);
-  assert(!initial.sentinelPresent, 'obsolete phantom-scroll sentinel must not remain in the document', initial);
-
-  const overlayScrollImpact = await evaluate(client, `(() => {
-    const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
-    if (!(overlay instanceof HTMLElement)) return null;
-    const before = document.documentElement.scrollHeight;
-    const previousDisplay = overlay.style.display;
-    overlay.style.display = 'none';
-    const withoutOverlay = document.documentElement.scrollHeight;
-    overlay.style.display = previousDisplay;
-    const restored = document.documentElement.scrollHeight;
-    return { before, withoutOverlay, restored };
-  })()`);
-  assert(overlayScrollImpact != null, 'iOS overlay scroll-impact probe could not run');
-  assert(Math.abs(overlayScrollImpact.before - overlayScrollImpact.withoutOverlay) <= 1, 'mobile nav overlay must not contribute to document scroll height', overlayScrollImpact);
-  assert(Math.abs(overlayScrollImpact.before - overlayScrollImpact.restored) <= 1, 'restoring nav overlay must not change document scroll height', overlayScrollImpact);
-
-  const initialScrollHeight = initial.scrollHeight;
-  for (const fraction of [0.35, 0.7, 1]) {
-    await evaluate(client, `window.scrollTo(0, Math.max(0, (document.documentElement.scrollHeight - window.innerHeight) * ${fraction}))`);
-    await sleep(180);
-    const scrolled = await evaluate(client, `(() => {
-      const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-      const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
-      const vv = window.visualViewport;
-      const navRect = nav?.getBoundingClientRect();
-      const overlayRect = overlay?.getBoundingClientRect();
-      return {
-        scrollY: window.scrollY,
-        scrollHeight: document.documentElement.scrollHeight,
-        navBottom: navRect?.bottom ?? null,
-        visualBottom: vv ? vv.offsetTop + vv.height : null,
-        overlayTop: overlayRect?.top ?? null,
-      };
-    })()`);
-    assert(Math.abs(scrolled.scrollHeight - initialScrollHeight) <= 1, 'scrolling must not grow document height through mobile nav positioning', { initialScrollHeight, scrolled, fraction });
-    assert(scrolled.navBottom != null && scrolled.visualBottom != null && Math.abs(scrolled.navBottom - scrolled.visualBottom) <= 2, 'iOS nav drifted during scroll', { scrolled, fraction });
-    assert(scrolled.overlayTop != null && Math.abs(scrolled.overlayTop) <= 1, 'iOS overlay drifted from viewport top during scroll', { scrolled, fraction });
-  }
-
-  await evaluate(client, `window.scrollTo(0, 0)`);
-  await sleep(120);
-  const focused = await evaluate(client, `(() => {
-    const field = document.querySelector('input[aria-label="Klub axtar"]');
-    if (!(field instanceof HTMLInputElement)) return null;
-    field.focus();
-    const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-    const vv = window.visualViewport;
-    const rect = nav?.getBoundingClientRect();
-    return {
-      active: document.activeElement === field,
-      visibility: nav ? getComputedStyle(nav).visibility : null,
-      navBottom: rect?.bottom ?? null,
       visualBottom: vv ? vv.offsetTop + vv.height : null,
-    };
-  })()`);
-  assert(focused?.active, 'iOS keyboard regression requires a focusable search input', focused);
-  assert(focused?.visibility === 'visible', 'CSS viewport overlay must not hide the nav during focus lifecycle', focused);
-
-  await evaluate(client, `document.querySelector('input[aria-label="Klub axtar"]')?.blur()`);
-  await navigate(client, '/rayon');
-  await waitForPage(client, 'nav[aria-label="Mobil naviqasiya"]');
-  await sleep(200);
-  const afterRoute = await evaluate(client, `(() => {
-    const overlay = document.querySelector('[data-mobile-nav-overlay="true"]');
-    const nav = document.querySelector('nav[aria-label="Mobil naviqasiya"]');
-    const vv = window.visualViewport;
-    const overlayRect = overlay?.getBoundingClientRect();
-    const navRect = nav?.getBoundingClientRect();
-    return {
-      overlayPosition: overlay ? getComputedStyle(overlay).position : null,
-      navPosition: nav ? getComputedStyle(nav).position : null,
-      overlayTop: overlayRect?.top ?? null,
+      rootScrollTop: root?.scrollTop ?? null,
+      rootScrollHeight: root?.scrollHeight ?? null,
+      rootClientHeight: root?.clientHeight ?? null,
+      rootTop: rootRect?.top ?? null,
+      rootBottom: rootRect?.bottom ?? null,
+      navTop: navRect?.top ?? null,
       navBottom: navRect?.bottom ?? null,
-      visualBottom: vv ? vv.offsetTop + vv.height : null,
+      navPosition: nav ? getComputedStyle(nav).position : null,
+      bodyOverflowY: getComputedStyle(document.body).overflowY,
+      viewportVar: getComputedStyle(document.documentElement).getPropertyValue('--gameyer-mobile-vh').trim(),
     };
   })()`);
-  assert(afterRoute.overlayPosition === 'fixed' && afterRoute.navPosition === 'absolute', 'route changes must preserve overlay architecture', afterRoute);
-  assert(afterRoute.overlayTop != null && Math.abs(afterRoute.overlayTop) <= 1, 'route changes must keep overlay pinned to top', afterRoute);
-  assert(afterRoute.navBottom != null && afterRoute.visualBottom != null && Math.abs(afterRoute.navBottom - afterRoute.visualBottom) <= 2, 'route changes must keep nav aligned to visible bottom', afterRoute);
 
-  console.log('iOS Chrome dynamic-viewport overlay regression passed: stable bottom nav with no scroll-height feedback.');
+  const initial = await readShell();
+  assert(Math.abs(initial.windowScrollY) <= 1, 'iOS app shell must keep the root document stationary', initial);
+  assert(initial.bodyOverflowY === 'hidden', 'iOS body must not own vertical scrolling', initial);
+  assert(initial.navPosition === 'static', 'iOS bottom nav must remain normal-flow content', initial);
+  assert(initial.shellHeight != null && initial.visualHeight != null && Math.abs(initial.shellHeight - initial.visualHeight) <= 2, 'iOS app shell must match visualViewport.height', initial);
+  assert(initial.navBottom != null && initial.shellBottom != null && Math.abs(initial.navBottom - initial.shellBottom) <= 2, 'iOS bottom nav must be the final app-shell row', initial);
+  assert(initial.documentScrollHeight <= initial.visualHeight + 2, 'iOS root document must not contain phantom bottom scroll space', initial);
+
+  await evaluate(client, `(() => {
+    const root = document.querySelector('[data-mobile-scroll-root="true"]');
+    if (root) root.scrollTop = root.scrollHeight;
+  })()`);
+  await sleep(220);
+  const scrolled = await readShell();
+  assert(Math.abs(scrolled.windowScrollY) <= 1, 'iOS inner scrolling must never leak to window scroll', scrolled);
+  assert(scrolled.rootScrollTop != null && scrolled.rootScrollHeight != null && scrolled.rootClientHeight != null
+    && scrolled.rootScrollTop >= Math.max(0, scrolled.rootScrollHeight - scrolled.rootClientHeight - 2),
+    'iOS inner scroll must reach the real page end', scrolled);
+  assert(scrolled.documentScrollHeight <= scrolled.visualHeight + 2, 'iOS inner scrolling must not create a black root gap', scrolled);
+  assert(scrolled.navBottom != null && scrolled.shellBottom != null && Math.abs(scrolled.navBottom - scrolled.shellBottom) <= 2, 'iOS nav must remain stable while page content scrolls', scrolled);
+
+  await setViewport(client, 390, 620, true);
+  await sleep(700);
+  const compact = await readShell();
+  assert(compact.shellHeight != null && compact.visualHeight != null && Math.abs(compact.shellHeight - compact.visualHeight) <= 2, 'iOS shell must follow a smaller visual viewport', compact);
+  assert(compact.navBottom != null && compact.shellBottom != null && Math.abs(compact.navBottom - compact.shellBottom) <= 2, 'iOS nav must stay at shell bottom after viewport shrink', compact);
+  assert(Math.abs(compact.windowScrollY) <= 1, 'viewport shrink must not create root scrolling', compact);
+
+  await setViewport(client, 390, 844, true);
+  await sleep(700);
+  const restored = await readShell();
+  assert(restored.shellHeight != null && restored.visualHeight != null && Math.abs(restored.shellHeight - restored.visualHeight) <= 2, 'iOS shell must recover after visual viewport restoration', restored);
+  assert(restored.documentScrollHeight <= restored.visualHeight + 2, 'restored iOS viewport must remain free of root black-gap overflow', restored);
+
+  await navigate(client, '/menyu');
+  await waitForPage(client, '[data-mobile-scroll-root="true"]');
+  await sleep(500);
+  const afterRoute = await readShell();
+  assert(afterRoute.shellHeight != null && afterRoute.visualHeight != null && Math.abs(afterRoute.shellHeight - afterRoute.visualHeight) <= 2, 'client route must resettle shell to visual viewport height', afterRoute);
+  assert(afterRoute.documentScrollHeight <= afterRoute.visualHeight + 2, 'menu route must not recreate document-level black gap', afterRoute);
+  assert(afterRoute.navBottom != null && afterRoute.shellBottom != null && Math.abs(afterRoute.navBottom - afterRoute.shellBottom) <= 2, 'menu route must keep nav in the shell bottom row', afterRoute);
+
+  console.log('iOS Chrome app-shell regression passed: root locked, inner scroll stable, viewport resize and route transition healthy.');
 }
 
 async function runViewport(client, viewport, criticalPaths) {
@@ -555,7 +519,7 @@ try {
     console.log(`Responsive browser checks passed: ${viewport.name}`);
   }
 
-  await assertIOSChromeNavFallback(client);
+  await assertIOSChromeAppShell(client);
 
   console.log(`Responsive browser regression passed across ${viewports.length} viewports and ${criticalPaths.length + 1} critical routes per viewport.`);
 } finally {
