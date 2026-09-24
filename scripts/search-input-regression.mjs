@@ -48,7 +48,14 @@ assert(searchFilter.includes("trackGaEvent('search_cleared'"), 'Settled clear ac
 assert(searchFilter.includes('lastTrackedQueryRef.current = currentQuery;'), 'External query synchronization must not be misclassified as fresh user search intent.');
 assert(searchFilter.includes('}, [value, pathname, router]);'), 'Typing debounce must not restart when stale server search params arrive.');
 assert(searchFilter.includes('setValue(currentQuery)'), 'SearchFilter must still sync genuine external query changes such as clear-all/back navigation.');
-assert(!searchFilter.includes('resultRevealRequest'), 'Search submit must not force-scroll away from the map-first discovery surface.');
+assert(searchFilter.includes('resultRevealRequest'), 'Explicit Search/Enter must retain a bounded committed-discovery reveal request.');
+assert(searchFilter.includes("const target = request.view === 'map' ? mapTarget : listTarget;"), 'Search submit must route map view to the map discovery surface and list view to the result heading.');
+assert(searchFilter.includes("document.querySelector<HTMLElement>('[data-explore-view=\"map\"]')"), 'Map-mode Search/Enter must target the active map discovery surface without changing view.');
+assert(searchFilter.includes("document.getElementById('club-results')"), 'List-mode Search/Enter must keep the explicit result heading as its reveal target.');
+assert(searchFilter.includes("target.scrollIntoView({ behavior: 'smooth', block: 'start' })"), 'Committed Search/Enter reveal must be smooth and view-preserving.');
+assert(searchFilter.includes('navigationTimerRef'), 'Search navigation debounce must be cancellable for an explicit Search/Enter submit.');
+assert(searchFilter.includes('window.clearTimeout(navigationTimerRef.current)'), 'Explicit Search/Enter must cancel the pending typing debounce before committing immediately.');
+assert(searchFilter.includes('if (submittedQuery !== currentQueryRef.current && submittedQuery !== lastRequestedQueryRef.current)'), 'Search/Enter must deduplicate an already requested committed query.');
 assert(exploreView.includes('className="relative mb-3 h-[340px] overflow-hidden rounded-[18px] sm:h-[400px] [contain:layout_paint_style]"'), 'Mobile list map must keep its original map-first height.');
 assert(searchFilter.includes('const navigationPending = value.trim() !== currentQuery;'), 'Search input must expose pending navigation state while committed results catch up.');
 assert(searchFilter.includes('aria-label="Axtarılır"'), 'Search input must provide accessible pending feedback.');
