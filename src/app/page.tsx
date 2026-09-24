@@ -106,7 +106,9 @@ export default async function HomePage({ searchParams }: PageProps) {
           </div>
         ) : null}
 
-        <div className="mx-auto max-w-[1440px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-8">
+        <div
+          className={`mx-auto max-w-[1440px] px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-8 ${view === 'map' ? '-mb-2 pb-0 md:mb-0 md:pb-8' : 'pb-8'}`}
+        >
           <section className="mb-4 flex items-start justify-between gap-3 sm:mb-5" aria-labelledby="home-title">
             <div className="min-w-0">
               <h1
