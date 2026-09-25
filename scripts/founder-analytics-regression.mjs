@@ -66,7 +66,7 @@ assert.ok(posthog.includes('uniqIf(person_id, person_id IN ('), 'Campaign return
 assert.ok(posthog.includes("timestamp < toDateTime('${from}')"), 'Prior-visit queries must end before the selected interval starts.');
 assert.ok(posthog.includes("uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions"), 'Attribution denominator must deduplicate public pageview sessions.');
 assert.ok(posthog.includes('attributionCompleteness: rate(publicPageviewSessions - numberValue(health.source_missing_sessions), publicPageviewSessions)'), 'Attribution completeness must measure sessions with known traffic source, not landing-path completeness.');
-assert.match(extended, />Stage reach — strict funnel deyil</, 'Independent discovery stages must be labeled as non-strict Stage Reach.');
+assert.match(extended, />Mərhələ çatımı — ardıcıl axın deyil</, 'Independent discovery stages must be labeled as non-strict stage reach.');
 assert.doesNotMatch(extended, /dropoff|OR-funnel|Landing-dən conversion/, 'Independent stage counts must not claim ordered funnel conversion or dropoff.');
 
 assert.match(posthog, /event = 'club_update_impression'/, 'Return-loop impressions must be measured from the dedicated update event.');
@@ -77,21 +77,21 @@ assert.ok(extended.includes('returnLoop.updateDetailClicks'), 'Founder Analytics
 assert.ok(types.includes('supplyFunnel: SupplyFunnelMetrics;'), 'Founder Analytics contract must include the owner-claim supply funnel.');
 assert.ok(posthog.includes("properties.submission_kind = 'owner_claim'") && posthog.includes("properties.submission_kind = 'new_club'") && posthog.includes("properties.submission_kind = 'correction'"), 'Supply funnel must preserve submission-kind boundaries.');
 for (const eventName of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) assert.ok(posthog.includes(eventName), `Owner-claim funnel must measure ${eventName}.`);
-assert.ok(extended.includes('posthog.supplyFunnel') && extended.includes('Klub sahibi funnel'), 'Founder Analytics must surface the owner-claim supply funnel.');
+assert.ok(extended.includes('posthog.supplyFunnel') && extended.includes('Klub sahibi müraciət axını'), 'Founder Analytics must surface the owner-claim supply funnel.');
 assert.ok(posthog.includes('newClubSent: numberValue(supplyFunnel.new_club_sent)') && posthog.includes('correctionSent: numberValue(supplyFunnel.correction_sent)'), 'Supply metrics must map new-club and correction sent signals.');
 assert.ok(extended.includes('supplyFunnel.newClubSent') && extended.includes('supplyFunnel.correctionSent'), 'Founder Analytics must surface new-club and correction signals.');
 assert.ok(types.includes('discoveryQuality:'), 'Founder Analytics contract must include discovery quality metrics.');
 assert.ok(posthog.includes("event = 'search_query' AND properties.no_results = true"), 'Discovery quality must measure zero-result search sessions.');
 assert.ok(posthog.includes("event = 'club_impression'") && posthog.includes("event = 'club_card_click'"), 'Discovery quality must measure visible-card and click sessions.');
-assert.ok(extended.includes('posthog.discoveryQuality') && extended.includes('Discovery quality'), 'Founder Analytics must surface discovery quality.');
-assert.ok(posthog.includes("event = 'filter_changed' AND properties.filter_name IN ('district','club_type','price_max')"), 'Filter adoption must use the contracted district/type/price filters.');
+assert.ok(extended.includes('posthog.discoveryQuality') && extended.includes('Kəşf etmə keyfiyyəti'), 'Founder Analytics must surface discovery quality.');
+assert.ok(posthog.includes("event = 'filter_changed' AND properties.filter_name IN ('district','metro','club_type','price_max')"), 'Filter adoption must use the contracted district/metro/type/price filters.');
 assert.ok(posthog.includes("event IN ('map_location_clicked','location_sort_clicked')"), 'Map adoption must use the contracted map/location events.');
 assert.ok(posthog.includes('filterAdoptionRate: rate(numberValue(discoveryQuality.filter_sessions), numberValue(funnel.discovery_sessions))'), 'Filter adoption denominator must be discovery sessions.');
 assert.ok(posthog.includes('mapAdoptionRate: rate(numberValue(discoveryQuality.map_sessions), numberValue(funnel.discovery_sessions))'), 'Map adoption denominator must be discovery sessions.');
 assert.ok(extended.includes('discoveryQuality.filterAdoptionRate') && extended.includes('discoveryQuality.mapAdoptionRate'), 'Founder Analytics must surface filter and map adoption.');
 assert.ok(posthog.includes("quantileIf(0.75)") && posthog.includes("event = 'web_vital'"), 'Real-user performance must use p75 web-vital telemetry.');
 for (const metricName of ['LCP', 'INP', 'CLS']) assert.ok(posthog.includes(`properties.metric_name = '${metricName}'`), `Web-vital query must include ${metricName}.`);
-assert.ok(extended.includes('posthog.webVitals') && extended.includes('Real user performance'), 'Founder Analytics must surface real-user performance.');
+assert.ok(extended.includes('posthog.webVitals') && extended.includes('Real istifadəçi performansı'), 'Founder Analytics must surface real-user performance.');
 assert.ok(extended.includes('webVitals.lcpSamples') && extended.includes('webVitals.inpSamples') && extended.includes('webVitals.clsSamples'), 'Performance p75 must show sample counts.');
 assert.ok(posthog.includes('profileToLeadRate: rate(numberValue(funnel.cta_sessions), numberValue(funnel.club_view_sessions))'), 'Profile-to-lead must use unique CTA sessions over club-view sessions.');
 assert.ok(types.includes('intentSessions: Metric;'), 'Founder Analytics must expose unique outbound-intent sessions.');
@@ -110,22 +110,22 @@ assert.ok(page.includes('təsdiqlənmiş rezervasiya, müştəri və ya satış 
 assert.ok(extended.includes('posthog.whatsappBookingClicks') && extended.includes('club.whatsappBookingClicks'), 'Founder analytics UI must surface WhatsApp reservation intent.');
 assert.ok(posthog.includes('conversionRate: metric(rate(currentIntentSessions, currentClubViewSessions), rate(previousIntentSessions, previousClubViewSessions))'), 'Primary intent conversion must use unique session denominators.');
 assert.ok(types.includes('integrityOk: boolean'), 'Stage Reach contract must expose integrity state.');
-assert.ok(extended.includes('funnel.integrityOk') && extended.includes('Reach integrity check keçib'), 'Stage Reach must surface subset integrity.');
-assert.ok(extended.includes('D30 bu dashboard-da hesablanmır'), 'Retention UI must explicitly state that D30 is not calculated.');
-assert.ok(extended.includes('user bazasına bölünmür'), 'Filter adoption denominator must be explicit in the UI.');
+assert.ok(extended.includes('funnel.integrityOk') && extended.includes('Çatım bütövlüyü yoxlaması keçib'), 'Stage reach must surface subset integrity.');
+assert.ok(extended.includes('D30 bu paneldə hesablanmır'), 'Retention UI must explicitly state that D30 is not calculated.');
+assert.ok(extended.includes('istifadəçi sayına bölünmür'), 'Filter adoption denominator must be explicit in the UI.');
 assert.ok(types.includes('firstPartyIntent:'), 'Supabase metrics must include first-party intent verification.');
 assert.ok(supabase.includes("from('analytics_events')") && supabase.includes("['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click']"), 'Supabase must independently verify outbound intent events including WhatsApp reservation intent.');
 assert.ok(dashboard.includes('getSupabaseMetrics(supabase, range)'), 'First-party verification must use the same selected date range.');
-assert.ok(page.includes('Metodologiya guard:') && page.includes('cross-provider bölmə aparılmır'), 'Dashboard must guard provider identity semantics in user-visible copy.');
-assert.ok(page.includes('Outbound intent sessiyası') && page.includes('firstPartyIntent.browserVisitors'), 'Dashboard must surface the intent North Star and first-party verifier.');
-assert.ok(page.includes('GA4 key events = 0:') && page.includes('behavior tracking yoxdur demək deyil'), 'GA4 zero key-events must not be mislabeled as absent tracking.');
+assert.ok(page.includes('Ölçmə qaydası:') && page.includes('bir-birinə bölünmür'), 'Dashboard must guard provider identity semantics in user-visible copy.');
+assert.ok(page.includes('Əlaqə niyyəti olan sessiya') && page.includes('firstPartyIntent.browserVisitors'), 'Dashboard must surface the intent North Star and first-party verifier.');
+assert.ok(page.includes('GA4 əsas hadisələri = 0:') && page.includes('davranış ölçülmür demək deyil'), 'GA4 zero key-events must not be mislabeled as absent tracking.');
 assert.ok(databaseTypes.includes('analytics_events: {') && databaseTypes.includes("AnalyticsEvent = Database['public']['Tables']['analytics_events']['Row']"), 'Database types must include the production analytics_events table.');
 assert.ok(types.includes('clubViewSessions: number;') && types.includes('ctaSessions: number;') && types.includes('viewSessions: number;') && types.includes('intentSessions: number;'), 'Founder metric contracts must keep raw events separate from unique-session reach.');
 assert.ok(posthog.includes('AS club_view_sessions') && posthog.includes('AS cta_sessions') && posthog.includes('AS view_sessions') && posthog.includes('AS intent_sessions'), 'PostHog campaign and club queries must collect unique-session conversion denominators.');
 assert.ok(normalization.includes('clubViewRate: rate(clubViewSessions, sessions)') && normalization.includes('conversionRate: rate(ctaSessions, sessions)'), 'Campaign rates must use unique session reach, not raw clicks.');
 assert.ok(normalization.includes('intentRate: rate(intentSessions, viewSessions)'), 'Club intent rate must use unique session denominators.');
 assert.ok(normalization.includes('ctaRate: rate(row.ctaSessions, row.sessions)'), 'Acquisition intent rate must use unique intent sessions.');
-assert.ok(page.includes('Intent sess.') && extended.includes('Intent sess. rate') && extended.includes('Detail→intent'), 'Founder UI must visibly distinguish raw CTA events from unique intent sessions.');
+assert.ok(page.includes('Əlaqə sessiyası') && extended.includes('Əlaqə sessiyası faizi') && extended.includes('Profil→əlaqə'), 'Founder UI must visibly distinguish raw CTA events from unique intent sessions.');
 assert.ok(types.includes('newUsers: number;'), 'Founder Analytics contract must expose first-seen users separately from returning users.');
 assert.ok(posthog.includes('newUsers: Math.max(0, numberValue(retention.users) - numberValue(retention.returning_users))'), 'New users must derive from current users minus users seen before the interval within the retention lookback.');
 assert.ok(extended.includes('posthog.newUsers') && extended.includes('Yeni istifadəçilər'), 'Founder Analytics must surface new versus returning users.');
@@ -137,14 +137,14 @@ assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source 
 assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
 assert.ok(posthog.includes("['founder-analytics-posthog-v14']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
-assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
-assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
+assert.match(extended, />Geri dönüş modulu</, 'Founder Analytics must surface return-loop reach.');
+assert.match(extended, /ardıcıl funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
 assert.match(extended, /d1CohortUsers/, 'Founder Analytics must render the dedicated D1 mature cohort denominator.');
 assert.match(extended, /d3CohortUsers/, 'Founder Analytics must render the dedicated D3 mature cohort denominator.');
 assert.match(extended, /d7CohortUsers/, 'Founder Analytics must render the dedicated D7 mature cohort denominator.');
 assert.doesNotMatch(extended, /yalnız yeddi günlük müşahidə pəncərəsi tamamlanan kohort/, 'Retention UI must not imply one shared seven-day cohort for D1/D3/D7.');
-assert.match(extended, />PWA install siqnalları</, 'Founder Analytics must surface PWA install evidence.');
+assert.match(extended, />PWA quraşdırma siqnalları</, 'Founder Analytics must surface PWA install evidence.');
 assert.match(extended, /Quraşdırma imkanı.*download deyil/s, 'PWA availability must not be presented as a download or completed install.');
 assert.match(extended, /posthog\.pwa\.installed/, 'Founder Analytics must surface confirmed appinstalled evidence.');
 assert.match(extended, />Klub data prioritetləri</, 'Founder Analytics must surface demand-weighted club data priorities.');
@@ -198,7 +198,7 @@ assert.ok(posthog.includes("withPostHogPhaseDeadline('Tracking health'") && post
 assert.ok(!posthog.includes('await Promise.all([overviewPromise, healthRetentionPromise, optionalPromise])'), 'Core and optional PostHog reads must never regress to one bursty all-at-once await.');
 
 assert.ok(posthog.includes('integrityOk: numberValue(funnel.cta_sessions) <= numberValue(funnel.club_view_sessions)'), 'Stage Reach integrity must only enforce the true CTA subset invariant.');
-assert.ok(extended.includes('CTA sessiyası klub-detail sessiyasının subsetidir'), 'Stage Reach UI must describe the true subset invariant instead of a fake strict funnel.');
+assert.ok(extended.includes('əlaqə sessiyası klub profil sessiyasının alt qrupudur'), 'Stage reach UI must describe the true subset invariant instead of a fake strict funnel.');
 
 assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 8_000'), 'Core PostHog timeout must remain bounded while allowing slower production API responses.');
 assert.ok(posthog.includes('POSTHOG_MAX_CONCURRENCY = 6'), 'PostHog optional-query concurrency must remain bounded after core reads complete.');

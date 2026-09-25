@@ -149,9 +149,9 @@ try {
   await navigate('/');
   await wait(`Boolean(document.querySelector('input[aria-label="Klub axtar"]'))`, 'search input after club view regression');
   const hasSearchTerm = await evaluate(`(() => {
-    const visibleClub = Array.from(document.querySelectorAll('a[href^="/klub/"]')).find((anchor) => {
+    const visibleClub = Array.from(document.querySelectorAll('#club-discovery a[href^="/klub/"]')).find((anchor) => {
       const rect = anchor.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
+      return rect.width > 0 && rect.height > 0 && Boolean(anchor.querySelector('h3'));
     });
     window.__gameyerSearchTerm = visibleClub?.querySelector('h3')?.textContent?.trim() || '';
     return Boolean(window.__gameyerSearchTerm);

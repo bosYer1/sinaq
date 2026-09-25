@@ -243,5 +243,5 @@ export interface ClubWithRelations extends ClubRow {
   opening_hours: ClubOpeningHours[];
 }
 
-export interface ClubFilters { district?: string; type?: string; priceMax?: number; q?: string }
+export interface ClubFilters { district?: string; metro?: string; type?: string; priceMax?: number; q?: string }
 export type ClubWithDistance = ClubWithRelations & { distanceKm: number | null };

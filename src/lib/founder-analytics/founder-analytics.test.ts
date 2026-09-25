@@ -35,6 +35,13 @@ test('absent attribution is labeled without inventing a campaign', () => {
   assert.equal(row.campaign, '(kampaniyasız)');
 });
 
+test('Meta shorthand acquisition sources are readable in Founder Analytics', () => {
+  assert.equal(normalizeCampaign({ source: 'ig', medium: 'paid_social' }).source, 'Instagram');
+  assert.equal(normalizeCampaign({ source: 'fb', medium: 'paid_social' }).source, 'Facebook');
+  assert.equal(normalizeCampaign({ source: 'an', medium: 'paid_social' }).source, 'Meta Audience Network');
+  assert.equal(normalizeCampaign({ source: 'msg', medium: 'paid_social' }).source, 'Messenger');
+});
+
 test('acquisition groups paid and organic campaign rows without losing totals', () => {
   const paid = normalizeCampaign({ source: 'ig', medium: 'paid', campaign: 'one', visitors: 4, sessions: 5, club_views: 3, club_view_sessions: 2, cta_clicks: 3, cta_sessions: 1 });
   const organic = normalizeCampaign({ source: 'google', medium: 'organic', campaign: '', visitors: 3, sessions: 3, club_views: 1, club_view_sessions: 1, cta_clicks: 0, cta_sessions: 0 });

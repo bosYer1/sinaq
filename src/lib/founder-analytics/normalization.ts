@@ -10,8 +10,18 @@ export function stringValue(value: unknown, fallback = '') {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback;
 }
 
+export function sourceDisplayLabel(value: unknown, fallback = 'direct') {
+  const source = stringValue(value, fallback);
+  const normalized = source.toLowerCase();
+  if (normalized === 'ig') return 'Instagram';
+  if (normalized === 'fb') return 'Facebook';
+  if (normalized === 'an') return 'Meta Audience Network';
+  if (normalized === 'msg') return 'Messenger';
+  return source;
+}
+
 export function normalizeCampaign(row: Record<string, unknown>): CampaignRow {
-  const source = stringValue(row.source, 'direct');
+  const source = sourceDisplayLabel(row.source, 'direct');
   const medium = stringValue(row.medium, '—');
   const campaign = stringValue(row.campaign, '(kampaniyasız)');
   const clubViews = numberValue(row.club_views);
