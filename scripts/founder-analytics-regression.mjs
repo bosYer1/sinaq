@@ -191,7 +191,7 @@ assert.ok(loading.includes('Analitika yüklənir') && loading.includes('aria-bus
 
 assert.ok(posthog.includes("const healthPromise = queryCoreHogQL") && posthog.includes("const retentionPromise = queryCoreHogQL"), 'Health and retention queries must be explicit so only truly critical reads can block provider readiness.');
 assert.ok(posthog.includes("const [overviewRows, healthRows] = await Promise.all([overviewPromise, healthPromise])"), 'Overview and tracking health must finish before optional PostHog fan-out starts.');
-assert.ok(posthog.indexOf("const [overviewRows, healthRows] = await Promise.all([overviewPromise, healthPromise])") < posthog.indexOf("const optionalPromise = Promise.all(["), 'Optional PostHog queries must not start until core provider reads are complete.');
+assert.ok(posthog.indexOf("const [overviewRows, healthRows] = await Promise.all([overviewPromise, healthPromise])") < posthog.indexOf("const optionalPromise: Promise<Row[][]> = Promise.all(["), 'Optional PostHog queries must not start until core provider reads are complete.');
 assert.ok(posthog.includes("if (healthRows.length === 0)") && !posthog.includes("if (healthRows.length === 0 || retentionRows.length === 0)"), 'Retention failure must not take down otherwise healthy PostHog core metrics.');
 assert.ok(posthog.includes("POSTHOG_OPTIONAL_PHASE_DEADLINE_MS = 5_000") && posthog.includes("withPostHogPhaseDeadline('Optional analytics'"), 'Optional analytics must have an independent phase deadline so extended queries cannot consume the full dashboard budget.');
 assert.ok(posthog.includes("withPostHogPhaseDeadline('Retention'"), 'Retention must fail soft inside the bounded optional phase.');
