@@ -253,7 +253,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           GROUP BY person_id
         )
         WHERE current_sessions > 0
-      `),      `).catch((error) => {
+      `).catch((error) => {
       const detail = error instanceof Error ? error.message : 'Retention sorğusu uğursuz oldu.';
       queryErrors.push(`Retention: ${detail}`);
       return [] as Row[];
@@ -269,7 +269,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       return emptyMetrics(queryErrors[0] ?? 'PostHog əsas overview sorğusu data qaytarmadı.', 'error');
     }
 
-    const optionalPromise = Promise.all([
+    const optionalPromise: Promise<Row[][]> = Promise.all([
       runHogQL(`
         SELECT
           source,
