@@ -77,7 +77,7 @@ assert.ok(extended.includes('returnLoop.updateDetailClicks'), 'Founder Analytics
 assert.ok(types.includes('supplyFunnel: SupplyFunnelMetrics;'), 'Founder Analytics contract must include the owner-claim supply funnel.');
 assert.ok(posthog.includes("properties.submission_kind = 'owner_claim'") && posthog.includes("properties.submission_kind = 'new_club'") && posthog.includes("properties.submission_kind = 'correction'"), 'Supply funnel must preserve submission-kind boundaries.');
 for (const eventName of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) assert.ok(posthog.includes(eventName), `Owner-claim funnel must measure ${eventName}.`);
-assert.ok(extended.includes('posthog.supplyFunnel') && extended.includes('Klub sahibi funnel'), 'Founder Analytics must surface the owner-claim supply funnel.');
+assert.ok(extended.includes('posthog.supplyFunnel') && extended.includes('Klub sahibi müraciət axını'), 'Founder Analytics must surface the owner-claim supply funnel.');
 assert.ok(posthog.includes('newClubSent: numberValue(supplyFunnel.new_club_sent)') && posthog.includes('correctionSent: numberValue(supplyFunnel.correction_sent)'), 'Supply metrics must map new-club and correction sent signals.');
 assert.ok(extended.includes('supplyFunnel.newClubSent') && extended.includes('supplyFunnel.correctionSent'), 'Founder Analytics must surface new-club and correction signals.');
 assert.ok(types.includes('discoveryQuality:'), 'Founder Analytics contract must include discovery quality metrics.');
@@ -112,7 +112,7 @@ assert.ok(posthog.includes('conversionRate: metric(rate(currentIntentSessions, c
 assert.ok(types.includes('integrityOk: boolean'), 'Stage Reach contract must expose integrity state.');
 assert.ok(extended.includes('funnel.integrityOk') && extended.includes('Çatım bütövlüyü yoxlaması keçib'), 'Stage reach must surface subset integrity.');
 assert.ok(extended.includes('D30 bu paneldə hesablanmır'), 'Retention UI must explicitly state that D30 is not calculated.');
-assert.ok(extended.includes('istifadəçi bazasına bölünmür'), 'Filter adoption denominator must be explicit in the UI.');
+assert.ok(extended.includes('istifadəçi sayına bölünmür'), 'Filter adoption denominator must be explicit in the UI.');
 assert.ok(types.includes('firstPartyIntent:'), 'Supabase metrics must include first-party intent verification.');
 assert.ok(supabase.includes("from('analytics_events')") && supabase.includes("['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click']"), 'Supabase must independently verify outbound intent events including WhatsApp reservation intent.');
 assert.ok(dashboard.includes('getSupabaseMetrics(supabase, range)'), 'First-party verification must use the same selected date range.');
