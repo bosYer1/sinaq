@@ -39,6 +39,22 @@ function hasConfirmedPublicType(club: ClubWithRelations) {
   return types.includes('pc') || types.includes('playstation');
 }
 
+function normalizeSearchText(value: string | null | undefined) {
+  return (value ?? '')
+    .toLocaleLowerCase('az')
+    .replace(/ə/g, 'e')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ç/g, 'c')
+    .replace(/ğ/g, 'g')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
 async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
   const supabase = createPublicClient();
   let districtId: string | null = null;
@@ -83,17 +99,10 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
       .lte('pricing.price_from', filters.priceMax!);
   }
 
-  const searchQuery = filters.q?.trim();
-  if (searchQuery) {
-    const sanitized = searchQuery.replace(/[%_,()]/g, ' ').trim();
-    const searchTerms = sanitized.split(/\s+/).filter(Boolean).slice(0, 6);
-
-    for (const term of searchTerms) {
-      query = query.or(
-        `name.ilike.%${term}%,address.ilike.%${term}%,slug.ilike.%${term}%`
-      );
-    }
-  }
+  const searchTerms = normalizeSearchText(filters.q)
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 6);
 
   const [{ data, error }, popularity] = await Promise.all([
     query.returns<ClubWithRelations[]>(),
@@ -105,6 +114,20 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
   }
 
   let clubs = (data ?? []).map(normalizeClubRelations).filter(hasConfirmedPublicType);
+
+  if (searchTerms.length > 0) {
+    clubs = clubs.filter((club) => {
+      const searchableText = normalizeSearchText([
+        club.name,
+        club.slug,
+        club.address,
+        club.district?.name,
+      ].filter(Boolean).join(' '));
+
+      return searchTerms.every((term) => searchableText.includes(term));
+    });
+  }
+
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
   const hasTypeFilter = requestedType === 'pc' || requestedType === 'playstation';
 
@@ -155,7 +178,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v7'],
+  ['gameyer-public-clubs-v8'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 
