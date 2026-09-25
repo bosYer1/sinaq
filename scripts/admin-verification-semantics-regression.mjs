@@ -8,9 +8,9 @@ const [analytics, clubDetail, adminHome] = await Promise.all([
 ]);
 
 assert.ok(
-  analytics.includes('Founder-approved klub') &&
-  analytics.includes('Founder-approved inventory-dədir') &&
-  analytics.includes('ayrıca verification flag · owner təsdiqi kimi oxuma'),
+  analytics.includes('Founder təsdiqli klub') &&
+  analytics.includes('Founder təsdiqli bazadadır') &&
+  analytics.includes('ayrıca doğrulanmış işarəsi daşıyır; bunu klub sahibinin təsdiqi kimi oxuma'),
   'Founder Analytics must separate active Founder-approved inventory from owner verification.',
 );
 
