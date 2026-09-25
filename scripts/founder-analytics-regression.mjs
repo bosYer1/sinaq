@@ -138,7 +138,7 @@ assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('),
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
 assert.ok(posthog.includes("['founder-analytics-posthog-v14']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
 assert.match(extended, />Geri dönüş modulu</, 'Founder Analytics must surface return-loop reach.');
-assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
+assert.match(extended, /ardıcıl funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
 assert.match(extended, /d1CohortUsers/, 'Founder Analytics must render the dedicated D1 mature cohort denominator.');
 assert.match(extended, /d3CohortUsers/, 'Founder Analytics must render the dedicated D3 mature cohort denominator.');
