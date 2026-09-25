@@ -136,7 +136,7 @@ assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club tran
 assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
 assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
-assert.ok(posthog.includes("['founder-analytics-posthog-v13']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v14']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
 assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
@@ -169,7 +169,7 @@ assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0
   assert.ok(source.includes('createLimitedPostHogRunner'), 'PostHog queries must use a bounded runner.');
   assert.ok(source.includes('errors.push(detail);') && source.includes('return [];'), 'Extended PostHog query failures must fail soft instead of taking down the whole dashboard.');
   assert.ok(source.includes("if (overviewRows.length === 0)"), 'Core overview failure must still fail closed rather than showing invented zero metrics.');
-  assert.ok(source.includes("['founder-analytics-posthog-v13']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
+  assert.ok(source.includes("['founder-analytics-posthog-v14']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
 }
 
 assert.ok(posthog.includes('toFloatOrZero(toString(properties.metric_value))'), 'PostHog web-vitals query must use the supported HogQL float conversion helper.');
@@ -189,16 +189,17 @@ assert.ok(dashboard.includes('SECONDARY_PROVIDER_DEADLINE_MS = 4_500') && dashbo
 assert.ok(dashboard.includes("withDashboardDeadline('GA4'") && dashboard.includes("withDashboardDeadline('GSC'") && dashboard.includes("withDashboardDeadline('Meta Ads'") && dashboard.includes("withDashboardDeadline('Supabase'"), 'Founder dashboard must apply provider deadlines consistently.');
 assert.ok(loading.includes('Analitika yüklənir') && loading.includes('aria-busy="true"'), 'Analytics route must render an immediate loading shell during server navigation.');
 
-assert.ok(posthog.includes("const healthRetentionPromise = Promise.all(["), 'Health and retention must start concurrently with overview and optional PostHog reads.');
-assert.ok(posthog.includes("queryCoreHogQL(host, projectId, apiKey"), 'Critical PostHog health/retention reads must use bounded core queries.');
-assert.ok(posthog.includes("if (healthRows.length === 0 || retentionRows.length === 0)"), 'Missing critical CEO-signal inputs must fail closed instead of producing fake zero signals.');
-assert.ok(posthog.includes('const overviewPromise = queryCoreHogQL') && posthog.includes('const optionalPromise = Promise.all(['), 'PostHog phases must launch without a sequential waterfall.');
-assert.ok(posthog.includes('await Promise.all([overviewPromise, healthRetentionPromise, optionalPromise])'), 'PostHog phases must converge through one concurrent await.');
-assert.ok(!posthog.includes("const [campaignRows, clubRows, trendRows, healthRows, retentionRows"), 'Health/retention must not remain in optional fail-soft result tuple.');
+assert.ok(posthog.includes("const healthPromise = queryCoreHogQL") && posthog.includes("const retentionPromise = queryCoreHogQL"), 'Health and retention queries must be explicit so only truly critical reads can block provider readiness.');
+assert.ok(posthog.includes("const [overviewRows, healthRows] = await Promise.all([overviewPromise, healthPromise])"), 'Overview and tracking health must finish before optional PostHog fan-out starts.');
+assert.ok(posthog.indexOf("const [overviewRows, healthRows] = await Promise.all([overviewPromise, healthPromise])") < posthog.indexOf("const optionalPromise = Promise.all(["), 'Optional PostHog queries must not start until core provider reads are complete.');
+assert.ok(posthog.includes("if (healthRows.length === 0)") && !posthog.includes("if (healthRows.length === 0 || retentionRows.length === 0)"), 'Retention failure must not take down otherwise healthy PostHog core metrics.');
+assert.ok(posthog.includes("POSTHOG_OPTIONAL_PHASE_DEADLINE_MS = 5_000") && posthog.includes("withPostHogPhaseDeadline('Optional analytics'"), 'Optional analytics must have an independent phase deadline so extended queries cannot consume the full dashboard budget.');
+assert.ok(posthog.includes("withPostHogPhaseDeadline('Retention'"), 'Retention must fail soft inside the bounded optional phase.');
+assert.ok(!posthog.includes('await Promise.all([overviewPromise, healthRetentionPromise, optionalPromise])'), 'Core and optional PostHog reads must never regress to one bursty all-at-once await.');
 
 assert.ok(posthog.includes('integrityOk: numberValue(funnel.cta_sessions) <= numberValue(funnel.club_view_sessions)'), 'Stage Reach integrity must only enforce the true CTA subset invariant.');
 assert.ok(extended.includes('CTA sessiyası klub-detail sessiyasının subsetidir'), 'Stage Reach UI must describe the true subset invariant instead of a fake strict funnel.');
 
 assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 8_000'), 'Core PostHog timeout must remain bounded while allowing slower production API responses.');
-assert.ok(posthog.includes('POSTHOG_MAX_CONCURRENCY = 6'), 'PostHog optional-query concurrency must remain bounded.');
-assert.ok(posthog.includes('POSTHOG_DASHBOARD_DEADLINE_MS = 14_000'), 'Dashboard deadline must cover the bounded optional query fan-out while core timeout retries skip timeout errors.');
+assert.ok(posthog.includes('POSTHOG_MAX_CONCURRENCY = 6'), 'PostHog optional-query concurrency must remain bounded after core reads complete.');
+assert.ok(posthog.includes('POSTHOG_DASHBOARD_DEADLINE_MS = 14_000') && posthog.includes('POSTHOG_OPTIONAL_PHASE_DEADLINE_MS = 5_000'), 'Dashboard deadline must exceed the prioritized core plus bounded optional phase budget.');
