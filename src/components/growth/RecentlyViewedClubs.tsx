@@ -17,7 +17,10 @@ export function RecentlyViewedClubs({ clubs }: { clubs: AvailableClub[] }) {
   const impressionTracked = useRef(false);
 
   useEffect(() => {
-    setRecent(readRecentClubs());
+    const frame = window.requestAnimationFrame(() => {
+      setRecent(readRecentClubs());
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   const visibleClubs = useMemo(() => {
