@@ -9,6 +9,7 @@ import { getSiteUrl } from '@/lib/site-url';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { ExploreView } from '@/components/explore/ExploreView';
 import { ClubUpdatesFeed } from '@/components/growth/ClubUpdatesFeed';
+import { RecentlyViewedClubs } from '@/components/growth/RecentlyViewedClubs';
 import { Skeleton } from '@/components/ui/Skeleton';
 import type { ClubFilters } from '@/types/database';
 
@@ -139,6 +140,14 @@ export default async function HomePage({ searchParams }: PageProps) {
               <FilterBar districts={activeDistricts} types={types} />
             </Suspense>
           </section>
+
+          <RecentlyViewedClubs
+            clubs={discoveryClubs.map((club) => ({
+              slug: club.slug,
+              name: club.name,
+              district: club.district?.name ?? null,
+            }))}
+          />
 
           {activeUpdates.length > 0 ? (
             <section
