@@ -12,6 +12,9 @@ assert.ok(mobileNav.includes('href="/#club-search"'), 'Mobile search navigation 
 assert.ok(mobileNav.includes('data-mobile-nav-static="true"'), 'Mobile navigation must be a normal-flow row in the app shell.');
 assert.ok(mobileNav.includes('shrink-0'), 'Mobile navigation must reserve its own row instead of overlaying page content.');
 assert.ok(mobileNav.includes('pb-[env(safe-area-inset-bottom)]'), 'Mobile nav must preserve iPhone safe-area padding.');
+assert.ok(mobileNav.includes('min-h-[58px]'), 'Mobile nav must keep the compact 58px visual row.');
+assert.ok(mobileNav.includes('h-9 w-9'), 'Primary mobile search control must stay visually compact.');
+assert.ok(layout.includes('h-14 max-w-[1440px]') && layout.includes('md:h-16'), 'Mobile header must be compact without changing desktop header height.');
 assert.ok(!mobileNav.includes('fixed'), 'Mobile navigation must not use position:fixed on iOS.');
 assert.ok(!mobileNav.includes('absolute'), 'Mobile navigation must not use position:absolute.');
 assert.ok(!mobileNav.includes('window.visualViewport'), 'Mobile navigation itself must not own viewport positioning logic.');
