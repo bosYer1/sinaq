@@ -208,6 +208,12 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         GROUP BY period
       `);
 
+    const overviewRows = await overviewPromise;
+
+    if (overviewRows.length === 0) {
+      return emptyMetrics(queryErrors[0] ?? 'PostHog əsas overview sorğusu data qaytarmadı.', 'error');
+    }
+
     const healthPromise = queryCoreHogQL(host, projectId, apiKey, `
         SELECT
           maxIf(timestamp, ${publicScope}) AS latest_event_at,
@@ -233,7 +239,12 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
-      `);
+      `).catch((error) => {
+      const detail = error instanceof Error ? error.message : 'Tracking health sorğusu uğursuz oldu.';
+      queryErrors.push(`Tracking health: ${detail}`);
+      return [] as Row[];
+    });
+
     const retentionPromise = queryCoreHogQL(host, projectId, apiKey, `
         SELECT
           count() AS users,
@@ -259,15 +270,6 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       return [] as Row[];
     });
 
-    const [overviewRows, healthRows] = await Promise.all([overviewPromise, healthPromise]);
-
-    if (healthRows.length === 0) {
-      return emptyMetrics('PostHog tracking sağlamlığı datası alınmadı.', 'error');
-    }
-
-    if (overviewRows.length === 0) {
-      return emptyMetrics(queryErrors[0] ?? 'PostHog əsas overview sorğusu data qaytarmadı.', 'error');
-    }
 
     const optionalPromise: Promise<Row[][]> = Promise.all([
       runHogQL(`
@@ -513,9 +515,11 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
 
     const optionalFallback = Array.from({ length: 9 }, () => [] as Row[]);
     const [
+      healthRows,
       retentionRows,
       [campaignRows, clubRows, trendRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows],
     ] = await Promise.all([
+      withPostHogPhaseDeadline('Tracking health', healthPromise, [] as Row[], queryErrors),
       withPostHogPhaseDeadline('Retention', retentionPromise, [] as Row[], queryErrors),
       withPostHogPhaseDeadline('Optional analytics', optionalPromise, optionalFallback, queryErrors),
     ]);
