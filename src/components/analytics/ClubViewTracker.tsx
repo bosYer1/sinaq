@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { trackGaEvent } from '@/lib/google-analytics';
 import { clubViewEvent, trackMetaCustomEvent, type ClubViewMeta } from '@/lib/meta-pixel';
 import { trackPostHogEvent } from '@/lib/posthog';
+import { rememberRecentClub } from '@/lib/recent-clubs';
 
 export function ClubViewTracker({ club }: { club: ClubViewMeta }) {
   const tracked = useRef(false);
@@ -11,6 +12,12 @@ export function ClubViewTracker({ club }: { club: ClubViewMeta }) {
   useEffect(() => {
     if (tracked.current) return;
     tracked.current = true;
+
+    rememberRecentClub({
+      slug: club.clubSlug,
+      name: club.clubName,
+      district: club.district ?? null,
+    });
 
     const eventProperties = {
       club_id: club.clubId,
