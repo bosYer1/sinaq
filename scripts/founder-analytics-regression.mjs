@@ -136,7 +136,7 @@ assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club tran
 assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
 assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
-assert.ok(posthog.includes("['founder-analytics-posthog-v12']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v13']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
 assert.match(extended, />Return-loop reach</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /strict ordered funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
 
@@ -169,7 +169,7 @@ assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0
   assert.ok(source.includes('createLimitedPostHogRunner'), 'PostHog queries must use a bounded runner.');
   assert.ok(source.includes('errors.push(detail);') && source.includes('return [];'), 'Extended PostHog query failures must fail soft instead of taking down the whole dashboard.');
   assert.ok(source.includes("if (overviewRows.length === 0)"), 'Core overview failure must still fail closed rather than showing invented zero metrics.');
-  assert.ok(source.includes("['founder-analytics-posthog-v12']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
+  assert.ok(source.includes("['founder-analytics-posthog-v13']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
 }
 
 assert.ok(posthog.includes('toFloatOrZero(toString(properties.metric_value))'), 'PostHog web-vitals query must use the supported HogQL float conversion helper.');
@@ -177,8 +177,10 @@ assert.ok(!posthog.includes('toFloat64OrZero('), 'Unsupported HogQL toFloat64OrZ
 
 assert.ok(posthog.includes("GAMEYER_POSTHOG_PROJECT_ID = '585472'"), 'GameYer analytics must have a verified project-id fallback.');
 assert.ok(posthog.includes("GAMEYER_POSTHOG_HOST = 'https://us.posthog.com'"), 'GameYer analytics must use the verified US PostHog region fallback.');
-assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 4_000'), 'Core PostHog timeout must stay within the dashboard deadline budget and allow one bounded retry.');
+assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 8_000'), 'Core PostHog timeout must tolerate normal production latency without forcing an early abort.');
 assert.ok(posthog.includes('queryCoreHogQL(host, projectId, apiKey'), 'Core PostHog overview must run before optional query fan-out.');
+assert.ok(posthog.includes("error.name === 'TimeoutError'") && posthog.includes('if (isTimeoutError(error)) break;'), 'Timed-out core queries must not immediately spend a second full timeout retry.');
+assert.ok(posthog.includes("PRODUCT_ANALYTICS_STARTED_AT = '2026-08-18T20:00:00.000Z'") && posthog.includes("toDateTime('${historyFrom}')"), 'Historical PostHog scans must be bounded by the real GameYer analytics start instead of scanning empty pre-launch history.');
 assert.ok(posthog.includes('for (let attempt = 0; attempt < 2; attempt += 1)'), 'Core PostHog read must retry once for transient failures.');
 assert.ok(posthog.includes("if (result.status.status !== 'ready') throw new Error(result.status.detail);"), 'Provider errors must not be stored as successful cached analytics.');
 assert.ok(!posthog.includes('return fetchPostHogMetrics(range);'), 'A failed cached PostHog read must not trigger a second full live query in the same dashboard request.');
@@ -188,7 +190,7 @@ assert.ok(dashboard.includes("withDashboardDeadline('GA4'") && dashboard.include
 assert.ok(loading.includes('Analitika yüklənir') && loading.includes('aria-busy="true"'), 'Analytics route must render an immediate loading shell during server navigation.');
 
 assert.ok(posthog.includes("const healthRetentionPromise = Promise.all(["), 'Health and retention must start concurrently with overview and optional PostHog reads.');
-assert.ok(posthog.includes("queryCoreHogQL(host, projectId, apiKey"), 'Critical PostHog health/retention reads must use retrying core queries.');
+assert.ok(posthog.includes("queryCoreHogQL(host, projectId, apiKey"), 'Critical PostHog health/retention reads must use bounded core queries.');
 assert.ok(posthog.includes("if (healthRows.length === 0 || retentionRows.length === 0)"), 'Missing critical CEO-signal inputs must fail closed instead of producing fake zero signals.');
 assert.ok(posthog.includes('const overviewPromise = queryCoreHogQL') && posthog.includes('const optionalPromise = Promise.all(['), 'PostHog phases must launch without a sequential waterfall.');
 assert.ok(posthog.includes('await Promise.all([overviewPromise, healthRetentionPromise, optionalPromise])'), 'PostHog phases must converge through one concurrent await.');
@@ -197,6 +199,6 @@ assert.ok(!posthog.includes("const [campaignRows, clubRows, trendRows, healthRow
 assert.ok(posthog.includes('integrityOk: numberValue(funnel.cta_sessions) <= numberValue(funnel.club_view_sessions)'), 'Stage Reach integrity must only enforce the true CTA subset invariant.');
 assert.ok(extended.includes('CTA sessiyası klub-detail sessiyasının subsetidir'), 'Stage Reach UI must describe the true subset invariant instead of a fake strict funnel.');
 
-assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 4_000'), 'Core PostHog attempts must fit inside the dashboard deadline even with one bounded retry.');
+assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 8_000'), 'Core PostHog timeout must remain bounded while allowing slower production API responses.');
 assert.ok(posthog.includes('POSTHOG_MAX_CONCURRENCY = 6'), 'PostHog optional-query concurrency must remain bounded.');
-assert.ok(posthog.includes('POSTHOG_DASHBOARD_DEADLINE_MS = 14_000'), 'Dashboard deadline must cover the bounded two-wave optional query fan-out as well as core retries.');
+assert.ok(posthog.includes('POSTHOG_DASHBOARD_DEADLINE_MS = 14_000'), 'Dashboard deadline must cover the bounded optional query fan-out while core timeout retries skip timeout errors.');
