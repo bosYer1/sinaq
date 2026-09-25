@@ -2,8 +2,10 @@
 
 import ReactDOM from 'react-dom';
 import type { District, ClubType } from '@/types/database';
+import type { MetroStation } from '@/lib/metro';
 import { SearchFilter } from './SearchFilter';
 import { DistrictFilter } from './DistrictFilter';
+import { MetroFilter } from './MetroFilter';
 import { TypeFilter } from './TypeFilter';
 import { PriceFilter } from './PriceFilter';
 import { ViewToggle } from './ViewToggle';
@@ -13,10 +15,11 @@ const OSM_TILE_ORIGIN = 'https://tile.openstreetmap.org';
 
 interface FilterBarProps {
   districts: District[];
+  metroStations: MetroStation[];
   types: ClubType[];
 }
 
-export function FilterBar({ districts, types }: FilterBarProps) {
+export function FilterBar({ districts, metroStations, types }: FilterBarProps) {
   ReactDOM.prefetchDNS(OSM_TILE_ORIGIN);
   ReactDOM.preconnect(OSM_TILE_ORIGIN);
 
@@ -41,6 +44,7 @@ export function FilterBar({ districts, types }: FilterBarProps) {
           ) : null}
           <TypeFilter types={types} />
           <DistrictFilter districts={districts} />
+          <MetroFilter stations={metroStations} />
           <PriceFilter />
         </div>
 

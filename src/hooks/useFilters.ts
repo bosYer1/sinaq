@@ -20,6 +20,7 @@ export function useFilters() {
 
   const filters: ClubFilters = useMemo(() => ({
     district: searchParams.get('district') || undefined,
+    metro: searchParams.get('metro') || undefined,
     type: searchParams.get('type') || undefined,
     priceMax: parsePositiveNumber(searchParams.get('price_max')),
     q: searchParams.get('q')?.trim() || undefined,
@@ -50,6 +51,11 @@ export function useFilters() {
     updateParams({ district: slug });
   }, [updateParams]);
 
+  const setMetro = useCallback((slug: string | undefined) => {
+    trackPostHogEvent('filter_changed', { filter_name: 'metro', filter_value: slug ?? null });
+    updateParams({ metro: slug });
+  }, [updateParams]);
+
   const setType = useCallback((slug: string | undefined) => {
     trackPostHogEvent('filter_changed', { filter_name: 'club_type', filter_value: slug ?? null });
     updateParams({ type: slug });
@@ -70,6 +76,7 @@ export function useFilters() {
   const clearAll = useCallback(() => {
     trackPostHogEvent('filters_cleared', {
       had_district: Boolean(filters.district),
+      had_metro: Boolean(filters.metro),
       had_club_type: Boolean(filters.type),
       had_price_max: Boolean(filters.priceMax),
       had_search_query: Boolean(filters.q),
@@ -79,9 +86,9 @@ export function useFilters() {
     if (view === 'map') params.set('view', 'map');
     const query = params.toString();
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [filters.district, filters.priceMax, filters.q, filters.type, pathname, router, view]);
+  }, [filters.district, filters.metro, filters.priceMax, filters.q, filters.type, pathname, router, view]);
 
-  const hasActiveFilters = Boolean(filters.district || filters.type || filters.priceMax || filters.q);
+  const hasActiveFilters = Boolean(filters.district || filters.metro || filters.type || filters.priceMax || filters.q);
 
-  return { filters, view, setDistrict, setType, setPriceMax, setQuery, setView, clearAll, hasActiveFilters };
+  return { filters, view, setDistrict, setMetro, setType, setPriceMax, setQuery, setView, clearAll, hasActiveFilters };
 }

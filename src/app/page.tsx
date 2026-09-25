@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { getClubs } from '@/lib/queries/clubs';
+import { getAvailableMetroStations } from '@/lib/metro';
 import { getDistricts, getClubTypes } from '@/lib/queries/districts';
 import { getActiveClubUpdates } from '@/lib/queries/club-updates';
 import { isSupabaseConfigured } from '@/lib/config';
@@ -15,9 +16,9 @@ import type { ClubFilters } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
-type HomeSearchParams = { district?: string; type?: string; price_max?: string; q?: string; view?: string };
+type HomeSearchParams = { district?: string; metro?: string; type?: string; price_max?: string; q?: string; view?: string };
 interface PageProps { searchParams: Promise<HomeSearchParams> }
-const INDEX_AFFECTING_QUERY_KEYS: Array<keyof HomeSearchParams> = ['district', 'type', 'price_max', 'q', 'view'];
+const INDEX_AFFECTING_QUERY_KEYS: Array<keyof HomeSearchParams> = ['district', 'metro', 'type', 'price_max', 'q', 'view'];
 
 function hasActiveQuery(params: HomeSearchParams) {
   return INDEX_AFFECTING_QUERY_KEYS.some((key) => {
@@ -42,12 +43,13 @@ export default async function HomePage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
   const filters: ClubFilters = {
     district: resolvedSearchParams.district?.trim() || undefined,
+    metro: resolvedSearchParams.metro?.trim() || undefined,
     type: resolvedSearchParams.type?.trim() || undefined,
     priceMax: parsePositiveNumber(resolvedSearchParams.price_max),
     q: resolvedSearchParams.q?.trim() || undefined,
   };
   const view = resolvedSearchParams.view === 'map' ? 'map' : 'list';
-  const hasDataFilter = Boolean(filters.district || filters.type || filters.priceMax || filters.q);
+  const hasDataFilter = Boolean(filters.district || filters.metro || filters.type || filters.priceMax || filters.q);
   const allClubsPromise = getClubs();
   const filteredClubsPromise = hasDataFilter ? getClubs(filters) : allClubsPromise;
 
@@ -65,6 +67,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       .filter((slug): slug is string => Boolean(slug)),
   );
   const activeDistricts = districts.filter((district) => activeDistrictSlugs.has(district.slug));
+  const activeMetroStations = getAvailableMetroStations(discoveryClubs);
   const siteUrl = getSiteUrl();
   const homeStructuredData = {
     '@context': 'https://schema.org',
@@ -74,7 +77,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         '@id': `${siteUrl}/#home`,
         url: siteUrl,
         name: 'Bakıda PC və PlayStation klubları',
-        description: 'Bakıda gaming klublarını axtar, rayon və tip üzrə filtr et, xəritədə müqayisə et.',
+        description: 'Bakıda gaming klublarını axtar, rayon, metro və tip üzrə filtr et, xəritədə müqayisə et.',
         isPartOf: { '@id': `${siteUrl}/#website` },
         mainEntity: { '@id': `${siteUrl}/#club-list` },
         inLanguage: 'az-AZ',
@@ -137,7 +140,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                 </div>
               }
             >
-              <FilterBar districts={activeDistricts} types={types} />
+              <FilterBar districts={activeDistricts} metroStations={activeMetroStations} types={types} />
             </Suspense>
           </section>
 

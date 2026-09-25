@@ -3,6 +3,7 @@ import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { isPremiumActive } from '@/lib/utils';
 import { getClubPopularityMetrics } from '@/lib/queries/club-popularity';
+import { clubMatchesMetro } from '@/lib/metro';
 import type { ClubFilters, ClubWithRelations } from '@/types/database';
 
 const CLUB_SELECT = `
@@ -39,8 +40,11 @@ function hasConfirmedPublicType(club: ClubWithRelations) {
   return types.includes('pc') || types.includes('playstation');
 }
 
+const SEARCH_LOCATION_STOP_WORDS = new Set(['ms', 'metro', 'metrosu']);
+
 function normalizeSearchText(value: string | null | undefined) {
   return (value ?? '')
+    .replace(/\bm\s*\/\s*s\b/giu, ' metro ')
     .toLocaleLowerCase('az')
     .replace(/ə/g, 'e')
     .replace(/ı/g, 'i')
@@ -99,10 +103,12 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
       .lte('pricing.price_from', filters.priceMax!);
   }
 
-  const searchTerms = normalizeSearchText(filters.q)
+  const normalizedSearchTerms = normalizeSearchText(filters.q)
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 6);
+  const meaningfulSearchTerms = normalizedSearchTerms.filter((term) => !SEARCH_LOCATION_STOP_WORDS.has(term));
+  const searchTerms = meaningfulSearchTerms.length > 0 ? meaningfulSearchTerms : normalizedSearchTerms;
 
   const [{ data, error }, popularity] = await Promise.all([
     query.returns<ClubWithRelations[]>(),
@@ -126,6 +132,10 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
       return searchTerms.every((term) => searchableText.includes(term));
     });
+  }
+
+  if (filters.metro) {
+    clubs = clubs.filter((club) => clubMatchesMetro(club, filters.metro!));
   }
 
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
@@ -178,7 +188,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
 const getCachedClubs = unstable_cache(
   async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v8'],
+  ['gameyer-public-clubs-v9'],
   { revalidate: 60, tags: ['public-clubs'] },
 );
 

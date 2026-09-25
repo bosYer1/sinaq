@@ -9,6 +9,7 @@ import { trackPostHogEvent } from '@/lib/posthog';
 type PendingSearchAnalytics = {
   query: string;
   district: string | null;
+  metro: string | null;
   clubType: string | null;
   priceMax: string | null;
   exploreView: 'list' | 'map';
@@ -115,6 +116,7 @@ export function SearchFilter() {
       setPendingSearchAnalytics({
         query: nextQuery,
         district: params.get('district'),
+        metro: params.get('metro'),
         clubType: params.get('type'),
         priceMax: params.get('price_max'),
         exploreView: params.get('view') === 'map' ? 'map' : 'list',
@@ -142,6 +144,7 @@ export function SearchFilter() {
           search_query: null,
           search_query_length: 0,
           district: pending.district,
+          metro: pending.metro,
           club_type: pending.clubType,
           price_max: pending.priceMax,
           explore_view: pending.exploreView,
@@ -150,6 +153,7 @@ export function SearchFilter() {
           search_term: null,
           search_query_length: 0,
           district: pending.district,
+          metro: pending.metro,
           club_type: pending.clubType,
           price_max: pending.priceMax,
           explore_view: pending.exploreView,

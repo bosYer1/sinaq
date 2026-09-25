@@ -493,7 +493,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         SELECT
           uniqIf(properties.$session_id, event = 'search_query' AND notEmpty(properties.$session_id)) AS search_sessions,
           uniqIf(properties.$session_id, event = 'search_query' AND properties.no_results = true AND notEmpty(properties.$session_id)) AS zero_result_search_sessions,
-          uniqIf(properties.$session_id, event = 'filter_changed' AND properties.filter_name IN ('district','club_type','price_max') AND notEmpty(properties.$session_id)) AS filter_sessions,
+          uniqIf(properties.$session_id, event = 'filter_changed' AND properties.filter_name IN ('district','metro','club_type','price_max') AND notEmpty(properties.$session_id)) AS filter_sessions,
           uniqIf(properties.$session_id, event IN ('map_location_clicked','location_sort_clicked') AND notEmpty(properties.$session_id)) AS map_sessions,
           uniqIf(properties.$session_id, event = 'club_impression' AND notEmpty(properties.$session_id)) AS club_impression_sessions,
           uniqIf(properties.$session_id, event = 'club_card_click' AND notEmpty(properties.$session_id)) AS club_click_sessions
