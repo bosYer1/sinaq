@@ -60,10 +60,14 @@ assert(exploreView.includes('“${searchQuery}” üçün uyğun klublar'), 'Act
 assert(exploreView.includes('const hasStructuredFilters = Boolean(filters.district || filters.type || filters.priceMax);'), 'Search empty state must know whether structured filters are also active.');
 assert(exploreView.includes('searchQuery={searchQuery}'), 'Search empty state must receive the committed query for missing-club suggestions.');
 
-assert(clubsQuery.includes("const searchTerms = sanitized.split(/\\s+/).filter(Boolean).slice(0, 6);"), 'Club search must tokenize settled multi-word queries with a bounded term count.');
-assert(clubsQuery.includes('for (const term of searchTerms)'), 'Club search must apply every sanitized search term.');
-assert(clubsQuery.includes('`name.ilike.%${term}%,address.ilike.%${term}%,slug.ilike.%${term}%`'), 'Each search token must match club name, address, or slug.');
-assert(!clubsQuery.includes('`name.ilike.%${sanitized}%,address.ilike.%${sanitized}%,slug.ilike.%${sanitized}%`'), 'Club search must not require a spaced partial query to exist as one literal phrase.');
-assert(clubsQuery.includes("['gameyer-public-clubs-v7']"), 'Public club query cache must remain bumped after search matching and public club shape changes.');
+assert(clubsQuery.includes('function normalizeSearchText'), 'Club search must normalize Azerbaijani spelling variants before matching.');
+for (const token of [".replace(/ə/g, 'e')", ".replace(/ı/g, 'i')", ".replace(/ö/g, 'o')", ".replace(/ü/g, 'u')", ".replace(/ş/g, 's')", ".replace(/ç/g, 'c')", ".replace(/ğ/g, 'g')"]) {
+  assert(clubsQuery.includes(token), `Club search normalization must preserve Azerbaijani transliteration rule ${token}.`);
+}
+assert(clubsQuery.includes("const searchTerms = normalizeSearchText(filters.q)"), 'Club search must tokenize the normalized settled query.');
+assert(clubsQuery.includes("club.district?.name"), 'Club search must include district names so location intent can resolve without exact address wording.');
+assert(clubsQuery.includes("return searchTerms.every((term) => searchableText.includes(term));"), 'All normalized search terms must match the club search surface.');
+assert(!clubsQuery.includes('name.ilike.%'), 'Public search must not fall back to accent-sensitive DB ilike matching.');
+assert(clubsQuery.includes("['gameyer-public-clubs-v8']"), 'Public club query cache must remain bumped after tolerant search semantics change.');
 
 console.log('Search input regression checks passed.');
