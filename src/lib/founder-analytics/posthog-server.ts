@@ -11,10 +11,12 @@ type Row = Record<string, unknown>;
 
 const ALLOWED_HOSTS = new Set(['https://us.posthog.com', 'https://eu.posthog.com']);
 const PRODUCT_TIME_ZONE = 'Asia/Baku';
+const PRODUCT_ANALYTICS_STARTED_AT = '2026-08-18T20:00:00.000Z';
+const POSTHOG_HISTORY_WINDOW_MS = 365 * 86_400_000;
 const GAMEYER_POSTHOG_PROJECT_ID = '585472';
 const GAMEYER_POSTHOG_HOST = 'https://us.posthog.com';
 const POSTHOG_QUERY_TIMEOUT_MS = 6_000;
-const POSTHOG_CORE_TIMEOUT_MS = 4_000;
+const POSTHOG_CORE_TIMEOUT_MS = 8_000;
 const POSTHOG_DASHBOARD_DEADLINE_MS = 14_000;
 const POSTHOG_MAX_CONCURRENCY = 6;
 
@@ -67,6 +69,11 @@ async function queryHogQL(
   return rows(await response.json() as HogQLResponse);
 }
 
+function isTimeoutError(error: unknown) {
+  return error instanceof Error
+    && (error.name === 'TimeoutError' || /timeout/i.test(error.message));
+}
+
 async function queryCoreHogQL(host: string, projectId: string, apiKey: string, query: string): Promise<Row[]> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -74,6 +81,10 @@ async function queryCoreHogQL(host: string, projectId: string, apiKey: string, q
       return await queryHogQL(host, projectId, apiKey, query, POSTHOG_CORE_TIMEOUT_MS);
     } catch (error) {
       lastError = error;
+      // A slow query is unlikely to become fast on an immediate retry and a second
+      // full timeout can consume the whole dashboard budget. Retry only non-timeout
+      // transient failures.
+      if (isTimeoutError(error)) break;
       if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 350));
     }
   }
@@ -84,7 +95,10 @@ function periodClause(range: DateRange) {
   const from = safeIso(range.from);
   const to = safeIso(range.to);
   const previousFrom = safeIso(range.previousFrom);
-  return { from, to, previousFrom };
+  const oneYearBefore = new Date(new Date(from).getTime() - POSTHOG_HISTORY_WINDOW_MS);
+  const productStart = new Date(PRODUCT_ANALYTICS_STARTED_AT);
+  const historyFrom = safeIso((oneYearBefore > productStart ? oneYearBefore : productStart).toISOString());
+  return { from, to, previousFrom, historyFrom };
 }
 
 function createLimitedPostHogRunner(host: string, projectId: string, apiKey: string, errors: string[]) {
@@ -134,7 +148,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
   const host = ALLOWED_HOSTS.has(configuredHost) ? configuredHost : GAMEYER_POSTHOG_HOST;
   if (!apiKey) return emptyMetrics('PostHog server read credential konfiqurasiya olunmayıb.', 'unavailable');
 
-  const { from, to, previousFrom } = periodClause(range);
+  const { from, to, previousFrom, historyFrom } = periodClause(range);
   const productionPublicScope = "properties.gameyer_traffic_scope = 'public' AND properties.$host = 'gameyer.az'";
   const publicScope = `${productionPublicScope} AND (properties.$virt_is_bot != true OR isNull(properties.$virt_is_bot))`;
   const fromDay = `toDate(toTimeZone(toDateTime('${from}'), '${PRODUCT_TIME_ZONE}'))`;
@@ -210,7 +224,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
             min(timestamp) AS first_seen,
             uniqIf(properties.$session_id, timestamp >= toDateTime('${from}')) AS current_sessions
           FROM events
-          WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
+          WHERE timestamp >= toDateTime('${historyFrom}')
             AND timestamp < toDateTime('${to}')
             AND ${publicScope}
             AND event = '$pageview'
@@ -231,7 +245,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           uniqIf(person_id, person_id IN (
             SELECT person_id
             FROM events
-            WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
+            WHERE timestamp >= toDateTime('${historyFrom}')
               AND timestamp < toDateTime('${from}')
               AND ${publicScope}
               AND event = '$pageview'
@@ -374,7 +388,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
             min(toDate(toTimeZone(timestamp, '${PRODUCT_TIME_ZONE}'))) AS first_day,
             groupUniqArray(toDate(toTimeZone(timestamp, '${PRODUCT_TIME_ZONE}'))) AS active_days
           FROM events
-          WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
+          WHERE timestamp >= toDateTime('${historyFrom}')
             AND timestamp < toDateTime('${to}')
             AND ${publicScope}
             AND event = '$pageview'
@@ -413,7 +427,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
             AND person_id IN (
               SELECT person_id
               FROM events
-              WHERE timestamp >= toDateTime('${from}') - INTERVAL 365 DAY
+              WHERE timestamp >= toDateTime('${historyFrom}')
                 AND timestamp < toDateTime('${from}')
                 AND ${publicScope}
                 AND event = '$pageview'
@@ -642,7 +656,7 @@ const getCachedPostHogMetrics = unstable_cache(
     if (result.status.status !== 'ready') throw new Error(result.status.detail);
     return result;
   },
-  ['founder-analytics-posthog-v12'],
+  ['founder-analytics-posthog-v13'],
   { revalidate: 300, tags: ['founder-analytics'] },
 );
 
