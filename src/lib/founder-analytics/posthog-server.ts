@@ -18,6 +18,7 @@ const GAMEYER_POSTHOG_HOST = 'https://us.posthog.com';
 const POSTHOG_QUERY_TIMEOUT_MS = 6_000;
 const POSTHOG_CORE_TIMEOUT_MS = 8_000;
 const POSTHOG_DASHBOARD_DEADLINE_MS = 14_000;
+const POSTHOG_OPTIONAL_PHASE_DEADLINE_MS = 5_000;
 const POSTHOG_MAX_CONCURRENCY = 6;
 
 function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogMetrics {
@@ -89,6 +90,28 @@ async function queryCoreHogQL(host: string, projectId: string, apiKey: string, q
     }
   }
   throw lastError instanceof Error ? lastError : new Error('PostHog əsas sorğusu uğursuz oldu.');
+}
+
+async function withPostHogPhaseDeadline<T>(
+  label: string,
+  promise: Promise<T>,
+  fallback: T,
+  errors: string[],
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => {
+          errors.push(`${label} phase deadline exceeded (${POSTHOG_OPTIONAL_PHASE_DEADLINE_MS / 1000}s)`);
+          resolve(fallback);
+        }, POSTHOG_OPTIONAL_PHASE_DEADLINE_MS);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 function periodClause(range: DateRange) {
@@ -185,8 +208,7 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         GROUP BY period
       `);
 
-    const healthRetentionPromise = Promise.all([
-      queryCoreHogQL(host, projectId, apiKey, `
+    const healthPromise = queryCoreHogQL(host, projectId, apiKey, `
         SELECT
           maxIf(timestamp, ${publicScope}) AS latest_event_at,
           countIf(${publicScope}) AS public_events,
@@ -211,8 +233,8 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}')
-      `),
-      queryCoreHogQL(host, projectId, apiKey, `
+      `);
+    const retentionPromise = queryCoreHogQL(host, projectId, apiKey, `
         SELECT
           count() AS users,
           countIf(first_seen < toDateTime('${from}')) AS returning_users,
@@ -231,8 +253,21 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           GROUP BY person_id
         )
         WHERE current_sessions > 0
-      `),
-    ]);
+      `),      `).catch((error) => {
+      const detail = error instanceof Error ? error.message : 'Retention sorğusu uğursuz oldu.';
+      queryErrors.push(`Retention: ${detail}`);
+      return [] as Row[];
+    });
+
+    const [overviewRows, healthRows] = await Promise.all([overviewPromise, healthPromise]);
+
+    if (healthRows.length === 0) {
+      return emptyMetrics('PostHog tracking sağlamlığı datası alınmadı.', 'error');
+    }
+
+    if (overviewRows.length === 0) {
+      return emptyMetrics(queryErrors[0] ?? 'PostHog əsas overview sorğusu data qaytarmadı.', 'error');
+    }
 
     const optionalPromise = Promise.all([
       runHogQL(`
@@ -476,19 +511,14 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
       `),
     ]);
 
+    const optionalFallback = Array.from({ length: 9 }, () => [] as Row[]);
     const [
-      overviewRows,
-      [healthRows, retentionRows],
+      retentionRows,
       [campaignRows, clubRows, trendRows, funnelRows, cohortRows, returnLoopRows, supplyFunnelRows, discoveryQualityRows, webVitalRows],
-    ] = await Promise.all([overviewPromise, healthRetentionPromise, optionalPromise]);
-
-    if (healthRows.length === 0 || retentionRows.length === 0) {
-      return emptyMetrics('PostHog tracking sağlamlığı və ya retention datası alınmadı.', 'error');
-    }
-
-    if (overviewRows.length === 0) {
-      return emptyMetrics(queryErrors[0] ?? 'PostHog əsas overview sorğusu data qaytarmadı.', 'error');
-    }
+    ] = await Promise.all([
+      withPostHogPhaseDeadline('Retention', retentionPromise, [] as Row[], queryErrors),
+      withPostHogPhaseDeadline('Optional analytics', optionalPromise, optionalFallback, queryErrors),
+    ]);
 
     const current = overviewRows.find((row) => row.period === 'current') ?? {};
     const previous = overviewRows.find((row) => row.period === 'previous') ?? {};
@@ -656,7 +686,7 @@ const getCachedPostHogMetrics = unstable_cache(
     if (result.status.status !== 'ready') throw new Error(result.status.detail);
     return result;
   },
-  ['founder-analytics-posthog-v13'],
+  ['founder-analytics-posthog-v14'],
   { revalidate: 300, tags: ['founder-analytics'] },
 );
 
