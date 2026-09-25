@@ -132,17 +132,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           className="flex h-[var(--gameyer-mobile-vh,100svh)] flex-col overflow-hidden md:min-h-screen md:h-auto md:overflow-visible"
         >
         <header className="sticky top-0 z-30 shrink-0 border-b border-border/80 bg-surface md:bg-surface/95 md:backdrop-blur">
-          <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
-            <Link href="/" className="flex items-center gap-2.5" aria-label="GameYer ana səhifə">
+          <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between px-4 sm:px-6 md:h-16 lg:px-8">
+            <Link href="/" className="flex items-center gap-2 md:gap-2.5" aria-label="GameYer ana səhifə">
               <Image
                 src="/gameyer-logo.jpeg"
                 alt="GameYer loqosu"
                 width={36}
                 height={36}
                 priority
-                className="h-9 w-9 rounded-xl object-cover shadow-sm"
+                className="h-8 w-8 rounded-[10px] object-cover shadow-sm md:h-9 md:w-9 md:rounded-xl"
               />
-              <span className="font-display text-xl font-bold tracking-[-0.04em] text-ink">Game<span className="text-primary">Yer</span></span>
+              <span className="font-display text-lg font-bold tracking-[-0.04em] text-ink md:text-xl">Game<span className="text-primary">Yer</span></span>
             </Link>
 
             <nav className="hidden items-center gap-5 text-sm font-medium text-muted md:flex" aria-label="Əsas keçidlər">
@@ -158,7 +158,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <Link href="/elaqe#new-club" className="hidden rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark sm:inline-flex">+ Klubunu əlavə et</Link>
-              <Link href="/elaqe#new-club" className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-primary px-2.5 text-[11px] font-bold text-white shadow-sm transition active:scale-[0.98] sm:hidden"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-sm leading-none" aria-hidden="true">+</span>Klubunu əlavə et</Link>
+              <Link href="/elaqe#new-club" className="inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-[10px] bg-primary px-2 text-[10px] font-bold text-white shadow-sm transition active:scale-[0.98] sm:hidden"><span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white/15 text-xs leading-none" aria-hidden="true">+</span>Klubunu əlavə et</Link>
             </div>
           </div>
         </header>

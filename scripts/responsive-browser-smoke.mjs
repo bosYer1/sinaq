@@ -183,7 +183,7 @@ async function assertCommonLayout(client, viewport, path) {
   const layout = await evaluate(client, commonLayoutExpression);
   assert(layout.scrollWidth <= layout.clientWidth + 1, `${viewport.name} ${path}: horizontal overflow detected`, layout);
   assert(/viewport-fit\s*=\s*cover/i.test(layout.viewportMeta), `${viewport.name} ${path}: viewport-fit=cover is missing from generated viewport metadata`, layout);
-  assert(layout.header && layout.header.height >= 60 && layout.header.height <= 68, `${viewport.name} ${path}: header geometry is invalid`, layout);
+  assert(layout.header && (viewport.mobile ? (layout.header.height >= 56 && layout.header.height <= 58) : (layout.header.height >= 60 && layout.header.height <= 68)), `${viewport.name} ${path}: header geometry is invalid`, layout);
   assert(layout.header.top >= -1 && layout.header.top <= 1, `${viewport.name} ${path}: header is not pinned to the app-shell top`, layout);
 
   if (viewport.mobile) {
