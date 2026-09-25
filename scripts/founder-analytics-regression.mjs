@@ -66,7 +66,7 @@ assert.ok(posthog.includes('uniqIf(person_id, person_id IN ('), 'Campaign return
 assert.ok(posthog.includes("timestamp < toDateTime('${from}')"), 'Prior-visit queries must end before the selected interval starts.');
 assert.ok(posthog.includes("uniqIf(properties.$session_id, ${publicScope} AND event = '$pageview') AS public_pageview_sessions"), 'Attribution denominator must deduplicate public pageview sessions.');
 assert.ok(posthog.includes('attributionCompleteness: rate(publicPageviewSessions - numberValue(health.source_missing_sessions), publicPageviewSessions)'), 'Attribution completeness must measure sessions with known traffic source, not landing-path completeness.');
-assert.match(extended, />Stage reach — strict funnel deyil</, 'Independent discovery stages must be labeled as non-strict Stage Reach.');
+assert.match(extended, />Mərhələ çatımı — ardıcıl axın deyil</, 'Independent discovery stages must be labeled as non-strict stage reach.');
 assert.doesNotMatch(extended, /dropoff|OR-funnel|Landing-dən conversion/, 'Independent stage counts must not claim ordered funnel conversion or dropoff.');
 
 assert.match(posthog, /event = 'club_update_impression'/, 'Return-loop impressions must be measured from the dedicated update event.');
@@ -110,9 +110,9 @@ assert.ok(page.includes('təsdiqlənmiş rezervasiya, müştəri və ya satış 
 assert.ok(extended.includes('posthog.whatsappBookingClicks') && extended.includes('club.whatsappBookingClicks'), 'Founder analytics UI must surface WhatsApp reservation intent.');
 assert.ok(posthog.includes('conversionRate: metric(rate(currentIntentSessions, currentClubViewSessions), rate(previousIntentSessions, previousClubViewSessions))'), 'Primary intent conversion must use unique session denominators.');
 assert.ok(types.includes('integrityOk: boolean'), 'Stage Reach contract must expose integrity state.');
-assert.ok(extended.includes('funnel.integrityOk') && extended.includes('Reach integrity check keçib'), 'Stage Reach must surface subset integrity.');
-assert.ok(extended.includes('D30 bu dashboard-da hesablanmır'), 'Retention UI must explicitly state that D30 is not calculated.');
-assert.ok(extended.includes('user bazasına bölünmür'), 'Filter adoption denominator must be explicit in the UI.');
+assert.ok(extended.includes('funnel.integrityOk') && extended.includes('Çatım bütövlüyü yoxlaması keçib'), 'Stage reach must surface subset integrity.');
+assert.ok(extended.includes('D30 bu paneldə hesablanmır'), 'Retention UI must explicitly state that D30 is not calculated.');
+assert.ok(extended.includes('istifadəçi bazasına bölünmür'), 'Filter adoption denominator must be explicit in the UI.');
 assert.ok(types.includes('firstPartyIntent:'), 'Supabase metrics must include first-party intent verification.');
 assert.ok(supabase.includes("from('analytics_events')") && supabase.includes("['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click']"), 'Supabase must independently verify outbound intent events including WhatsApp reservation intent.');
 assert.ok(dashboard.includes('getSupabaseMetrics(supabase, range)'), 'First-party verification must use the same selected date range.');
@@ -198,7 +198,7 @@ assert.ok(posthog.includes("withPostHogPhaseDeadline('Tracking health'") && post
 assert.ok(!posthog.includes('await Promise.all([overviewPromise, healthRetentionPromise, optionalPromise])'), 'Core and optional PostHog reads must never regress to one bursty all-at-once await.');
 
 assert.ok(posthog.includes('integrityOk: numberValue(funnel.cta_sessions) <= numberValue(funnel.club_view_sessions)'), 'Stage Reach integrity must only enforce the true CTA subset invariant.');
-assert.ok(extended.includes('CTA sessiyası klub-detail sessiyasının subsetidir'), 'Stage Reach UI must describe the true subset invariant instead of a fake strict funnel.');
+assert.ok(extended.includes('əlaqə sessiyası klub profil sessiyasının alt qrupudur'), 'Stage reach UI must describe the true subset invariant instead of a fake strict funnel.');
 
 assert.ok(posthog.includes('POSTHOG_CORE_TIMEOUT_MS = 8_000'), 'Core PostHog timeout must remain bounded while allowing slower production API responses.');
 assert.ok(posthog.includes('POSTHOG_MAX_CONCURRENCY = 6'), 'PostHog optional-query concurrency must remain bounded after core reads complete.');
