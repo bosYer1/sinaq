@@ -16,6 +16,20 @@ export function RecentlyViewedClubs({ clubs }: { clubs: AvailableClub[] }) {
   const [recent, setRecent] = useState<RecentClub[]>([]);
   const impressionTracked = useRef(false);
 
+const RECENT_CLUB_ATTRIBUTION_KEY = 'gameyer:recent-club-attribution';
+
+function rememberRecentClubAttribution(club: AvailableClub, listPosition: number) {
+  try {
+    window.sessionStorage.setItem(RECENT_CLUB_ATTRIBUTION_KEY, JSON.stringify({
+      club_slug: club.slug,
+      surface: 'home_recently_viewed',
+      list_position: listPosition,
+    }));
+  } catch {
+    // Navigation and analytics must still work when storage is unavailable.
+  }
+}
+
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setRecent(readRecentClubs());
@@ -63,6 +77,7 @@ export function RecentlyViewedClubs({ clubs }: { clubs: AvailableClub[] }) {
             prefetch={false}
             onClick={() => {
               rememberClubEntryOrigin(club.slug);
+              rememberRecentClubAttribution(club, index + 1);
               trackPostHogEvent('recent_club_click', {
                 club_slug: club.slug,
                 club_name: club.name,
