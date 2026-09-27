@@ -21,7 +21,8 @@ const rootFavicon = fs.readFileSync('public/favicon.jpeg');
 const brandedFavicon = fs.readFileSync('public/gameyer-favicon.jpeg');
 
 const checks = [
-  [clubPage.includes("const title = `${club.name} — ${districtName ?? 'Bakı'}, ${titleDetail}`;"), 'club title keeps club name + district context in a compact form'],
+  [clubPage.includes("const title = `${club.name} — ${open24Hours ? '24/7, ' : ''}${districtName ?? 'Bakı'}, ${titleDetail}`;"), 'club title keeps club name + verified 24/7 status + district context in a compact form'],
+  [clubPage.includes("open24Hours ? '24/7 fəaliyyət göstərir.' : null"), 'club description must surface verified 24/7 status when present'],
   [clubPage.includes("minPrice != null ? `${minPrice} AZN-dən` : category"), 'club title keeps a factual price/category fallback'],
   [clubPage.includes("İş saatları, ünvan və xəritəyə GameYer-də bax."), 'club meta description uses a compact factual CTA'],
   [clubPage.includes("name: club.district?.name ? `${club.name} — ${club.district.name}` : club.name"), 'club breadcrumb disambiguates branch context with verified district data'],
