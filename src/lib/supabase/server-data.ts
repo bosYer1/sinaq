@@ -39,36 +39,26 @@ async function trustedPublicDataFetch(input: RequestInfo | URL, init?: RequestIn
   const trustedToken = ciToken || vercelToken;
   const trustedHeader = ciToken ? 'x-gameyer-github-oidc' : 'x-gameyer-vercel-oidc';
 
-  // Canary safety only applies to production Vercel traffic while anon RLS is
-  // still available. CI deliberately has no fallback: a green workflow proves
-  // that GitHub OIDC can carry the public-data reads before anon SELECT is cut.
   if (!trustedToken) {
-    return fetch(directRequest);
+    throw new Error('Trusted public data OIDC credential is unavailable.');
   }
 
-  try {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        [trustedHeader]: trustedToken,
-        ...(SUPABASE_PUBLISHABLE_KEY ? { apikey: SUPABASE_PUBLISHABLE_KEY } : {}),
-      },
-      body: JSON.stringify({
-        url: directRequest.url,
-        method: directRequest.method,
-        headers: proxyHeaders(directRequest.headers),
-      }),
-      cache: 'no-store',
-    });
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      [trustedHeader]: trustedToken,
+      ...(SUPABASE_PUBLISHABLE_KEY ? { apikey: SUPABASE_PUBLISHABLE_KEY } : {}),
+    },
+    body: JSON.stringify({
+      url: directRequest.url,
+      method: directRequest.method,
+      headers: proxyHeaders(directRequest.headers),
+    }),
+    cache: 'no-store',
+  });
 
-    if (response.ok || ciToken) return response;
-  } catch (error) {
-    if (ciToken) throw error;
-    // Production canary falls through to existing public RLS until final cutover.
-  }
-
-  return fetch(directRequest);
+  return response;
 }
 
 export function createServerDataClient() {
