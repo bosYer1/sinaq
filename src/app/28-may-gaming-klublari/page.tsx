@@ -10,7 +10,7 @@ const get28MayClubs = cache(() => getClubs({ q: '28 May' }));
 export async function generateMetadata(): Promise<Metadata> {
   const clubs = await get28MayClubs();
   const indexable = clubs.length >= 2;
-  const title = '28 Mayda gaming klubları — PC və PlayStation';
+  const title = '28 May PlayStation və PC klubları — ünvan və xəritə';
   const description = clubs.length > 0
     ? `28 May axtarışına uyğun ${clubs.length} aktiv PC və PlayStation klubunu GameYer-də müqayisə et. Ünvan, xəritə və mövcud olduqda qiymət və iş saatlarına bax.`
     : '28 May ərazisində PC və PlayStation gaming klublarını GameYer-də tap.';
@@ -87,9 +87,9 @@ export default async function TwentyEightMayGamingClubsPage() {
         <Link href="/">GameYer</Link> / 28 May gaming klubları
       </nav>
 
-      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">28 Mayda PC və PlayStation gaming klubları</h1>
+      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">28 Mayda PlayStation və PC klubları</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-        GameYer-də “28 May” axtarışına uyğun aktiv gaming klublarını bir siyahıda müqayisə et.
+        28 Mayda PlayStation və PC klub axtarırsansa, GameYer-də uyğun aktiv gaming məkanlarını bir siyahıda müqayisə et.
         Hazırda {clubs.length} uyğun klub göstərilir. Ünvan, xəritə, əlaqə və mövcud olduqda qiymət və iş saatı məlumatlarına klub profillərində bax.
       </p>
 
