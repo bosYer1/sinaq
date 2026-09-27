@@ -17,23 +17,19 @@ function landingSignals(clubs: Awaited<ReturnType<typeof getClubs>>) {
 
 export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs({ type: 'playstation' });
-  const { minimumPrice, hasHours } = landingSignals(clubs);
+  const { minimumPrice } = landingSignals(clubs);
   const title = minimumPrice !== null
-    ? `Bakıda ${clubs.length} PlayStation klubu — PS Club, ${minimumPrice} AZN-dən`
-    : `Bakıda ${clubs.length} PlayStation klubu — PS Club, PS5 və PS4`;
-  const facts = [
-    minimumPrice !== null ? `saatlıq qiymətlər ${minimumPrice} AZN-dən başlayır` : null,
-    hasHours ? 'iş saatları olan profilləri yoxla' : null,
-  ].filter((item): item is string => Boolean(item));
+    ? 'Bakıda PlayStation klubları — PS Club, PS5/PS4'
+    : 'Bakıda PlayStation klubları — PS Club, PS5 və PS4';
   const dynamicDescription = clubs.length > 0
-    ? `Bakıda ${clubs.length} PlayStation klubunu müqayisə et. PS Club, PS5 və PS4 seçimlərinə, ünvan, rayon və xəritəyə bax${facts.length > 0 ? `; ${facts.join(', ')}` : ''}.`
+    ? `Bakıda ${clubs.length} PlayStation və PS klubunu müqayisə et. PS5/PS4, ünvan, rayon və xəritəyə bax${minimumPrice !== null ? `; qiymətlər ${minimumPrice} AZN-dən` : ''}.`
     : description;
   return {
     title,
     description: dynamicDescription,
     alternates: { canonical: '/bakida-playstation-klublari' },
     robots: clubs.length > 0 ? { index: true, follow: true } : { index: false, follow: true },
-    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-playstation-klublari', title, description: dynamicDescription },
+    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-playstation-klublari', title: `${title} | GameYer`, description: dynamicDescription },
   };
 }
 
@@ -55,6 +51,7 @@ export default async function BakuPlayStationClubsPage() {
     { question: 'Bakıda PlayStation klub qiymətləri neçə AZN-dən başlayır?', answer: minimumPrice !== null ? `GameYer-də hazırda göstərilən PlayStation klublarında saatlıq qiymətlər ${minimumPrice} AZN-dən başlayır. Konkret klub profilində aktual tarifi yoxla.` : 'Saatlıq PlayStation qiymətləri klubdan və otaq/zona tipindən asılıdır. Qiymət məlumatı olan klubları GameYer-də müqayisə edə bilərsən.' },
     { question: 'Mənə yaxın PlayStation klubunu necə tapa bilərəm?', answer: 'Yaxın klublar səhifəsindən xəritəyə keçərək lokasiyana yaxın PlayStation klublarını görə bilərsən. Rayon səhifələri konkret ərazidə seçimləri daraltmağa kömək edir.' },
     { question: 'Klubda PS5 və ya PS4 olduğunu necə yoxlaya bilərəm?', answer: 'Konsol modeli və zona məlumatı klub tərəfindən təqdim edilibsə, profil və tarif adlarında göstərilir. Məlumat qeyd olunmayıbsa, getməzdən əvvəl klubun telefon və ya Instagram hesabı ilə dəqiqləşdirmək lazımdır.' },
+    { question: 'PS Club və PlayStation klubu eyni şeydir?', answer: 'Bəli. Axtarışlarda “PS Club”, “PS klub” və “PlayStation klubu” eyni tip məkan üçün işlədilir. GameYer bu məkanları PlayStation kateqoriyasında bir yerdə göstərir.' },
     { question: 'PS klub seçərkən nəyə baxmaq lazımdır?', answer: 'Yaxınlıqla yanaşı PS5 və ya PS4 modelini, standart və VIP zona fərqini, saatlıq qiyməti, iş saatlarını və ünvanı müqayisə etmək faydalıdır.' },
   ];
 
@@ -73,7 +70,7 @@ export default async function BakuPlayStationClubsPage() {
   return <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }} />
     <nav className="mb-5 text-xs text-muted"><Link href="/">GameYer</Link> / Bakıda PlayStation klubları</nav>
-    <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda PlayStation, PS5 və PS4 klubları</h1>
+    <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Bakıda PlayStation və PS klubları — PS5, PS4</h1>
     <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakıda PlayStation, PS5 və PS4 klub axtaranlar üçün aktiv məkanları bir yerdə müqayisə et. Hazırda {clubs.length} PlayStation klubu göstərilir{minimumPrice !== null ? ` və saatlıq qiymətlər ${minimumPrice} AZN-dən başlayır` : ''}. Ünvan, xəritə və mövcud olduqda iş saatı, konsol və tarif məlumatları klub səhifələrindədir.</p>
 
     <div className="mt-4 flex flex-wrap gap-2">
