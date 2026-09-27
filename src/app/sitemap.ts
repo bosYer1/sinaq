@@ -51,7 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/istifade-qaydalari`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
-  const supabase = createServerDataClient();
+  const supabase = await createServerDataClient();
   const { data, error } = await supabase
     .from('clubs')
     .select(`
