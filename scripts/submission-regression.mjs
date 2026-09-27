@@ -41,6 +41,11 @@ assert.match(clubListSource, /Klub siyahıda yoxdur\? Təklif et/, 'search no-re
 assert.doesNotMatch(clubListSource, /\/elaqe\?club=/, 'search no-result proposal must not label free-text search as an existing club identity.');
 
 assert.doesNotMatch(contactSource, /\/klub-sahibi/, 'contact page must not link to the removed club-owner flow.');
-assert.match(nextConfigSource, /source:\s*['"]\\/klub-sahibi['"][\s\S]*?destination:\s*['"]\\/elaqe#new-club['"][\s\S]*?permanent:\s*true/, 'legacy /klub-sahibi must remain a permanent redirect to the canonical /elaqe owner-submission section.');
+assert.ok(
+  nextConfigSource.includes("source: '/klub-sahibi'")
+    && nextConfigSource.includes("destination: '/elaqe#new-club'")
+    && nextConfigSource.includes('permanent: true'),
+  'legacy /klub-sahibi must remain a permanent redirect to the canonical /elaqe owner-submission section.',
+);
 
 console.log('Submission regression contract: PASS');
