@@ -40,6 +40,20 @@ function hasConfirmedPublicType(club: ClubWithRelations) {
   return types.includes('pc') || types.includes('playstation');
 }
 
+function hasConfirmedPublicSocial(club: Pick<ClubWithRelations, 'instagram_url' | 'tiktok_url'>) {
+  return Boolean(club.instagram_url?.trim() || club.tiktok_url?.trim());
+}
+
+function isPublicClubForWeb(club: ClubWithRelations) {
+  return Boolean(
+    club.is_active
+      && club.latitude != null
+      && club.longitude != null
+      && hasConfirmedPublicSocial(club)
+      && hasConfirmedPublicType(club)
+  );
+}
+
 const SEARCH_LOCATION_STOP_WORDS = new Set(['ms', 'metro', 'metrosu']);
 
 function normalizeSearchText(value: string | null | undefined) {
@@ -119,7 +133,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
     return [];
   }
 
-  let clubs = (data ?? []).map(normalizeClubRelations).filter(hasConfirmedPublicType);
+  let clubs = (data ?? []).map(normalizeClubRelations).filter(isPublicClubForWeb);
 
   if (searchTerms.length > 0) {
     clubs = clubs.filter((club) => {
@@ -198,6 +212,8 @@ export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelat
 
 type PublicClubCountRow = {
   id: string;
+  instagram_url: string | null;
+  tiktok_url: string | null;
   type_assignments: Array<{ club_type: { slug: string } | null }>;
 };
 
@@ -220,6 +236,8 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
     .from('clubs')
     .select(`
       id,
+      instagram_url,
+      tiktok_url,
       type_assignments:club_type_assignments (
         club_type:club_types ( slug )
       )
@@ -238,6 +256,7 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
 
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
   return (data ?? []).filter((club) => {
+    if (!club.instagram_url?.trim() && !club.tiktok_url?.trim()) return false;
     const slugs = (club.type_assignments ?? [])
       .map((assignment) => assignment.club_type?.slug)
       .filter((slug): slug is string => Boolean(slug));
@@ -276,7 +295,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
 
   if (!data) return null;
   const club = normalizeClubRelations(data);
-  return hasConfirmedPublicType(club) ? club : null;
+  return isPublicClubForWeb(club) ? club : null;
 }
 
 const getCachedClubBySlug = unstable_cache(
