@@ -149,17 +149,10 @@ export async function proxy(request: NextRequest) {
   const clubSlug = pathname.startsWith('/klub/') ? decodeURIComponent(pathname.slice('/klub/'.length)) : null;
 
   if (clubSlug && SEO_INACTIVE_CLUB_TOMBSTONES.has(clubSlug)) {
-    const { data: activeClub, error: activeClubError } = await supabase
-      .from('clubs')
-      .select('id')
-      .eq('slug', clubSlug)
-      .eq('is_active', true)
-      .maybeSingle();
-
-    // Fail open on a dependency error so a temporary Supabase problem cannot hide a valid club.
-    if (activeClubError) return response;
-    if (!activeClub) return inactiveClubNotFound();
-    return response;
+    // These routes are explicit SEO tombstones, not a live database lookup.
+    // Keeping the decision local guarantees a real HTTP 404 even when public
+    // Supabase reads are intentionally blocked by the server-only data cutover.
+    return inactiveClubNotFound();
   }
 
   const {
