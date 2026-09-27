@@ -131,20 +131,15 @@ async function trustedPublicDataFetch(input: RequestInfo | URL, init?: RequestIn
   const trustedToken = githubToken || vercelToken;
   const trustedHeader = githubToken ? 'x-gameyer-github-oidc' : 'x-gameyer-vercel-oidc';
 
-  // Canary safety only applies to production Vercel traffic while anon RLS is
-  // still available. CI deliberately has no anonymous fallback.
   if (!trustedToken) {
-    return fetch(directRequest);
+    throw new Error('Trusted public data OIDC credential is unavailable.');
   }
 
-  try {
-    const response = await proxyPublicDataFetch(directRequest, trustedHeader as 'x-gameyer-github-oidc' | 'x-gameyer-vercel-oidc', trustedToken);
-    if (response.ok || githubToken) return response;
-  } catch (error) {
-    if (githubToken) throw error;
-  }
-
-  return fetch(directRequest);
+  return proxyPublicDataFetch(
+    directRequest,
+    trustedHeader as 'x-gameyer-github-oidc' | 'x-gameyer-vercel-oidc',
+    trustedToken,
+  );
 
 }
 
