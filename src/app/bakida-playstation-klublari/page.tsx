@@ -21,12 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = minimumPrice !== null
     ? 'Bakıda PlayStation klubları — PS Club, PS5/PS4 qiymətləri'
     : 'Bakıda PlayStation klubları — PS Club, PS5 və PS4';
-  const facts = [
-    minimumPrice !== null ? `saatlıq qiymətlər ${minimumPrice} AZN-dən başlayır` : null,
-    hasHours ? 'iş saatları olan profilləri yoxla' : null,
-  ].filter((item): item is string => Boolean(item));
   const dynamicDescription = clubs.length > 0
-    ? `Bakıda ${clubs.length} PlayStation və PS klubunu müqayisə et. PS5 və PS4 seçimlərinə, ünvan, rayon və xəritəyə bax${facts.length > 0 ? `; ${facts.join(', ')}` : ''}.`
+    ? `Bakıda ${clubs.length} PlayStation və PS klubunu müqayisə et. PS5/PS4, ünvan, rayon və xəritəyə bax${minimumPrice !== null ? `; qiymətlər ${minimumPrice} AZN-dən` : ''}.`
     : description;
   return {
     title,
