@@ -9,7 +9,7 @@ const VERCEL_SUBJECT = 'owner:gameyer:project:gameyer:environment:production';
 const ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const HOST_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?::\d{1,5})?$/i;
-const EVENT_TYPES = new Set(['maps_click', 'phone_click', 'instagram_click', 'club_correction_click']);
+const EVENT_TYPES = new Set(['maps_click', 'phone_click', 'instagram_click', 'club_correction_click', 'whatsapp_booking_click', 'recent_club_click']);
 
 let jwksPromise: Promise<ReturnType<typeof createRemoteJWKSet>> | null = null;
 
@@ -67,11 +67,12 @@ function validVisit(row: Record<string, unknown>) {
 }
 
 function validEvent(row: Record<string, unknown>) {
+  const isRecentClubClick = row.event_type === 'recent_club_click';
   return typeof row.session_id === 'string' && ID_RE.test(row.session_id)
-    && typeof row.path === 'string' && row.path.length >= 7 && row.path.length <= 300
+    && typeof row.path === 'string' && row.path.length >= 1 && row.path.length <= 300
     && typeof row.event_type === 'string' && EVENT_TYPES.has(row.event_type)
     && typeof row.club_slug === 'string' && row.club_slug.length <= 120 && SLUG_RE.test(row.club_slug)
-    && row.path === `/klub/${row.club_slug}`;
+    && (isRecentClubClick ? row.path === '/' : row.path === `/klub/${row.club_slug}`);
 }
 
 Deno.serve(async (request: Request) => {
