@@ -70,6 +70,6 @@ assert(clubsQuery.includes(".replace(/\\bm\\s*\\/\\s*s\\b/giu, ' metro ')"), 'm/
 assert(clubsQuery.includes("club.district?.name"), 'Club search must include district names so location intent can resolve without exact address wording.');
 assert(clubsQuery.includes("return searchTerms.every((term) => searchableText.includes(term));"), 'All normalized search terms must match the club search surface.');
 assert(!clubsQuery.includes('name.ilike.%'), 'Public search must not fall back to accent-sensitive DB ilike matching.');
-assert(clubsQuery.includes("['gameyer-public-clubs-v9']"), 'Public club query cache must remain bumped after tolerant search semantics change.');
+assert(clubsQuery.includes("['gameyer-public-clubs-v10']"), 'Public club query cache must remain bumped after tolerant search semantics change.');
 
 console.log('Search input regression checks passed.');
