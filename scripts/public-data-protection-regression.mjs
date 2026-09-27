@@ -16,6 +16,7 @@ const [
   terms,
   rootLayout,
   menuPage,
+  publicDataProxy,
 ] = await Promise.all([
   readFile(new URL('../src/lib/supabase/public-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/supabase/server-data.ts', import.meta.url), 'utf8'),
@@ -31,15 +32,18 @@ const [
   readFile(new URL('../src/app/istifade-qaydalari/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/menyu/page.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/functions/gameyer-public-data-proxy/index.ts', import.meta.url), 'utf8'),
 ]);
 
 assert.match(publicServer, /import 'server-only';/, 'public data client wrapper must stay server-only');
 assert.match(publicServer, /createServerDataClient/, 'public query modules must use the trusted server data client');
 assert.doesNotMatch(publicServer, /SUPABASE_PUBLISHABLE_KEY/, 'public server query wrapper must not use the browser publishable key');
 
-assert.match(serverData, /SUPABASE_SECRET_KEY/, 'server data client must prefer the Supabase secret key');
+assert.match(serverData, /SUPABASE_SECRET_KEY/, 'server data client may use a direct Supabase secret when explicitly configured');
 assert.match(serverData, /SUPABASE_SERVICE_ROLE_KEY/, 'server data client must retain service-role fallback compatibility');
-assert.match(serverData, /VERCEL_ENV !== 'production'/, 'publishable-key fallback must be forbidden in production');
+assert.match(serverData, /VERCEL_OIDC_TOKEN/, 'production public reads must support Vercel OIDC without a long-lived Supabase secret');
+assert.match(serverData, /gameyer-public-data-proxy/, 'production public reads must traverse the trusted Supabase Edge proxy');
+assert.match(serverData, /global:\s*\{\s*fetch:\s*oidcPublicDataFetch\s*\}/, 'production publishable client must replace direct fetch with the OIDC proxy fetch');
 
 assert.doesNotMatch(clubLogo, /supabase\/client/, 'public ClubLogo must not import the browser Supabase client');
 assert.doesNotMatch(clubLogo, /\.from\(['"]clubs['"]\)/, 'public ClubLogo must not read clubs directly from the browser');
@@ -79,6 +83,22 @@ assert.doesNotMatch(
 assert.match(migration, /authenticated_admin_read_clubs/, 'clubs must retain an authenticated admin-only SELECT policy');
 assert.match(migration, /authenticated_admin_read_club_updates/, 'club updates must retain an authenticated admin-only SELECT policy');
 assert.match(migration, /revoke execute on function app_private\.is_public_club\(uuid\) from anon, authenticated;/i, 'legacy public visibility RPC must be closed after public RLS removal');
+
+for (const literal of [
+  "VERCEL_ISSUER = 'https://oidc.vercel.com/gameyer'",
+  "VERCEL_AUDIENCE = 'https://vercel.com/gameyer'",
+  "VERCEL_SUBJECT = 'owner:gameyer:project:gameyer:environment:production'",
+  "request.headers.get('x-gameyer-vercel-oidc')",
+  "method !== 'GET' && method !== 'HEAD'",
+  'ALLOWED_PATHS',
+  'SUPABASE_SECRET_KEYS',
+  'SUPABASE_SERVICE_ROLE_KEY',
+]) {
+  assert.ok(publicDataProxy.includes(literal), `trusted public data proxy must enforce ${literal}`);
+}
+assert.doesNotMatch(publicDataProxy, /Access-Control-Allow-Origin:\s*['"]\*['"]/, 'trusted public data proxy must not expose wildcard CORS');
+assert.match(publicDataProxy, /target\.origin !== expectedOrigin/, 'proxy must reject off-project upstream origins');
+assert.match(publicDataProxy, /!ALLOWED_PATHS\.has\(target\.pathname\)/, 'proxy must reject non-public-inventory REST paths');
 
 assert.match(terms, /avtomatlaşdırılmış məlumat çıxarılması/i, 'usage terms must disclose automated extraction restrictions');
 assert.match(terms, /robot, scraper, crawler, headless browser/i, 'usage terms must explicitly cover common automated scraping methods');
