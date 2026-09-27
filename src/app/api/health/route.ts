@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDatabaseHealth } from '@/lib/health';
-import { createClient } from '@/lib/supabase/server';
+import { createServerDataClient } from '@/lib/supabase/server-data';
 import {
   getAnalyticsWriteMode,
   requestVercelOidcToken,
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   const analyticsWrite = getAnalyticsWriteMode(requestVercelOidcToken(request));
 
   const database = await getDatabaseHealth(async () => {
-    const supabase = await createClient();
+    const supabase = createServerDataClient();
     return supabase
       .from('clubs')
       .select('id')
