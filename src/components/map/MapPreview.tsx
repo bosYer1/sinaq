@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ClubWithRelations } from '@/types/database';
+import { rememberClubEntryOrigin } from '@/components/clubs/BackToClubsLink';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import {
   MAP_TILE_SIZE,
@@ -11,6 +13,7 @@ import {
   projectMapCoordinate,
 } from '@/lib/mapViewport';
 import { isClubOpenNow, isPremiumActive } from '@/lib/utils';
+import { trackPostHogEvent } from '@/lib/posthog';
 
 type MapPreviewProps = {
   clubs: ClubWithRelations[];
@@ -25,6 +28,8 @@ const INITIAL_PREVIEW_SIZE: PreviewSize = { width: 390, height: 340 };
 
 function PreviewMarker({
   id,
+  slug,
+  name,
   top,
   left,
   hasPC,
@@ -33,6 +38,8 @@ function PreviewMarker({
   premium,
 }: {
   id: string;
+  slug: string;
+  name: string;
   top: number;
   left: number;
   hasPC: boolean;
@@ -50,11 +57,27 @@ function PreviewMarker({
         : '#6B7280';
 
   return (
-    <span
-      className="absolute -translate-x-1/2 -translate-y-full drop-shadow-[0_2px_3px_rgba(0,0,0,0.18)]"
-      style={{ top, left }}
-      aria-hidden="true"
+    <Link
+      href={`/klub/${encodeURIComponent(slug)}`}
+      prefetch={false}
+      aria-label={`${name} klubuna bax`}
+      title={name}
       data-map-preview-marker="true"
+      onClick={() => {
+        rememberClubEntryOrigin(slug);
+        trackPostHogEvent('club_card_click', {
+          club_id: id,
+          club_slug: slug,
+          club_name: name,
+          surface: 'map_preview_marker',
+          discovery_surface: 'map_preview',
+        }, {
+          send_instantly: true,
+          transport: 'sendBeacon',
+        });
+      }}
+      className="absolute z-20 -translate-x-1/2 -translate-y-full rounded-full drop-shadow-[0_2px_3px_rgba(0,0,0,0.18)] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      style={{ top, left }}
     >
       <svg viewBox="0 0 40 40" className="h-[34px] w-[34px] overflow-visible">
         {hasPC && hasPlayStation ? (
@@ -74,7 +97,7 @@ function PreviewMarker({
         <circle cx="20" cy="16" r="4" fill="#fff" />
         {open ? <circle cx="30.5" cy="8.5" r="4.5" fill="#16A34A" stroke="#fff" strokeWidth="2" /> : null}
       </svg>
-    </span>
+    </Link>
   );
 }
 
@@ -179,6 +202,8 @@ export function MapPreview({ clubs }: MapPreviewProps) {
         <PreviewMarker
           key={club.id}
           id={club.id}
+          slug={club.slug}
+          name={club.name}
           top={top}
           left={left}
           hasPC={hasPC}
