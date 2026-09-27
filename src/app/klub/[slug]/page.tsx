@@ -121,6 +121,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const minPcPrice = startingPrices.pc?.price_from ?? null;
   const minPlayStationPrice = startingPrices.playstation?.price_from ?? null;
   const open24Hours = isOpen24HoursEveryDay(openingHours);
+  const locationIdentity = `${club.name} ${club.address} ${club.slug}`.toLowerCase().replaceAll('-', ' ');
+  const isTwentyEightMayClub = locationIdentity.includes('28 may');
   const hasMap = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}` : undefined;
   const offerCatalog = hourlyPricing.length > 0 ? {
     '@type': 'OfferCatalog',
@@ -197,6 +199,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
       {minPcPrice != null && minPcPrice <= 2 ? <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Ucuz PC klubları</Link> : null}
       {minPlayStationPrice != null && minPlayStationPrice <= 3 ? <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Ucuz PlayStation klubları</Link> : null}
       {open24Hours ? <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">24 saat gaming klubları</Link> : null}
+      {isTwentyEightMayClub ? <Link href="/28-may-gaming-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">28 May gaming klubları</Link> : null}
     </nav>
   </>;
 }
