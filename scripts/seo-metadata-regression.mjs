@@ -8,6 +8,7 @@ const manifest = fs.readFileSync('src/app/manifest.ts', 'utf8');
 const nearbyPage = fs.readFileSync('src/app/yaxinliqda-gaming-klublari/page.tsx', 'utf8');
 const pcLanding = fs.readFileSync('src/app/bakida-pc-klublari/page.tsx', 'utf8');
 const playstationLanding = fs.readFileSync('src/app/bakida-playstation-klublari/page.tsx', 'utf8');
+const internetLanding = fs.readFileSync('src/app/bakida-internet-klublari/page.tsx', 'utf8');
 const twentyFourHourLanding = fs.readFileSync('src/app/bakida-24-saat-gaming-klublari/page.tsx', 'utf8');
 const twentyEightMayPage = fs.readFileSync('src/app/28-may-gaming-klublari/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
@@ -35,8 +36,11 @@ const checks = [
   [rootLayout.includes("areaServed: { '@type': 'Country', name: 'Azerbaijan' }"), 'organization structured data keeps the verified Azerbaijan service area'],
   [Buffer.compare(rootFavicon, brandedFavicon) === 0, 'root favicon is byte-identical to the locked GameYer favicon asset'],
   [manifest.includes("src: '/favicon.jpeg'"), 'PWA manifest points at the crawler-friendly root favicon'],
-  [nearbyPage.includes("const title = 'Yaxınlıqdakı PC və PlayStation klubları — Bakı xəritəsi';"), 'nearby landing keeps stable PC + PlayStation intent in the title'],
+  [nearbyPage.includes("const title = 'Mənə yaxın PC, PlayStation və internet klubları — Bakı xəritəsi';"), 'nearby landing title must cover the proven near-me PC/PlayStation/internet intent.'],
+  [nearbyPage.includes('Mənə yaxın PC, PlayStation və internet klubları'), 'nearby landing H1 must reinforce near-me discovery intent.'],
+  [nearbyPage.includes('internet kafe') && nearbyPage.includes('Xəritə ilə yaxınlığı yoxla'), 'nearby landing must connect internet-cafe intent with map-based proximity.'],
   [pcLanding.includes('href="#pc-clubs"') && pcLanding.includes('id="pc-clubs"') && pcLanding.includes('scroll-mt-24'), 'PC landing primary CTA must jump directly to the club list.'],
+  [internetLanding.includes('href="/yaxinliqda-gaming-klublari"') && internetLanding.includes('Mənə yaxın internet klubları'), 'winning internet-club hub must reinforce the nearby discovery landing.'],
   [playstationLanding.includes("'Bakıda PlayStation klubları — PS Club, PS5/PS4 qiymətləri'"), 'PlayStation landing title must cover the proven PS Club query family.'],
   [playstationLanding.includes('Bakıda PlayStation və PS klubları — PS5, PS4'), 'PlayStation H1 must stay aligned with PlayStation/PS intent.'],
   [playstationLanding.includes('PS Club və PlayStation klubu eyni şeydir?'), 'PlayStation landing must explain the natural PS Club synonym without keyword stuffing.'],
