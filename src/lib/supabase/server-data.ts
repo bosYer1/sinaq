@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { request as httpsRequest } from 'node:https';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import {
@@ -11,6 +12,53 @@ const GITHUB_OIDC_AUDIENCE = 'https://gameyer.az/public-data-ci';
 
 let serverDataClient: ReturnType<typeof createClient<Database>> | null = null;
 let githubOidcCache: { token: string; expiresAt: number } | null = null;
+
+type RawHttpsOptions = {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+  timeoutMs?: number;
+};
+
+function rawHttpsFetch(url: string, options: RawHttpsOptions = {}) {
+  const target = new URL(url);
+  if (target.protocol !== 'https:') {
+    return Promise.reject(new Error('Trusted server HTTPS client only accepts https URLs.'));
+  }
+
+  return new Promise<Response>((resolve, reject) => {
+    const request = httpsRequest(target, {
+      method: options.method ?? 'GET',
+      headers: options.headers,
+    }, (response) => {
+      const chunks: Buffer[] = [];
+      response.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+      response.on('end', () => {
+        const headers = new Headers();
+        for (const [name, value] of Object.entries(response.headers)) {
+          if (Array.isArray(value)) {
+            for (const item of value) headers.append(name, item);
+          } else if (value != null) {
+            headers.set(name, String(value));
+          }
+        }
+
+        resolve(new Response(Buffer.concat(chunks), {
+          status: response.statusCode ?? 502,
+          headers,
+        }));
+      });
+    });
+
+    request.setTimeout(options.timeoutMs ?? 4000, () => {
+      request.destroy(new Error('Trusted server HTTPS request timed out.'));
+    });
+    request.on('error', reject);
+
+    if (options.body) request.write(options.body);
+    request.end();
+  });
+}
 
 function proxyHeaders(headersInit?: HeadersInit) {
   const headers = new Headers(headersInit);
@@ -45,12 +93,12 @@ async function mintGitHubOidcToken() {
 
   const url = new URL(requestUrl);
   url.searchParams.set('audience', GITHUB_OIDC_AUDIENCE);
-  const response = await fetch(url, {
+  const response = await rawHttpsFetch(url.toString(), {
     headers: {
       accept: 'application/json',
       authorization: `Bearer ${requestToken}`,
     },
-    cache: 'no-store',
+    timeoutMs: 4000,
   });
   if (!response.ok) {
     throw new Error(`GitHub OIDC mint failed: ${response.status}`);
@@ -103,7 +151,7 @@ async function proxyPublicDataFetch(
   });
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
+    const response = await rawHttpsFetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -111,7 +159,7 @@ async function proxyPublicDataFetch(
         ...(SUPABASE_PUBLISHABLE_KEY ? { apikey: SUPABASE_PUBLISHABLE_KEY } : {}),
       },
       body,
-      cache: 'no-store',
+      timeoutMs: 4000,
     });
 
     if (![502, 503, 504].includes(response.status) || attempt === 1) {
