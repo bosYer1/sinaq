@@ -47,12 +47,16 @@ assert.match(serverData, /SUPABASE_SECRET_KEY/, 'server data client may use a di
 assert.match(serverData, /SUPABASE_SERVICE_ROLE_KEY/, 'server data client must retain service-role fallback compatibility');
 assert.match(serverData, /VERCEL_OIDC_TOKEN/, 'production public reads must support environment-scoped Vercel OIDC when available');
 assert.match(serverData, /x-vercel-oidc-token/, 'production public reads must support request-scoped Vercel OIDC');
-assert.match(serverData, /GAMEYER_CI_OIDC_TOKEN/, 'CI public reads must support GitHub Actions OIDC');
+assert.match(serverData, /GAMEYER_CI_OIDC_TOKEN/, 'CI public reads must retain explicit GitHub Actions OIDC fallback support');
+assert.match(serverData, /ACTIONS_ID_TOKEN_REQUEST_URL/, 'long-running CI must be able to mint fresh GitHub OIDC tokens at runtime');
+assert.match(serverData, /ACTIONS_ID_TOKEN_REQUEST_TOKEN/, 'long-running CI must authenticate runtime OIDC mint requests');
+assert.match(serverData, /GITHUB_OIDC_AUDIENCE/, 'runtime GitHub OIDC minting must use the locked GameYer audience');
 assert.match(serverData, /x-gameyer-github-oidc/, 'CI must use a distinct GitHub OIDC proxy credential');
-assert.match(serverData, /if \(response\.ok \|\| ciToken\) return response;/, 'CI OIDC must not silently fall back to anonymous public reads');
+assert.match(serverData, /response\.status === 401/, 'CI must detect expired OIDC tokens');
+assert.match(serverData, /requestScopedGitHubOidcToken\(true\)/, 'CI must force one OIDC refresh after an authenticated 401');
 assert.match(serverData, /return fetch\(directRequest\)/, 'production canary must retain a direct RLS fallback until final cutover');
 assert.match(serverData, /gameyer-public-data-proxy/, 'trusted public reads must traverse the Supabase Edge proxy');
-assert.match(serverData, /global:\s*\{\s*fetch:\s*trustedPublicDataFetch\s*\}/, 'trusted publishable client must replace direct fetch with the OIDC proxy fetch');
+assert.match(serverData, /global:\s*\{\s*fetch:\s*baseFetch\s*\}/, 'trusted publishable client must use the guarded OIDC-aware fetch path');
 
 assert.doesNotMatch(clubLogo, /supabase\/client/, 'public ClubLogo must not import the browser Supabase client');
 assert.doesNotMatch(clubLogo, /\.from\(['"]clubs['"]\)/, 'public ClubLogo must not read clubs directly from the browser');
