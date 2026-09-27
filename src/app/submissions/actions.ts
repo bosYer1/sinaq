@@ -151,12 +151,7 @@ async function submitOwnerClaim(args: {
   const admin = createServerAdminClient();
   if (!admin) throw new Error('Owner claim şəkilləri üçün trusted server bağlantısı mövcud deyil.');
 
-  let clubId: string | null = null;
-  if (clubSlug) {
-    const { data: club, error: clubError } = await admin.from('clubs').select('id').eq('slug', clubSlug).maybeSingle();
-    if (clubError) throw new Error(clubError.message);
-    clubId = club?.id ?? null;
-  }
+  const clubId = clubSlug ? await resolvePublicClubId(clubSlug) : null;
 
   const submissionId = crypto.randomUUID();
   const { error: insertError } = await admin.from('club_submissions').insert({
