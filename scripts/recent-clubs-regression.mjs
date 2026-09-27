@@ -29,7 +29,8 @@ assert(recentUi.includes("trackPostHogEvent('recent_clubs_impression'"), 'Recent
 assert(recentUi.includes("trackPostHogEvent('recent_club_click'"), 'Recent-club return clicks must be measurable.');
 assert(recentUi.includes("eventType: 'recent_club_click'"), 'Recent-club return clicks must also reach first-party analytics.');
 assert(recentUi.includes("navigator.sendBeacon('/api/analytics/event'"), 'Recent-club first-party measurement must survive navigation.');
-assert(recentUi.includes("path: `/klub/${clubSlug}`"), 'Recent-club first-party events must preserve the target club identity under the existing analytics path contract.');
+assert(recentUi.includes("path: '/'"), 'Recent-club first-party events must preserve the homepage as the source path.');
+assert(recentUi.includes('clubSlug,'), 'Recent-club first-party events must preserve the target club identity separately from the source path.');
 assert(recentUi.includes("surface: 'home_recently_viewed'"), 'Recent-club analytics must use a stable surface identifier.');
 assert(recentUi.includes('rememberClubEntryOrigin(club.slug)'), 'Recent-club navigation must preserve the existing return-to-list behavior.');
 assert(recentUi.includes('prefetch={false}'), 'Recent-club links must avoid adding mobile viewport prefetch work.');
