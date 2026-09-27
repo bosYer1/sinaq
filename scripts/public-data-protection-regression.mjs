@@ -62,6 +62,10 @@ assert.match(serverData, /return response;/, 'trusted OIDC responses must be ret
 assert.doesNotMatch(serverData, /return fetch\(directRequest\)/, 'production trusted public-data reads must not fall back to anonymous REST after cutover readiness');
 assert.match(serverData, /Trusted public data OIDC credential is unavailable/, 'missing trusted OIDC must fail closed instead of silently exposing direct reads');
 assert.match(serverData, /gameyer-public-data-proxy/, 'trusted public reads must traverse the Supabase Edge proxy');
+assert.match(serverData, /node:https/, 'trusted server transport must bypass Next fetch instrumentation');
+assert.match(serverData, /rawHttpsFetch/, 'trusted proxy and CI token requests must use the bounded raw HTTPS transport');
+assert.match(serverData, /Trusted server HTTPS request timed out/, 'trusted raw HTTPS transport must fail with a bounded timeout');
+assert.doesNotMatch(serverData, /cache:\s*['"]no-store['"]/, 'trusted transport must not trigger Next dynamic rendering through no-store fetch');
 assert.match(serverData, /global:\s*\{\s*fetch:\s*baseFetch\s*\}/, 'trusted publishable client must use the guarded OIDC-aware fetch path');
 
 assert.doesNotMatch(clubLogo, /supabase\/client/, 'public ClubLogo must not import the browser Supabase client');
@@ -124,6 +128,9 @@ for (const literal of [
 assert.doesNotMatch(publicDataProxy, /Access-Control-Allow-Origin:\s*['"]\*['"]/, 'trusted public data proxy must not expose wildcard CORS');
 assert.match(publicDataProxy, /target\.origin !== expectedOrigin/, 'proxy must reject off-project upstream origins');
 assert.match(publicDataProxy, /!ALLOWED_PATHS\.has\(target\.pathname\)/, 'proxy must reject non-public-inventory REST paths');
+assert.match(publicDataProxy, /\.well-known\/jwks/, 'OIDC verification must use the providers direct JWKS endpoints');
+assert.doesNotMatch(publicDataProxy, /openid-configuration/, 'OIDC verification must not add a discovery request on every cold isolate');
+assert.match(publicDataProxy, /timeoutDuration:\s*3000/, 'remote JWKS loading must have a bounded timeout');
 assert.match(publicDataProxy, /Boolean\(vercelToken\) === Boolean\(githubToken\)/, 'proxy must require exactly one trusted OIDC provider');
 assert.match(publicDataProxy, /eventName === 'push' && ref !== 'refs\/heads\/main'/, 'GitHub push trust must be limited to main');
 assert.match(publicDataProxy, /eventName === 'pull_request' && !\/\^refs\\\/pull\\\/\\d\+\\\/merge\$\//, 'GitHub pull-request trust must require the merge ref contract');
