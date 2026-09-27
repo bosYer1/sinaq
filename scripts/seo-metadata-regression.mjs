@@ -6,6 +6,7 @@ const districtPage = fs.readFileSync('src/app/rayon/[slug]/page.tsx', 'utf8');
 const rootLayout = fs.readFileSync('src/app/layout.tsx', 'utf8');
 const manifest = fs.readFileSync('src/app/manifest.ts', 'utf8');
 const nearbyPage = fs.readFileSync('src/app/yaxinliqda-gaming-klublari/page.tsx', 'utf8');
+const playstationLanding = fs.readFileSync('src/app/bakida-playstation-klublari/page.tsx', 'utf8');
 const twentyEightMayPage = fs.readFileSync('src/app/28-may-gaming-klublari/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
@@ -33,6 +34,9 @@ const checks = [
   [Buffer.compare(rootFavicon, brandedFavicon) === 0, 'root favicon is byte-identical to the locked GameYer favicon asset'],
   [manifest.includes("src: '/favicon.jpeg'"), 'PWA manifest points at the crawler-friendly root favicon'],
   [nearbyPage.includes("const title = 'Yaxınlıqdakı PC və PlayStation klubları — Bakı xəritəsi';"), 'nearby landing keeps stable PC + PlayStation intent in the title'],
+  [playstationLanding.includes('Bakıda ${clubs.length} PlayStation klubu — qiymətlər ${minimumPrice} AZN-dən'), 'PlayStation landing title exposes real live inventory and factual starting price'],
+  [playstationLanding.includes('Bakıda ${clubs.length} PlayStation klubu — PS5, PS4 və xəritə'), 'PlayStation landing keeps a factual no-price title fallback'],
+  [playstationLanding.includes("openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-playstation-klublari', title, description: dynamicDescription }"), 'PlayStation OpenGraph title stays aligned with the search title'],
   [nextConfig.includes("source: '/favicon.ico'") && nextConfig.includes("destination: '/gameyer-favicon.jpeg'"), 'favicon.ico resolves to the locked GameYer favicon asset'],
   [indexNowWorkflow.includes('Wait for Vercel deployment') && indexNowWorkflow.includes('node scripts/indexnow-submit.mjs'), 'IndexNow workflow waits for production before notifying search engines'],
   [twentyEightMayPage.includes("getClubs({ q: '28 May' })") && twentyEightMayPage.includes("canonical: '/28-may-gaming-klublari'"), '28 May landing is data-driven and canonicalized'],
