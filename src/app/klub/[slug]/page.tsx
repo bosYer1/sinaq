@@ -44,6 +44,12 @@ function schemaBusinessType(typeSlugs: string[]) {
   return 'LocalBusiness';
 }
 
+function schemaAddressLocality(districtSlug?: string | null) {
+  if (districtSlug === 'sumqayit') return 'Sumqayıt';
+  if (districtSlug === 'xirdalan') return 'Xırdalan';
+  return 'Bakı';
+}
+
 function isOpen24HoursEveryDay(openingHours: Array<{ day_of_week: number; open_time: string | null; close_time: string | null; is_closed: boolean }>) {
   const hoursByDay = new Map(openingHours.map((hours) => [hours.day_of_week, hours]));
   return Array.from({ length: 7 }, (_, day) => day).every((day) => {
@@ -67,10 +73,12 @@ export async function generateMetadata({ params }: ClubPageProps): Promise<Metad
   const openingHours = Array.isArray(club.opening_hours) ? club.opening_hours : [];
   const { min: minPrice } = getHourlyPriceRange(pricing);
   const hasOpeningHours = openingHours.some((item) => !item.is_closed && Boolean(item.open_time) && Boolean(item.close_time));
+  const open24Hours = isOpen24HoursEveryDay(openingHours);
   const locationText = districtName ? `${districtName} rayonunda` : 'Bakıda';
   const titleDetail = minPrice != null ? `${minPrice} AZN-dən` : category;
-  const title = `${club.name} — ${districtName ?? 'Bakı'}, ${titleDetail}`;
+  const title = `${club.name} — ${open24Hours ? '24/7, ' : ''}${districtName ?? 'Bakı'}, ${titleDetail}`;
   const detailParts = [
+    open24Hours ? '24/7 fəaliyyət göstərir.' : null,
     minPrice != null ? `Saatlıq qiymət ${minPrice} AZN-dən.` : null,
     hasOpeningHours ? 'İş saatları, ünvan və xəritəyə GameYer-də bax.' : 'Ünvan, xəritə və əlaqə məlumatlarına GameYer-də bax.',
   ].filter((value): value is string => Boolean(value));
@@ -121,6 +129,11 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const minPcPrice = startingPrices.pc?.price_from ?? null;
   const minPlayStationPrice = startingPrices.playstation?.price_from ?? null;
   const open24Hours = isOpen24HoursEveryDay(openingHours);
+  const locationIdentity = `${club.name} ${club.address} ${club.slug}`.toLowerCase().replaceAll('-', ' ');
+  const isTwentyEightMayClub = locationIdentity.includes('28 may');
+  const isLaLigaClub = locationIdentity.includes('laliga') || locationIdentity.includes('la liga');
+  const isJustForFunClub = locationIdentity.includes('just for fun');
+  const isVegasClub = locationIdentity.includes('vegas gaming');
   const hasMap = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}` : undefined;
   const offerCatalog = hourlyPricing.length > 0 ? {
     '@type': 'OfferCatalog',
@@ -166,7 +179,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
         telephone: club.phone || undefined,
         priceRange,
         currenciesAccepted: 'AZN',
-        address: { '@type': 'PostalAddress', streetAddress: club.address, addressLocality: 'Bakı', addressRegion: club.district?.name || 'Bakı', addressCountry: 'AZ' },
+        address: { '@type': 'PostalAddress', streetAddress: club.address, addressLocality: schemaAddressLocality(club.district?.slug), addressRegion: club.district?.name || undefined, addressCountry: 'AZ' },
         geo: club.latitude != null && club.longitude != null ? { '@type': 'GeoCoordinates', latitude: club.latitude, longitude: club.longitude } : undefined,
         hasMap,
         openingHoursSpecification: openingHoursSpecification.length > 0 ? openingHoursSpecification : undefined,
@@ -197,6 +210,10 @@ export default async function ClubPage({ params }: ClubPageProps) {
       {minPcPrice != null && minPcPrice <= 2 ? <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Ucuz PC klubları</Link> : null}
       {minPlayStationPrice != null && minPlayStationPrice <= 3 ? <Link href="/bakida-ucuz-playstation-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Ucuz PlayStation klubları</Link> : null}
       {open24Hours ? <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">24 saat gaming klubları</Link> : null}
+      {isTwentyEightMayClub ? <Link href="/28-may-gaming-klublari" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">28 May gaming klubları</Link> : null}
+      {isLaLigaClub ? <Link href="/laliga-game-center" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər LaLiga filialları</Link> : null}
+      {isJustForFunClub ? <Link href="/just-for-fun" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər Just For Fun filialları</Link> : null}
+      {isVegasClub ? <Link href="/vegas-gaming-center" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər Vegas filialları</Link> : null}
     </nav>
   </>;
 }
