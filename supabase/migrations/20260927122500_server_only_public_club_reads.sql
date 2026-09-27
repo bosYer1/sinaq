@@ -74,3 +74,9 @@ on public.club_updates
 for select
 to authenticated
 using ((select public.is_admin()));
+
+-- The legacy visibility helper was exposed to anon/authenticated only to support
+-- the public RLS policies removed above. Once public inventory reads move
+-- server-side, callers must not be able to probe club UUID visibility through RPC.
+revoke execute on function app_private.is_public_club(uuid) from anon, authenticated;
+
