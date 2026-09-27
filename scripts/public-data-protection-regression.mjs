@@ -169,6 +169,12 @@ assert.match(terms, /texniki mühafizə tədbirlərinin dolanılması/i, 'usage 
 assert.match(terms, /məcburi qanunvericilik/i, 'usage terms must preserve mandatory legal rights and exceptions');
 assert.match(terms, /ayrı-ayrı ictimai faktların/i, 'usage terms must not overclaim ownership over public facts or third-party materials');
 assert.match(terms, /qanuni axtarış sistemi indekslənməsi/i, 'usage terms must preserve legitimate search-engine indexing');
+assert.match(terms, /ayrıca və ya açıq razılıq tələb etdiyi hallarda həmin razılıq ayrıca qaydada alınır/i, 'usage terms must not rely on passive site use where law requires explicit consent');
+assert.match(terms, /hüquq sahiblərinə aid ola bilər/i, 'usage terms must preserve third-party ownership of marks, logos and media');
+assert.match(terms, /məlumatı düzəldə, məhdudlaşdıra və ya silə bilər/i, 'usage terms must expose a review path for substantiated correction or rights notices');
+assert.match(terms, /Məxfilik siyasəti/i, 'usage terms must link personal-data handling to the privacy policy');
+assert.match(terms, /müddəası səlahiyyətli orqan tərəfindən tam və ya qismən etibarsız sayılarsa/i, 'usage terms must include a severability safeguard');
+assert.match(terms, /Məcburi qanunvericiliyin müddəaları bu qaydalarla ziddiyyət təşkil etdiyi həddə üstün tətbiq olunur/i, 'usage terms must explicitly preserve mandatory law');
 assert.match(rootLayout, /href="\/istifade-qaydalari"/, 'desktop footer must expose the usage terms');
 assert.match(menuPage, /href: '\/istifade-qaydalari'/, 'mobile menu must expose the usage terms');
 
