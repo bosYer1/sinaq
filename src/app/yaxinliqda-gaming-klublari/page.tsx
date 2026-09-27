@@ -9,11 +9,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs();
   const hasPricing = clubs.some((club) => club.pricing.some((item) => item.price_from > 0));
   const hasHours = clubs.some((club) => club.opening_hours.length > 0);
-  const title = 'Yaxınlıqdakı PC və PlayStation klubları — Bakı xəritəsi';
+  const title = 'Mənə yaxın PC, PlayStation və internet klubları — Bakı xəritəsi';
   const availability = [hasPricing ? 'mövcud qiymətlər' : null, hasHours ? 'iş saatları' : null]
     .filter((value): value is string => Boolean(value))
     .join(', ');
-  const description = `Yaxınlıqdakı PC, kompüter və PlayStation klublarını tap. Bakı üzrə gaming klublarını rayon və xəritədə yerləşməyə görə müqayisə et${availability ? `; ${availability} olan profillərdə həmin məlumatlara da bax` : ''}.`;
+  const description = `Mənə yaxın və yaxınlıqdakı PC, kompüter, internet klub və PlayStation klublarını tap. Bakı üzrə gaming məkanlarını rayon və xəritədə yerləşməyə görə müqayisə et${availability ? `; ${availability} olan profillərdə həmin məlumatlara da bax` : ''}.`;
 
   return {
     title,
@@ -106,9 +106,9 @@ export default async function NearbyGamingClubsPage() {
         <Link href="/" className="hover:text-ink">GameYer</Link> <span aria-hidden="true">/</span> <span>Yaxınlıqdakı gaming klubları</span>
       </nav>
 
-      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Yaxınlıqdakı PC və PlayStation klubları</h1>
+      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Mənə yaxın PC, PlayStation və internet klubları</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-        Yaxınlıqda gaming klub, kompüter klubu və ya PlayStation klub axtarırsansa, Bakı üzrə aktiv məkanları burada müqayisə et. Hazırda {clubs.length} klub göstərilir; {pcCount}-i PC, {playStationCount}-ü PlayStation seçimi təqdim edir. Qiymət və iş saatları yalnız təsdiqlənmiş məlumat olduqda göstərilir.
+        Mənə yaxın gaming klub, PC klub, internet kafe və ya PlayStation klub axtarırsansa, Bakı üzrə aktiv məkanları burada müqayisə et. Hazırda {clubs.length} klub göstərilir; {pcCount}-i PC, {playStationCount}-ü PlayStation seçimi təqdim edir. Xəritə ilə yaxınlığı yoxla; qiymət və iş saatları yalnız təsdiqlənmiş məlumat olduqda göstərilir.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2">
