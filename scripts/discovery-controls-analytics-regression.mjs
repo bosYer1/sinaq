@@ -17,6 +17,10 @@ assert.ok(!analytics.includes("'mobile_more_clubs_clicked'"), 'Delegated analyti
 assert.ok(!explore.includes('const needsMobileExpansion ='), 'Marker selection must not auto-expand or drag the user into the mobile list.');
 assert.ok(explore.includes('h-[340px]') && explore.includes('sm:h-[400px]'), 'Mobile map preview must keep the original map-first size.');
 assert.ok(mapPreview.includes('const INITIAL_PREVIEW_SIZE: PreviewSize = { width: 390, height: 340 };'), 'Map preview first paint must preserve the original 340px viewport.');
+assert.ok(mapPreview.includes('href={`/klub/${encodeURIComponent(slug)}`}'), 'Mobile map preview markers must open club detail directly.');
+assert.ok(mapPreview.includes("surface: 'map_preview_marker'") && mapPreview.includes("discovery_surface: 'map_preview'"), 'Mobile map preview club opens must remain attributable.');
+assert.ok(mapPreview.includes('rememberClubEntryOrigin(slug)'), 'Map preview direct club opens must preserve back-navigation origin.');
+assert.ok(explore.includes('bottom-4 left-1/2 z-[600]') && !explore.includes('absolute inset-0 z-[600]'), 'Map activation control must not cover clickable preview markers.');
 
 for (const event of ['location_sort_clicked', 'map_location_clicked', 'home_club_jump_clicked']) {
   assert.ok(analytics.includes(`'${event}'`), `${event} must stay wired to PostHog`);
