@@ -96,6 +96,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let laLigaLatest: string | null = null;
   let justForFunCount = 0;
   let justForFunLatest: string | null = null;
+  let vegasCount = 0;
+  let vegasLatest: string | null = null;
 
   for (const club of clubs) {
     overallLatest = newerIso(overallLatest, club.updated_at);
@@ -131,6 +133,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (locationIdentity.includes('just for fun')) {
       justForFunCount += 1;
       justForFunLatest = newerIso(justForFunLatest, club.updated_at);
+    }
+    if (locationIdentity.includes('vegas gaming')) {
+      vegasCount += 1;
+      vegasLatest = newerIso(vegasLatest, club.updated_at);
     }
 
     if (!club.district?.slug) continue;
@@ -168,6 +174,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (twentyEightMayCount >= 2) addLanding('/28-may-gaming-klublari', 0.86, twentyEightMayLatest);
   if (laLigaCount >= 2) addLanding('/laliga-game-center', 0.84, laLigaLatest);
   if (justForFunCount >= 2) addLanding('/just-for-fun', 0.84, justForFunLatest);
+  if (vegasCount >= 2) addLanding('/vegas-gaming-center', 0.84, vegasLatest);
 
   const applyLatest = (url: string, latest: string | null) => {
     if (!latest) return;
