@@ -1,6 +1,7 @@
 import { submitClubSubmission } from '@/app/submissions/actions';
 import { SubmissionAnalytics } from '@/components/submissions/SubmissionAnalytics';
 import { SubmissionImagePicker } from '@/components/submissions/SubmissionImagePicker';
+import Link from 'next/link';
 import { SubmissionSubmitButton } from '@/components/submissions/SubmissionSubmitButton';
 
 type SubmissionKind = 'correction' | 'new_club' | 'owner_claim';
@@ -159,6 +160,27 @@ export function SubmissionForm({ kind, clubName, clubSlug, returnTo, submitLabel
           ? 'Nömrə yalnız müraciəti dəqiqləşdirmək və sizinlə əlaqə saxlamaq üçün istifadə olunur.'
           : 'Müraciət yalnız məlumatın yoxlanması və sizinlə əlaqə üçün istifadə olunur. Şifrə, SMS kodu və ya hesab giriş məlumatı göndərməyin.'}
       </p>
+
+      <label className="flex items-start gap-3 rounded-xl border border-border bg-surface-alt p-3 text-xs leading-5 text-muted">
+        <input
+          type="checkbox"
+          name="terms_accepted"
+          value="1"
+          required
+          className="mt-1 h-4 w-4 shrink-0 accent-primary"
+        />
+        <span>
+          <Link href="/istifade-qaydalari" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+            İstifadəçi razılaşması
+          </Link>
+          {' '}və{' '}
+          <Link href="/mexfilik" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+            Məxfilik siyasəti
+          </Link>
+          {' '}ilə tanışam və müraciətdə təqdim etdiyim məlumatı paylaşmağa hüququm olduğunu təsdiq edirəm.
+          {ownerClaim ? ' Klub adından məlumat təqdim edirəmsə, bunu etməyə səlahiyyətim olduğunu da təsdiq edirəm.' : ''}
+        </span>
+      </label>
 
       <SubmissionSubmitButton label={submitLabel} />
     </form>
