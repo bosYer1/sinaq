@@ -1,4 +1,3 @@
-import { unstable_cache } from 'next/cache';
 import { createServerDataClient } from '@/lib/supabase/server-data';
 import { getClubs } from '@/lib/queries/clubs';
 
@@ -25,7 +24,7 @@ export interface ClubUpdateItem {
   };
 }
 
-function createClubUpdatesClient() {
+async function createClubUpdatesClient() {
   return createServerDataClient();
 }
 
@@ -35,7 +34,7 @@ function firstRelatedRow<T>(value: T | T[] | null | undefined): T | null {
 }
 
 async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]> {
-  const supabase = createClubUpdatesClient();
+  const supabase = await createClubUpdatesClient();
   const publicClubs = await getClubs();
   const publicClubIds = publicClubs.map((club) => club.id);
   if (publicClubIds.length === 0) return [];
@@ -108,16 +107,10 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
   });
 }
 
-const getCachedActiveClubUpdates = unstable_cache(
-  async (clubId?: string) => queryActiveClubUpdates(clubId),
-  ['gameyer-active-club-updates-v4'],
-  { revalidate: 60, tags: ['club-updates'] },
-);
-
 export async function getActiveClubUpdates(): Promise<ClubUpdateItem[]> {
-  return getCachedActiveClubUpdates();
+  return queryActiveClubUpdates();
 }
 
 export async function getActiveClubUpdatesByClubId(clubId: string): Promise<ClubUpdateItem[]> {
-  return getCachedActiveClubUpdates(clubId);
+  return queryActiveClubUpdates(clubId);
 }
