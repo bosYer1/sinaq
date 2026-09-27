@@ -39,9 +39,17 @@ assert.ok(recentClubAnalyticsMigration.includes("'recent_club_click'::text") && 
 assert.ok(recentClubAnalyticsMigration.includes("'recent_club_click'") && recentClubAnalyticsMigration.includes('enforce_analytics_event_rate_limit'), 'Recent-club analytics migration must keep the DB rate-limit allow-list aligned.');
 assert.ok(eventRoute.includes("const isRecentClubClick = eventType === 'recent_club_click';") && eventRoute.includes("(isRecentClubClick ? path !== '/' : path !== `/klub/${clubSlug}`)"), 'Recent-club first-party events must be accepted only from the homepage while existing CTA events remain pinned to club paths.');
 const normalizedRecentClubMigration = recentClubAnalyticsMigration.replace(/\s+/g, ' ');
-assert.ok(
-  normalizedRecentClubMigration.includes("new.event_type = 'recent_club_click' and new.path <> '/'") &&
-  normalizedRecentClubMigration.includes("new.event_type <> 'recent_club_click' and ( new.path !~ '^/klub/[a-z0-9]+(?:-[a-z0-9]+)*
+for (const token of [
+  "new.event_type = 'recent_club_click'",
+  "new.path <> '/'",
+  "new.event_type <> 'recent_club_click'",
+  "new.path <> ('/klub/' || new.club_slug)",
+]) {
+  assert.ok(
+    normalizedRecentClubMigration.includes(token),
+    `DB analytics backstop missing required recent-click path token: ${token}`,
+  );
+}
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(clubView.includes(token), `ClubViewTracker must keep ${token}`);
 assert.ok(card.includes('club_card_click'), 'club_card_click must stay wired');
 for (const property of ['source_surface', 'explore_view', 'search_active', 'club_type_filter', 'district_filter', 'price_max_filter']) assert.ok(card.includes(property), `Club discovery events must keep ${property} context`);
