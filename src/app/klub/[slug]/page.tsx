@@ -58,7 +58,7 @@ function isOpen24HoursEveryDay(openingHours: Array<{ day_of_week: number; open_t
 export async function generateMetadata({ params }: ClubPageProps): Promise<Metadata> {
   const { slug } = await params;
   const club = await getClubBySlug(slug);
-  if (!club) return { title: 'Klub tapılmadı', robots: { index: false, follow: false } };
+  if (!club) notFound();
 
   const districtName = club.district?.name;
   const typeSlugs = (club.type_assignments ?? []).map((item) => item?.club_type?.slug).filter((value): value is string => Boolean(value));
