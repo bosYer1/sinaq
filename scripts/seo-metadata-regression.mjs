@@ -7,6 +7,7 @@ const districtTypePage = fs.readFileSync('src/app/rayon/[slug]/[type]/page.tsx',
 const districtIndexPage = fs.readFileSync('src/app/rayon/page.tsx', 'utf8');
 const seoLocation = fs.readFileSync('src/lib/seo-location.ts', 'utf8');
 const rootLayout = fs.readFileSync('src/app/layout.tsx', 'utf8');
+const homePage = fs.readFileSync('src/app/page.tsx', 'utf8');
 const manifest = fs.readFileSync('src/app/manifest.ts', 'utf8');
 const nearbyPage = fs.readFileSync('src/app/yaxinliqda-gaming-klublari/page.tsx', 'utf8');
 const pcLanding = fs.readFileSync('src/app/bakida-pc-klublari/page.tsx', 'utf8');
@@ -37,6 +38,9 @@ const checks = [
   [districtTypePage.includes('const locationPhrase = discoveryLocationPhrase(district.name, district.slug);') && districtTypePage.includes('`${locationPhrase} ${searchLabel} — qiymətlər və ünvanlar`'), 'district-type metadata must use truthful city/district wording.'],
   [districtIndexPage.includes("'Bakı və ətrafı üzrə gaming klubları — PC və PlayStation'") && districtIndexPage.includes('Bakı rayonlarında, Xırdalan və Sumqayıtda'), 'discovery index must describe Baku plus nearby cities truthfully.'],
   [districtPage.includes("Ünvan, iş saatları və xəritəyə GameYer-də bax."), 'district description stays compact and factual'],
+  [rootLayout.includes("default: 'Bakıda gaming klubları — PC və PlayStation | GameYer'"), 'homepage title must lead with generic Baku gaming-club intent while retaining the GameYer brand.'],
+  [rootLayout.includes("description: 'Bakıda gaming klub, PC klub, kompüter klubu, internet klub və PlayStation klub tap."), 'homepage description must cover the core generic gaming/PC/internet/PlayStation intent naturally.'],
+  [homePage.includes('Bakıda gaming klubunu tap'), 'homepage H1 must reinforce Baku gaming-club discovery intent.'],
   [rootLayout.includes("{ url: '/favicon.ico', type: 'image/jpeg', sizes: '1254x1254' }"), 'root metadata exposes the conventional favicon path'],
   [rootLayout.includes("shortcut: [{ url: '/favicon.ico'"), 'root metadata exposes a stable shortcut favicon'],
   [rootLayout.includes("alternateName: ['GameYer.az']"), 'brand structured data carries the stable GameYer.az alternate name'],
