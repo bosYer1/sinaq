@@ -92,8 +92,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: 'GameYer — Bakıda gaming, PC və PlayStation klubları', template: '%s | GameYer' },
-  description: 'Bakıda PC klub, kompüter klubu, internet klub və PlayStation klub tap. Ünvan, rayon və xəritəyə görə müqayisə et; qiymət və iş saatları məlum olduqda klub profilində göstərilir.',
+  title: { default: 'Bakıda gaming klubları — PC və PlayStation | GameYer', template: '%s | GameYer' },
+  description: 'Bakıda gaming, PC, internet və PlayStation klublarını ünvan, rayon və xəritəyə görə tap. Qiymət və iş saatlarını klub profilində müqayisə et.',
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
   icons: {
@@ -109,7 +109,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   appleWebApp: { capable: true, title: 'GameYer', statusBarStyle: 'default' },
   alternates: { canonical: '/' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/', siteName: 'GameYer', title: 'GameYer — Bakıda gaming, PC və PlayStation klubları', description: 'Bakıda PC, kompüter, internet və PlayStation klublarını xəritə və rayon üzrə tap; mövcud qiymət və iş saatlarına profillərdə bax.', images: [{ url: socialImage, width: 1200, height: 630, alt: 'GameYer — Bakıda gaming klubu tap' }] },
+  openGraph: { type: 'website', locale: 'az_AZ', url: '/', siteName: 'GameYer', title: 'Bakıda gaming klubları — PC və PlayStation | GameYer', description: 'Bakıda PC, kompüter, internet və PlayStation klublarını xəritə və rayon üzrə tap; mövcud qiymət və iş saatlarına profillərdə bax.', images: [{ url: socialImage, width: 1200, height: 630, alt: 'GameYer — Bakıda gaming klubu tap' }] },
   twitter: { card: 'summary_large_image', title: 'GameYer — Bakıda gaming klubu tap', description: 'PC, internet və PlayStation klublarını xəritə və rayon üzrə tap; mövcud qiymət məlumatlarını müqayisə et.', images: [socialImage] },
 };
 
