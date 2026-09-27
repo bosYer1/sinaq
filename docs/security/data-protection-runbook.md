@@ -92,13 +92,31 @@ It must continue to prohibit, without prior written permission:
 
 It must not claim ownership of third-party trademarks, logos, photographs or underlying public facts.
 
-## 6. Official registration follow-up
+## 6. Azerbaijan legal basis to preserve
 
-After the Founder has the appropriate tax/legal registration details, review official registration of the GameYer information collection with the Azerbaijan Intellectual Property Agency. Keep the issued certificate and submitted deposit/materials with the project legal records.
+The current operational basis is the Azerbaijan Law "Məlumat toplularının hüquqi qorunması haqqında":
+
+- Article 1.0.2 describes dual protection: the collection's structure may be protected by copyright, while its content may receive the separate/special database protection.
+- Article 6.1 gives the producer of a collection requiring substantial qualitative and/or quantitative investment in preparation, verification or arrangement the right to oppose extraction and/or re-use of all or a substantial part.
+- Article 6.2 expressly treats financial expenditure, time and energy/resources as evidence of substantial investment; novelty or material value is not required.
+- Article 6.4 addresses repeated and systematic extraction/re-use of insubstantial parts when it conflicts with normal use or unreasonably harms the producer's legitimate interests.
+- Article 10 provides a 15-year special-protection period and allows a materially reinvested/updated collection to have its own protection period.
+- Articles 12.1-12.2 provide for official registration and a registration certificate.
+- Articles 13.2-13.3 treat circumvention/removal of technical protection measures as unlawful use/prohibited conduct.
+
+This is why the technical protections, evidence ledger and contemporaneous investment records belong in one protection system rather than being treated as separate tasks.
+
+## 7. Official registration follow-up
+
+After the Founder has the appropriate tax/legal registration details, prepare official registration of the GameYer information collection with the Azerbaijan Intellectual Property Agency. The Agency currently exposes electronic services for both copyright-protected and special-protection database registration.
+
+The current state-duty schedule lists 40 AZN for official registration of a database protected by copyright or special protection. Re-check the official tariff immediately before payment because statutory fees can change.
+
+Keep the application package, submitted copy/deposit, payment receipt, issued certificate and the exact dataset/version represented by the filing with the project legal records.
 
 Registration is an evidence-strengthening step, not a substitute for proving the facts of a particular infringement.
 
-## 7. Vercel Firewall rollout — no production enforcement without review
+## 8. Vercel Firewall rollout — no production enforcement without review
 
 Firewall controls can accidentally block real users and search crawlers, so use staged rollout:
 
@@ -111,7 +129,7 @@ Firewall controls can accidentally block real users and search crawlers, so use 
 
 Do not block Googlebot/Bingbot or legitimate SEO crawling with generic `bot`, `crawler`, `headless`, `curl` or similar substring rules.
 
-## 8. Release checklist for PR #560
+## 9. Release checklist for PR #560
 
 Before release:
 
