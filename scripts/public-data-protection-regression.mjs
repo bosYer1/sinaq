@@ -18,6 +18,8 @@ const [
   menuPage,
   publicDataProxy,
   publicDataCanary,
+  buildOidcCanary,
+  packageJson,
 ] = await Promise.all([
   readFile(new URL('../src/lib/supabase/public-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/supabase/server-data.ts', import.meta.url), 'utf8'),
@@ -35,6 +37,8 @@ const [
   readFile(new URL('../src/app/menyu/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/functions/gameyer-public-data-proxy/index.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/api/security/public-data-canary/route.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../scripts/vercel-oidc-build-canary.mjs', import.meta.url), 'utf8'),
+  readFile(new URL('../package.json', import.meta.url), 'utf8'),
 ]);
 
 assert.match(publicServer, /import 'server-only';/, 'public data client wrapper must stay server-only');
@@ -107,6 +111,10 @@ assert.match(publicDataCanary, /gameyer-public-data-proxy/, 'OIDC canary must te
 assert.match(publicDataCanary, /public_clubs: publicCount/, 'OIDC canary must expose only the verified count, not raw club inventory');
 assert.match(publicDataCanary, /x-robots-tag': 'noindex, nofollow'/, 'OIDC canary must stay out of search results');
 assert.match(publicDataCanary, /VERCEL_ENV !== 'production'/, 'OIDC canary must not impersonate production trust in preview');
+assert.match(buildOidcCanary, /VERCEL_OIDC_TOKEN/, 'production build canary must require the Vercel OIDC token');
+assert.match(buildOidcCanary, /gameyer-public-data-proxy/, 'production build canary must exercise the trusted bridge before Next.js build');
+assert.match(buildOidcCanary, /rows\.length < 1/, 'production build canary must fail closed when trusted data is empty');
+assert.match(packageJson, /node scripts\/vercel-oidc-build-canary\.mjs && npm test && next build/, 'production build must run OIDC canary before Next.js renders cacheable pages');
 
 assert.match(terms, /İstifadəçi razılaşması və istifadə qaydaları/i, 'usage terms must identify themselves as the user agreement');
 assert.match(terms, /Qanunla məcburi qaydada icazə verilən hallar istisna olmaqla/i, 'usage terms must preserve mandatory legal exceptions');
