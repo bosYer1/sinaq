@@ -15,6 +15,8 @@ const playstationLanding = fs.readFileSync('src/app/bakida-playstation-klublari/
 const internetLanding = fs.readFileSync('src/app/bakida-internet-klublari/page.tsx', 'utf8');
 const twentyFourHourLanding = fs.readFileSync('src/app/bakida-24-saat-gaming-klublari/page.tsx', 'utf8');
 const twentyEightMayPage = fs.readFileSync('src/app/28-may-gaming-klublari/page.tsx', 'utf8');
+const laLigaPage = fs.readFileSync('src/app/laliga-game-center/page.tsx', 'utf8');
+const justForFunPage = fs.readFileSync('src/app/just-for-fun/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
 const indexNowWorkflow = fs.readFileSync('.github/workflows/indexnow-submit.yml', 'utf8');
@@ -69,6 +71,12 @@ const checks = [
   [clubPage.includes("const isTwentyEightMayClub = locationIdentity.includes('28 may');") && clubPage.includes('isTwentyEightMayClub ? <Link href="/28-may-gaming-klublari"'), '28 May club profiles must contextually reinforce the dedicated landing.'],
   [twentyEightMayPage.includes('clubs.length >= 2'), '28 May landing only becomes indexable with enough real public supply'],
   [sitemapPage.includes("twentyEightMayCount >= 2") && sitemapPage.includes("/28-may-gaming-klublari"), '28 May sitemap entry is supply-gated'],
+  [laLigaPage.includes("getClubs({ q: 'LaLiga' })") && laLigaPage.includes("canonical: '/laliga-game-center'") && laLigaPage.includes('clubs.length >= 2'), 'LaLiga brand hub must stay data-driven, canonicalized and supply-gated'],
+  [clubPage.includes("const isLaLigaClub = locationIdentity.includes('laliga') || locationIdentity.includes('la liga');") && clubPage.includes('isLaLigaClub ? <Link href="/laliga-game-center"'), 'LaLiga branch profiles must reinforce the brand hub'],
+  [sitemapPage.includes("laLigaCount >= 2") && sitemapPage.includes("/laliga-game-center"), 'LaLiga brand hub sitemap entry must be supply-gated'],
+  [justForFunPage.includes("getClubs({ q: 'Just For Fun' })") && justForFunPage.includes("canonical: '/just-for-fun'") && justForFunPage.includes('clubs.length >= 2'), 'Just For Fun brand hub must stay data-driven, canonicalized and supply-gated'],
+  [clubPage.includes("const isJustForFunClub = locationIdentity.includes('just for fun');") && clubPage.includes('isJustForFunClub ? <Link href="/just-for-fun"'), 'Just For Fun branch profiles must reinforce the brand hub'],
+  [sitemapPage.includes("justForFunCount >= 2") && sitemapPage.includes("/just-for-fun"), 'Just For Fun brand hub sitemap entry must be supply-gated'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
