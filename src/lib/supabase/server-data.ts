@@ -131,20 +131,11 @@ async function trustedPublicDataFetch(input: RequestInfo | URL, init?: RequestIn
   const trustedToken = githubToken || vercelToken;
   const trustedHeader = githubToken ? 'x-gameyer-github-oidc' : 'x-gameyer-vercel-oidc';
 
-  // Canary safety only applies to production Vercel traffic while anon RLS is
-  // still available. CI deliberately has no anonymous fallback.
   if (!trustedToken) {
-    return fetch(directRequest);
+    throw new Error('Trusted public data OIDC credential is unavailable.');
   }
 
-  try {
-    const response = await proxyPublicDataFetch(directRequest, trustedHeader as 'x-gameyer-github-oidc' | 'x-gameyer-vercel-oidc', trustedToken);
-    if (response.ok || githubToken) return response;
-  } catch (error) {
-    if (githubToken) throw error;
-  }
-
-  return fetch(directRequest);
+  return proxyPublicDataFetch(directRequest, trustedHeader as 'x-gameyer-github-oidc' | 'x-gameyer-vercel-oidc', trustedToken);
 
 }
 
@@ -169,10 +160,8 @@ export function createServerDataClient() {
   const baseFetch = (isProduction || hasCiOidc) && !secret
     ? async (input: RequestInfo | URL, init?: RequestInit) => {
         const response = await trustedPublicDataFetch(input, init);
-        if (
-          response.status === 401
-          && githubOidcRuntimeAvailable()
-        ) {
+
+        if (response.status === 401 && githubOidcRuntimeAvailable()) {
           githubOidcCache = null;
           const refreshed = await requestScopedGitHubOidcToken(true);
           if (refreshed) {
@@ -180,6 +169,23 @@ export function createServerDataClient() {
             return proxyPublicDataFetch(directRequest, 'x-gameyer-github-oidc', refreshed);
           }
         }
+
+        if ([502, 503, 504].includes(response.status)) {
+          const retryRequest = new Request(input, init);
+          const githubToken = await requestScopedGitHubOidcToken();
+          const vercelToken = githubToken ? null : await requestScopedVercelOidcToken();
+          const trustedToken = githubToken || vercelToken;
+          if (!trustedToken) {
+            throw new Error('Trusted public data OIDC credential is unavailable during proxy retry.');
+          }
+          const trustedHeader = githubToken ? 'x-gameyer-github-oidc' : 'x-gameyer-vercel-oidc';
+          return proxyPublicDataFetch(
+            retryRequest,
+            trustedHeader as 'x-gameyer-github-oidc' | 'x-gameyer-vercel-oidc',
+            trustedToken,
+          );
+        }
+
         return response;
       }
     : undefined;
