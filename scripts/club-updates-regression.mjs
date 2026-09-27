@@ -25,7 +25,7 @@ const checks = [
   [query.includes('const district = firstRelatedRow(club.district);'), 'many-to-one district relation supports object responses'],
   [!query.includes('const club = item.club[0]'), 'club relation is not incorrectly assumed to be an array'],
   [query.includes('profile_image_url'), 'update query carries profile images server-side instead of adding client fetches'],
-  [query.includes("['gameyer-active-club-updates-v4']"), 'cache version is bumped after mobile offer performance fix'],
+  [!query.includes('unstable_cache'), 'club updates must not persist empty trusted-read results across request boundaries'],
   [feed.includes("update.kind === 'offer' && update.ends_at === null"), 'UI detects ongoing offers explicitly'],
   [feed.includes('Davam edən təklif'), 'UI does not invent an offer expiry'],
   [feed.includes("trackPostHogEvent('club_update_impression'"), 'update impressions are measured'],
