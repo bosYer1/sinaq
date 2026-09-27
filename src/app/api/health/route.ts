@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   const analyticsWrite = getAnalyticsWriteMode(requestVercelOidcToken(request));
 
   const database = await getDatabaseHealth(async () => {
-    const supabase = createServerDataClient();
+    const supabase = await createServerDataClient();
     return supabase
       .from('clubs')
       .select('id')
