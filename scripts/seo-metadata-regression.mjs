@@ -3,6 +3,9 @@ import fs from 'node:fs';
 const clubPage = fs.readFileSync('src/app/klub/[slug]/page.tsx', 'utf8');
 const clubLayout = fs.readFileSync('src/app/klub/[slug]/layout.tsx', 'utf8');
 const districtPage = fs.readFileSync('src/app/rayon/[slug]/page.tsx', 'utf8');
+const districtTypePage = fs.readFileSync('src/app/rayon/[slug]/[type]/page.tsx', 'utf8');
+const districtIndexPage = fs.readFileSync('src/app/rayon/page.tsx', 'utf8');
+const seoLocation = fs.readFileSync('src/lib/seo-location.ts', 'utf8');
 const rootLayout = fs.readFileSync('src/app/layout.tsx', 'utf8');
 const manifest = fs.readFileSync('src/app/manifest.ts', 'utf8');
 const nearbyPage = fs.readFileSync('src/app/yaxinliqda-gaming-klublari/page.tsx', 'utf8');
@@ -28,7 +31,10 @@ const checks = [
   [clubLayout.includes("import { notFound } from 'next/navigation';"), 'club layout can terminate missing/inactive slugs before rendering'],
   [clubLayout.includes('if (!club) notFound();'), 'missing/inactive club slugs are rejected in the parent layout before child streaming'],
   [!clubLayout.includes('if (!club) return children;'), 'layout no longer lets missing/inactive club pages stream a soft-404 fallback'],
-  [districtPage.includes("const title = `${data.district.name} gaming klubları — PC və PlayStation`;"), 'district title is compact and intent-first'],
+  [districtPage.includes("const title = `${locationPhrase} gaming klubları — PC və PlayStation`;"), 'district title is compact, intent-first and locality-aware'],
+  [seoLocation.includes("['sumqayit', 'xirdalan']") && seoLocation.includes("return CITY_DISCOVERY_SLUGS.has(slug) ? `${name} şəhərində` : `${name} rayonunda`;"), 'SEO location helper must distinguish nearby cities from Baku districts.'],
+  [districtTypePage.includes('const locationPhrase = discoveryLocationPhrase(district.name, district.slug);') && districtTypePage.includes('`${locationPhrase} ${searchLabel} — qiymətlər və ünvanlar`'), 'district-type metadata must use truthful city/district wording.'],
+  [districtIndexPage.includes("'Bakı və ətrafı üzrə gaming klubları — PC və PlayStation'") && districtIndexPage.includes('Bakı rayonlarında, Xırdalan və Sumqayıtda'), 'discovery index must describe Baku plus nearby cities truthfully.'],
   [districtPage.includes("Ünvan, iş saatları və xəritəyə GameYer-də bax."), 'district description stays compact and factual'],
   [rootLayout.includes("{ url: '/favicon.ico', type: 'image/jpeg', sizes: '1254x1254' }"), 'root metadata exposes the conventional favicon path'],
   [rootLayout.includes("shortcut: [{ url: '/favicon.ico'"), 'root metadata exposes a stable shortcut favicon'],
