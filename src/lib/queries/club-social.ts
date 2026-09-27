@@ -9,7 +9,7 @@ type PublicClubSocialRow = {
 };
 
 export async function getClubTikTokUrl(clubId: string): Promise<string | null> {
-  const supabase = createPublicClient();
+  const supabase = await createPublicClient();
   const { data, error } = await supabase
     .from('clubs')
     .select(`
