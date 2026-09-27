@@ -6,6 +6,7 @@ import { createServerAdminClient } from '@/lib/supabase/server-admin';
 import { getClubBySlug } from '@/lib/queries/clubs';
 
 const KINDS = new Set(['correction', 'new_club', 'owner_claim']);
+const TERMS_VERSION = '2026-09-27';
 const CONTACT_TYPES = new Set(['instagram', 'phone', 'email']);
 const OWNER_ROLES: Record<string, string> = {
   owner: 'Sahib',
@@ -204,17 +205,23 @@ export async function submitClubSubmission(formData: FormData) {
   const freeMessage = text(formData, 'message', 3000);
   const contactType = text(formData, 'contact_type', 30);
   const contactValue = text(formData, 'contact_value', 200);
+  const termsAccepted = text(formData, 'terms_accepted', 10) === '1';
 
-  if (!KINDS.has(kind) || !CONTACT_TYPES.has(contactType) || clubName.length < 2 || !validContact(contactType, contactValue)) {
+  if (!KINDS.has(kind) || !CONTACT_TYPES.has(contactType) || clubName.length < 2 || !validContact(contactType, contactValue) || !termsAccepted) {
     redirect(resultUrl(formData, 'error'));
   }
 
-  const message = kind === 'owner_claim'
+  const submissionMessage = kind === 'owner_claim'
     ? ownerClaimMessage(formData, freeMessage)
     : kind === 'new_club'
       ? '[SADƏLƏŞDİRİLMİŞ YENİ KLUB TƏKLİFİ] Klubun adı və əlaqə nömrəsi təqdim edildi.'
       : '[SADƏLƏŞDİRİLMİŞ DÜZƏLİŞ MÜRACİƏTİ] Klubun adı və əlaqə nömrəsi təqdim edildi.';
-  if (!message) redirect(resultUrl(formData, 'error'));
+  if (!submissionMessage) redirect(resultUrl(formData, 'error'));
+
+  const message = [
+    `[RAZILIQ] İstifadəçi razılaşması versiyası: ${TERMS_VERSION}; formda açıq razılıq verildi.`,
+    submissionMessage,
+  ].join('\n').slice(0, 3000);
 
   try {
     if (kind === 'owner_claim') {
