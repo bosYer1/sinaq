@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
-import { createServerDataClient } from '@/lib/supabase/server-data';
+import { getClubBySlug } from '@/lib/queries/clubs';
 
 const KINDS = new Set(['correction', 'new_club', 'owner_claim']);
 const CONTACT_TYPES = new Set(['instagram', 'phone', 'email']);
@@ -100,15 +100,8 @@ function extensionFor(file: File) {
 
 async function resolvePublicClubId(clubSlug: string) {
   if (!clubSlug) return null;
-  const supabase = createServerDataClient();
-  const { data, error } = await supabase
-    .from('clubs')
-    .select('id')
-    .eq('slug', clubSlug)
-    .eq('is_active', true)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data?.id ?? null;
+  const club = await getClubBySlug(clubSlug);
+  return club?.id ?? null;
 }
 
 async function insertOwnerClaimWithoutImages(args: {
