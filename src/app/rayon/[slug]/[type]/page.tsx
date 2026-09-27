@@ -74,13 +74,13 @@ export async function generateMetadata({ params }: DistrictTypePageProps): Promi
   const hasHours = clubs.some((club) => club.opening_hours.length > 0);
   const canonical = `/rayon/${slug}/${type}`;
   const title = minPrice != null
-    ? `${locationPhrase} ${searchLabel} — qiymətlər və ünvanlar`
-    : `${locationPhrase} ${searchLabel} — ünvanlar və xəritə`;
+    ? `${district.name} ${label} klubları — ${minPrice} AZN-dən`
+    : `${district.name} ${label} klubları — ünvan və xəritə`;
   const discoveryLabel = type === 'pc' ? 'PC, kompüter və internet kafe' : label;
   const descriptionParts = [
-    `${locationPhrase} ${discoveryLabel} axtarırsan? ${clubs.length} aktiv klubu müqayisə et.`,
-    minPrice != null ? `Məlum saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : null,
-    hasHours ? 'Məlum iş saatlarına, ünvan və xəritə məlumatlarına GameYer-də bax.' : 'Ünvan və xəritə məlumatlarına GameYer-də bax.',
+    `${locationPhrase} ${clubs.length} aktiv ${discoveryLabel} məkanını müqayisə et.`,
+    minPrice != null ? `Saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : null,
+    hasHours ? 'Ünvan, xəritə və iş saatlarına bax.' : 'Ünvan və xəritəyə bax.',
   ].filter((value): value is string => Boolean(value));
   const description = descriptionParts.join(' ');
 
