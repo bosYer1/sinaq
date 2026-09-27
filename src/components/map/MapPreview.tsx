@@ -79,7 +79,7 @@ function PreviewMarker({
           transport: 'sendBeacon',
         });
       }}
-      className="absolute z-20 -translate-x-1/2 -translate-y-full rounded-full drop-shadow-[0_2px_3px_rgba(0,0,0,0.18)] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      className="absolute z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-full items-end justify-center rounded-full drop-shadow-[0_2px_3px_rgba(0,0,0,0.18)] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       style={{ top, left }}
     >
       <svg viewBox="0 0 40 40" className="h-[34px] w-[34px] overflow-visible">
