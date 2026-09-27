@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: responsive-${{ github.ref }}
@@ -39,6 +40,14 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Mint trusted public-data OIDC token
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('https://gameyer.az/public-data-ci');
+            core.setSecret(token);
+            core.exportVariable('GAMEYER_CI_OIDC_TOKEN', token);
 
       - name: Start production server
         run: |
@@ -87,6 +96,35 @@ jobs:
 
       - name: Mobile club return browser regression
         run: node scripts/mobile-club-return-browser-smoke.mjs
+
+      - name: Restart production server with fresh OIDC token
+        run: |
+          if [ -f /tmp/gameyer-responsive-next.pid ]; then
+            kill "$(cat /tmp/gameyer-responsive-next.pid)" || true
+            rm -f /tmp/gameyer-responsive-next.pid
+          fi
+          sleep 1
+
+      - name: Refresh trusted public-data OIDC token
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('https://gameyer.az/public-data-ci');
+            core.setSecret(token);
+            core.exportVariable('GAMEYER_CI_OIDC_TOKEN', token);
+
+      - name: Restart production server after OIDC refresh
+        run: |
+          npm run start > /tmp/gameyer-responsive-next.log 2>&1 &
+          echo $! > /tmp/gameyer-responsive-next.pid
+          for i in {1..40}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/gameyer-responsive-next.log
+          exit 1
 
       - name: Sitemap and public route integrity
         run: node scripts/site-integrity-smoke.mjs
