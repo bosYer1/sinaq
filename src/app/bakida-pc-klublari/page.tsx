@@ -78,7 +78,8 @@ export default async function BakuPcClubsPage() {
     <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakıda PC klub, kompüter klubu, internet klub və internet-kafe kimi axtarılan gaming məkanlarını bir yerdə müqayisə et. Hazırda {clubs.length} PC klubu göstərilir{minimumPrice !== null ? ` və saatlıq qiymətlər ${minimumPrice} AZN-dən başlayır` : ''}. Klub səhifəsindən ünvanı, xəritəni və mövcud olduqda iş saatı və saatlıq qiymət məlumatlarını yoxlaya bilərsən.</p>
 
     <div className="mt-4 flex flex-wrap gap-2">
-      <Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Mənə yaxın PC klubları</Link>
+      <a href="#pc-clubs" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">PC klublara bax ↓</a>
+      <Link href="/yaxinliqda-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">Mənə yaxın PC klubları</Link>
       <Link href="/bakida-internet-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">Internet və kompüter klubları</Link>
       <Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">PC klub qiymətlərini müqayisə et</Link>
       <Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">Ucuz PC klubları — 2 AZN-dək</Link>
@@ -88,7 +89,7 @@ export default async function BakuPcClubsPage() {
 
     {strongDistricts.length > 0 ? <section className="mt-6" aria-labelledby="pc-districts-heading"><h2 id="pc-districts-heading" className="font-display text-base font-bold text-ink">Rayon üzrə PC klubları</h2><p className="mt-1 text-xs leading-5 text-muted">Ən azı 2 aktiv PC klubu olan rayonlara birbaşa keç.</p><div className="mt-3 flex flex-wrap gap-2">{strongDistricts.map((district) => <Link key={district.slug} href={`/rayon/${district.slug}/pc`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">{district.name} PC klubları ({district.count})</Link>)}</div></section> : null}
 
-    <div className="mt-7"><SeoClubList clubs={clubs} /></div>
+    <div id="pc-clubs" className="mt-7 scroll-mt-24"><SeoClubList clubs={clubs} /></div>
     <section className="mt-10 rounded-card border border-border bg-surface p-5">
       <h2 className="font-display text-lg font-bold">PC klubunu necə seçmək olar?</h2>
       <p className="mt-2 text-sm leading-6 text-muted">Rayonuna yaxınlığı, mövcud olduqda saatlıq qiyməti və iş saatlarını, həmçinin klubun xəritədə yerini müqayisə et. “Internet klub” və “internet kafe” axtarırsansa da eyni PC məkanlarını ayrıca internet klubları səhifəsində görə bilərsən.</p>
