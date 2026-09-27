@@ -19,14 +19,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs({ type: 'playstation' });
   const { minimumPrice, hasHours } = landingSignals(clubs);
   const title = minimumPrice !== null
-    ? `Bakıda ${clubs.length} PlayStation klubu — qiymətlər ${minimumPrice} AZN-dən`
-    : `Bakıda ${clubs.length} PlayStation klubu — PS5, PS4 və xəritə`;
+    ? `Bakıda ${clubs.length} PlayStation klubu — PS Club, ${minimumPrice} AZN-dən`
+    : `Bakıda ${clubs.length} PlayStation klubu — PS Club, PS5 və PS4`;
   const facts = [
     minimumPrice !== null ? `saatlıq qiymətlər ${minimumPrice} AZN-dən başlayır` : null,
     hasHours ? 'iş saatları olan profilləri yoxla' : null,
   ].filter((item): item is string => Boolean(item));
   const dynamicDescription = clubs.length > 0
-    ? `Bakıda ${clubs.length} PlayStation klubunu müqayisə et. PS5 və PS4 seçimlərinə, ünvan, rayon və xəritəyə bax${facts.length > 0 ? `; ${facts.join(', ')}` : ''}.`
+    ? `Bakıda ${clubs.length} PlayStation klubunu müqayisə et. PS Club, PS5 və PS4 seçimlərinə, ünvan, rayon və xəritəyə bax${facts.length > 0 ? `; ${facts.join(', ')}` : ''}.`
     : description;
   return {
     title,
