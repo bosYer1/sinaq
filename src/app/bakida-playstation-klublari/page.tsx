@@ -19,8 +19,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs({ type: 'playstation' });
   const { minimumPrice, hasHours } = landingSignals(clubs);
   const title = minimumPrice !== null
-    ? 'Bakıda PlayStation, PS5 və PS4 klubları — qiymətlər'
-    : 'Bakıda PlayStation, PS5 və PS4 klubları — ünvan və xəritə';
+    ? `Bakıda ${clubs.length} PlayStation klubu — qiymətlər ${minimumPrice} AZN-dən`
+    : `Bakıda ${clubs.length} PlayStation klubu — PS5, PS4 və xəritə`;
   const facts = [
     minimumPrice !== null ? `saatlıq qiymətlər ${minimumPrice} AZN-dən başlayır` : null,
     hasHours ? 'iş saatları olan profilləri yoxla' : null,
@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: dynamicDescription,
     alternates: { canonical: '/bakida-playstation-klublari' },
     robots: clubs.length > 0 ? { index: true, follow: true } : { index: false, follow: true },
-    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-playstation-klublari', title: 'Bakıda PlayStation, PS5 və PS4 klubları | GameYer', description: dynamicDescription },
+    openGraph: { type: 'website', locale: 'az_AZ', url: '/bakida-playstation-klublari', title, description: dynamicDescription },
   };
 }
 
