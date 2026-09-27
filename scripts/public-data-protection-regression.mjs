@@ -7,6 +7,8 @@ const [
   clubLogo,
   clubDetail,
   clubUpdates,
+  clubs,
+  clubSocial,
   sitemap,
   health,
   submissions,
@@ -20,6 +22,8 @@ const [
   readFile(new URL('../src/components/clubs/ClubLogo.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/queries/club-updates.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/queries/clubs.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/queries/club-social.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/sitemap.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/api/health/route.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/submissions/actions.ts', import.meta.url), 'utf8'),
@@ -47,7 +51,8 @@ assert.match(clubUpdates, /const publicClubs = await getClubs\(\)/, 'club update
 assert.match(clubUpdates, /\.in\('club_id', publicClubIds\)/, 'server-secret club update reads must stay restricted to public club ids');
 assert.match(sitemap, /createServerDataClient/, 'sitemap inventory reads must be server-only');
 assert.match(health, /createServerDataClient/, 'health inventory reads must be server-only');
-assert.match(submissions, /createServerDataClient/, 'public submission club lookup must use the server data client');
+assert.match(submissions, /getClubBySlug/, 'public submission club lookup must reuse the canonical public club visibility query');
+assert.doesNotMatch(submissions, /createServerDataClient/, 'submission code must not bypass canonical public club visibility directly');
 
 for (const table of [
   'clubs',
