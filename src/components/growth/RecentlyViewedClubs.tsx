@@ -31,7 +31,7 @@ function visitorId() {
 function trackRecentClubClickFirstParty(clubSlug: string) {
   const body = JSON.stringify({
     sessionId: visitorId(),
-    path: `/klub/${clubSlug}`,
+    path: '/',
     eventType: 'recent_club_click',
     clubSlug,
   });
