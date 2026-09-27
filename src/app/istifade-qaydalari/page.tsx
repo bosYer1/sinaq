@@ -99,8 +99,8 @@ export default function TermsPage() {
             <li>robot, scraper, crawler, headless browser, skript və ya oxşar vasitə ilə klub məlumatlarının kütləvi və ya sistemli çıxarılması;</li>
             <li>məlumat toplusunun tam və ya kəmiyyət və ya keyfiyyət baxımından əhəmiyyətli hissəsinin başqa məlumat bazasına, kataloqa, tətbiqə və ya xidmətə köçürülməsi və ya təkrar istifadəsi;</li>
             <li>əhəmiyyətli olmayan hissələrin təkrar və sistemli şəkildə götürülməsi nəticəsində GameYer toplusunu əvəz edən, onun normal istifadəsinə zidd olan və ya istehsalçının qanuni maraqlarına əsassız zərər vuran toplunun yaradılması;</li>
-            <li>GameYer məlumatlarının rəqib kataloq, marketplace, rezervasiya və ya oxşar kommersiya xidmətinin inventarını kütləvi şəkildə yaratmaq və ya zənginləşdirmək üçün təkrar istifadəsi;</li>
-            <li>rate limit, giriş nəzarəti, bot müdafiəsi və digər texniki mühafizə tədbirlərinin dolanılması, zəiflədilməsi və ya buna cəhd edilməsi.</li>
+            <li>GameYer məlumatlarının rəqib kataloq, bazar platforması, rezervasiya və ya oxşar kommersiya xidmətinin inventarını kütləvi şəkildə yaratmaq və ya zənginləşdirmək üçün təkrar istifadəsi;</li>
+            <li>sorğu tezliyi məhdudiyyəti, giriş nəzarəti, bot müdafiəsi və digər texniki mühafizə tədbirlərinin dolanılması, zəiflədilməsi və ya buna cəhd edilməsi.</li>
           </ul>
           <p className="mt-3">
             Adi brauzer istifadəsi, ayrı-ayrı məlumatlara qanuni baxış və istinad, GameYer-in açıq crawler qaydalarına
@@ -179,7 +179,7 @@ export default function TermsPage() {
           <h2 className="font-display text-lg font-bold text-ink">10. Texniki müdafiə və xidmətə giriş</h2>
           <p className="mt-2">
             GameYer xidmətin təhlükəsizliyi, əlçatanlığı, sui-istifadənin qarşısının alınması və hüquqların müdafiəsi üçün
-            sorğu tezliyini məhdudlaşdıra, şübhəli avtomatlaşdırılmış sorğuları bloklaya və ya challenge tətbiq edə,
+            sorğu tezliyini məhdudlaşdıra, şübhəli avtomatlaşdırılmış sorğuları bloklaya və ya əlavə doğrulama tədbiri tətbiq edə,
             müəyyən sorğuları rədd edə və digər proporsional texniki mühafizə tədbirləri tətbiq edə bilər.
           </p>
           <p className="mt-2">
