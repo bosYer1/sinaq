@@ -78,6 +78,7 @@ assert.doesNotMatch(
 );
 assert.match(migration, /authenticated_admin_read_clubs/, 'clubs must retain an authenticated admin-only SELECT policy');
 assert.match(migration, /authenticated_admin_read_club_updates/, 'club updates must retain an authenticated admin-only SELECT policy');
+assert.match(migration, /revoke execute on function app_private\.is_public_club\(uuid\) from anon, authenticated;/i, 'legacy public visibility RPC must be closed after public RLS removal');
 
 assert.match(terms, /avtomatlaşdırılmış məlumat çıxarılması/i, 'usage terms must disclose automated extraction restrictions');
 assert.match(terms, /robot, scraper, crawler, headless browser/i, 'usage terms must explicitly cover common automated scraping methods');
