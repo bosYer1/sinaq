@@ -170,11 +170,11 @@ export function SubmissionForm({ kind, clubName, clubSlug, returnTo, submitLabel
           className="mt-1 h-4 w-4 shrink-0 accent-primary"
         />
         <span>
-          <Link href="/istifade-qaydalari" target="_blank" className="font-semibold text-primary hover:underline">
+          <Link href="/istifade-qaydalari" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
             İstifadəçi razılaşması və istifadə qaydaları
           </Link>
           {' '}və{' '}
-          <Link href="/mexfilik" target="_blank" className="font-semibold text-primary hover:underline">
+          <Link href="/mexfilik" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
             Məxfilik siyasəti
           </Link>
           {' '}ilə tanışam və müraciətdə təqdim etdiyim məlumatı paylaşmağa hüququm olduğunu təsdiq edirəm.
