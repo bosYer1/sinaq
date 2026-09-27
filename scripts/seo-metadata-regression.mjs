@@ -17,6 +17,7 @@ const twentyFourHourLanding = fs.readFileSync('src/app/bakida-24-saat-gaming-klu
 const twentyEightMayPage = fs.readFileSync('src/app/28-may-gaming-klublari/page.tsx', 'utf8');
 const laLigaPage = fs.readFileSync('src/app/laliga-game-center/page.tsx', 'utf8');
 const justForFunPage = fs.readFileSync('src/app/just-for-fun/page.tsx', 'utf8');
+const vegasPage = fs.readFileSync('src/app/vegas-gaming-center/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
 const indexNowWorkflow = fs.readFileSync('.github/workflows/indexnow-submit.yml', 'utf8');
@@ -77,6 +78,9 @@ const checks = [
   [justForFunPage.includes("getClubs({ q: 'Just For Fun' })") && justForFunPage.includes("canonical: '/just-for-fun'") && justForFunPage.includes('clubs.length >= 2'), 'Just For Fun brand hub must stay data-driven, canonicalized and supply-gated'],
   [clubPage.includes("const isJustForFunClub = locationIdentity.includes('just for fun');") && clubPage.includes('isJustForFunClub ? <Link href="/just-for-fun"'), 'Just For Fun branch profiles must reinforce the brand hub'],
   [sitemapPage.includes("justForFunCount >= 2") && sitemapPage.includes("/just-for-fun"), 'Just For Fun brand hub sitemap entry must be supply-gated'],
+  [vegasPage.includes("getClubs({ q: 'Vegas' })") && vegasPage.includes("canonical: '/vegas-gaming-center'") && vegasPage.includes('clubs.length >= 2'), 'Vegas brand hub must stay data-driven, canonicalized and supply-gated'],
+  [clubPage.includes("const isVegasClub = locationIdentity.includes('vegas gaming');") && clubPage.includes('isVegasClub ? <Link href="/vegas-gaming-center"'), 'Vegas branch profiles must reinforce the brand hub'],
+  [sitemapPage.includes("vegasCount >= 2") && sitemapPage.includes("/vegas-gaming-center"), 'Vegas brand hub sitemap entry must be supply-gated'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
