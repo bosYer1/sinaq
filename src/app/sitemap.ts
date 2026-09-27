@@ -46,6 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/melumat-metodologiyasi`, changeFrequency: 'monthly', priority: 0.58 },
     { url: `${baseUrl}/elaqe`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${baseUrl}/mexfilik`, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${baseUrl}/istifade-qaydalari`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
   const supabase = createServerDataClient();
