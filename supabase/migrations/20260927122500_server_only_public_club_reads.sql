@@ -1,9 +1,10 @@
 -- GameYer public club inventory must be rendered server-side.
 -- This removes the browser publishable-key bulk-read path while preserving
--- authenticated admin reads and service-role/server-secret reads.
+-- authenticated admin reads and trusted Vercel OIDC -> Supabase Edge reads.
 --
--- IMPORTANT: deploy application code that uses createServerDataClient in the
--- same release as this migration. Do not apply this migration by itself.
+-- IMPORTANT: deploy the OIDC read proxy and application code that uses
+-- createServerDataClient in the same controlled release as this migration.
+-- Do not apply this migration by itself.
 
 revoke select on table public.clubs from anon;
 drop policy if exists public_read_visible_clubs_anon on public.clubs;
