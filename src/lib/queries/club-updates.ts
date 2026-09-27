@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { createServerDataClient } from '@/lib/supabase/server-data';
+import { getClubs } from '@/lib/queries/clubs';
 
 export type ClubUpdateKind = 'tournament' | 'offer';
 
@@ -34,7 +35,11 @@ function firstRelatedRow<T>(value: T | T[] | null | undefined): T | null {
 }
 
 async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]> {
-  const supabase = createClubUpdatesClient();
+  const [supabase, publicClubs] = [createClubUpdatesClient(), await getClubs()];
+  const publicClubIds = publicClubs.map((club) => club.id);
+  if (publicClubIds.length === 0) return [];
+  if (clubId && !publicClubIds.includes(clubId)) return [];
+
   const nowIso = new Date().toISOString();
 
   let query = supabase
@@ -48,6 +53,7 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
       )
     `)
     .eq('is_active', true)
+    .in('club_id', publicClubIds)
     .or(`ends_at.gt.${nowIso},and(kind.eq.offer,ends_at.is.null,reverify_after.gt.${nowIso})`)
     .order('starts_at', { ascending: true, nullsFirst: false })
     .order('ends_at', { ascending: true, nullsFirst: false })
