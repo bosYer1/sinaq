@@ -1,20 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
-import { assertSupabaseConfig, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/supabase/public-config';
+import 'server-only';
 
-let publicClient: ReturnType<typeof createClient<Database>> | null = null;
+import { createServerDataClient } from '@/lib/supabase/server-data';
 
+/**
+ * Legacy name retained so existing server-side query modules stay source-compatible.
+ * Public club data must be read through the trusted server data client, never directly
+ * from the browser publishable key.
+ */
 export function createPublicClient() {
-  assertSupabaseConfig();
-  if (publicClient) return publicClient;
-
-  publicClient = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  });
-
-  return publicClient;
+  return createServerDataClient();
 }
