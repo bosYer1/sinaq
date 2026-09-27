@@ -160,10 +160,8 @@ export function createServerDataClient() {
   const baseFetch = (isProduction || hasCiOidc) && !secret
     ? async (input: RequestInfo | URL, init?: RequestInit) => {
         const response = await trustedPublicDataFetch(input, init);
-        if (
-          response.status === 401
-          && githubOidcRuntimeAvailable()
-        ) {
+
+        if (response.status === 401 && githubOidcRuntimeAvailable()) {
           githubOidcCache = null;
           const refreshed = await requestScopedGitHubOidcToken(true);
           if (refreshed) {
@@ -171,6 +169,23 @@ export function createServerDataClient() {
             return proxyPublicDataFetch(directRequest, 'x-gameyer-github-oidc', refreshed);
           }
         }
+
+        if ([502, 503, 504].includes(response.status)) {
+          const retryRequest = new Request(input, init);
+          const githubToken = await requestScopedGitHubOidcToken();
+          const vercelToken = githubToken ? null : await requestScopedVercelOidcToken();
+          const trustedToken = githubToken || vercelToken;
+          if (!trustedToken) {
+            throw new Error('Trusted public data OIDC credential is unavailable during proxy retry.');
+          }
+          const trustedHeader = githubToken ? 'x-gameyer-github-oidc' : 'x-gameyer-vercel-oidc';
+          return proxyPublicDataFetch(
+            retryRequest,
+            trustedHeader as 'x-gameyer-github-oidc' | 'x-gameyer-vercel-oidc',
+            trustedToken,
+          );
+        }
+
         return response;
       }
     : undefined;
