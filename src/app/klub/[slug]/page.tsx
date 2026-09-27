@@ -73,10 +73,12 @@ export async function generateMetadata({ params }: ClubPageProps): Promise<Metad
   const openingHours = Array.isArray(club.opening_hours) ? club.opening_hours : [];
   const { min: minPrice } = getHourlyPriceRange(pricing);
   const hasOpeningHours = openingHours.some((item) => !item.is_closed && Boolean(item.open_time) && Boolean(item.close_time));
+  const open24Hours = isOpen24HoursEveryDay(openingHours);
   const locationText = districtName ? `${districtName} rayonunda` : 'Bakıda';
   const titleDetail = minPrice != null ? `${minPrice} AZN-dən` : category;
-  const title = `${club.name} — ${districtName ?? 'Bakı'}, ${titleDetail}`;
+  const title = `${club.name} — ${open24Hours ? '24/7, ' : ''}${districtName ?? 'Bakı'}, ${titleDetail}`;
   const detailParts = [
+    open24Hours ? '24/7 fəaliyyət göstərir.' : null,
     minPrice != null ? `Saatlıq qiymət ${minPrice} AZN-dən.` : null,
     hasOpeningHours ? 'İş saatları, ünvan və xəritəyə GameYer-də bax.' : 'Ünvan, xəritə və əlaqə məlumatlarına GameYer-də bax.',
   ].filter((value): value is string => Boolean(value));
