@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs({ type: 'playstation' });
   const { minimumPrice } = landingSignals(clubs);
   const title = minimumPrice !== null
-    ? 'Bakıda PlayStation klubları — PS Club, PS5/PS4 qiymətləri'
+    ? 'Bakıda PlayStation klubları — PS Club, PS5/PS4'
     : 'Bakıda PlayStation klubları — PS Club, PS5 və PS4';
   const dynamicDescription = clubs.length > 0
     ? `Bakıda ${clubs.length} PlayStation və PS klubunu müqayisə et. PS5/PS4, ünvan, rayon və xəritəyə bax${minimumPrice !== null ? `; qiymətlər ${minimumPrice} AZN-dən` : ''}.`
