@@ -11,6 +11,9 @@ const [
   health,
   submissions,
   migration,
+  terms,
+  rootLayout,
+  menuPage,
 ] = await Promise.all([
   readFile(new URL('../src/lib/supabase/public-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/supabase/server-data.ts', import.meta.url), 'utf8'),
@@ -21,6 +24,9 @@ const [
   readFile(new URL('../src/app/api/health/route.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/submissions/actions.ts', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/migrations/20260927122500_server_only_public_club_reads.sql', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/istifade-qaydalari/page.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/menyu/page.tsx', import.meta.url), 'utf8'),
 ]);
 
 assert.match(publicServer, /import 'server-only';/, 'public data client wrapper must stay server-only');
@@ -65,5 +71,12 @@ assert.doesNotMatch(
 );
 assert.match(migration, /authenticated_admin_read_clubs/, 'clubs must retain an authenticated admin-only SELECT policy');
 assert.match(migration, /authenticated_admin_read_club_updates/, 'club updates must retain an authenticated admin-only SELECT policy');
+
+assert.match(terms, /avtomatlaşdırılmış məlumat çıxarılması/i, 'usage terms must disclose automated extraction restrictions');
+assert.match(terms, /robot, scraper, crawler, headless browser/i, 'usage terms must explicitly cover common automated scraping methods');
+assert.match(terms, /texniki mühafizə tədbirlərinin dolanılması/i, 'usage terms must prohibit bypassing technical safeguards');
+assert.match(terms, /Axtarış sistemlərinin qanuni və normal indeksləmə fəaliyyəti/i, 'usage terms must preserve legitimate search-engine indexing');
+assert.match(rootLayout, /href="\/istifade-qaydalari"/, 'desktop footer must expose the usage terms');
+assert.match(menuPage, /href: '\/istifade-qaydalari'/, 'mobile menu must expose the usage terms');
 
 console.log('Public data anti-scrape regression contract: PASS');
