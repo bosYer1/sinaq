@@ -13,6 +13,7 @@ import {
   projectMapCoordinate,
 } from '@/lib/mapViewport';
 import { isClubOpenNow, isPremiumActive } from '@/lib/utils';
+import { trackGaEvent } from '@/lib/google-analytics';
 import { trackPostHogEvent } from '@/lib/posthog';
 
 type MapPreviewProps = {
@@ -65,13 +66,15 @@ function PreviewMarker({
       data-map-preview-marker="true"
       onClick={() => {
         rememberClubEntryOrigin(slug);
-        trackPostHogEvent('club_card_click', {
+        const properties = {
           club_id: id,
           club_slug: slug,
           club_name: name,
-          surface: 'map_preview_marker',
-          discovery_surface: 'map_preview',
-        }, {
+          source_surface: 'map_preview_marker',
+          explore_view: 'map',
+        };
+        trackGaEvent('club_card_click', properties);
+        trackPostHogEvent('club_card_click', properties, {
           send_instantly: true,
           transport: 'sendBeacon',
         });
