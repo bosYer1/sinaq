@@ -13,6 +13,7 @@ const [
   health,
   submissions,
   migration,
+  cutoverMigration,
   terms,
   rootLayout,
   menuPage,
@@ -31,6 +32,7 @@ const [
   readFile(new URL('../src/app/api/health/route.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/submissions/actions.ts', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/migrations/20260927122500_server_only_public_club_reads.sql', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/migrations/20260927145200_finalize_server_only_public_club_reads.sql', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/istifade-qaydalari/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/menyu/page.tsx', import.meta.url), 'utf8'),
@@ -56,7 +58,8 @@ assert.match(serverData, /response\.status === 401/, 'CI must detect expired OID
 assert.match(serverData, /requestScopedGitHubOidcToken\(true\)/, 'CI must force one OIDC refresh after an authenticated 401');
 assert.match(serverData, /\[502, 503, 504\]\.includes\(response\.status\)/, 'trusted proxy reads must recognize transient Edge runtime failures');
 assert.match(serverData, /attempt < 2/, 'trusted proxy reads may retry a transient Edge runtime failure only once');
-assert.match(serverData, /return fetch\(directRequest\)/, 'production canary must retain a direct RLS fallback until final cutover');
+assert.doesNotMatch(serverData, /return fetch\(directRequest\)/, 'production public-data reads must not fall back to anonymous REST after cutover readiness');
+assert.match(serverData, /Trusted public data OIDC credential is unavailable/, 'missing trusted OIDC must fail closed');
 assert.match(serverData, /gameyer-public-data-proxy/, 'trusted public reads must traverse the Supabase Edge proxy');
 assert.match(serverData, /global:\s*\{\s*fetch:\s*baseFetch\s*\}/, 'trusted publishable client must use the guarded OIDC-aware fetch path');
 
@@ -98,6 +101,36 @@ assert.doesNotMatch(
 assert.match(migration, /authenticated_admin_read_clubs/, 'clubs must retain an authenticated admin-only SELECT policy');
 assert.match(migration, /authenticated_admin_read_club_updates/, 'club updates must retain an authenticated admin-only SELECT policy');
 assert.match(migration, /revoke execute on function app_private\.is_public_club\(uuid\) from anon, authenticated;/i, 'legacy public visibility RPC must be closed after public RLS removal');
+
+for (const table of [
+  'clubs',
+  'club_pricing',
+  'club_opening_hours',
+  'club_images',
+  'club_type_assignments',
+  'club_types',
+  'districts',
+  'club_updates',
+]) {
+  assert.match(
+    cutoverMigration,
+    new RegExp(`revoke\\s+select\\s+on\\s+table\\s+public\\.${table}\\s+from\\s+anon`, 'i'),
+    `final cutover must revoke anon SELECT from ${table}`,
+  );
+}
+assert.match(cutoverMigration, /drop policy if exists/i, 'final cutover must be safe to re-apply without policy-existence failures');
+assert.doesNotMatch(cutoverMigration, /create\s+policy/i, 'final cutover must not recreate or mutate authenticated admin policies');
+assert.doesNotMatch(
+  cutoverMigration,
+  /revoke\s+select\s+on\s+table\s+public\.[a-z_]+\s+from\s+authenticated/i,
+  'final cutover must preserve authenticated admin SELECT grants',
+);
+assert.match(
+  cutoverMigration,
+  /revoke execute on function app_private\.is_public_club\(uuid\) from anon, authenticated;/i,
+  'final cutover must close the legacy public visibility RPC',
+);
+
 
 for (const literal of [
   "VERCEL_ISSUER = 'https://oidc.vercel.com/gameyer'",
