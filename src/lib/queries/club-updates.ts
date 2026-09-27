@@ -1,6 +1,6 @@
 import { unstable_cache } from 'next/cache';
-import { createClient } from '@supabase/supabase-js';
-import { assertSupabaseConfig, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/supabase/public-config';
+import { createServerDataClient } from '@/lib/supabase/server-data';
+import { getClubs } from '@/lib/queries/clubs';
 
 export type ClubUpdateKind = 'tournament' | 'offer';
 
@@ -26,14 +26,7 @@ export interface ClubUpdateItem {
 }
 
 function createClubUpdatesClient() {
-  assertSupabaseConfig();
-  return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  });
+  return createServerDataClient();
 }
 
 function firstRelatedRow<T>(value: T | T[] | null | undefined): T | null {
@@ -43,6 +36,11 @@ function firstRelatedRow<T>(value: T | T[] | null | undefined): T | null {
 
 async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]> {
   const supabase = createClubUpdatesClient();
+  const publicClubs = await getClubs();
+  const publicClubIds = publicClubs.map((club) => club.id);
+  if (publicClubIds.length === 0) return [];
+  if (clubId && !publicClubIds.includes(clubId)) return [];
+
   const nowIso = new Date().toISOString();
 
   let query = supabase
@@ -56,6 +54,7 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
       )
     `)
     .eq('is_active', true)
+    .in('club_id', publicClubIds)
     .or(`ends_at.gt.${nowIso},and(kind.eq.offer,ends_at.is.null,reverify_after.gt.${nowIso})`)
     .order('starts_at', { ascending: true, nullsFirst: false })
     .order('ends_at', { ascending: true, nullsFirst: false })

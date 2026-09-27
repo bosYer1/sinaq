@@ -5,49 +5,50 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
-const get28MayClubs = cache(() => getClubs({ q: '28 May' }));
+const getVegasClubs = cache(() => getClubs({ q: 'Vegas' }));
 
 export async function generateMetadata(): Promise<Metadata> {
-  const clubs = await get28MayClubs();
+  const clubs = await getVegasClubs();
   const indexable = clubs.length >= 2;
-  const title = '28 May PlayStation və PC klubları — ünvan və xəritə';
+  const title = 'Vegas Gaming Center filialları — Bakı';
   const description = clubs.length > 0
-    ? `28 May axtarışına uyğun ${clubs.length} aktiv PC və PlayStation klubunu GameYer-də müqayisə et. Ünvan, xəritə və mövcud olduqda qiymət və iş saatlarına bax.`
-    : '28 May ərazisində PC və PlayStation gaming klublarını GameYer-də tap.';
+    ? `Bakıda ${clubs.length} aktiv Vegas Gaming Center və Vegas Gaming Club filialını müqayisə et. Ünvan, xəritə və mövcud olduqda qiymət və iş saatlarına bax.`
+    : 'Bakıda Vegas Gaming Center filiallarını GameYer-də tap.';
 
   return {
     title,
     description,
-    alternates: { canonical: '/28-may-gaming-klublari' },
+    alternates: { canonical: '/vegas-gaming-center' },
     robots: indexable ? { index: true, follow: true } : { index: false, follow: true },
     openGraph: {
       type: 'website',
       locale: 'az_AZ',
-      url: '/28-may-gaming-klublari',
+      url: '/vegas-gaming-center',
       title: `${title} | GameYer`,
       description,
     },
   };
 }
 
-export default async function TwentyEightMayGamingClubsPage() {
-  const clubs = await get28MayClubs();
+export default async function VegasGamingCenterPage() {
+  const clubs = await getVegasClubs();
   const siteUrl = getSiteUrl();
-  const pageUrl = `${siteUrl}/28-may-gaming-klublari`;
+  const pageUrl = `${siteUrl}/vegas-gaming-center`;
   const faq = [
     {
-      question: '28 Mayda PC və PlayStation klublarını necə tapa bilərəm?',
-      answer: 'Bu səhifə GameYer-də “28 May” axtarışına uyğun aktiv gaming klublarını bir yerdə göstərir. Klub profilindən ünvan və xəritə məlumatına baxa bilərsən.',
+      question: 'Vegas Gaming Center filiallarını haradan görə bilərəm?',
+      answer: 'Bu səhifə GameYer-də Vegas adına uyğun aktiv Gaming Center və Gaming Club filiallarını bir yerdə göstərir. Filial profilindən ünvan və xəritə məlumatına baxa bilərsən.',
     },
     {
-      question: '28 May gaming klub qiymətlərini haradan görə bilərəm?',
-      answer: 'Qiyməti dərc edilmiş klublarda saatlıq tariflər klub profilində göstərilir. Məlumat olmayan qiymət uydurulmur.',
+      question: 'Vegas Gaming Center qiymətləri harada göstərilir?',
+      answer: 'Qiyməti dərc edilmiş filiallarda saatlıq tariflər klub profilində göstərilir. Məlumat olmayan qiymət uydurulmur.',
     },
     {
-      question: '28 Mayda internet klub da bu siyahıya daxildir?',
-      answer: 'PC, kompüter və internet klub kimi təsnif edilən aktiv gaming məkanları 28 May axtarışına uyğun gəldikdə bu siyahıda görünə bilər.',
+      question: 'Mənə yaxın Vegas filialını necə tapa bilərəm?',
+      answer: 'Filialların ünvanlarını və xəritədə yerlərini müqayisə et, sonra uyğun klub profilindən marşruta keç.',
     },
   ];
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -55,12 +56,12 @@ export default async function TwentyEightMayGamingClubsPage() {
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'GameYer', item: siteUrl },
-          { '@type': 'ListItem', position: 2, name: '28 May gaming klubları', item: pageUrl },
+          { '@type': 'ListItem', position: 2, name: 'Vegas Gaming Center filialları', item: pageUrl },
         ],
       },
       ...(clubs.length > 0 ? [{
         '@type': 'ItemList',
-        name: '28 Mayda gaming klubları',
+        name: 'Vegas Gaming Center və Gaming Club filialları',
         numberOfItems: clubs.length,
         itemListElement: clubs.map((club, index) => ({
           '@type': 'ListItem',
@@ -84,31 +85,31 @@ export default async function TwentyEightMayGamingClubsPage() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
       <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb">
-        <Link href="/">GameYer</Link> / 28 May gaming klubları
+        <Link href="/">GameYer</Link> / Vegas Gaming Center
       </nav>
 
-      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">28 Mayda PlayStation və PC klubları</h1>
+      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Vegas Gaming Center və Gaming Club filialları</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-        28 Mayda PlayStation və PC klub axtarırsansa, GameYer-də uyğun aktiv gaming məkanlarını bir siyahıda müqayisə et.
-        Hazırda {clubs.length} uyğun klub göstərilir. Ünvan, xəritə, əlaqə və mövcud olduqda qiymət və iş saatı məlumatlarına klub profillərində bax.
+        Bakıda Vegas Gaming Center və Vegas Gaming Club axtarırsansa, uyğun aktiv filialları burada bir yerdə müqayisə et.
+        Hazırda {clubs.length} aktiv filial göstərilir. Ünvan, xəritə, əlaqə və mövcud olduqda qiymət və iş saatı məlumatlarına klub profillərində bax.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <Link href="/?q=28%20May&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">28 May klubları xəritədə</Link>
-        <Link href="/bakida-pc-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">PC klubları</Link>
+        <Link href="/?q=Vegas&view=map" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Vegas filiallarını xəritədə gör</Link>
         <Link href="/bakida-playstation-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">PlayStation klubları</Link>
+        <Link href="/bakida-pc-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">PC klubları</Link>
       </div>
 
       {clubs.length > 0 ? (
         <div className="mt-7"><SeoClubList clubs={clubs} /></div>
       ) : (
         <div className="mt-7 rounded-card border border-border bg-surface p-5 text-sm text-muted">
-          Hazırda 28 May axtarışına uyğun aktiv klub görünmür.
+          Hazırda Vegas adına uyğun aktiv filial görünmür.
         </div>
       )}
 
-      <section className="mt-8" aria-labelledby="may28-faq-heading">
-        <h2 id="may28-faq-heading" className="font-display text-lg font-bold text-ink">28 May gaming klubları haqqında suallar</h2>
+      <section className="mt-8" aria-labelledby="vegas-faq-heading">
+        <h2 id="vegas-faq-heading" className="font-display text-lg font-bold text-ink">Vegas Gaming Center haqqında suallar</h2>
         <div className="mt-4 space-y-3">
           {faq.map((item) => (
             <article key={item.question} className="rounded-card border border-border bg-surface p-4">

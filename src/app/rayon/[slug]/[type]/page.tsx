@@ -6,6 +6,7 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts } from '@/lib/queries/districts';
 import { getSiteUrl } from '@/lib/site-url';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { discoveryLocationPhrase } from '@/lib/seo-location';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
 interface DistrictTypePageProps {
@@ -68,17 +69,18 @@ export async function generateMetadata({ params }: DistrictTypePageProps): Promi
   if (!district || !label || !searchLabel) return { title: 'Səhifə tapılmadı', robots: { index: false, follow: false } };
 
   const clubs = await getComboClubs(slug, type);
+  const locationPhrase = discoveryLocationPhrase(district.name, district.slug);
   const minPrice = minHourlyPrice(clubs, type);
   const hasHours = clubs.some((club) => club.opening_hours.length > 0);
   const canonical = `/rayon/${slug}/${type}`;
   const title = minPrice != null
-    ? `${district.name} rayonunda ${searchLabel} — qiymətlər və ünvanlar`
-    : `${district.name} rayonunda ${searchLabel} — ünvanlar və xəritə`;
+    ? `${district.name} ${label} klubları — ${minPrice} AZN-dən`
+    : `${district.name} ${label} klubları — ünvan və xəritə`;
   const discoveryLabel = type === 'pc' ? 'PC, kompüter və internet kafe' : label;
   const descriptionParts = [
-    `${district.name} rayonunda ${discoveryLabel} axtarırsan? ${clubs.length} aktiv klubu müqayisə et.`,
-    minPrice != null ? `Məlum saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : null,
-    hasHours ? 'Məlum iş saatlarına, ünvan və xəritə məlumatlarına GameYer-də bax.' : 'Ünvan və xəritə məlumatlarına GameYer-də bax.',
+    `${locationPhrase} ${clubs.length} aktiv ${discoveryLabel} məkanını müqayisə et.`,
+    minPrice != null ? `Saatlıq qiymətlər ${minPrice} AZN-dən başlayır.` : null,
+    hasHours ? 'Ünvan, xəritə və iş saatlarına bax.' : 'Ünvan və xəritəyə bax.',
   ].filter((value): value is string => Boolean(value));
   const description = descriptionParts.join(' ');
 
@@ -98,6 +100,7 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
   const [districts, clubs] = await Promise.all([getDistricts(), getComboClubs(slug, type)]);
   const district = districts.find((item) => item.slug === slug);
   if (!district || !label) notFound();
+  const locationPhrase = discoveryLocationPhrase(district.name, district.slug);
 
   const minPrice = minHourlyPrice(clubs, type);
   const pricedClubCount = clubs.filter((club) => club.pricing.some((item) => item.club_type?.slug === type && item.unit === 'saat' && item.price_from > 0)).length;
@@ -106,17 +109,17 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
   const pageUrl = `${siteUrl}/rayon/${slug}/${type}`;
   const faq = [
     {
-      question: `${district.name} rayonunda ${label} klubun saatlıq qiyməti nə qədərdir?`,
+      question: `${locationPhrase} ${label} klubun saatlıq qiyməti nə qədərdir?`,
       answer: minPrice != null
-        ? `GameYer-də ${district.name} rayonunda qiyməti məlum ${label} klublarında saatlıq tariflər ${minPrice} AZN-dən başlayır. Son qiymət zona, konsol və kampaniyaya görə dəyişə bilər.`
-        : `${district.name} rayonunda ${label} klub qiymətləri məkan və tarifə görə dəyişir. Təsdiqlənmiş qiymət olduqda klub profilində göstərilir.`,
+        ? `GameYer-də ${locationPhrase} qiyməti məlum ${label} klublarında saatlıq tariflər ${minPrice} AZN-dən başlayır. Son qiymət zona, konsol və kampaniyaya görə dəyişə bilər.`
+        : `${locationPhrase} ${label} klub qiymətləri məkan və tarifə görə dəyişir. Təsdiqlənmiş qiymət olduqda klub profilində göstərilir.`,
     },
     {
-      question: `${district.name} rayonunda yaxın ${label} klubunu necə tapa bilərəm?`,
+      question: `${locationPhrase} yaxın ${label} klubunu necə tapa bilərəm?`,
       answer: `Siyahıdakı klubları müqayisə et və xəritə görünüşünə keç. Klub profilində ünvanı, xəritə nöqtəsini, məlum olduqda iş saatlarını və qiymətləri yoxlaya bilərsən.`,
     },
     {
-      question: `${district.name} rayonunda ${label} klub seçərkən nəyə baxmaq lazımdır?`,
+      question: `${locationPhrase} ${label} klub seçərkən nəyə baxmaq lazımdır?`,
       answer: type === 'pc'
         ? 'Məlum saatlıq qiymətlə yanaşı kompüter zonasına, monitor və avadanlıq səviyyəsinə, iş saatlarına və lokasiyaya baxmaq faydalıdır.'
         : 'Məlum saatlıq qiymətlə yanaşı konsol modelinə, standart və VIP otaq fərqinə, iş saatlarına və lokasiyaya baxmaq faydalıdır.',
@@ -135,7 +138,7 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
       },
       {
         '@type': 'ItemList',
-        name: `${district.name} rayonunda ${label} klubları`,
+        name: `${locationPhrase} ${label} klubları`,
         numberOfItems: clubs.length,
         itemListElement: clubs.map((club, index) => ({ '@type': 'ListItem', position: index + 1, name: club.name, url: `${siteUrl}/klub/${club.slug}` })),
       },
@@ -154,8 +157,8 @@ export default async function DistrictTypePage({ params }: DistrictTypePageProps
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
       <nav className="mb-5 text-xs text-muted" aria-label="Breadcrumb"><Link href="/" className="hover:text-ink">GameYer</Link> <span aria-hidden="true">/</span>{' '}<Link href={`/rayon/${slug}`} className="hover:text-ink">{district.name}</Link> <span aria-hidden="true">/</span>{' '}<span>{label}</span></nav>
-      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">{district.name} rayonunda {label} klubları</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{district.name} rayonunda {label} klub axtaranlar üçün aktiv məkanları müqayisə et. Hazırda {clubs.length} klub göstərilir.{minPrice != null ? ` Məlum saatlıq tariflər ${minPrice} AZN-dən başlayır.` : ''}{hoursClubCount > 0 ? ` ${hoursClubCount} klub üçün iş saatı məlumatı mövcuddur.` : ''} Klub səhifələrində ünvan və xəritə məlumatları, qiymət və iş saatları isə təsdiqləndikdə göstərilir.</p>
+      <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">{locationPhrase} {label} klubları</h1>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{locationPhrase} {label} klub axtaranlar üçün aktiv məkanları müqayisə et. Hazırda {clubs.length} klub göstərilir.{minPrice != null ? ` Məlum saatlıq tariflər ${minPrice} AZN-dən başlayır.` : ''}{hoursClubCount > 0 ? ` ${hoursClubCount} klub üçün iş saatı məlumatı mövcuddur.` : ''} Klub səhifələrində ünvan və xəritə məlumatları, qiymət və iş saatları isə təsdiqləndikdə göstərilir.</p>
 
       {(minPrice != null || pricedClubCount > 0) ? <section className="mt-5 rounded-card border border-border bg-surface p-4"><h2 className="font-display text-base font-bold text-ink">{district.name} {label} klub qiymətləri</h2><p className="mt-1 text-sm leading-6 text-muted">{pricedClubCount > 0 ? `${pricedClubCount} klub üçün saatlıq qiymət məlumatı mövcuddur` : 'Qiymət məlumatları yenilənir'}{minPrice != null ? ` və ən aşağı məlum tarif ${minPrice} AZN-dir.` : '.'}</p><Link href="/bakida-gaming-klub-qiymetleri" className="mt-3 inline-flex text-sm font-semibold text-primary">Bakı üzrə bütün klub qiymətlərini müqayisə et →</Link></section> : null}
 

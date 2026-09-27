@@ -51,6 +51,7 @@ const gameYerLinks: Array<{ href: string; title: string; description: string; ic
   { href: '/elaqe#new-club', title: 'Klub əlavə et', description: 'Klubun adı və əlaqə nömrəsini göndər', icon: 'owner' },
   { href: '/elaqe', title: 'Əlaqə', description: 'Klub təklif et və ya düzəliş bildir', icon: 'contact' },
   { href: '/mexfilik', title: 'Məxfilik', description: 'Məlumatların istifadəsi', icon: 'privacy' },
+  { href: '/istifade-qaydalari', title: 'İstifadə qaydaları', description: 'Məlumat toplusu və istifadə şərtləri', icon: 'shield' },
 ];
 
 function MenuIcon({ name, className = 'h-5 w-5' }: { name: IconName; className?: string }) {
