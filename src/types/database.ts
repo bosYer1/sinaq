@@ -61,6 +61,60 @@ export interface Database {
         Update: { id?: string; club_id?: string; url?: string; position?: number; is_cover?: boolean };
         Relationships: [{ foreignKeyName: 'club_images_club_id_fkey'; columns: ['club_id']; isOneToOne: false; referencedRelation: 'clubs'; referencedColumns: ['id'] }];
       };
+      club_updates: {
+        Row: {
+          id: string;
+          club_id: string;
+          kind: 'tournament' | 'offer';
+          title: string;
+          description: string | null;
+          starts_at: string | null;
+          ends_at: string | null;
+          source_type: 'official_instagram' | 'official_website' | 'owner_submission' | 'other';
+          source_url: string;
+          verified_at: string;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          reverify_after: string | null;
+        };
+        Insert: {
+          id?: string;
+          club_id: string;
+          kind: 'tournament' | 'offer';
+          title: string;
+          description?: string | null;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          source_type: 'official_instagram' | 'official_website' | 'owner_submission' | 'other';
+          source_url: string;
+          verified_at?: string;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          reverify_after?: string | null;
+        };
+        Update: {
+          id?: string;
+          club_id?: string;
+          kind?: 'tournament' | 'offer';
+          title?: string;
+          description?: string | null;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          source_type?: 'official_instagram' | 'official_website' | 'owner_submission' | 'other';
+          source_url?: string;
+          verified_at?: string;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          reverify_after?: string | null;
+        };
+        Relationships: [{ foreignKeyName: 'club_updates_club_id_fkey'; columns: ['club_id']; isOneToOne: false; referencedRelation: 'clubs'; referencedColumns: ['id'] }];
+      };
       club_data_evidence: {
         Row: { id: string; club_id: string; field_name: string; source_type: string; source_url: string | null; evidence_value: string | null; confidence: string; is_current: boolean; checked_at: string; created_by: string | null; created_at: string };
         Insert: { id?: string; club_id: string; field_name: string; source_type: string; source_url?: string | null; evidence_value?: string | null; confidence: string; is_current?: boolean; checked_at?: string; created_by?: string | null; created_at?: string };
