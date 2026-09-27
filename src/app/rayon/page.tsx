@@ -3,12 +3,13 @@ import Link from 'next/link';
 import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts } from '@/lib/queries/districts';
 import { getSiteUrl } from '@/lib/site-url';
+import { discoveryLocationPhrase } from '@/lib/seo-location';
 
 export const metadata: Metadata = {
-  title: 'Bakı rayonları üzrə gaming klubları — PC və PlayStation',
-  description: 'Nərimanov, Nəsimi, Yasamal və Bakının digər rayonlarında PC, kompüter və PlayStation klublarını tap. Rayon, ünvan və xəritəni müqayisə et; qiymət və iş saatları məlum olduqda göstərilir.',
+  title: 'Bakı və ətrafı üzrə gaming klubları — PC və PlayStation',
+  description: 'Bakı, Xırdalan və Sumqayıtda PC, kompüter və PlayStation klublarını ərazi üzrə tap. Ünvan və xəritəni müqayisə et; qiymət və iş saatları məlum olduqda göstərilir.',
   alternates: { canonical: '/rayon' },
-  openGraph: { type: 'website', locale: 'az_AZ', url: '/rayon', title: 'Bakı rayonları üzrə gaming klubları | GameYer', description: 'Bakının rayonları üzrə aktiv PC və PlayStation klublarını tap; mövcud qiymət və iş saatlarına klub profillərində bax.' },
+  openGraph: { type: 'website', locale: 'az_AZ', url: '/rayon', title: 'Bakı və ətrafı üzrə gaming klubları | GameYer', description: 'Bakı, Xırdalan və Sumqayıtda aktiv PC və PlayStation klublarını ərazi üzrə tap; mövcud qiymət və iş saatlarına klub profillərində bax.' },
 };
 
 export default async function DistrictIndexPage() {
@@ -39,17 +40,17 @@ export default async function DistrictIndexPage() {
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'GameYer', item: siteUrl },
-          { '@type': 'ListItem', position: 2, name: 'Bakı rayonları üzrə gaming klubları', item: pageUrl },
+          { '@type': 'ListItem', position: 2, name: 'Bakı və ətrafı üzrə gaming klubları', item: pageUrl },
         ],
       },
       {
         '@type': 'ItemList',
-        name: 'Bakı rayonları üzrə gaming klubları',
+        name: 'Bakı və ətrafı üzrə gaming klubları',
         numberOfItems: coveredDistricts.length,
         itemListElement: coveredDistricts.map((district, index) => ({
           '@type': 'ListItem',
           position: index + 1,
-          name: `${district.name} rayonunda gaming klubları`,
+          name: `${discoveryLocationPhrase(district.name, district.slug)} gaming klubları`,
           url: `${siteUrl}/rayon/${district.slug}`,
         })),
       },
@@ -67,18 +68,18 @@ export default async function DistrictIndexPage() {
         <section className="overflow-hidden rounded-[22px] border border-border bg-surface px-5 py-6 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:px-7 sm:py-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Bakı üzrə kəşf et</p>
-              <h1 className="mt-2 font-display text-2xl font-bold tracking-[-0.035em] text-ink sm:text-3xl">Rayonlar üzrə gaming klubları</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakının rayonlarında PC, kompüter, internet və PlayStation klublarını bir yerdə tap. Aktiv klub olan rayona keçib ünvan və xəritə məlumatlarını müqayisə et; qiymət və iş saatları yalnız məlum və təsdiqlənmiş olduqda göstərilir.</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Bakı və ətrafını kəşf et</p>
+              <h1 className="mt-2 font-display text-2xl font-bold tracking-[-0.035em] text-ink sm:text-3xl">Ərazi üzrə gaming klubları</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">Bakı rayonlarında, Xırdalan və Sumqayıtda PC, kompüter, internet və PlayStation klublarını bir yerdə tap. Aktiv klub olan əraziyə keçib ünvan və xəritə məlumatlarını müqayisə et; qiymət və iş saatları yalnız məlum və təsdiqlənmiş olduqda göstərilir.</p>
             </div>
             <div className="flex shrink-0 gap-2">
               <div className="rounded-xl border border-border bg-bg-elevated px-3 py-2 text-center">
                 <div className="text-lg font-bold text-ink">{districtCards.length}</div>
-                <div className="text-[10px] text-muted">rayon</div>
+                <div className="text-[10px] text-muted">ərazi</div>
               </div>
               <div className="rounded-xl border border-border bg-pc-tint px-3 py-2 text-center">
                 <div className="text-lg font-bold text-primary">{coveredDistrictCount}</div>
-                <div className="text-[10px] text-muted">aktiv rayon</div>
+                <div className="text-[10px] text-muted">aktiv ərazi</div>
               </div>
             </div>
           </div>
