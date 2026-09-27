@@ -21,6 +21,12 @@ assert.match(actionSource, /resultUrl\(formData, 'rate'\)/, 'rate-limited submis
 assert.match(formSource, /action=\{submitClubSubmission\}/, 'public form must remain connected to the server action');
 assert.match(formSource, /name="website"/, 'honeypot field must remain present');
 assert.match(formSource, /name="contact_value"[\s\S]*required/, 'contact value must remain required');
+assert.match(formSource, /name="terms_accepted"[\s\S]*required/, 'submission forms must require explicit terms consent');
+assert.match(formSource, /href="\/istifade-qaydalari"/, 'submission consent must link to the user agreement');
+assert.match(formSource, /href="\/mexfilik"/, 'submission consent must link to the privacy policy');
+assert.match(actionSource, /const TERMS_VERSION = '2026-09-27'/, 'submission consent must retain an auditable agreement version');
+assert.match(actionSource, /termsAccepted = text\(formData, 'terms_accepted', 10\) === '1'/, 'server action must independently verify terms consent');
+assert.match(actionSource, /\[RAZILIQ\] İstifadəçi razılaşması versiyası:/, 'accepted agreement version must be persisted with the submission');
 assert.match(formSource, /const simpleContact = !ownerClaim/, 'new-club and correction forms must use the simplified contact flow');
 assert.match(formSource, /name="contact_type" value="phone"/, 'simplified submissions must submit phone as the fixed contact type');
 assert.match(formSource, /type="tel"[\s\S]*placeholder="\+994 50 123 45 67"/, 'simplified submissions must expose a phone-number input');
