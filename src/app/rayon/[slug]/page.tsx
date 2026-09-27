@@ -6,6 +6,7 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getDistricts } from '@/lib/queries/districts';
 import { getSiteUrl } from '@/lib/site-url';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { discoveryLocationPhrase } from '@/lib/seo-location';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
 interface DistrictPageProps { params: Promise<{ slug: string }> }
@@ -37,9 +38,10 @@ export async function generateMetadata({ params }: DistrictPageProps): Promise<M
   if (!data) return { title: 'Rayon tapılmadı', robots: { index: false, follow: true } };
 
   const canonical = `/rayon/${data.district.slug}`;
+  const locationPhrase = discoveryLocationPhrase(data.district.name, data.district.slug);
   if (data.clubs.length === 0) {
-    const title = `${data.district.name} rayonunda gaming klubları`;
-    const description = `${data.district.name} rayonunda aktiv gaming klubları əlavə olunduqca GameYer-də görünəcək.`;
+    const title = `${locationPhrase} gaming klubları`;
+    const description = `${locationPhrase} aktiv gaming klubları əlavə olunduqca GameYer-də görünəcək.`;
     return {
       title,
       description,
@@ -53,8 +55,8 @@ export async function generateMetadata({ params }: DistrictPageProps): Promise<M
   const pcMin = minHourlyPrice(data.clubs, 'pc');
   const psMin = minHourlyPrice(data.clubs, 'playstation');
   const priceParts = [pcMin != null ? `PC ${pcMin} AZN-dən` : null, psMin != null ? `PlayStation ${psMin} AZN-dən` : null].filter(Boolean).join(', ');
-  const title = `${data.district.name} gaming klubları — PC və PlayStation`;
-  const description = `${data.district.name} rayonunda ${data.clubs.length} aktiv gaming klubu.${priceParts ? ` ${priceParts}.` : ''} Ünvan, iş saatları və xəritəyə GameYer-də bax.`;
+  const title = `${locationPhrase} gaming klubları — PC və PlayStation`;
+  const description = `${locationPhrase} ${data.clubs.length} aktiv gaming klubu.${priceParts ? ` ${priceParts}.` : ''} Ünvan, iş saatları və xəritəyə GameYer-də bax.`;
   return {
     title,
     description,
@@ -69,6 +71,7 @@ export default async function DistrictPage({ params }: DistrictPageProps) {
   const data = await getDistrictPageData(slug);
   if (!data) notFound();
   const { district, clubs } = data;
+  const locationPhrase = discoveryLocationPhrase(district.name, district.slug);
 
   if (clubs.length === 0) {
     return (
@@ -81,8 +84,8 @@ export default async function DistrictPage({ params }: DistrictPageProps) {
           <section className="rounded-[22px] border border-border bg-white px-5 py-7 shadow-[0_10px_35px_rgba(31,35,48,0.05)] sm:px-8 sm:py-9">
             <span className="inline-flex rounded-full bg-surface-alt px-3 py-1 text-[11px] font-semibold text-muted">Məlumat hazırlanır</span>
             <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-primary">{district.name} · Bakı</p>
-            <h1 className="mt-2 font-display text-2xl font-bold tracking-[-0.035em] text-ink sm:text-3xl">{district.name} rayonunda gaming klubları</h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">Hazırda GameYer-də {district.name} rayonu üçün aktiv və təsdiqlənmiş PC və ya PlayStation klubu yoxdur. Yeni məkanın məlumatı yoxlanılıb aktivləşdirildikdə bu səhifədə avtomatik görünəcək.</p>
+            <h1 className="mt-2 font-display text-2xl font-bold tracking-[-0.035em] text-ink sm:text-3xl">{locationPhrase} gaming klubları</h1>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">Hazırda GameYer-də {district.name} üçün aktiv və təsdiqlənmiş PC və ya PlayStation klubu yoxdur. Yeni məkanın məlumatı yoxlanılıb aktivləşdirildikdə bu səhifədə avtomatik görünəcək.</p>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Bu müddətdə aktiv klub olan digər rayonlara baxa və ya xəritədən yaxınlıqdakı gaming məkanlarını tapa bilərsən.</p>
 
             <div className="mt-6 flex flex-wrap gap-2 border-t border-border/70 pt-5">
@@ -127,8 +130,8 @@ export default async function DistrictPage({ params }: DistrictPageProps) {
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">{district.name} · Bakı</p>
-              <h1 className="mt-2 font-display text-2xl font-bold tracking-[-0.035em] text-ink sm:text-3xl">{district.name} rayonunda gaming klubları</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{district.name} rayonunda aktiv PC və PlayStation məkanlarını bir yerdə müqayisə et. Ünvan, xəritə, iş saatları və təsdiqlənmiş saatlıq qiymətlər klub səhifəsində göstərilir.</p>
+              <h1 className="mt-2 font-display text-2xl font-bold tracking-[-0.035em] text-ink sm:text-3xl">{locationPhrase} gaming klubları</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{locationPhrase} aktiv PC və PlayStation məkanlarını bir yerdə müqayisə et. Ünvan, xəritə, iş saatları və təsdiqlənmiş saatlıq qiymətlər klub səhifəsində göstərilir.</p>
               {(pcMin != null || psMin != null) ? <p className="mt-2 text-sm font-medium text-ink">Bu rayonda mövcud tariflər: {pcMin != null ? `PC ${pcMin} AZN-dən` : null}{pcMin != null && psMin != null ? ' · ' : null}{psMin != null ? `PlayStation ${psMin} AZN-dən` : null}.</p> : null}
             </div>
             <div className="grid grid-cols-3 gap-2 sm:flex">
@@ -153,7 +156,7 @@ export default async function DistrictPage({ params }: DistrictPageProps) {
         </section>
 
         <section className="mt-5 rounded-[22px] border border-border bg-white p-5 sm:p-6">
-          <h2 className="font-display text-lg font-bold text-ink">{district.name} rayonunda gaming klub necə seçilir?</h2>
+          <h2 className="font-display text-lg font-bold text-ink">{locationPhrase} gaming klub necə seçilir?</h2>
           <p className="mt-2 max-w-4xl text-sm leading-6 text-muted">PC klubu seçərkən saatlıq qiymətlə yanaşı kompüter zonasına və iş saatlarına bax. PlayStation üçün isə konsol modeli, standart və VIP tariflərin fərqini yoxla. GameYer-də {district.name} üzrə klubları xəritədə görüb uyğun məkanı müqayisə edə bilərsən.</p>
         </section>
 
