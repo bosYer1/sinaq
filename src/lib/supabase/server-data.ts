@@ -27,7 +27,7 @@ async function oidcPublicDataFetch(input: RequestInfo | URL, init?: RequestInit)
     throw new Error('Trusted public data bridge is unavailable: VERCEL_OIDC_TOKEN is missing.');
   }
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
+  return fetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -41,8 +41,6 @@ async function oidcPublicDataFetch(input: RequestInfo | URL, init?: RequestInit)
     }),
     cache: 'no-store',
   });
-
-  return response;
 }
 
 export function createServerDataClient() {
@@ -51,6 +49,7 @@ export function createServerDataClient() {
   const secret = process.env.SUPABASE_SECRET_KEY?.trim()
     || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   const isProduction = process.env.VERCEL_ENV === 'production';
+  const oidcBridgeEnabled = process.env.GAMEYER_PUBLIC_DATA_OIDC_ENABLED === '1';
 
   if (!SUPABASE_URL) {
     throw new Error('Server data client is unavailable: Supabase URL is missing.');
@@ -67,7 +66,7 @@ export function createServerDataClient() {
       autoRefreshToken: false,
       detectSessionInUrl: false,
     },
-    ...(isProduction && !secret
+    ...(isProduction && !secret && oidcBridgeEnabled
       ? { global: { fetch: oidcPublicDataFetch } }
       : {}),
   });
