@@ -64,7 +64,6 @@ const SEO_INACTIVE_CLUB_TOMBSTONES = new Set([
   'playstation-club-bakixanov-yavar-aliyev',
   'playstation-home-qara-qarayev',
   'playstation-sarayevo',
-  'prime-cyberclub',
   'prospekt-game-club',
   'qarabag-playstation-club-tibb',
   'qardawlar-ps-club',
@@ -149,17 +148,7 @@ export async function proxy(request: NextRequest) {
   const clubSlug = pathname.startsWith('/klub/') ? decodeURIComponent(pathname.slice('/klub/'.length)) : null;
 
   if (clubSlug && SEO_INACTIVE_CLUB_TOMBSTONES.has(clubSlug)) {
-    const { data: activeClub, error: activeClubError } = await supabase
-      .from('clubs')
-      .select('id')
-      .eq('slug', clubSlug)
-      .eq('is_active', true)
-      .maybeSingle();
-
-    // Fail open on a dependency error so a temporary Supabase problem cannot hide a valid club.
-    if (activeClubError) return response;
-    if (!activeClub) return inactiveClubNotFound();
-    return response;
+    return inactiveClubNotFound();
   }
 
   const {
@@ -259,7 +248,6 @@ export const config = {
     '/klub/playstation-club-bakixanov-yavar-aliyev',
     '/klub/playstation-home-qara-qarayev',
     '/klub/playstation-sarayevo',
-    '/klub/prime-cyberclub',
     '/klub/prospekt-game-club',
     '/klub/qarabag-playstation-club-tibb',
     '/klub/qardawlar-ps-club',
