@@ -22,6 +22,8 @@ const checks = [
   [clubPage.includes("minPrice != null ? `${minPrice} AZN-dən` : category"), 'club title keeps a factual price/category fallback'],
   [clubPage.includes("İş saatları, ünvan və xəritəyə GameYer-də bax."), 'club meta description uses a compact factual CTA'],
   [clubPage.includes("name: club.district?.name ? `${club.name} — ${club.district.name}` : club.name"), 'club breadcrumb disambiguates branch context with verified district data'],
+  [clubPage.includes("if (districtSlug === 'sumqayit') return 'Sumqayıt';") && clubPage.includes("if (districtSlug === 'xirdalan') return 'Xırdalan';"), 'club schema must preserve non-Baku localities for Sumqayıt and Xırdalan.'],
+  [clubPage.includes("addressLocality: schemaAddressLocality(club.district?.slug)"), 'club PostalAddress must not hardcode Bakı for every active club.'],
   [!clubPage.includes('qiymətlər ${minPrice} AZN-dən və ünvan'), 'legacy overlong club title pattern is removed'],
   [clubLayout.includes("import { notFound } from 'next/navigation';"), 'club layout can terminate missing/inactive slugs before rendering'],
   [clubLayout.includes('if (!club) notFound();'), 'missing/inactive club slugs are rejected in the parent layout before child streaming'],
