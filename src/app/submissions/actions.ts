@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
+import { createServerDataClient } from '@/lib/supabase/server-data';
 
 const KINDS = new Set(['correction', 'new_club', 'owner_claim']);
 const CONTACT_TYPES = new Set(['instagram', 'phone', 'email']);
@@ -99,7 +100,7 @@ function extensionFor(file: File) {
 
 async function resolvePublicClubId(clubSlug: string) {
   if (!clubSlug) return null;
-  const supabase = await createClient();
+  const supabase = createServerDataClient();
   const { data, error } = await supabase
     .from('clubs')
     .select('id')
@@ -239,11 +240,7 @@ export async function submitClubSubmission(formData: FormData) {
       });
     } else {
       const supabase = await createClient();
-      let clubId: string | null = null;
-      if (clubSlug) {
-        const { data } = await supabase.from('clubs').select('id').eq('slug', clubSlug).eq('is_active', true).maybeSingle();
-        clubId = data?.id ?? null;
-      }
+      const clubId = clubSlug ? await resolvePublicClubId(clubSlug) : null;
 
       const { error } = await supabase.from('club_submissions').insert({
         kind: kind as 'correction' | 'new_club',
