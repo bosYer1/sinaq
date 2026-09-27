@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [card, link, whatsappBookingLink, detail, clubView, pageview, submissionAnalytics, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest] = await Promise.all([
+const [card, link, whatsappBookingLink, tiktokLink, detail, clubView, pageview, submissionAnalytics, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest] = await Promise.all([
   readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedClubLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedWhatsAppBookingLink.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/analytics/TrackedTikTokLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/ClubViewTracker.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/PageViewTracker.tsx', import.meta.url), 'utf8'),
@@ -21,16 +22,24 @@ const [card, link, whatsappBookingLink, detail, clubView, pageview, submissionAn
   readFile(new URL('../supabase/functions/gameyer-analytics-ingest/index.ts', import.meta.url), 'utf8'),
 ]);
 
-const [whatsappConstraintMigration, whatsappRateLimitMigration, recentClubAnalyticsMigration] = await Promise.all([
+const [whatsappConstraintMigration, whatsappRateLimitMigration, recentClubAnalyticsMigration, tiktokParityMigration] = await Promise.all([
   readFile(new URL('../supabase/migrations/20260921152430_add_whatsapp_booking_analytics_event.sql', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/migrations/20260921153431_allow_whatsapp_booking_in_analytics_rate_limit.sql', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/migrations/20260927114500_add_recent_club_click_analytics.sql', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/migrations/20260927132000_add_tiktok_intent_parity.sql', import.meta.url), 'utf8'),
 ]);
 
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(card.includes(token), `ClubCard must keep ${token}`);
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(link.includes(token), `TrackedClubLink must keep ${token}`);
 for (const token of ['trackGaEvent', 'trackPostHogEvent', 'whatsapp_booking_click', 'contact_whatsapp_booking', 'intent_only', "navigator.sendBeacon('/api/analytics/event'", "eventType: 'whatsapp_booking_click'"]) assert.ok(whatsappBookingLink.includes(token), `WhatsApp booking analytics must keep ${token}`);
 assert.ok(!whatsappBookingLink.includes('trackMetaCustomEvent'), 'WhatsApp booking rollout must not touch Meta/SMM tracking');
+for (const token of ['trackGaEvent', 'trackPostHogEvent', 'tiktok_click', "navigator.sendBeacon('/api/analytics/event'", "eventType: 'tiktok_click'"]) assert.ok(tiktokLink.includes(token), `TikTok analytics must keep ${token}`);
+assert.ok(!tiktokLink.includes('trackMetaCustomEvent'), 'TikTok first-party parity must not expand Meta/SMM tracking.');
+assert.ok(eventRoute.includes("'tiktok_click'"), 'First-party analytics route must accept TikTok intent.');
+assert.ok(trustedIngest.includes("'tiktok_click'"), 'Trusted analytics ingest must accept TikTok intent.');
+assert.ok(tiktokParityMigration.includes("'tiktok_click'::text") && tiktokParityMigration.includes('analytics_events_type_valid'), 'TikTok migration must extend the DB event constraint.');
+assert.ok(tiktokParityMigration.includes("'tiktok_click'") && tiktokParityMigration.includes('enforce_analytics_event_rate_limit'), 'TikTok migration must keep the DB abuse backstop aligned.');
+assert.ok(tiktokParityMigration.includes("'recent_club_click'") && tiktokParityMigration.includes("new.event_type <> 'recent_club_click'"), 'TikTok migration must preserve recent-club homepage path semantics.');
 assert.ok(eventRoute.includes("'whatsapp_booking_click'"), 'First-party analytics route must accept WhatsApp reservation intent.');
 assert.ok(whatsappConstraintMigration.includes("'whatsapp_booking_click'") && whatsappConstraintMigration.includes('analytics_events_type_valid'), 'Production analytics constraint migration must allow WhatsApp reservation intent.');
 assert.ok(whatsappRateLimitMigration.includes("'whatsapp_booking_click'") && whatsappRateLimitMigration.includes('enforce_analytics_event_rate_limit'), 'Production analytics trigger migration must allow WhatsApp reservation intent.');
@@ -127,7 +136,7 @@ for (const token of [
 ]) assert.ok(trustedIngest.includes(token), `Trusted ingest must enforce ${token}`);
 assert.ok(trustedIngest.includes("request.headers.get('x-gameyer-vercel-oidc')"), 'Trusted ingest must require the server-only Vercel OIDC token');
 assert.ok(!trustedIngest.includes("Access-Control-Allow-Origin: '*'"), 'Trusted ingest must never become a public CORS analytics endpoint');
-assert.ok(trustedIngest.includes("'whatsapp_booking_click'") && trustedIngest.includes("'recent_club_click'"), 'Trusted analytics ingest must accept both WhatsApp intent and recent-club return events.');
+assert.ok(trustedIngest.includes("'whatsapp_booking_click'") && trustedIngest.includes("'tiktok_click'") && trustedIngest.includes("'recent_club_click'"), 'Trusted analytics ingest must accept WhatsApp, TikTok and recent-club events.');
 assert.ok(trustedIngest.includes("const isRecentClubClick = row.event_type === 'recent_club_click';") && trustedIngest.includes("(isRecentClubClick ? row.path === '/' : row.path === `/klub/${row.club_slug}`)"), 'Trusted ingest must preserve homepage source semantics only for recent-club clicks while keeping CTA events pinned to club paths.');
 
 for (const policy of [
@@ -140,7 +149,7 @@ assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, visi
 assert.ok(serverOnlyAnalyticsMigration.includes('REVOKE INSERT (session_id, path, event_type, club_slug)'), 'Server-only migration must revoke public analytics-event insert columns');
 assert.ok(serverOnlyAnalyticsMigration.includes('FROM anon, authenticated'), 'Server-only migration must revoke both public PostgREST roles');
 
-const combined = [card, link, whatsappBookingLink, detail, clubView, pageview, submissionAnalytics, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest].join('\n');
+const combined = [card, link, whatsappBookingLink, tiktokLink, detail, clubView, pageview, submissionAnalytics, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest].join('\n');
 for (const forbidden of ['phone_number', 'user_location', 'coordinates:', 'email:']) assert.ok(!combined.includes(forbidden), `analytics code must not deliberately send ${forbidden}`);
 
 console.log('Analytics parity regression contract: PASS');
