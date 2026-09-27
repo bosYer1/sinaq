@@ -49,14 +49,6 @@ jobs:
             | sort > /tmp/repo-migrations.txt
           diff -u /tmp/expected-migrations.txt /tmp/repo-migrations.txt
 
-      - name: Mint trusted public-data OIDC token
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const token = await core.getIDToken('https://gameyer.az/public-data-ci');
-            core.setSecret(token);
-            core.exportVariable('GAMEYER_CI_OIDC_TOKEN', token);
-
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
@@ -74,6 +66,14 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Mint trusted public-data OIDC token
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('https://gameyer.az/public-data-ci');
+            core.setSecret(token);
+            core.exportVariable('GAMEYER_CI_OIDC_TOKEN', token);
 
       - name: Start production server
         run: |
