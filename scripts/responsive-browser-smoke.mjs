@@ -110,8 +110,18 @@ async function waitForPage(client, selector = 'body') {
 }
 
 async function navigate(client, path) {
-  await client.send('Page.navigate', { url: `${BASE_URL}${path}` });
-  await waitForPage(client);
+  let lastError;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await client.send('Page.navigate', { url: `${BASE_URL}${path}` });
+    try {
+      await waitForPage(client);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) await sleep(350);
+    }
+  }
+  throw new Error(`Navigation did not become ready after one retry: ${path}. ${lastError instanceof Error ? lastError.message : String(lastError)}`);
 }
 
 async function setViewport(client, width, height, mobile) {
