@@ -7,7 +7,7 @@ import { SeoClubList } from '@/components/seo/SeoClubList';
 
 export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs();
-  const title = 'Mənə yaxın PC, PlayStation və internet klubları — Bakı xəritəsi';
+  const title = 'Mənə yaxın PC, internet və PlayStation klubları';
   const description = 'Mənə yaxın PC, internet və PlayStation klublarını Bakı xəritəsində tap. Ünvan, rayon, qiymət və iş saatlarını GameYer-də müqayisə et.';
 
   return {
