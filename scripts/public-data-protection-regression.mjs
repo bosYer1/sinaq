@@ -43,6 +43,8 @@ assert.match(clubDetail, /profileImageUrl=\{club\.profile_image_url\}/, 'club de
 
 assert.match(clubUpdates, /createServerDataClient/, 'club updates must be loaded server-side');
 assert.doesNotMatch(clubUpdates, /SUPABASE_PUBLISHABLE_KEY/, 'club updates query must not use the browser publishable key');
+assert.match(clubUpdates, /const publicClubs = await getClubs\(\)/, 'club updates must derive visibility from the canonical public club query');
+assert.match(clubUpdates, /\.in\('club_id', publicClubIds\)/, 'server-secret club update reads must stay restricted to public club ids');
 assert.match(sitemap, /createServerDataClient/, 'sitemap inventory reads must be server-only');
 assert.match(health, /createServerDataClient/, 'health inventory reads must be server-only');
 assert.match(submissions, /createServerDataClient/, 'public submission club lookup must use the server data client');
