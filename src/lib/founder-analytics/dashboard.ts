@@ -95,6 +95,7 @@ function unavailableSupabase(detail: string): SupabaseMetrics {
       browserVisitors: 0,
       phoneClicks: 0,
       instagramClicks: 0,
+      tiktokClicks: 0,
       mapsClicks: 0,
       whatsappBookingClicks: 0,
     },
