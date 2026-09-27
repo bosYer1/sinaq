@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { createClient } from '@/lib/supabase/server';
+import { createServerDataClient } from '@/lib/supabase/server-data';
 import { getSiteUrl } from '@/lib/site-url';
 
 interface SitemapClub {
@@ -48,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/mexfilik`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
-  const supabase = await createClient();
+  const supabase = createServerDataClient();
   const { data, error } = await supabase
     .from('clubs')
     .select(`
