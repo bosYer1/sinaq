@@ -186,6 +186,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/haqqimizda" className="hover:text-ink">Haqqımızda</Link>
             <Link href="/melumat-metodologiyasi" className="hover:text-ink">Metodologiya</Link>
             <Link href="/mexfilik" className="hover:text-ink">Məxfilik</Link>
+            <Link href="/istifade-qaydalari" className="hover:text-ink">İstifadə qaydaları</Link>
             <a href="https://www.instagram.com/gameyer.az/" target="_blank" rel="noopener noreferrer" className="ml-auto hover:text-ink">Instagram</a>
             <a href="https://www.tiktok.com/@gameyer.az" target="_blank" rel="noopener noreferrer" className="hover:text-ink">TikTok</a>
           </div>

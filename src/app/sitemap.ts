@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { createClient } from '@/lib/supabase/server';
+import { createServerDataClient } from '@/lib/supabase/server-data';
 import { getSiteUrl } from '@/lib/site-url';
 
 interface SitemapClub {
@@ -7,6 +7,8 @@ interface SitemapClub {
   address: string;
   slug: string;
   updated_at: string | null;
+  instagram_url: string | null;
+  tiktok_url: string | null;
   district: { slug: string } | null;
   type_assignments: Array<{ club_type: { slug: string } | null }>;
   pricing: Array<{ price_from: number; unit: string; club_type: { slug: string } | null }>;
@@ -46,9 +48,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/melumat-metodologiyasi`, changeFrequency: 'monthly', priority: 0.58 },
     { url: `${baseUrl}/elaqe`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${baseUrl}/mexfilik`, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${baseUrl}/istifade-qaydalari`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
-  const supabase = await createClient();
+  const supabase = createServerDataClient();
   const { data, error } = await supabase
     .from('clubs')
     .select(`
@@ -56,6 +59,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       address,
       slug,
       updated_at,
+      instagram_url,
+      tiktok_url,
       district:districts ( slug ),
       type_assignments:club_type_assignments (
         club_type:club_types ( slug )
@@ -77,7 +82,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .not('longitude', 'is', null);
   if (error) return entries;
 
-  const clubs = ((data ?? []) as unknown as SitemapClub[]).filter(hasConfirmedPublicType);
+  const clubs = ((data ?? []) as unknown as SitemapClub[]).filter((club) =>
+    hasConfirmedPublicType(club) && Boolean(club.instagram_url?.trim() || club.tiktok_url?.trim())
+  );
   const activeDistricts = new Set<string>();
   const comboCounts = new Map<string, number>();
   const districtLatest = new Map<string, string | null>();
