@@ -49,7 +49,10 @@ assert.match(serverData, /SUPABASE_SECRET_KEY/, 'server data client may use a di
 assert.match(serverData, /SUPABASE_SERVICE_ROLE_KEY/, 'server data client must retain service-role fallback compatibility');
 assert.match(serverData, /VERCEL_OIDC_TOKEN/, 'production public reads must support Vercel OIDC without a long-lived Supabase secret');
 assert.match(serverData, /gameyer-public-data-proxy/, 'production public reads must traverse the trusted Supabase Edge proxy');
-assert.match(serverData, /global:\s*\{\s*fetch:\s*oidcPublicDataFetch\s*\}/, 'production publishable client must replace direct fetch with the OIDC proxy fetch');
+assert.match(serverData, /import \{ headers \} from 'next\/headers';/, 'runtime trusted reads must use the request-scoped Vercel OIDC header');
+assert.match(serverData, /headers\(\)\)\.get\('x-vercel-oidc-token'\)/, 'runtime trusted reads must consume x-vercel-oidc-token');
+assert.match(serverData, /global:\s*\{\s*fetch:\s*trustedProxyFetch\(oidcToken\)\s*\}/, 'production publishable client must replace direct fetch with the trusted OIDC proxy');
+assert.doesNotMatch(serverData, /GAMEYER_PUBLIC_DATA_OIDC_ENABLED/, 'trusted production reads must not depend on a manually forgotten rollout flag');
 
 assert.doesNotMatch(clubLogo, /supabase\/client/, 'public ClubLogo must not import the browser Supabase client');
 assert.doesNotMatch(clubLogo, /\.from\(['"]clubs['"]\)/, 'public ClubLogo must not read clubs directly from the browser');
@@ -58,7 +61,9 @@ assert.match(clubDetail, /profileImageUrl=\{club\.profile_image_url\}/, 'club de
 assert.match(clubUpdates, /createServerDataClient/, 'club updates must be loaded server-side');
 assert.doesNotMatch(clubUpdates, /SUPABASE_PUBLISHABLE_KEY/, 'club updates query must not use the browser publishable key');
 assert.match(clubUpdates, /const publicClubs = await getClubs\(\)/, 'club updates must derive visibility from the canonical public club query');
-assert.match(clubUpdates, /\.in\('club_id', publicClubIds\)/, 'server-secret club update reads must stay restricted to public club ids');
+assert.match(clubUpdates, /\.in\('club_id', publicClubIds\)/, 'trusted club update reads must stay restricted to public club ids');
+assert.doesNotMatch(clubs, /unstable_cache/, 'public club inventory must not persist empty results across OIDC request boundaries');
+assert.doesNotMatch(clubUpdates, /unstable_cache/, 'club updates must not persist empty results across OIDC request boundaries');
 assert.match(sitemap, /createServerDataClient/, 'sitemap inventory reads must be server-only');
 assert.match(health, /createServerDataClient/, 'health inventory reads must be server-only');
 assert.match(submissions, /getClubBySlug/, 'public submission club lookup must reuse the canonical public club visibility query');
