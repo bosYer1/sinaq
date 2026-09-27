@@ -24,45 +24,17 @@ const ALLOWED_PATHS = new Set([
   '/rest/v1/club_updates',
 ]);
 
-let vercelJwksPromise: Promise<ReturnType<typeof createRemoteJWKSet>> | null = null;
-let githubJwksPromise: Promise<ReturnType<typeof createRemoteJWKSet>> | null = null;
-
-async function remoteJwks(
-  issuer: string,
-  current: Promise<ReturnType<typeof createRemoteJWKSet>> | null,
-  assign: (value: Promise<ReturnType<typeof createRemoteJWKSet>>) => void,
-) {
-  if (current) return current;
-
-  const promise = (async () => {
-    const response = await fetch(`${issuer}/.well-known/openid-configuration`, {
-      headers: { accept: 'application/json' },
-    });
-    if (!response.ok) throw new Error(`OIDC discovery failed: ${response.status}`);
-    const discovery = await response.json() as { jwks_uri?: unknown };
-    if (typeof discovery.jwks_uri !== 'string') throw new Error('OIDC discovery missing jwks_uri');
-    return createRemoteJWKSet(new URL(discovery.jwks_uri));
-  })();
-
-  assign(promise);
-  return promise;
-}
-
-async function vercelJwks() {
-  return remoteJwks(VERCEL_ISSUER, vercelJwksPromise, (value) => {
-    vercelJwksPromise = value;
-  });
-}
-
-async function githubJwks() {
-  return remoteJwks(GITHUB_ISSUER, githubJwksPromise, (value) => {
-    githubJwksPromise = value;
-  });
-}
+const vercelJwks = createRemoteJWKSet(
+  new URL(`${VERCEL_ISSUER}/.well-known/jwks`),
+  { timeoutDuration: 3000, cooldownDuration: 300000 },
+);
+const githubJwks = createRemoteJWKSet(
+  new URL(`${GITHUB_ISSUER}/.well-known/jwks`),
+  { timeoutDuration: 3000, cooldownDuration: 300000 },
+);
 
 async function verifyVercelProductionToken(token: string) {
-  const jwks = await vercelJwks();
-  await jwtVerify(token, jwks, {
+  await jwtVerify(token, vercelJwks, {
     issuer: VERCEL_ISSUER,
     audience: VERCEL_AUDIENCE,
     subject: VERCEL_SUBJECT,
@@ -70,8 +42,7 @@ async function verifyVercelProductionToken(token: string) {
 }
 
 async function verifyGitHubActionsToken(token: string) {
-  const jwks = await githubJwks();
-  const { payload } = await jwtVerify(token, jwks, {
+  const { payload } = await jwtVerify(token, githubJwks, {
     issuer: GITHUB_ISSUER,
     audience: GITHUB_AUDIENCE,
   });
