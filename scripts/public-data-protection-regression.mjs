@@ -17,6 +17,7 @@ const [
   rootLayout,
   menuPage,
   publicDataProxy,
+  publicDataCanary,
 ] = await Promise.all([
   readFile(new URL('../src/lib/supabase/public-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/supabase/server-data.ts', import.meta.url), 'utf8'),
@@ -33,6 +34,7 @@ const [
   readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/menyu/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/functions/gameyer-public-data-proxy/index.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/api/security/public-data-canary/route.ts', import.meta.url), 'utf8'),
 ]);
 
 assert.match(publicServer, /import 'server-only';/, 'public data client wrapper must stay server-only');
@@ -100,10 +102,20 @@ assert.doesNotMatch(publicDataProxy, /Access-Control-Allow-Origin:\s*['"]\*['"]/
 assert.match(publicDataProxy, /target\.origin !== expectedOrigin/, 'proxy must reject off-project upstream origins');
 assert.match(publicDataProxy, /!ALLOWED_PATHS\.has\(target\.pathname\)/, 'proxy must reject non-public-inventory REST paths');
 
-assert.match(terms, /avtomatlaşdırılmış məlumat çıxarılması/i, 'usage terms must disclose automated extraction restrictions');
+assert.match(publicDataCanary, /requestVercelOidcToken\(request\)/, 'OIDC canary must use the request-scoped Vercel token at runtime');
+assert.match(publicDataCanary, /gameyer-public-data-proxy/, 'OIDC canary must test the trusted public-data bridge');
+assert.match(publicDataCanary, /public_clubs: publicCount/, 'OIDC canary must expose only the verified count, not raw club inventory');
+assert.match(publicDataCanary, /x-robots-tag': 'noindex, nofollow'/, 'OIDC canary must stay out of search results');
+assert.match(publicDataCanary, /VERCEL_ENV !== 'production'/, 'OIDC canary must not impersonate production trust in preview');
+
+assert.match(terms, /İstifadəçi razılaşması və istifadə qaydaları/i, 'usage terms must identify themselves as the user agreement');
+assert.match(terms, /Qanunla məcburi qaydada icazə verilən hallar istisna olmaqla/i, 'usage terms must preserve mandatory legal exceptions');
+assert.match(terms, /avtomatlaşdırılmış çıxarış/i, 'usage terms must disclose automated extraction restrictions');
 assert.match(terms, /robot, scraper, crawler, headless browser/i, 'usage terms must explicitly cover common automated scraping methods');
 assert.match(terms, /texniki mühafizə tədbirlərinin dolanılması/i, 'usage terms must prohibit bypassing technical safeguards');
-assert.match(terms, /Axtarış sistemlərinin qanuni və normal indeksləmə fəaliyyəti/i, 'usage terms must preserve legitimate search-engine indexing');
+assert.match(terms, /Axtarış sistemlərinin normal indeksləmə fəaliyyəti/i, 'usage terms must preserve legitimate search-engine indexing');
+assert.match(terms, /ayrıca ictimai faktların/i, 'usage terms must not overclaim ownership of underlying public facts');
+assert.match(terms, /qanunla məhdudlaşdırılması mümkün olmayan istehlakçı/i, 'usage terms must preserve mandatory consumer rights');
 assert.match(rootLayout, /href="\/istifade-qaydalari"/, 'desktop footer must expose the usage terms');
 assert.match(menuPage, /href: '\/istifade-qaydalari'/, 'mobile menu must expose the usage terms');
 
