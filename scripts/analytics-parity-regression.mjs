@@ -37,6 +37,8 @@ assert.ok(whatsappRateLimitMigration.includes("'whatsapp_booking_click'") && wha
 assert.ok(eventRoute.includes("'recent_club_click'"), 'First-party analytics route must accept recent-club return clicks.');
 assert.ok(recentClubAnalyticsMigration.includes("'recent_club_click'::text") && recentClubAnalyticsMigration.includes('analytics_events_type_valid'), 'Recent-club analytics migration must extend the event constraint.');
 assert.ok(recentClubAnalyticsMigration.includes("'recent_club_click')") && recentClubAnalyticsMigration.includes('enforce_analytics_event_rate_limit'), 'Recent-club analytics migration must keep the DB rate-limit allow-list aligned.');
+assert.ok(eventRoute.includes("const isRecentClubClick = eventType === 'recent_club_click';") && eventRoute.includes("(isRecentClubClick ? path !== '/' : path !== `/klub/${clubSlug}`)"), 'Recent-club first-party events must be accepted only from the homepage while existing CTA events remain pinned to club paths.');
+assert.ok(recentClubAnalyticsMigration.includes("new.event_type = 'recent_club_click' and new.path <> '/'") && recentClubAnalyticsMigration.includes("new.event_type <> 'recent_club_click'"), 'DB analytics backstop must preserve source-path semantics for recent clicks without weakening existing CTA path validation.');
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(clubView.includes(token), `ClubViewTracker must keep ${token}`);
 assert.ok(card.includes('club_card_click'), 'club_card_click must stay wired');
 for (const property of ['source_surface', 'explore_view', 'search_active', 'club_type_filter', 'district_filter', 'price_max_filter']) assert.ok(card.includes(property), `Club discovery events must keep ${property} context`);
