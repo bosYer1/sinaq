@@ -129,6 +129,12 @@ export default function TermsPage() {
             </Link>{' '}
             verilir.
           </p>
+          <p className="mt-2">
+            Müraciət göndərərkən ayrıca razılıq qutusunu işarələməklə həmin anda qüvvədə olan bu İstifadəçi razılaşması
+            və Məxfilik siyasəti ilə tanış olduğunuzu, təqdim etdiyiniz məlumatı paylaşmağa hüququnuz olduğunu təsdiq edirsiniz.
+            Klub adından məlumat təqdim etdiyinizi bildirirsinizsə, bunu etməyə səlahiyyətinizin olduğunu da təsdiq edirsiniz.
+            Qəbul edilən razılaşmanın versiyası müraciətlə birlikdə audit izi kimi saxlanıla bilər.
+          </p>
         </section>
 
         <section>
