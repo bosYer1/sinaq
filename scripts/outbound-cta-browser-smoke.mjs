@@ -259,6 +259,50 @@ try {
   assert(mapsCapture.properties?.cta_surface === 'header_maps', 'Maps header CTA lost surface attribution', mapsCapture);
   assert(mapsCapture.path === clubHref, 'Maps regression click unexpectedly navigated away from the club detail page', mapsCapture);
 
+  await navigate('/klub/sigma-gamer-arena');
+  await wait(`Boolean(document.querySelector('h1'))`, 'TikTok-only club detail heading');
+  const tiktokOnlyDetail = await evaluate(`(() => {
+    const article = document.querySelector('article');
+    const links = Array.from(article?.querySelectorAll('a') ?? []);
+    const tiktok = links.find((anchor) => (anchor.textContent || '').trim() === 'TikTok');
+    const instagram = links.find((anchor) => (anchor.textContent || '').trim() === 'Instagram');
+    return {
+      path: location.pathname,
+      tiktokHref: tiktok?.href || null,
+      instagramHref: instagram?.href || null,
+    };
+  })()`);
+  assert(tiktokOnlyDetail.path === '/klub/sigma-gamer-arena', 'TikTok-only regression did not land on Sigma Gamer Arena', tiktokOnlyDetail);
+  assert(Boolean(tiktokOnlyDetail.tiktokHref), 'TikTok-only club must expose a TikTok CTA', tiktokOnlyDetail);
+  assert(tiktokOnlyDetail.instagramHref === null, 'TikTok-only club must not fabricate an Instagram CTA', tiktokOnlyDetail);
+
+  await evaluate(`(() => {
+    window.__gameyerCapturedEvents = window.__gameyerCapturedEvents || [];
+    window.posthog = {
+      __loaded: true,
+      capture(event, properties) { window.__gameyerCapturedEvents.push({ event, properties }); },
+    };
+    const anchor = Array.from(document.querySelector('article')?.querySelectorAll('a') ?? []).find((item) => (item.textContent || '').trim() === 'TikTok');
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('href', 'about:blank');
+    anchor.click();
+    return true;
+  })()`);
+  await wait(`window.__gameyerCapturedEvents.some((entry) => entry.event === 'tiktok_click')`, 'tiktok_click PostHog capture');
+
+  const tiktokCapture = await evaluate(`(() => {
+    const capture = window.__gameyerCapturedEvents.find((entry) => entry.event === 'tiktok_click');
+    return {
+      path: location.pathname,
+      event: capture?.event || null,
+      properties: capture?.properties || null,
+    };
+  })()`);
+  assert(tiktokCapture.event === 'tiktok_click', 'TikTok CTA did not emit tiktok_click', tiktokCapture);
+  assert(tiktokCapture.properties?.club_slug === 'sigma-gamer-arena', 'TikTok CTA lost club slug attribution', tiktokCapture);
+  assert(tiktokCapture.properties?.cta_surface === 'contact_tiktok', 'TikTok CTA lost contact surface attribution', tiktokCapture);
+  assert(tiktokCapture.path === '/klub/sigma-gamer-arena', 'TikTok regression click unexpectedly navigated away from the club detail page', tiktokCapture);
+
 
   await navigate('/klub/fight-club-playstation');
   await wait(`Boolean(document.querySelector('h1'))`, 'fixed-line club detail heading');

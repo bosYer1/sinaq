@@ -269,7 +269,7 @@ async function assertHomepage(client, viewport) {
     assert(Number.isFinite(Number(listView.previewZoom)), `${viewport.name}: preview shared viewport zoom is missing`, listView);
     assert(listView.previewAttribution, `${viewport.name}: preview OpenStreetMap attribution is missing`, listView);
     assert(listView.activationVisible, `${viewport.name}: map activation control is missing`, listView);
-    assert(listView.activationText === 'Xəritəyə toxunun', `${viewport.name}: visible map activation hint regressed`, listView);
+    assert(listView.activationText === 'Xəritəni aktiv et', `${viewport.name}: visible map activation hint regressed`, listView);
     assert(listView.mapActive === 'false', `${viewport.name}: list map is interactive before activation`, listView);
     assert(listView.clubsVisible, `${viewport.name}: club list heading is missing`, listView);
     assert(listView.mapContainerHeight >= 335 && listView.mapContainerHeight <= 410, `${viewport.name}: enlarged list-view map height regressed`, listView);

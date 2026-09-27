@@ -182,9 +182,9 @@ export interface Database {
         ];
       };
       commercial_performance_snapshots: {
-        Row: { id: string; placement_id: string; club_id: string; snapshot_type: 'baseline' | 'day7' | 'final'; period_start: string; period_end: string; profile_views: number; view_sessions: number; phone_clicks: number; instagram_clicks: number; maps_clicks: number; intent_sessions: number; created_at: string };
-        Insert: { id?: string; placement_id: string; club_id: string; snapshot_type: 'baseline' | 'day7' | 'final'; period_start: string; period_end: string; profile_views?: number; view_sessions?: number; phone_clicks?: number; instagram_clicks?: number; maps_clicks?: number; intent_sessions?: number; created_at?: string };
-        Update: { id?: string; placement_id?: string; club_id?: string; snapshot_type?: 'baseline' | 'day7' | 'final'; period_start?: string; period_end?: string; profile_views?: number; view_sessions?: number; phone_clicks?: number; instagram_clicks?: number; maps_clicks?: number; intent_sessions?: number; created_at?: string };
+        Row: { id: string; placement_id: string; club_id: string; snapshot_type: 'baseline' | 'day7' | 'final'; period_start: string; period_end: string; profile_views: number; view_sessions: number; phone_clicks: number; instagram_clicks: number; maps_clicks: number; whatsapp_clicks: number; tiktok_clicks: number; intent_sessions: number; created_at: string };
+        Insert: { id?: string; placement_id: string; club_id: string; snapshot_type: 'baseline' | 'day7' | 'final'; period_start: string; period_end: string; profile_views?: number; view_sessions?: number; phone_clicks?: number; instagram_clicks?: number; maps_clicks?: number; whatsapp_clicks?: number; tiktok_clicks?: number; intent_sessions?: number; created_at?: string };
+        Update: { id?: string; placement_id?: string; club_id?: string; snapshot_type?: 'baseline' | 'day7' | 'final'; period_start?: string; period_end?: string; profile_views?: number; view_sessions?: number; phone_clicks?: number; instagram_clicks?: number; maps_clicks?: number; whatsapp_clicks?: number; tiktok_clicks?: number; intent_sessions?: number; created_at?: string };
         Relationships: [
           { foreignKeyName: 'commercial_performance_snapshots_placement_id_fkey'; columns: ['placement_id']; isOneToOne: false; referencedRelation: 'commercial_placements'; referencedColumns: ['id'] },
           { foreignKeyName: 'commercial_performance_snapshots_club_id_fkey'; columns: ['club_id']; isOneToOne: false; referencedRelation: 'clubs'; referencedColumns: ['id'] }
@@ -207,11 +207,11 @@ export interface Database {
         Returns: string;
       };
       activate_commercial_premium_atomic: {
-        Args: { p_contract_id: string; p_baseline_start: string; p_baseline_end: string; p_profile_views: number; p_view_sessions: number; p_phone_clicks: number; p_instagram_clicks: number; p_maps_clicks: number; p_intent_sessions: number };
+        Args: { p_contract_id: string; p_baseline_start: string; p_baseline_end: string; p_profile_views: number; p_view_sessions: number; p_phone_clicks: number; p_instagram_clicks: number; p_maps_clicks: number; p_whatsapp_clicks: number; p_tiktok_clicks: number; p_intent_sessions: number };
         Returns: string;
       };
       finalize_commercial_performance_atomic: {
-        Args: { p_placement_id: string; p_period_start: string; p_period_end: string; p_profile_views: number; p_view_sessions: number; p_phone_clicks: number; p_instagram_clicks: number; p_maps_clicks: number; p_intent_sessions: number };
+        Args: { p_placement_id: string; p_period_start: string; p_period_end: string; p_profile_views: number; p_view_sessions: number; p_phone_clicks: number; p_instagram_clicks: number; p_maps_clicks: number; p_whatsapp_clicks: number; p_tiktok_clicks: number; p_intent_sessions: number };
         Returns: string;
       };
       get_admin_analytics: { Args: Record<PropertyKey, never>; Returns: Json };

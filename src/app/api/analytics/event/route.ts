@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 const MAX_BODY_BYTES = 1024;
 const SESSION_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const EVENT_TYPES = new Set(['maps_click', 'phone_click', 'instagram_click', 'club_correction_click', 'whatsapp_booking_click']);
+const EVENT_TYPES = new Set(['maps_click', 'phone_click', 'instagram_click', 'tiktok_click', 'club_correction_click', 'whatsapp_booking_click', 'recent_club_click']);
 
 type AdminRpcClient = {
   rpc: (fn: 'is_admin') => PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
@@ -39,12 +39,13 @@ export async function POST(request: Request) {
   }
 
   const { sessionId, path, eventType, clubSlug } = parsed.data as Record<string, unknown>;
+  const isRecentClubClick = eventType === 'recent_club_click';
   if (
     typeof sessionId !== 'string' || !SESSION_RE.test(sessionId) ||
-    typeof path !== 'string' || path.length < 7 || path.length > 300 || !path.startsWith('/klub/') ||
+    typeof path !== 'string' || path.length < 1 || path.length > 300 ||
     typeof eventType !== 'string' || !EVENT_TYPES.has(eventType) ||
     typeof clubSlug !== 'string' || clubSlug.length > 120 || !SLUG_RE.test(clubSlug) ||
-    path !== `/klub/${clubSlug}`
+    (isRecentClubClick ? path !== '/' : path !== `/klub/${clubSlug}`)
   ) return NextResponse.json({ ok: false }, { status: 400 });
 
   const supabase = await createClient();
