@@ -93,7 +93,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: 'Bakıda gaming klubları — PC və PlayStation | GameYer', template: '%s | GameYer' },
-  description: 'Bakıda gaming klub, PC klub, kompüter klubu, internet klub və PlayStation klub tap. Ünvan, rayon və xəritəyə görə müqayisə et; qiymət və iş saatları məlum olduqda klub profilində göstərilir.',
+  description: 'Bakıda gaming, PC, internet və PlayStation klublarını ünvan, rayon və xəritəyə görə tap. Qiymət və iş saatlarını klub profilində müqayisə et.',
   applicationName: 'GameYer',
   manifest: '/manifest.webmanifest',
   icons: {
