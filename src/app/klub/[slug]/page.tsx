@@ -44,6 +44,12 @@ function schemaBusinessType(typeSlugs: string[]) {
   return 'LocalBusiness';
 }
 
+function schemaAddressLocality(districtSlug?: string | null) {
+  if (districtSlug === 'sumqayit') return 'Sumqayıt';
+  if (districtSlug === 'xirdalan') return 'Xırdalan';
+  return 'Bakı';
+}
+
 function isOpen24HoursEveryDay(openingHours: Array<{ day_of_week: number; open_time: string | null; close_time: string | null; is_closed: boolean }>) {
   const hoursByDay = new Map(openingHours.map((hours) => [hours.day_of_week, hours]));
   return Array.from({ length: 7 }, (_, day) => day).every((day) => {
@@ -168,7 +174,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
         telephone: club.phone || undefined,
         priceRange,
         currenciesAccepted: 'AZN',
-        address: { '@type': 'PostalAddress', streetAddress: club.address, addressLocality: 'Bakı', addressRegion: club.district?.name || 'Bakı', addressCountry: 'AZ' },
+        address: { '@type': 'PostalAddress', streetAddress: club.address, addressLocality: schemaAddressLocality(club.district?.slug), addressRegion: club.district?.name || undefined, addressCountry: 'AZ' },
         geo: club.latitude != null && club.longitude != null ? { '@type': 'GeoCoordinates', latitude: club.latitude, longitude: club.longitude } : undefined,
         hasMap,
         openingHoursSpecification: openingHoursSpecification.length > 0 ? openingHoursSpecification : undefined,
