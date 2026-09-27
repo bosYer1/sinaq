@@ -19,28 +19,52 @@ function proxyHeaders(headersInit?: HeadersInit) {
   return result;
 }
 
+async function requestScopedVercelOidcToken() {
+  const environmentToken = process.env.VERCEL_OIDC_TOKEN?.trim();
+  if (environmentToken) return environmentToken;
+
+  try {
+    const { headers } = await import('next/headers');
+    const requestHeaders = await headers();
+    return requestHeaders.get('x-vercel-oidc-token')?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 async function oidcPublicDataFetch(input: RequestInfo | URL, init?: RequestInit) {
   const directRequest = new Request(input, init);
-  const oidcToken = process.env.VERCEL_OIDC_TOKEN?.trim();
+  const oidcToken = await requestScopedVercelOidcToken();
 
+  // Canary safety: while anon SELECT is still available, lack of request-scoped
+  // OIDC must not take the public site down. After the trusted route is proven
+  // in production, the database privilege cutover is the final enforcement layer.
   if (!oidcToken) {
-    throw new Error('Trusted public data bridge is unavailable: VERCEL_OIDC_TOKEN is missing.');
+    return fetch(directRequest);
   }
 
-  return fetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-gameyer-vercel-oidc': oidcToken,
-      ...(SUPABASE_PUBLISHABLE_KEY ? { apikey: SUPABASE_PUBLISHABLE_KEY } : {}),
-    },
-    body: JSON.stringify({
-      url: directRequest.url,
-      method: directRequest.method,
-      headers: proxyHeaders(directRequest.headers),
-    }),
-    cache: 'no-store',
-  });
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-gameyer-vercel-oidc': oidcToken,
+        ...(SUPABASE_PUBLISHABLE_KEY ? { apikey: SUPABASE_PUBLISHABLE_KEY } : {}),
+      },
+      body: JSON.stringify({
+        url: directRequest.url,
+        method: directRequest.method,
+        headers: proxyHeaders(directRequest.headers),
+      }),
+      cache: 'no-store',
+    });
+
+    if (response.ok) return response;
+  } catch {
+    // Fall through to the existing public RLS path during the canary release.
+  }
+
+  return fetch(directRequest);
 }
 
 export function createServerDataClient() {
@@ -49,7 +73,6 @@ export function createServerDataClient() {
   const secret = process.env.SUPABASE_SECRET_KEY?.trim()
     || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   const isProduction = process.env.VERCEL_ENV === 'production';
-  const oidcBridgeEnabled = process.env.GAMEYER_PUBLIC_DATA_OIDC_ENABLED === '1';
 
   if (!SUPABASE_URL) {
     throw new Error('Server data client is unavailable: Supabase URL is missing.');
@@ -66,7 +89,7 @@ export function createServerDataClient() {
       autoRefreshToken: false,
       detectSessionInUrl: false,
     },
-    ...(isProduction && !secret && oidcBridgeEnabled
+    ...(isProduction && !secret
       ? { global: { fetch: oidcPublicDataFetch } }
       : {}),
   });

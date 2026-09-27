@@ -41,7 +41,9 @@ assert.doesNotMatch(publicServer, /SUPABASE_PUBLISHABLE_KEY/, 'public server que
 
 assert.match(serverData, /SUPABASE_SECRET_KEY/, 'server data client may use a direct Supabase secret when explicitly configured');
 assert.match(serverData, /SUPABASE_SERVICE_ROLE_KEY/, 'server data client must retain service-role fallback compatibility');
-assert.match(serverData, /VERCEL_OIDC_TOKEN/, 'production public reads must support Vercel OIDC without a long-lived Supabase secret');
+assert.match(serverData, /VERCEL_OIDC_TOKEN/, 'production public reads must support environment-scoped Vercel OIDC when available');
+assert.match(serverData, /x-vercel-oidc-token/, 'production public reads must support request-scoped Vercel OIDC');
+assert.match(serverData, /return fetch\(directRequest\)/, 'OIDC canary must retain a direct RLS fallback until the production bridge is proven');
 assert.match(serverData, /gameyer-public-data-proxy/, 'production public reads must traverse the trusted Supabase Edge proxy');
 assert.match(serverData, /global:\s*\{\s*fetch:\s*oidcPublicDataFetch\s*\}/, 'production publishable client must replace direct fetch with the OIDC proxy fetch');
 
@@ -100,10 +102,12 @@ assert.doesNotMatch(publicDataProxy, /Access-Control-Allow-Origin:\s*['"]\*['"]/
 assert.match(publicDataProxy, /target\.origin !== expectedOrigin/, 'proxy must reject off-project upstream origins');
 assert.match(publicDataProxy, /!ALLOWED_PATHS\.has\(target\.pathname\)/, 'proxy must reject non-public-inventory REST paths');
 
-assert.match(terms, /avtomatlaşdırılmış məlumat çıxarılması/i, 'usage terms must disclose automated extraction restrictions');
+assert.match(terms, /avtomatlaşdırılmış çıxarış və kütləvi təkrar istifadə/i, 'usage terms must disclose automated extraction and reuse restrictions');
 assert.match(terms, /robot, scraper, crawler, headless browser/i, 'usage terms must explicitly cover common automated scraping methods');
 assert.match(terms, /texniki mühafizə tədbirlərinin dolanılması/i, 'usage terms must prohibit bypassing technical safeguards');
-assert.match(terms, /Axtarış sistemlərinin qanuni və normal indeksləmə fəaliyyəti/i, 'usage terms must preserve legitimate search-engine indexing');
+assert.match(terms, /məcburi qanunvericilik/i, 'usage terms must preserve mandatory legal rights and exceptions');
+assert.match(terms, /ayrı-ayrı ictimai faktların/i, 'usage terms must not overclaim ownership over public facts or third-party materials');
+assert.match(terms, /qanuni axtarış sistemi indekslənməsi/i, 'usage terms must preserve legitimate search-engine indexing');
 assert.match(rootLayout, /href="\/istifade-qaydalari"/, 'desktop footer must expose the usage terms');
 assert.match(menuPage, /href: '\/istifade-qaydalari'/, 'mobile menu must expose the usage terms');
 

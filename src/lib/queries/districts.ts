@@ -1,8 +1,8 @@
-import { unstable_cache } from 'next/cache';
+import { cache } from 'react';
 import { createPublicClient } from '@/lib/supabase/public-server';
 import type { District, ClubType } from '@/types/database';
 
-const getCachedDistricts = unstable_cache(
+const getCachedDistricts = cache(
   async (): Promise<District[]> => {
     const supabase = createPublicClient();
     const { data, error } = await supabase
@@ -18,8 +18,6 @@ const getCachedDistricts = unstable_cache(
 
     return data ?? [];
   },
-  ['gameyer-public-districts-v1'],
-  { revalidate: 3600, tags: ['public-reference-data'] },
 );
 
 /** Bütün rayonları əlifba sırası ilə qaytarır. */
@@ -27,7 +25,7 @@ export async function getDistricts(): Promise<District[]> {
   return getCachedDistricts();
 }
 
-const getCachedClubTypes = unstable_cache(
+const getCachedClubTypes = cache(
   async (): Promise<ClubType[]> => {
     const supabase = createPublicClient();
     const { data, error } = await supabase
@@ -43,8 +41,6 @@ const getCachedClubTypes = unstable_cache(
 
     return data ?? [];
   },
-  ['gameyer-public-club-types-v1'],
-  { revalidate: 3600, tags: ['public-reference-data'] },
 );
 
 /** Klub tiplərini qaytarır (PC, PlayStation). */

@@ -1,4 +1,4 @@
-import { unstable_cache } from 'next/cache';
+import { cache } from 'react';
 import { createServerDataClient } from '@/lib/supabase/server-data';
 import { getClubs } from '@/lib/queries/clubs';
 
@@ -108,10 +108,8 @@ async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]
   });
 }
 
-const getCachedActiveClubUpdates = unstable_cache(
+const getCachedActiveClubUpdates = cache(
   async (clubId?: string) => queryActiveClubUpdates(clubId),
-  ['gameyer-active-club-updates-v4'],
-  { revalidate: 60, tags: ['club-updates'] },
 );
 
 export async function getActiveClubUpdates(): Promise<ClubUpdateItem[]> {
