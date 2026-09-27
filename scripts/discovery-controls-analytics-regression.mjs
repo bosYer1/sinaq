@@ -21,6 +21,7 @@ assert.ok(mapPreview.includes('href={`/klub/${encodeURIComponent(slug)}`}'), 'Mo
 assert.ok(mapPreview.includes("source_surface: 'map_preview_marker'") && mapPreview.includes("explore_view: 'map'"), 'Mobile map preview club opens must remain attributable.');
 assert.ok(mapPreview.includes("trackGaEvent('club_card_click'") && mapPreview.includes("trackPostHogEvent('club_card_click'"), 'Map preview club opens must keep GA4 and PostHog analytics parity.');
 assert.ok(mapPreview.includes('rememberClubEntryOrigin(slug)'), 'Map preview direct club opens must preserve back-navigation origin.');
+assert.ok(mapPreview.includes('flex h-11 w-11') && mapPreview.includes('items-end justify-center'), 'Mobile map preview markers must preserve a 44px tap target without enlarging the pin visual.');
 assert.ok(explore.includes('bottom-4 left-1/2 z-[600]') && !explore.includes('absolute inset-0 z-[600]'), 'Map activation control must not cover clickable preview markers.');
 
 for (const event of ['location_sort_clicked', 'map_location_clicked', 'home_club_jump_clicked']) {
