@@ -54,9 +54,13 @@ assert.match(serverData, /GITHUB_OIDC_AUDIENCE/, 'runtime GitHub OIDC minting mu
 assert.match(serverData, /x-gameyer-github-oidc/, 'CI must use a distinct GitHub OIDC proxy credential');
 assert.match(serverData, /response\.status === 401/, 'CI must detect expired OIDC tokens');
 assert.match(serverData, /requestScopedGitHubOidcToken\(true\)/, 'CI must force one OIDC refresh after an authenticated 401');
+assert.match(serverData, /\[502, 503, 504\]\.includes\(response\.status\)/, 'trusted public-data reads must retry one transient proxy failure');
+assert.match(serverData, /Trusted public data OIDC credential is unavailable during proxy retry/, 'transient retry must still fail closed when no trusted credential exists');
 assert.match(serverData, /\[502, 503, 504\]\.includes\(response\.status\)/, 'trusted proxy reads must recognize transient Edge runtime failures');
 assert.match(serverData, /attempt < 2/, 'trusted proxy reads may retry a transient Edge runtime failure only once');
-assert.match(serverData, /return fetch\(directRequest\)/, 'production canary must retain a direct RLS fallback until final cutover');
+assert.match(serverData, /return response;/, 'trusted OIDC responses must be returned without anonymous fallback');
+assert.doesNotMatch(serverData, /return fetch\(directRequest\)/, 'production trusted public-data reads must not fall back to anonymous REST after cutover readiness');
+assert.match(serverData, /Trusted public data OIDC credential is unavailable/, 'missing trusted OIDC must fail closed instead of silently exposing direct reads');
 assert.match(serverData, /gameyer-public-data-proxy/, 'trusted public reads must traverse the Supabase Edge proxy');
 assert.match(serverData, /global:\s*\{\s*fetch:\s*baseFetch\s*\}/, 'trusted publishable client must use the guarded OIDC-aware fetch path');
 
