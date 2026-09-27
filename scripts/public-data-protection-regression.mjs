@@ -17,6 +17,9 @@ const [
   rootLayout,
   menuPage,
   publicDataProxy,
+  publicDataCanary,
+  buildOidcCanary,
+  packageJson,
 ] = await Promise.all([
   readFile(new URL('../src/lib/supabase/public-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/supabase/server-data.ts', import.meta.url), 'utf8'),
@@ -33,6 +36,9 @@ const [
   readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/menyu/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/functions/gameyer-public-data-proxy/index.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/api/security/public-data-canary/route.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../scripts/vercel-oidc-build-canary.mjs', import.meta.url), 'utf8'),
+  readFile(new URL('../package.json', import.meta.url), 'utf8'),
 ]);
 
 assert.match(publicServer, /import 'server-only';/, 'public data client wrapper must stay server-only');
@@ -101,6 +107,15 @@ for (const literal of [
 assert.doesNotMatch(publicDataProxy, /Access-Control-Allow-Origin:\s*['"]\*['"]/, 'trusted public data proxy must not expose wildcard CORS');
 assert.match(publicDataProxy, /target\.origin !== expectedOrigin/, 'proxy must reject off-project upstream origins');
 assert.match(publicDataProxy, /!ALLOWED_PATHS\.has\(target\.pathname\)/, 'proxy must reject non-public-inventory REST paths');
+
+assert.match(publicDataCanary, /requestVercelOidcToken\(request\)/, 'runtime canary must use the request-scoped Vercel OIDC token');
+assert.match(publicDataCanary, /gameyer-public-data-proxy/, 'runtime canary must test the trusted public-data bridge');
+assert.match(publicDataCanary, /public_clubs: publicCount/, 'runtime canary must expose only the verified count, not raw club inventory');
+assert.match(publicDataCanary, /x-robots-tag': 'noindex, nofollow'/, 'runtime canary must stay out of search results');
+assert.match(buildOidcCanary, /VERCEL_OIDC_TOKEN/, 'production build canary must require Vercel OIDC');
+assert.match(buildOidcCanary, /gameyer-public-data-proxy/, 'production build canary must exercise the trusted bridge');
+assert.match(buildOidcCanary, /rows\.length < 1/, 'production build canary must fail closed on empty trusted data');
+assert.match(packageJson, /node scripts\/vercel-oidc-build-canary\.mjs && npm test && next build/, 'production build must run OIDC canary before Next build');
 
 assert.match(terms, /avtomatlaşdırılmış çıxarış və kütləvi təkrar istifadə/i, 'usage terms must disclose automated extraction and reuse restrictions');
 assert.match(terms, /robot, scraper, crawler, headless browser/i, 'usage terms must explicitly cover common automated scraping methods');
