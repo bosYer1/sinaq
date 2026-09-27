@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm test && next build",
+    "build": "node scripts/vercel-oidc-build-canary.mjs && npm test && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
