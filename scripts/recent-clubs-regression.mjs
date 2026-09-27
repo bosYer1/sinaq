@@ -27,6 +27,9 @@ assert(home.indexOf('<RecentlyViewedClubs') < home.indexOf('{activeUpdates.lengt
 assert(recentUi.includes('clubsBySlug.get(entry.slug)'), 'Recent history must ignore clubs that are no longer in current public inventory.');
 assert(recentUi.includes("trackPostHogEvent('recent_clubs_impression'"), 'Recent-club exposure must be measurable.');
 assert(recentUi.includes("trackPostHogEvent('recent_club_click'"), 'Recent-club return clicks must be measurable.');
+assert(recentUi.includes("eventType: 'recent_club_click'"), 'Recent-club return clicks must also reach first-party analytics.');
+assert(recentUi.includes("navigator.sendBeacon('/api/analytics/event'"), 'Recent-club first-party measurement must survive navigation.');
+assert(recentUi.includes("path: `/klub/${clubSlug}`"), 'Recent-club first-party events must preserve the target club identity under the existing analytics path contract.');
 assert(recentUi.includes("surface: 'home_recently_viewed'"), 'Recent-club analytics must use a stable surface identifier.');
 assert(recentUi.includes('rememberClubEntryOrigin(club.slug)'), 'Recent-club navigation must preserve the existing return-to-list behavior.');
 assert(recentUi.includes('prefetch={false}'), 'Recent-club links must avoid adding mobile viewport prefetch work.');
