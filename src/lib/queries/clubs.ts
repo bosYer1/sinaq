@@ -1,4 +1,4 @@
-import { unstable_cache } from 'next/cache';
+import { cache } from 'react';
 import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { isPremiumActive } from '@/lib/utils';
@@ -200,14 +200,24 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
   return clubs;
 }
 
-const getCachedClubs = unstable_cache(
-  async (filters: ClubFilters) => queryClubs(filters),
-  ['gameyer-public-clubs-v10'],
-  { revalidate: 60, tags: ['public-clubs'] },
+const getCachedClubs = cache(
+  async (
+    district?: string,
+    metro?: string,
+    type?: string,
+    priceMax?: number,
+    q?: string,
+  ) => queryClubs({ district, metro, type, priceMax, q }),
 );
 
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
-  return getCachedClubs(filters);
+  return getCachedClubs(
+    filters.district,
+    filters.metro,
+    filters.type,
+    filters.priceMax,
+    filters.q,
+  );
 }
 
 type PublicClubCountRow = {
@@ -265,14 +275,12 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
   }).length;
 }
 
-const getCachedPublicClubCount = unstable_cache(
-  async (filters: Pick<ClubFilters, 'district' | 'type'>) => queryPublicClubCount(filters),
-  ['gameyer-public-club-count-v2'],
-  { revalidate: 60, tags: ['public-clubs'] },
+const getCachedPublicClubCount = cache(
+  async (district?: string, type?: string) => queryPublicClubCount({ district, type }),
 );
 
 export async function getPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
-  return getCachedPublicClubCount(filters);
+  return getCachedPublicClubCount(filters.district, filters.type);
 }
 
 async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> {
@@ -298,11 +306,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
   return isPublicClubForWeb(club) ? club : null;
 }
 
-const getCachedClubBySlug = unstable_cache(
-  async (slug: string) => queryClubBySlug(slug),
-  ['gameyer-public-club-by-slug-v5'],
-  { revalidate: 60, tags: ['public-clubs'] },
-);
+const getCachedClubBySlug = cache(async (slug: string) => queryClubBySlug(slug));
 
 export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
   return getCachedClubBySlug(slug);
