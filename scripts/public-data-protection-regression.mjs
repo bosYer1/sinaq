@@ -17,6 +17,8 @@ const [
   rootLayout,
   menuPage,
   publicDataProxy,
+  ciWorkflow,
+  responsiveWorkflow,
 ] = await Promise.all([
   readFile(new URL('../src/lib/supabase/public-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/supabase/server-data.ts', import.meta.url), 'utf8'),
@@ -33,6 +35,8 @@ const [
   readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/menyu/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/functions/gameyer-public-data-proxy/index.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8'),
+  readFile(new URL('../.github/workflows/responsive.yml', import.meta.url), 'utf8'),
 ]);
 
 assert.match(publicServer, /import 'server-only';/, 'public data client wrapper must stay server-only');
@@ -43,9 +47,12 @@ assert.match(serverData, /SUPABASE_SECRET_KEY/, 'server data client may use a di
 assert.match(serverData, /SUPABASE_SERVICE_ROLE_KEY/, 'server data client must retain service-role fallback compatibility');
 assert.match(serverData, /VERCEL_OIDC_TOKEN/, 'production public reads must support environment-scoped Vercel OIDC when available');
 assert.match(serverData, /x-vercel-oidc-token/, 'production public reads must support request-scoped Vercel OIDC');
-assert.match(serverData, /return fetch\(directRequest\)/, 'OIDC canary must retain a direct RLS fallback until the production bridge is proven');
-assert.match(serverData, /gameyer-public-data-proxy/, 'production public reads must traverse the trusted Supabase Edge proxy');
-assert.match(serverData, /global:\s*\{\s*fetch:\s*oidcPublicDataFetch\s*\}/, 'production publishable client must replace direct fetch with the OIDC proxy fetch');
+assert.match(serverData, /GAMEYER_CI_OIDC_TOKEN/, 'CI public reads must support GitHub Actions OIDC');
+assert.match(serverData, /x-gameyer-github-oidc/, 'CI must use a distinct GitHub OIDC proxy credential');
+assert.match(serverData, /if \(response\.ok \|\| ciToken\) return response;/, 'CI OIDC must not silently fall back to anonymous public reads');
+assert.match(serverData, /return fetch\(directRequest\)/, 'production canary must retain a direct RLS fallback until final cutover');
+assert.match(serverData, /gameyer-public-data-proxy/, 'trusted public reads must traverse the Supabase Edge proxy');
+assert.match(serverData, /global:\s*\{\s*fetch:\s*trustedPublicDataFetch\s*\}/, 'trusted publishable client must replace direct fetch with the OIDC proxy fetch');
 
 assert.doesNotMatch(clubLogo, /supabase\/client/, 'public ClubLogo must not import the browser Supabase client');
 assert.doesNotMatch(clubLogo, /\.from\(['"]clubs['"]\)/, 'public ClubLogo must not read clubs directly from the browser');
@@ -91,6 +98,12 @@ for (const literal of [
   "VERCEL_AUDIENCE = 'https://vercel.com/gameyer'",
   "VERCEL_SUBJECT = 'owner:gameyer:project:gameyer:environment:production'",
   "request.headers.get('x-gameyer-vercel-oidc')",
+  "request.headers.get('x-gameyer-github-oidc')",
+  "GITHUB_ISSUER = 'https://token.actions.githubusercontent.com'",
+  "GITHUB_AUDIENCE = 'https://gameyer.az/public-data-ci'",
+  "GITHUB_REPOSITORY = 'bosYer1/sinaq'",
+  "GITHUB_REPOSITORY_ID = '1332798813'",
+  "GITHUB_TRUSTED_ACTOR_ID = '315903980'",
   "method !== 'GET' && method !== 'HEAD'",
   'ALLOWED_PATHS',
   'SUPABASE_SECRET_KEYS',
@@ -101,6 +114,15 @@ for (const literal of [
 assert.doesNotMatch(publicDataProxy, /Access-Control-Allow-Origin:\s*['"]\*['"]/, 'trusted public data proxy must not expose wildcard CORS');
 assert.match(publicDataProxy, /target\.origin !== expectedOrigin/, 'proxy must reject off-project upstream origins');
 assert.match(publicDataProxy, /!ALLOWED_PATHS\.has\(target\.pathname\)/, 'proxy must reject non-public-inventory REST paths');
+assert.match(publicDataProxy, /Boolean\(vercelToken\) === Boolean\(githubToken\)/, 'proxy must require exactly one trusted OIDC provider');
+assert.match(publicDataProxy, /eventName === 'push' && ref !== 'refs\/heads\/main'/, 'GitHub push trust must be limited to main');
+assert.match(publicDataProxy, /eventName === 'pull_request' && !\/\^refs\\\/pull\\\/\\d\+\\\/merge\$\//, 'GitHub pull-request trust must require the merge ref contract');
+
+for (const workflow of [ciWorkflow, responsiveWorkflow]) {
+  assert.match(workflow, /id-token:\s*write/, 'trusted DB workflows must request GitHub OIDC permission');
+  assert.match(workflow, /core\.getIDToken\('https:\/\/gameyer\.az\/public-data-ci'\)/, 'trusted DB workflows must mint the locked audience token');
+  assert.match(workflow, /core\.exportVariable\('GAMEYER_CI_OIDC_TOKEN', token\)/, 'trusted DB workflows must expose the masked OIDC token only to later job steps');
+}
 
 assert.match(terms, /avtomatlaşdırılmış çıxarış və kütləvi təkrar istifadə/i, 'usage terms must disclose automated extraction and reuse restrictions');
 assert.match(terms, /robot, scraper, crawler, headless browser/i, 'usage terms must explicitly cover common automated scraping methods');
