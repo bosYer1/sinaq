@@ -50,7 +50,8 @@ assert.match(serverData, /x-vercel-oidc-token/, 'production public reads must su
 assert.match(serverData, /GAMEYER_CI_OIDC_TOKEN/, 'CI public reads must support GitHub Actions OIDC');
 assert.match(serverData, /x-gameyer-github-oidc/, 'CI must use a distinct GitHub OIDC proxy credential');
 assert.match(serverData, /if \(response\.ok \|\| ciToken\) return response;/, 'CI OIDC must not silently fall back to anonymous public reads');
-assert.match(serverData, /return fetch\(directRequest\)/, 'production canary must retain a direct RLS fallback until final cutover');
+assert.doesNotMatch(serverData, /return fetch\(directRequest\)/, 'production trusted public-data reads must not fall back to anonymous REST after cutover readiness');
+assert.match(serverData, /Trusted public data OIDC credential is unavailable/, 'missing trusted OIDC must fail closed instead of silently exposing direct reads');
 assert.match(serverData, /gameyer-public-data-proxy/, 'trusted public reads must traverse the Supabase Edge proxy');
 assert.match(serverData, /global:\s*\{\s*fetch:\s*trustedPublicDataFetch\s*\}/, 'trusted publishable client must replace direct fetch with the OIDC proxy fetch');
 
