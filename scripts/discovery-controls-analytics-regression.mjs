@@ -37,6 +37,7 @@ assert.ok(home.includes('id="club-search"'), 'Homepage search anchor must remain
 assert.ok(home.includes('id="club-discovery"'), 'Homepage club discovery anchor must remain stable');
 assert.ok(home.includes('ClubUpdatesFeed'), 'Homepage offers feed must remain present while filter controls stay discovery-focused.');
 assert.ok(home.includes('data-home-club-jump="true"'), 'Homepage must keep the direct club discovery jump measurable.');
+assert.ok(home.includes('href="#club-results"'), 'Homepage club jump must land on the actual result list rather than stopping above the mobile map preview.');
 assert.ok(home.includes('{clubs.length} klub ↓'), 'Homepage discovery jump must reflect the active result count.');
 assert.ok(clubMap.includes("trackPostHogEvent('club_card_click'"), 'Map popup club opens must stay measurable');
 assert.ok(clubMap.includes("discovery_surface: 'map_popup'"), 'Map popup clicks must preserve their discovery surface');
