@@ -39,12 +39,13 @@ export async function POST(request: Request) {
   }
 
   const { sessionId, path, eventType, clubSlug } = parsed.data as Record<string, unknown>;
+  const isRecentClubClick = eventType === 'recent_club_click';
   if (
     typeof sessionId !== 'string' || !SESSION_RE.test(sessionId) ||
-    typeof path !== 'string' || path.length < 7 || path.length > 300 || !path.startsWith('/klub/') ||
+    typeof path !== 'string' || path.length < 1 || path.length > 300 ||
     typeof eventType !== 'string' || !EVENT_TYPES.has(eventType) ||
     typeof clubSlug !== 'string' || clubSlug.length > 120 || !SLUG_RE.test(clubSlug) ||
-    path !== `/klub/${clubSlug}`
+    (isRecentClubClick ? path !== '/' : path !== `/klub/${clubSlug}`)
   ) return NextResponse.json({ ok: false }, { status: 400 });
 
   const supabase = await createClient();
