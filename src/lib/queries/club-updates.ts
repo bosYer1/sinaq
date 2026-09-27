@@ -1,6 +1,5 @@
 import { unstable_cache } from 'next/cache';
-import { createClient } from '@supabase/supabase-js';
-import { assertSupabaseConfig, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/supabase/public-config';
+import { createServerDataClient } from '@/lib/supabase/server-data';
 
 export type ClubUpdateKind = 'tournament' | 'offer';
 
@@ -26,14 +25,7 @@ export interface ClubUpdateItem {
 }
 
 function createClubUpdatesClient() {
-  assertSupabaseConfig();
-  return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  });
+  return createServerDataClient();
 }
 
 function firstRelatedRow<T>(value: T | T[] | null | undefined): T | null {
