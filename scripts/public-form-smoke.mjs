@@ -14,5 +14,5 @@ async function check(path, markers) {
   for (const marker of markers) assert(html.includes(marker), `${path} is missing required form marker`, { marker });
 }
 
-await check('/elaqe', ['name="contact_value"', 'name="website"']);
+await check('/elaqe', ['name="contact_value"', 'name="website"', 'name="terms_accepted"', '/istifade-qaydalari', '/mexfilik']);
 console.log('Public form availability smoke: PASS');
