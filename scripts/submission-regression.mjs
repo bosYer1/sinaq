@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [actionSource, formSource, contactSource, clubListSource] = await Promise.all([
+const [actionSource, formSource, contactSource, clubListSource, nextConfigSource] = await Promise.all([
   readFile(new URL('../src/app/submissions/actions.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/submissions/SubmissionForm.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/elaqe/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/clubs/ClubList.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../next.config.js', import.meta.url), 'utf8'),
 ]);
 
 assert.match(actionSource, /const KINDS = new Set\(\['correction', 'new_club', 'owner_claim'\]\)/, 'all public submission kinds must remain accepted');
@@ -40,5 +41,6 @@ assert.match(clubListSource, /Klub siyahıda yoxdur\? Təklif et/, 'search no-re
 assert.doesNotMatch(clubListSource, /\/elaqe\?club=/, 'search no-result proposal must not label free-text search as an existing club identity.');
 
 assert.doesNotMatch(contactSource, /\/klub-sahibi/, 'contact page must not link to the removed club-owner flow.');
+assert.match(nextConfigSource, /source:\s*['"]\\/klub-sahibi['"][\s\S]*?destination:\s*['"]\\/elaqe#new-club['"][\s\S]*?permanent:\s*true/, 'legacy /klub-sahibi must remain a permanent redirect to the canonical /elaqe owner-submission section.');
 
 console.log('Submission regression contract: PASS');
