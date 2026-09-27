@@ -65,7 +65,7 @@ assert.ok(actions.includes("stage: 'contacted'") && actions.includes('first_cont
 assert.ok(actions.includes("select('session_id,user_agent')"), 'Commercial snapshots must read user-agent evidence for traffic-quality filtering.');
 assert.ok(actions.includes('SYNTHETIC_USER_AGENT_RE') && actions.includes('rawViewRows.filter'), 'Commercial snapshots must exclude synthetic/bot-like profile traffic.');
 assert.ok(actions.includes('normalViewSessionIds.has(row.session_id)'), 'Commercial intent must be limited to normal profile-visitor IDs so synthetic CTA tests cannot inflate results.');
-assert.ok(actions.includes("['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click']"), 'Commercial intent collection must include WhatsApp reservation intent.');
+assert.ok(actions.includes("['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click', 'tiktok_click']"), 'Commercial intent collection must include WhatsApp and TikTok intent.');
 assert.ok(actions.includes("row.event_type === 'whatsapp_booking_click'") && actions.includes('whatsapp_clicks:'), 'Commercial metrics must expose an explicit WhatsApp click breakdown.');
 assert.equal((actions.match(/p_whatsapp_clicks:/g) || []).length, 2, 'Baseline and final commercial RPC calls must both pass WhatsApp clicks.');
 assert.ok(page.includes('WhatsApp {snap.whatsapp_clicks}'), 'Commercial snapshot UI must show WhatsApp intent separately.');
