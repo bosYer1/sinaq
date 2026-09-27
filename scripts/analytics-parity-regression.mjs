@@ -116,6 +116,8 @@ for (const token of [
 ]) assert.ok(trustedIngest.includes(token), `Trusted ingest must enforce ${token}`);
 assert.ok(trustedIngest.includes("request.headers.get('x-gameyer-vercel-oidc')"), 'Trusted ingest must require the server-only Vercel OIDC token');
 assert.ok(!trustedIngest.includes("Access-Control-Allow-Origin: '*'"), 'Trusted ingest must never become a public CORS analytics endpoint');
+assert.ok(trustedIngest.includes("'whatsapp_booking_click'") && trustedIngest.includes("'recent_club_click'"), 'Trusted analytics ingest must accept both WhatsApp intent and recent-club return events.');
+assert.ok(trustedIngest.includes("const isRecentClubClick = row.event_type === 'recent_club_click';") && trustedIngest.includes("(isRecentClubClick ? row.path === '/' : row.path === `/klub/${row.club_slug}`)"), 'Trusted ingest must preserve homepage source semantics only for recent-club clicks while keeping CTA events pinned to club paths.');
 
 for (const policy of [
   'anon_insert_page_views',
