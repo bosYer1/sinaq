@@ -96,20 +96,32 @@ async function proxyPublicDataFetch(
   trustedHeader: 'x-gameyer-github-oidc' | 'x-gameyer-vercel-oidc',
   trustedToken: string,
 ) {
-  return fetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      [trustedHeader]: trustedToken,
-      ...(SUPABASE_PUBLISHABLE_KEY ? { apikey: SUPABASE_PUBLISHABLE_KEY } : {}),
-    },
-    body: JSON.stringify({
-      url: directRequest.url,
-      method: directRequest.method,
-      headers: proxyHeaders(directRequest.headers),
-    }),
-    cache: 'no-store',
+  const body = JSON.stringify({
+    url: directRequest.url,
+    method: directRequest.method,
+    headers: proxyHeaders(directRequest.headers),
   });
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/gameyer-public-data-proxy`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        [trustedHeader]: trustedToken,
+        ...(SUPABASE_PUBLISHABLE_KEY ? { apikey: SUPABASE_PUBLISHABLE_KEY } : {}),
+      },
+      body,
+      cache: 'no-store',
+    });
+
+    if (![502, 503, 504].includes(response.status) || attempt === 1) {
+      return response;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+
+  throw new Error('Trusted public data proxy retry loop exited unexpectedly.');
 }
 
 async function trustedPublicDataFetch(input: RequestInfo | URL, init?: RequestInit) {
