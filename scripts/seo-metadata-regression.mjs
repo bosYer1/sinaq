@@ -6,6 +6,8 @@ const districtPage = fs.readFileSync('src/app/rayon/[slug]/page.tsx', 'utf8');
 const rootLayout = fs.readFileSync('src/app/layout.tsx', 'utf8');
 const manifest = fs.readFileSync('src/app/manifest.ts', 'utf8');
 const nearbyPage = fs.readFileSync('src/app/yaxinliqda-gaming-klublari/page.tsx', 'utf8');
+const pcLanding = fs.readFileSync('src/app/bakida-pc-klublari/page.tsx', 'utf8');
+const twentyFourHourLanding = fs.readFileSync('src/app/bakida-24-saat-gaming-klublari/page.tsx', 'utf8');
 const twentyEightMayPage = fs.readFileSync('src/app/28-may-gaming-klublari/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
@@ -33,6 +35,8 @@ const checks = [
   [Buffer.compare(rootFavicon, brandedFavicon) === 0, 'root favicon is byte-identical to the locked GameYer favicon asset'],
   [manifest.includes("src: '/favicon.jpeg'"), 'PWA manifest points at the crawler-friendly root favicon'],
   [nearbyPage.includes("const title = 'Yaxınlıqdakı PC və PlayStation klubları — Bakı xəritəsi';"), 'nearby landing keeps stable PC + PlayStation intent in the title'],
+  [pcLanding.includes('href="#pc-clubs"') && pcLanding.includes('id="pc-clubs"') && pcLanding.includes('scroll-mt-24'), 'PC landing primary CTA must jump directly to the club list.'],
+  [twentyFourHourLanding.includes('href="#night-clubs"') && twentyFourHourLanding.includes('id="night-clubs"') && twentyFourHourLanding.includes('24 saat klublara bax ↓'), '24-hour landing primary CTA must jump directly to matching club results.'],
   [nextConfig.includes("source: '/favicon.ico'") && nextConfig.includes("destination: '/gameyer-favicon.jpeg'"), 'favicon.ico resolves to the locked GameYer favicon asset'],
   [indexNowWorkflow.includes('Wait for Vercel deployment') && indexNowWorkflow.includes('node scripts/indexnow-submit.mjs'), 'IndexNow workflow waits for production before notifying search engines'],
   [twentyEightMayPage.includes("getClubs({ q: '28 May' })") && twentyEightMayPage.includes("canonical: '/28-may-gaming-klublari'"), '28 May landing is data-driven and canonicalized'],
