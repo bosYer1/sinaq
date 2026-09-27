@@ -262,6 +262,7 @@ export type SupabaseMetrics = {
     browserVisitors: number;
     phoneClicks: number;
     instagramClicks: number;
+    tiktokClicks: number;
     mapsClicks: number;
     whatsappBookingClicks: number;
   };

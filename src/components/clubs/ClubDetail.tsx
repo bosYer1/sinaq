@@ -65,7 +65,7 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
       ) : (
         <div className={cn('mb-6 flex min-h-[250px] items-center justify-center overflow-hidden rounded-card border border-border bg-gradient-to-br via-surface to-surface-alt px-5 py-7 sm:aspect-[16/7] sm:min-h-0 sm:px-6 sm:py-6', fallbackTint)}>
           <div className="w-full max-w-xl text-center">
-            <ClubLogo slug={club.slug} name={club.name} className="mx-auto h-16 w-16 rounded-2xl border border-border text-3xl shadow-card sm:h-20 sm:w-20 sm:text-4xl" priority />
+            <ClubLogo slug={club.slug} name={club.name} profileImageUrl={club.profile_image_url} className="mx-auto h-16 w-16 rounded-2xl border border-border text-3xl shadow-card sm:h-20 sm:w-20 sm:text-4xl" priority />
             <p className="mt-4 break-words font-display text-lg font-semibold leading-snug text-ink sm:text-xl">{club.name}</p>
             <span className="mt-2 inline-flex max-w-full items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary sm:text-xs">{fallbackType}</span>
             <p className="mx-auto mt-3 max-w-md text-sm leading-5 text-muted">Real klub şəkilləri əlavə ediləndə burada görünəcək.</p>
@@ -76,7 +76,7 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
       <div className="border-b border-border pb-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <ClubLogo slug={club.slug} name={club.name} className="h-11 w-11 rounded-xl border border-border text-xl shadow-sm sm:h-12 sm:w-12 sm:text-2xl" />
+            <ClubLogo slug={club.slug} name={club.name} profileImageUrl={club.profile_image_url} className="h-11 w-11 rounded-xl border border-border text-xl shadow-sm sm:h-12 sm:w-12 sm:text-2xl" />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">{club.name}</h1>

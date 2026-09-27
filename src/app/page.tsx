@@ -117,14 +117,14 @@ export default async function HomePage({ searchParams }: PageProps) {
                 id="home-title"
                 className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-ink sm:text-3xl"
               >
-                Gaming klubunu tap
+                Bakıda gaming klubunu tap
               </h1>
               <p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">
                 Axtar, filtr et, xəritədə bax və sənə uyğun klubu seç.
               </p>
             </div>
             <a
-              href="#club-discovery"
+              href="#club-results"
               data-home-club-jump="true"
               className="inline-flex h-9 shrink-0 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-bold text-primary no-underline transition active:scale-[0.98] sm:h-10 sm:px-4 sm:text-sm"
             >

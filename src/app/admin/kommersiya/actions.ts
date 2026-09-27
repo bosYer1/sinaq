@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/admin/requireAdmin';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MANUAL_SALES_STAGES = new Set(['targeted','contacted','replied','offered','lost']);
-const INTENT_EVENTS = ['phone_click', 'instagram_click', 'maps_click'] as const;
+const INTENT_EVENTS = ['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click', 'tiktok_click'] as const;
 const SYNTHETIC_USER_AGENT_RE = /(bot|crawler|spider|headless|playwright|puppeteer|lighthouse)/i;
 
 function text(formData: FormData, key: string) {
@@ -105,6 +105,8 @@ async function collectFirstPartyMetrics(
     phone_clicks: intentRows.filter((row) => row.event_type === 'phone_click').length,
     instagram_clicks: intentRows.filter((row) => row.event_type === 'instagram_click').length,
     maps_clicks: intentRows.filter((row) => row.event_type === 'maps_click').length,
+    whatsapp_clicks: intentRows.filter((row) => row.event_type === 'whatsapp_booking_click').length,
+    tiktok_clicks: intentRows.filter((row) => row.event_type === 'tiktok_click').length,
     intent_sessions: intentSessions.size,
   };
 }
@@ -334,6 +336,8 @@ export async function activateCommercialPremium(formData: FormData) {
     p_phone_clicks: baselineMetrics.phone_clicks,
     p_instagram_clicks: baselineMetrics.instagram_clicks,
     p_maps_clicks: baselineMetrics.maps_clicks,
+    p_whatsapp_clicks: baselineMetrics.whatsapp_clicks,
+    p_tiktok_clicks: baselineMetrics.tiktok_clicks,
     p_intent_sessions: baselineMetrics.intent_sessions,
   });
   if (error) throw new Error(error.message);
@@ -398,6 +402,8 @@ export async function captureCommercialPerformance(formData: FormData) {
       p_phone_clicks: metrics.phone_clicks,
       p_instagram_clicks: metrics.instagram_clicks,
       p_maps_clicks: metrics.maps_clicks,
+      p_whatsapp_clicks: metrics.whatsapp_clicks,
+      p_tiktok_clicks: metrics.tiktok_clicks,
       p_intent_sessions: metrics.intent_sessions,
     });
     if (error) throw new Error(error.message);

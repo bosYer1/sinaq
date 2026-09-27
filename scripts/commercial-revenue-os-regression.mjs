@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [candidate, page, actions, layout] = await Promise.all([
+const [candidate, whatsappParityMigration, tiktokParityMigration, page, actions, layout, databaseTypes] = await Promise.all([
   readFile(new URL('../docs/monetization/revenue-migration-candidate.sql', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/migrations/20260927103500_add_whatsapp_commercial_snapshot_parity.sql', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/migrations/20260927132000_add_tiktok_intent_parity.sql', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/admin/kommersiya/page.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/admin/kommersiya/actions.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/app/admin/layout.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/types/database.ts', import.meta.url), 'utf8'),
 ]);
 
 for (const table of ['commercial_opportunities','commercial_performance_snapshots']) {
@@ -62,5 +65,28 @@ assert.ok(actions.includes("stage: 'contacted'") && actions.includes('first_cont
 assert.ok(actions.includes("select('session_id,user_agent')"), 'Commercial snapshots must read user-agent evidence for traffic-quality filtering.');
 assert.ok(actions.includes('SYNTHETIC_USER_AGENT_RE') && actions.includes('rawViewRows.filter'), 'Commercial snapshots must exclude synthetic/bot-like profile traffic.');
 assert.ok(actions.includes('normalViewSessionIds.has(row.session_id)'), 'Commercial intent must be limited to normal profile-visitor IDs so synthetic CTA tests cannot inflate results.');
+assert.ok(actions.includes("['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click', 'tiktok_click']"), 'Commercial intent collection must include WhatsApp and TikTok intent.');
+assert.ok(actions.includes("row.event_type === 'whatsapp_booking_click'") && actions.includes('whatsapp_clicks:'), 'Commercial metrics must expose an explicit WhatsApp click breakdown.');
+assert.equal((actions.match(/p_whatsapp_clicks:/g) || []).length, 2, 'Baseline and final commercial RPC calls must both pass WhatsApp clicks.');
+assert.ok(page.includes('WhatsApp {snap.whatsapp_clicks}'), 'Commercial snapshot UI must show WhatsApp intent separately.');
+assert.ok(databaseTypes.includes('whatsapp_clicks: number') && databaseTypes.includes('p_whatsapp_clicks: number'), 'Database TypeScript contract must include WhatsApp snapshot/RPC fields.');
+assert.ok(whatsappParityMigration.includes('add column if not exists whatsapp_clicks integer not null default 0'), 'WhatsApp parity migration must add a non-negative snapshot column.');
+assert.ok(whatsappParityMigration.includes('check (whatsapp_clicks >= 0)'), 'WhatsApp snapshot column must reject negative metrics.');
+assert.equal((whatsappParityMigration.match(/p_whatsapp_clicks integer/g) || []).length, 2, 'Both commercial lifecycle RPCs must accept WhatsApp clicks.');
+assert.equal((whatsappParityMigration.match(/whatsapp_clicks, intent_sessions/g) || []).length, 2, 'Baseline and final snapshot inserts must persist WhatsApp clicks.');
+assert.ok(whatsappParityMigration.includes('drop function if exists public.activate_commercial_premium_atomic') && whatsappParityMigration.includes('drop function if exists public.finalize_commercial_performance_atomic'), 'Migration must retire pre-WhatsApp RPC signatures before installing the new contract.');
+assert.equal((whatsappParityMigration.match(/security invoker/g) || []).length, 2, 'WhatsApp parity RPC replacements must preserve SECURITY INVOKER.');
+assert.equal((whatsappParityMigration.match(/revoke execute on function public\./g) || []).length, 2, 'WhatsApp parity RPCs must preserve explicit execute revocation before authenticated grants.');
+assert.ok(actions.includes("['phone_click', 'instagram_click', 'maps_click', 'whatsapp_booking_click', 'tiktok_click']"), 'Commercial intent collection must include TikTok first-party intent.');
+assert.ok(actions.includes("row.event_type === 'tiktok_click'") && actions.includes('tiktok_clicks:'), 'Commercial metrics must expose an explicit TikTok click breakdown.');
+assert.equal((actions.match(/p_tiktok_clicks:/g) || []).length, 2, 'Baseline and final commercial RPC calls must both pass TikTok clicks.');
+assert.ok(page.includes('TikTok {snap.tiktok_clicks}'), 'Commercial snapshot UI must show TikTok intent separately.');
+assert.ok(databaseTypes.includes('tiktok_clicks: number') && databaseTypes.includes('p_tiktok_clicks: number'), 'Database TypeScript contract must include TikTok snapshot/RPC fields.');
+assert.ok(tiktokParityMigration.includes('add column if not exists tiktok_clicks integer not null default 0'), 'TikTok parity migration must add a non-negative snapshot column.');
+assert.ok(tiktokParityMigration.includes('check (tiktok_clicks >= 0)'), 'TikTok snapshot column must reject negative metrics.');
+assert.equal((tiktokParityMigration.match(/p_tiktok_clicks integer/g) || []).length, 2, 'Both commercial lifecycle RPCs must accept TikTok clicks.');
+assert.equal((tiktokParityMigration.match(/tiktok_clicks, intent_sessions/g) || []).length, 2, 'Baseline and final snapshot inserts must persist TikTok clicks.');
+assert.equal((tiktokParityMigration.match(/security invoker/g) || []).length, 2, 'TikTok parity RPC replacements must preserve SECURITY INVOKER.');
+assert.equal((tiktokParityMigration.match(/revoke execute on function public\./g) || []).length, 2, 'TikTok parity RPCs must preserve explicit execute revocation before authenticated grants.');
 
 console.log('Commercial Revenue OS regression passed.');

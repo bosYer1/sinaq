@@ -12,6 +12,48 @@ type AvailableClub = {
   district: string | null;
 };
 
+const VISITOR_KEY = 'gameyer_visitor_id';
+
+function visitorId() {
+  try {
+    const existing = window.localStorage.getItem(VISITOR_KEY);
+    if (existing && existing.length >= 8 && existing.length <= 64) return existing;
+    const next = typeof crypto.randomUUID === 'function'
+      ? `v-${crypto.randomUUID()}`.slice(0, 64)
+      : `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`.slice(0, 64);
+    window.localStorage.setItem(VISITOR_KEY, next);
+    return next;
+  } catch {
+    return `temp-v-${Date.now().toString(36)}`.slice(0, 64);
+  }
+}
+
+function trackRecentClubClickFirstParty(clubSlug: string) {
+  const body = JSON.stringify({
+    sessionId: visitorId(),
+    path: '/',
+    eventType: 'recent_club_click',
+    clubSlug,
+  });
+
+  try {
+    if (navigator.sendBeacon) {
+      const sent = navigator.sendBeacon('/api/analytics/event', new Blob([body], { type: 'application/json' }));
+      if (sent) return;
+    }
+  } catch {
+    // Fall through to keepalive fetch. Analytics must never block navigation.
+  }
+
+  void fetch('/api/analytics/event', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body,
+    credentials: 'same-origin',
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
 export function RecentlyViewedClubs({ clubs }: { clubs: AvailableClub[] }) {
   const [recent, setRecent] = useState<RecentClub[]>([]);
   const impressionTracked = useRef(false);
@@ -63,6 +105,7 @@ export function RecentlyViewedClubs({ clubs }: { clubs: AvailableClub[] }) {
             prefetch={false}
             onClick={() => {
               rememberClubEntryOrigin(club.slug);
+              trackRecentClubClickFirstParty(club.slug);
               trackPostHogEvent('recent_club_click', {
                 club_slug: club.slug,
                 club_name: club.name,

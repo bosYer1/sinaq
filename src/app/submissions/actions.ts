@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
+import { getClubBySlug } from '@/lib/queries/clubs';
 
 const KINDS = new Set(['correction', 'new_club', 'owner_claim']);
 const CONTACT_TYPES = new Set(['instagram', 'phone', 'email']);
@@ -99,15 +100,8 @@ function extensionFor(file: File) {
 
 async function resolvePublicClubId(clubSlug: string) {
   if (!clubSlug) return null;
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('clubs')
-    .select('id')
-    .eq('slug', clubSlug)
-    .eq('is_active', true)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data?.id ?? null;
+  const club = await getClubBySlug(clubSlug);
+  return club?.id ?? null;
 }
 
 async function insertOwnerClaimWithoutImages(args: {
@@ -157,12 +151,7 @@ async function submitOwnerClaim(args: {
   const admin = createServerAdminClient();
   if (!admin) throw new Error('Owner claim şəkilləri üçün trusted server bağlantısı mövcud deyil.');
 
-  let clubId: string | null = null;
-  if (clubSlug) {
-    const { data: club, error: clubError } = await admin.from('clubs').select('id').eq('slug', clubSlug).maybeSingle();
-    if (clubError) throw new Error(clubError.message);
-    clubId = club?.id ?? null;
-  }
+  const clubId = clubSlug ? await resolvePublicClubId(clubSlug) : null;
 
   const submissionId = crypto.randomUUID();
   const { error: insertError } = await admin.from('club_submissions').insert({
@@ -239,11 +228,7 @@ export async function submitClubSubmission(formData: FormData) {
       });
     } else {
       const supabase = await createClient();
-      let clubId: string | null = null;
-      if (clubSlug) {
-        const { data } = await supabase.from('clubs').select('id').eq('slug', clubSlug).eq('is_active', true).maybeSingle();
-        clubId = data?.id ?? null;
-      }
+      const clubId = clubSlug ? await resolvePublicClubId(clubSlug) : null;
 
       const { error } = await supabase.from('club_submissions').insert({
         kind: kind as 'correction' | 'new_club',
