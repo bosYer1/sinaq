@@ -32,14 +32,17 @@ async function requestScopedVercelOidcToken() {
   }
 }
 
-async function oidcPublicDataFetch(input: RequestInfo | URL, init?: RequestInit) {
+async function trustedPublicDataFetch(input: RequestInfo | URL, init?: RequestInit) {
   const directRequest = new Request(input, init);
-  const oidcToken = await requestScopedVercelOidcToken();
+  const ciToken = process.env.GAMEYER_CI_OIDC_TOKEN?.trim() || null;
+  const vercelToken = ciToken ? null : await requestScopedVercelOidcToken();
+  const trustedToken = ciToken || vercelToken;
+  const trustedHeader = ciToken ? 'x-gameyer-github-oidc' : 'x-gameyer-vercel-oidc';
 
-  // Canary safety: while anon SELECT is still available, lack of request-scoped
-  // OIDC must not take the public site down. After the trusted route is proven
-  // in production, the database privilege cutover is the final enforcement layer.
-  if (!oidcToken) {
+  // Canary safety only applies to production Vercel traffic while anon RLS is
+  // still available. CI deliberately has no fallback: a green workflow proves
+  // that GitHub OIDC can carry the public-data reads before anon SELECT is cut.
+  if (!trustedToken) {
     return fetch(directRequest);
   }
 
@@ -48,7 +51,7 @@ async function oidcPublicDataFetch(input: RequestInfo | URL, init?: RequestInit)
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-gameyer-vercel-oidc': oidcToken,
+        [trustedHeader]: trustedToken,
         ...(SUPABASE_PUBLISHABLE_KEY ? { apikey: SUPABASE_PUBLISHABLE_KEY } : {}),
       },
       body: JSON.stringify({
@@ -59,9 +62,10 @@ async function oidcPublicDataFetch(input: RequestInfo | URL, init?: RequestInit)
       cache: 'no-store',
     });
 
-    if (response.ok) return response;
-  } catch {
-    // Fall through to the existing public RLS path during the canary release.
+    if (response.ok || ciToken) return response;
+  } catch (error) {
+    if (ciToken) throw error;
+    // Production canary falls through to existing public RLS until final cutover.
   }
 
   return fetch(directRequest);
@@ -73,6 +77,7 @@ export function createServerDataClient() {
   const secret = process.env.SUPABASE_SECRET_KEY?.trim()
     || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   const isProduction = process.env.VERCEL_ENV === 'production';
+  const hasCiOidc = Boolean(process.env.GAMEYER_CI_OIDC_TOKEN?.trim());
 
   if (!SUPABASE_URL) {
     throw new Error('Server data client is unavailable: Supabase URL is missing.');
@@ -89,8 +94,8 @@ export function createServerDataClient() {
       autoRefreshToken: false,
       detectSessionInUrl: false,
     },
-    ...(isProduction && !secret
-      ? { global: { fetch: oidcPublicDataFetch } }
+    ...((isProduction || hasCiOidc) && !secret
+      ? { global: { fetch: trustedPublicDataFetch } }
       : {}),
   });
 
