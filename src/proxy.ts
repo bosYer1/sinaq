@@ -148,6 +148,8 @@ export async function proxy(request: NextRequest) {
   const clubSlug = pathname.startsWith('/klub/') ? decodeURIComponent(pathname.slice('/klub/'.length)) : null;
 
   if (clubSlug && SEO_INACTIVE_CLUB_TOMBSTONES.has(clubSlug)) {
+    // Explicit SEO tombstones must remain a local hard 404. Do not depend on
+    // public Supabase reads, which are intentionally blocked by the data cutover.
     return inactiveClubNotFound();
   }
 
