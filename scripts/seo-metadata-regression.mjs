@@ -45,6 +45,7 @@ const checks = [
   [nextConfig.includes("source: '/favicon.ico'") && nextConfig.includes("destination: '/gameyer-favicon.jpeg'"), 'favicon.ico resolves to the locked GameYer favicon asset'],
   [indexNowWorkflow.includes('Wait for Vercel deployment') && indexNowWorkflow.includes('node scripts/indexnow-submit.mjs'), 'IndexNow workflow waits for production before notifying search engines'],
   [twentyEightMayPage.includes("getClubs({ q: '28 May' })") && twentyEightMayPage.includes("canonical: '/28-may-gaming-klublari'"), '28 May landing is data-driven and canonicalized'],
+  [clubPage.includes("const isTwentyEightMayClub = locationIdentity.includes('28 may');") && clubPage.includes('isTwentyEightMayClub ? <Link href="/28-may-gaming-klublari"'), '28 May club profiles must contextually reinforce the dedicated landing.'],
   [twentyEightMayPage.includes('clubs.length >= 2'), '28 May landing only becomes indexable with enough real public supply'],
   [sitemapPage.includes("twentyEightMayCount >= 2") && sitemapPage.includes("/28-may-gaming-klublari"), '28 May sitemap entry is supply-gated'],
 ];
