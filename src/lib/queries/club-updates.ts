@@ -35,7 +35,8 @@ function firstRelatedRow<T>(value: T | T[] | null | undefined): T | null {
 }
 
 async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]> {
-  const [supabase, publicClubs] = [createClubUpdatesClient(), await getClubs()];
+  const supabase = createClubUpdatesClient();
+  const publicClubs = await getClubs();
   const publicClubIds = publicClubs.map((club) => club.id);
   if (publicClubIds.length === 0) return [];
   if (clubId && !publicClubIds.includes(clubId)) return [];
