@@ -17,7 +17,7 @@ function landingSignals(clubs: Awaited<ReturnType<typeof getClubs>>) {
 
 export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs({ type: 'playstation' });
-  const { minimumPrice, hasHours } = landingSignals(clubs);
+  const { minimumPrice } = landingSignals(clubs);
   const title = minimumPrice !== null
     ? 'Bakıda PlayStation klubları — PS Club, PS5/PS4 qiymətləri'
     : 'Bakıda PlayStation klubları — PS Club, PS5 və PS4';
