@@ -359,9 +359,9 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
                       trackPostHogEvent('mobile_map_preview_activated', { surface: 'mobile_list' });
                       setMobileListMapActive(true);
                     }}
-                    className="absolute inset-0 z-[600] flex touch-pan-y items-center justify-center rounded-[18px] bg-transparent"
+                    className="absolute bottom-4 left-1/2 z-[600] -translate-x-1/2 rounded-full border border-primary/20 bg-surface/95 px-4 py-2.5 text-xs font-bold text-primary shadow-[0_8px_24px_rgba(124,92,252,0.16)] backdrop-blur transition-transform active:scale-[0.98]"
                   >
-                    <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-surface/95 px-4 py-2.5 text-xs font-bold text-primary shadow-[0_8px_24px_rgba(124,92,252,0.16)] backdrop-blur transition-transform active:scale-[0.98]"><svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="10" cy="10" r="5" /><path d="M10 2v3M10 15v3M2 10h3M15 10h3" /></svg>Xəritəyə toxunun</span>
+                    <span className="inline-flex items-center gap-2"><svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="10" cy="10" r="5" /><path d="M10 2v3M10 15v3M2 10h3M15 10h3" /></svg>Xəritəni aktiv et</span>
                   </button>
                 ) : null}
               </div>
