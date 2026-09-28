@@ -7,7 +7,8 @@ import type { Database } from '@/types/database';
 import type { ClubDataQualityRow, DateRange, SupabaseMetrics } from './types';
 
 type ClubQualityRow = Pick<Database['public']['Tables']['clubs']['Row'], 'id' | 'name' | 'slug' | 'phone' | 'instagram_url' | 'tiktok_url' | 'profile_image_url' | 'latitude' | 'longitude'>;
-type EvidenceRow = Pick<Database['public']['Tables']['club_data_evidence']['Row'], 'club_id' | 'field_name' | 'confidence' | 'is_current' | 'checked_at'>;
+type EvidenceRow = Pick<Database['public']['Tables']['club_data_evidence']['Row'], 'club_id' | 'field_name' | 'evidence_value' | 'confidence' | 'is_current' | 'checked_at'>;
+type TypeAssignmentRow = { club_id: string; club_type: { slug: string } | null };
 
 const EVIDENCE_FRESH_DAYS = 30;
 const STRONG_EVIDENCE_CONFIDENCE = new Set(['official', 'corroborated']);
@@ -17,6 +18,29 @@ function evidenceGroup(fieldName: string): 'status' | 'type' | 'location' | null
   if (fieldName === 'type') return 'type';
   if (fieldName === 'address' || fieldName === 'coordinates') return 'location';
   return null;
+}
+
+function evidencedClubTypes(value: string | null): Set<'pc' | 'playstation'> {
+  const normalized = (value ?? '')
+    .toLocaleLowerCase('az')
+    .replace(/ə/g, 'e')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ç/g, 'c')
+    .replace(/ğ/g, 'g');
+  const result = new Set<'pc' | 'playstation'>();
+  if (/\bpc\b|komputer|computer|internet[ -]?(?:cafe|kafe|club|klub)/i.test(normalized)) result.add('pc');
+  if (/playstation|\bps[345]\b|\bps\s*[345]\b/i.test(normalized)) result.add('playstation');
+  return result;
+}
+
+function typeEvidenceComplete(
+  assignedTypes: Set<'pc' | 'playstation'>,
+  evidencedTypes: Set<'pc' | 'playstation'>,
+) {
+  return assignedTypes.size > 0 && [...assignedTypes].every((type) => evidencedTypes.has(type));
 }
 
 function emptyMetrics(detail: string): SupabaseMetrics {
@@ -36,10 +60,12 @@ function buildQualityBacklog(
   clubs: ClubQualityRow[],
   imageIds: Set<string>,
   typeIds: Set<string>,
+  assignedTypesByClub: Map<string, Set<'pc' | 'playstation'>>,
   evidenceRows: EvidenceRow[],
 ): ClubDataQualityRow[] {
   const latestEvidence = new Map<string, string>();
-  const freshStrongGroups = new Map<string, Set<'status' | 'type' | 'location'>>();
+  const freshStrongGroups = new Map<string, Set<'status' | 'location'>>();
+  const freshStrongTypes = new Map<string, Set<'pc' | 'playstation'>>();
   const staleCutoffMs = Date.now() - EVIDENCE_FRESH_DAYS * 24 * 60 * 60 * 1000;
 
   for (const evidence of evidenceRows) {
@@ -55,9 +81,15 @@ function buildQualityBacklog(
       && checkedAtMs >= staleCutoffMs
       && STRONG_EVIDENCE_CONFIDENCE.has(evidence.confidence)
     ) {
-      const groups = freshStrongGroups.get(evidence.club_id) ?? new Set<'status' | 'type' | 'location'>();
-      groups.add(group);
-      freshStrongGroups.set(evidence.club_id, groups);
+      if (group === 'type') {
+        const coveredTypes = freshStrongTypes.get(evidence.club_id) ?? new Set<'pc' | 'playstation'>();
+        for (const type of evidencedClubTypes(evidence.evidence_value)) coveredTypes.add(type);
+        freshStrongTypes.set(evidence.club_id, coveredTypes);
+      } else {
+        const groups = freshStrongGroups.get(evidence.club_id) ?? new Set<'status' | 'location'>();
+        groups.add(group);
+        freshStrongGroups.set(evidence.club_id, groups);
+      }
     }
   }
 
@@ -76,9 +108,13 @@ function buildQualityBacklog(
       : Number.isFinite(checkedAtMs) && checkedAtMs < staleCutoffMs
         ? 'stale'
         : 'fresh';
-    const strongGroups = freshStrongGroups.get(club.id) ?? new Set<'status' | 'type' | 'location'>();
-    const evidenceGaps: ClubDataQualityRow['evidenceGaps'] = (['status', 'type', 'location'] as const)
-      .filter((group) => !strongGroups.has(group));
+    const strongGroups = freshStrongGroups.get(club.id) ?? new Set<'status' | 'location'>();
+    const assignedTypes = assignedTypesByClub.get(club.id) ?? new Set<'pc' | 'playstation'>();
+    const coveredTypes = freshStrongTypes.get(club.id) ?? new Set<'pc' | 'playstation'>();
+    const evidenceGaps: ClubDataQualityRow['evidenceGaps'] = [];
+    if (!strongGroups.has('status')) evidenceGaps.push('status');
+    if (!typeEvidenceComplete(assignedTypes, coveredTypes)) evidenceGaps.push('type');
+    if (!strongGroups.has('location')) evidenceGaps.push('location');
 
     return {
       slug: club.slug,
@@ -177,8 +213,8 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']).eq('kind', 'new_club'),
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']).eq('kind', 'correction'),
     supabase.from('club_images').select('club_id'),
-    supabase.from('club_type_assignments').select('club_id'),
-    supabase.from('club_data_evidence').select('club_id,field_name,confidence,is_current,checked_at').eq('is_current', true),
+    supabase.from('club_type_assignments').select('club_id,club_type:club_types(slug)'),
+    supabase.from('club_data_evidence').select('club_id,field_name,evidence_value,confidence,is_current,checked_at').eq('is_current', true),
     supabase.from('analytics_events')
       .select('session_id,event_type')
       .gte('created_at', range.from)
@@ -191,13 +227,23 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
 
   const clubs = (clubsResult.data ?? []) as ClubQualityRow[];
   const imageIds = new Set((imagesResult.data ?? []).map((row) => row.club_id));
-  const typeIds = new Set((typesResult.data ?? []).map((row) => row.club_id));
+  const typeRows = (typesResult.data ?? []) as unknown as TypeAssignmentRow[];
+  const typeIds = new Set(typeRows.map((row) => row.club_id));
+  const assignedTypesByClub = new Map<string, Set<'pc' | 'playstation'>>();
+  for (const row of typeRows) {
+    const slug = row.club_type?.slug;
+    if (slug !== 'pc' && slug !== 'playstation') continue;
+    const types = assignedTypesByClub.get(row.club_id) ?? new Set<'pc' | 'playstation'>();
+    types.add(slug);
+    assignedTypesByClub.set(row.club_id, types);
+  }
   const evidenceRows = (evidenceResult.data ?? []) as EvidenceRow[];
   const intentRows = intentResult.error ? [] : (intentResult.data ?? []);
   const activeClubIds = new Set(clubs.map((club) => club.id));
   const freshCutoffMs = Date.now() - EVIDENCE_FRESH_DAYS * 24 * 60 * 60 * 1000;
   const currentEvidenceClubIds = new Set<string>();
-  const freshStrongByClub = new Map<string, Set<'status' | 'type' | 'location'>>();
+  const freshStrongByClub = new Map<string, Set<'status' | 'location'>>();
+  const freshStrongTypesByClub = new Map<string, Set<'pc' | 'playstation'>>();
   for (const evidence of evidenceRows) {
     if (!activeClubIds.has(evidence.club_id) || !evidence.is_current) continue;
     currentEvidenceClubIds.add(evidence.club_id);
@@ -209,16 +255,37 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
       && checkedAtMs >= freshCutoffMs
       && STRONG_EVIDENCE_CONFIDENCE.has(evidence.confidence)
     ) {
-      const groups = freshStrongByClub.get(evidence.club_id) ?? new Set<'status' | 'type' | 'location'>();
-      groups.add(group);
-      freshStrongByClub.set(evidence.club_id, groups);
+      if (group === 'type') {
+        const coveredTypes = freshStrongTypesByClub.get(evidence.club_id) ?? new Set<'pc' | 'playstation'>();
+        for (const type of evidencedClubTypes(evidence.evidence_value)) coveredTypes.add(type);
+        freshStrongTypesByClub.set(evidence.club_id, coveredTypes);
+      } else {
+        const groups = freshStrongByClub.get(evidence.club_id) ?? new Set<'status' | 'location'>();
+        groups.add(group);
+        freshStrongByClub.set(evidence.club_id, groups);
+      }
     }
   }
-  const withFreshStatus = [...freshStrongByClub.values()].filter((groups) => groups.has('status')).length;
-  const withFreshType = [...freshStrongByClub.values()].filter((groups) => groups.has('type')).length;
-  const withFreshLocation = [...freshStrongByClub.values()].filter((groups) => groups.has('location')).length;
-  const withFreshFullTriplet = [...freshStrongByClub.values()]
-    .filter((groups) => groups.has('status') && groups.has('type') && groups.has('location')).length;
+  const withFreshStatus = clubs.filter((club) => freshStrongByClub.get(club.id)?.has('status')).length;
+  const withFreshType = clubs.filter((club) =>
+    typeEvidenceComplete(
+      assignedTypesByClub.get(club.id) ?? new Set<'pc' | 'playstation'>(),
+      freshStrongTypesByClub.get(club.id) ?? new Set<'pc' | 'playstation'>(),
+    )
+  ).length;
+  const withFreshLocation = clubs.filter((club) => freshStrongByClub.get(club.id)?.has('location')).length;
+  const withFreshFullTriplet = clubs.filter((club) =>
+    freshStrongByClub.get(club.id)?.has('status')
+    && freshStrongByClub.get(club.id)?.has('location')
+    && typeEvidenceComplete(
+      assignedTypesByClub.get(club.id) ?? new Set<'pc' | 'playstation'>(),
+      freshStrongTypesByClub.get(club.id) ?? new Set<'pc' | 'playstation'>(),
+    )
+  ).length;
+  const withFreshStrongEvidence = new Set([
+    ...freshStrongByClub.keys(),
+    ...freshStrongTypesByClub.keys(),
+  ]).size;
   const firstPartyIntent = intentResult.error
     ? { available: false, detail: 'First-party analytics_events oxunmadı.', events: 0, browserVisitors: 0, phoneClicks: 0, instagramClicks: 0, mapsClicks: 0, whatsappBookingClicks: 0 }
     : {
@@ -238,7 +305,7 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
     evidenceFreshness: {
       cutoffDays: EVIDENCE_FRESH_DAYS,
       withAnyCurrentEvidence: currentEvidenceClubIds.size,
-      withFreshStrongEvidence: freshStrongByClub.size,
+      withFreshStrongEvidence,
       withFreshStatus,
       withFreshType,
       withFreshLocation,
@@ -248,7 +315,7 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
     staleSubmissions: staleResult.count ?? 0,
     submissionBacklogByKind: { ownerClaim: ownerClaimPendingResult.count ?? 0, newClub: newClubPendingResult.count ?? 0, correction: correctionPendingResult.count ?? 0 },
     completeness: calculateCompleteness(clubs, imageIds, typeIds),
-    qualityBacklog: buildQualityBacklog(clubs, imageIds, typeIds, evidenceRows),
+    qualityBacklog: buildQualityBacklog(clubs, imageIds, typeIds, assignedTypesByClub, evidenceRows),
     evidenceFreshness: buildEvidenceFreshness(clubs, evidenceRows),
     firstPartyIntent,
   };
