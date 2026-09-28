@@ -129,7 +129,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const minPcPrice = startingPrices.pc?.price_from ?? null;
   const minPlayStationPrice = startingPrices.playstation?.price_from ?? null;
   const open24Hours = isOpen24HoursEveryDay(openingHours);
-  const locationIdentity = `${club.name} ${club.address} ${club.slug}`.toLowerCase().replaceAll('-', ' ');
+  const locationIdentity = `${club.name} ${club.address} ${club.slug}`.toLocaleLowerCase('az').replaceAll('-', ' ');
   const isTwentyEightMayClub = locationIdentity.includes('28 may');
   const isLaLigaClub = locationIdentity.includes('laliga') || locationIdentity.includes('la liga');
   const isJustForFunClub = locationIdentity.includes('just for fun');
