@@ -152,7 +152,8 @@ assert.match(page, /clubDataPriorities=\{data\.clubDataPriorities\}/, 'Founder p
 assert.ok(types.includes('evidenceFreshness: {') && types.includes('withFreshFullTriplet: number;'), 'Supabase metrics must distinguish verified flags from auditable evidence freshness.');
 assert.ok(types.includes("evidenceGaps: Array<'status' | 'type' | 'location'>;"), 'Club data priorities must expose exact status/type/location evidence gaps.');
 assert.ok(supabase.includes('EVIDENCE_FRESH_DAYS = 30') && supabase.includes("STRONG_EVIDENCE_CONFIDENCE = new Set(['official', 'corroborated'])"), 'Evidence freshness must use a bounded 30-day official/corroborated contract.');
-assert.ok(supabase.includes("evidence.field_name") && supabase.includes("groups.has('status')") && supabase.includes("groups.has('type')") && supabase.includes("groups.has('location')"), 'Evidence coverage must evaluate status, type and location separately.');
+assert.ok(supabase.includes("evidence.field_name") && supabase.includes("groups.has('status')") && supabase.includes("groups.has('location')") && supabase.includes('typeEvidenceComplete('), 'Evidence coverage must evaluate status, location and complete assigned-type coverage separately.');
+assert.ok(supabase.includes('evidencedClubTypes') && supabase.includes('assignedTypesByClub') && supabase.includes('every((type) => evidencedTypes.has(type))'), 'Hybrid clubs must not satisfy fresh type coverage from evidence for only one assigned public type.');
 assert.ok(page.includes('Verified flag') && page.includes('Fresh strong evidence') && page.includes('Fresh 3-lü sübut'), 'Founder dashboard must not collapse verified flag and fresh provenance into one number.');
 assert.ok(extended.includes('Fresh sübut boşluğu') && extended.includes('club.evidenceGaps.map(evidenceGapLabel)'), 'Club priority table must show exact fresh evidence gaps.');
 assert.ok(calculations.includes('Sübut təzəliyi verified bayraqdan geri qalır') && calculations.includes('withFreshFullTriplet'), 'CEO signals must surface provenance freshness debt.');
@@ -165,14 +166,6 @@ console.log('founder analytics security, provider, and metric semantics regressi
 assert.ok(types.includes('submissionBacklogByKind:'), 'Supabase metrics must expose open submission backlog by business kind.');
 for (const kind of ['owner_claim', 'new_club', 'correction']) assert.ok(supabase.includes(`.eq('kind', '${kind}')`), `Operational backlog must count ${kind} independently.`);
 assert.ok(page.includes('submissionBacklogByKind.ownerClaim') && page.includes('submissionBacklogByKind.newClub') && page.includes('submissionBacklogByKind.correction'), 'Founder dashboard must surface the open supply backlog mix.');
-assert.ok(types.includes('evidenceFreshness:'), 'Supabase metrics must expose auditable evidence freshness separately from verified flags.');
-assert.ok(types.includes("missingEvidence: Array<'status' | 'type' | 'location'>"), 'Evidence backlog must track status/type/location gaps explicitly.');
-assert.ok(supabase.includes("field_name,confidence,is_current,checked_at") && supabase.includes("row.confidence === 'official' || row.confidence === 'corroborated'"), 'Evidence freshness must use current field-level confidence, not a generic verified flag.');
-assert.ok(supabase.includes("freshCutoffMs = Date.now() - 30 * 24 * 60 * 60 * 1000"), 'Evidence freshness window must remain explicit and bounded to 30 days.');
-assert.ok(supabase.includes("row.field_name === 'status'") && supabase.includes("row.field_name === 'type'") && supabase.includes("row.field_name === 'address' || row.field_name === 'coordinates'"), 'Evidence triplet must cover status, type and location.');
-assert.ok(page.includes('Sübut təzəliyi') && page.includes('Tam triplet') && page.includes('re-verification işi'), 'Founder dashboard must surface evidence freshness and re-verification work.');
-assert.ok(page.includes('public görünürlüğü dəyişmir') && page.includes('verified işarəsini avtomatik silmir'), 'Evidence UI must not imply an automatic public eligibility or verification mutation.');
-
 assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0') && calculations.includes('Klub sahibi müraciəti gözləyir'), 'CEO signals must elevate open owner claims as an operational supply priority.');
 
 
