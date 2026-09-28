@@ -110,6 +110,7 @@ test('CEO signals expose provider unavailability instead of fake metrics', () =>
     status: { key: 'supabase', label: 'Supabase', status: 'ready', detail: '', checkedAt: '' },
     activeClubs: 0,
     verifiedClubs: 0,
+    evidenceFreshness: { cutoffDays: 30, withAnyCurrentEvidence: 0, withFreshStrongEvidence: 0, withFreshStatus: 0, withFreshType: 0, withFreshLocation: 0, withFreshFullTriplet: 0 },
     pendingSubmissions: 0,
     staleSubmissions: 0,
     submissionBacklogByKind: { ownerClaim: 0, newClub: 0, correction: 0 },
@@ -154,7 +155,7 @@ test('CEO signal cap never hides a later critical signal behind lower-severity n
   } satisfies PostHogMetrics;
   const supabase: SupabaseMetrics = {
     status: { key: 'supabase', label: 'Supabase', status: 'ready', detail: '', checkedAt: '' },
-    activeClubs: 1, verifiedClubs: 1, pendingSubmissions: 4, staleSubmissions: 1,
+    activeClubs: 1, verifiedClubs: 1, evidenceFreshness: { cutoffDays: 30, withAnyCurrentEvidence: 0, withFreshStrongEvidence: 0, withFreshStatus: 0, withFreshType: 0, withFreshLocation: 0, withFreshFullTriplet: 0 }, pendingSubmissions: 4, staleSubmissions: 1,
     submissionBacklogByKind: { ownerClaim: 1, newClub: 1, correction: 1 },
     completeness: { total: 1, missingImage: 1, missingPhone: 1, missingSocial: 0, missingCoordinates: 1, missingType: 0 },
     qualityBacklog: [],
