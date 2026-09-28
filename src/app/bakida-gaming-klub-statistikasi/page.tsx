@@ -108,7 +108,7 @@ export default async function GamingClubMarketStatsPage() {
   const open24Share = clubs.length > 0 ? Math.round((open24Count / clubs.length) * 100) : 0;
   const verifiedShare = clubs.length > 0 ? Math.round((verifiedCount / clubs.length) * 100) : 0;
   const latestLabel = latestUpdated
-    ? new Intl.DateTimeFormat('az-AZ', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(latestUpdated))
+    ? new Intl.DateTimeFormat('az-AZ', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Baku' }).format(new Date(latestUpdated))
     : null;
 
   const structuredData = {
