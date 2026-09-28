@@ -18,6 +18,13 @@ const twentyEightMayPage = fs.readFileSync('src/app/28-may-gaming-klublari/page.
 const laLigaPage = fs.readFileSync('src/app/laliga-game-center/page.tsx', 'utf8');
 const justForFunPage = fs.readFileSync('src/app/just-for-fun/page.tsx', 'utf8');
 const vegasPage = fs.readFileSync('src/app/vegas-gaming-center/page.tsx', 'utf8');
+const forGamerPage = fs.readFileSync('src/app/forgamer/page.tsx', 'utf8');
+const ibrazoroPage = fs.readFileSync('src/app/ibrazoro/page.tsx', 'utf8');
+const qarabaghPage = fs.readFileSync('src/app/qarabagh-game-center/page.tsx', 'utf8');
+const marketStatsPage = fs.readFileSync('src/app/bakida-gaming-klub-statistikasi/page.tsx', 'utf8');
+const priceLanding = fs.readFileSync('src/app/bakida-gaming-klub-qiymetleri/page.tsx', 'utf8');
+const aboutPage = fs.readFileSync('src/app/haqqimizda/page.tsx', 'utf8');
+const methodologyPage = fs.readFileSync('src/app/melumat-metodologiyasi/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
 const indexNowWorkflow = fs.readFileSync('.github/workflows/indexnow-submit.yml', 'utf8');
@@ -67,6 +74,7 @@ const checks = [
   [twentyFourHourLanding.includes('href="#night-clubs"') && twentyFourHourLanding.includes('id="night-clubs"') && twentyFourHourLanding.includes('24 saat klublara bax ↓'), '24-hour landing primary CTA must jump directly to matching club results.'],
   [nextConfig.includes("source: '/favicon.ico'") && nextConfig.includes("destination: '/gameyer-favicon.jpeg'"), 'favicon.ico resolves to the locked GameYer favicon asset'],
   [indexNowWorkflow.includes('Wait for Vercel deployment') && indexNowWorkflow.includes('node scripts/indexnow-submit.mjs'), 'IndexNow workflow waits for production before notifying search engines'],
+  [indexNowWorkflow.includes('GITHUB_EVENT_NAME') && indexNowWorkflow.includes('node scripts/indexnow-submit.mjs --all'), 'IndexNow production pushes must submit the full current sitemap so brand-new URLs with older source lastmod are not skipped'],
   [twentyEightMayPage.includes("getClubs({ q: '28 May' })") && twentyEightMayPage.includes("canonical: '/28-may-gaming-klublari'"), '28 May landing is data-driven and canonicalized'],
   [twentyEightMayPage.includes("'28 May PlayStation və PC klubları — ünvan və xəritə'") && twentyEightMayPage.includes('28 Mayda PlayStation və PC klubları'), '28 May landing must prioritize the observed PlayStation query intent.'],
   [clubPage.includes("const isTwentyEightMayClub = locationIdentity.includes('28 may');") && clubPage.includes('isTwentyEightMayClub ? <Link href="/28-may-gaming-klublari"'), '28 May club profiles must contextually reinforce the dedicated landing.'],
@@ -81,6 +89,25 @@ const checks = [
   [vegasPage.includes("getClubs({ q: 'Vegas' })") && vegasPage.includes("canonical: '/vegas-gaming-center'") && vegasPage.includes('clubs.length >= 2'), 'Vegas brand hub must stay data-driven, canonicalized and supply-gated'],
   [clubPage.includes("const isVegasClub = locationIdentity.includes('vegas gaming');") && clubPage.includes('isVegasClub ? <Link href="/vegas-gaming-center"'), 'Vegas branch profiles must reinforce the brand hub'],
   [sitemapPage.includes("vegasCount >= 2") && sitemapPage.includes("/vegas-gaming-center"), 'Vegas brand hub sitemap entry must be supply-gated'],
+  [forGamerPage.includes("getClubs({ q: 'ForGamer' })") && forGamerPage.includes("canonical: '/forgamer'") && forGamerPage.includes('clubs.length >= 2'), 'ForGamer brand hub must stay data-driven, canonicalized and supply-gated'],
+  [clubPage.includes("const isForGamerClub = locationIdentity.includes('forgamer');") && clubPage.includes('isForGamerClub ? <Link href="/forgamer"'), 'ForGamer branch profiles must reinforce the brand hub'],
+  [sitemapPage.includes("forGamerCount >= 2") && sitemapPage.includes("/forgamer"), 'ForGamer brand hub sitemap entry must be supply-gated'],
+  [ibrazoroPage.includes("getClubs({ q: 'Ibrazoro' })") && ibrazoroPage.includes("canonical: '/ibrazoro'") && ibrazoroPage.includes('clubs.length >= 2'), 'Ibrazoro brand hub must stay data-driven, canonicalized and supply-gated'],
+  [clubPage.includes("const isIbrazoroClub = locationIdentity.includes('ibrazoro');") && clubPage.includes('isIbrazoroClub ? <Link href="/ibrazoro"'), 'Ibrazoro branch profiles must reinforce the brand hub'],
+  [clubPage.includes("toLocaleLowerCase('az')") && sitemapPage.includes("toLocaleLowerCase('az')"), 'brand identity matching must use Azerbaijani locale casing so İbrazoro-style names remain discoverable'],
+  [sitemapPage.includes("ibrazoroCount >= 2") && sitemapPage.includes("/ibrazoro"), 'Ibrazoro brand hub sitemap entry must be supply-gated'],
+  [qarabaghPage.includes("getClubs({ q: 'Qarabagh Game Center' })") && qarabaghPage.includes("canonical: '/qarabagh-game-center'") && qarabaghPage.includes('clubs.length >= 2'), 'Qarabagh brand hub must stay data-driven, canonicalized and supply-gated'],
+  [clubPage.includes("const isQarabaghClub = locationIdentity.includes('qarabagh game center');") && clubPage.includes('isQarabaghClub ? <Link href="/qarabagh-game-center"'), 'Qarabagh branch profiles must reinforce the brand hub'],
+  [sitemapPage.includes("qarabaghCount >= 2") && sitemapPage.includes("/qarabagh-game-center"), 'Qarabagh brand hub sitemap entry must be supply-gated'],
+  [playstationLanding.includes('PlayStation filial şəbəkələri') && playstationLanding.includes('brandNetworks') && playstationLanding.includes('/qarabagh-game-center'), 'PlayStation landing must reinforce real multi-branch entity hubs'],
+  [pcLanding.includes('PC filial şəbəkələri') && pcLanding.includes('brandNetworks') && pcLanding.includes('/forgamer'), 'PC landing must reinforce real multi-branch entity hubs'],
+  [internetLanding.includes('PC və internet klub şəbəkələri') && internetLanding.includes('brandNetworks') && internetLanding.includes('/forgamer'), 'winning internet landing must pass internal authority to real multi-branch entity hubs'],
+  [marketStatsPage.includes("canonical: '/bakida-gaming-klub-statistikasi'") && marketStatsPage.includes('getClubs()') && marketStatsPage.includes('Rayon və şəhər üzrə klub sıxlığı'), 'market statistics asset must stay live-data-driven and canonicalized'],
+  [marketStatsPage.includes('Məlumat metodologiyası') && marketStatsPage.includes('pricedShare') && marketStatsPage.includes('open24Share'), 'market statistics asset must expose methodology and data coverage'],
+  [sitemapPage.includes("/bakida-gaming-klub-statistikasi") && sitemapPage.includes("0.83"), 'market statistics asset must be present in the sitemap when public supply exists'],
+  [priceLanding.includes('href="/bakida-gaming-klub-statistikasi"') && aboutPage.includes('href="/bakida-gaming-klub-statistikasi"'), 'pricing and about pages must reinforce the public market statistics asset'],
+  [methodologyPage.includes('href="/bakida-gaming-klub-statistikasi"') && marketStatsPage.includes("timeZone: 'Asia/Baku'"), 'methodology must link to market statistics and freshness dates must render in Baku time'],
+  [marketStatsPage.includes("'@type': 'Dataset'") && marketStatsPage.includes("isAccessibleForFree: true") && marketStatsPage.includes("variableMeasured") && marketStatsPage.includes("spatialCoverage"), 'market statistics page must expose Google-compatible Dataset metadata without inventing a download or license'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);

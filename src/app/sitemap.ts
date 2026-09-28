@@ -105,6 +105,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let justForFunLatest: string | null = null;
   let vegasCount = 0;
   let vegasLatest: string | null = null;
+  let forGamerCount = 0;
+  let forGamerLatest: string | null = null;
+  let ibrazoroCount = 0;
+  let ibrazoroLatest: string | null = null;
+  let qarabaghCount = 0;
+  let qarabaghLatest: string | null = null;
 
   for (const club of clubs) {
     overallLatest = newerIso(overallLatest, club.updated_at);
@@ -128,7 +134,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (hourlyPricing.some((item) => item.club_type?.slug === 'pc' && item.price_from <= 2)) cheapPcCount += 1;
     if (hourlyPricing.some((item) => item.club_type?.slug === 'playstation' && item.price_from <= 3)) cheapPlayStationCount += 1;
     if (isOpen24HoursEveryDay(club.opening_hours ?? [])) open24Count += 1;
-    const locationIdentity = `${club.name} ${club.address} ${club.slug}`.toLowerCase().replaceAll('-', ' ');
+    const locationIdentity = `${club.name} ${club.address} ${club.slug}`.toLocaleLowerCase('az').replaceAll('-', ' ');
     if (locationIdentity.includes('28 may')) {
       twentyEightMayCount += 1;
       twentyEightMayLatest = newerIso(twentyEightMayLatest, club.updated_at);
@@ -144,6 +150,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (locationIdentity.includes('vegas gaming')) {
       vegasCount += 1;
       vegasLatest = newerIso(vegasLatest, club.updated_at);
+    }
+    if (locationIdentity.includes('forgamer')) {
+      forGamerCount += 1;
+      forGamerLatest = newerIso(forGamerLatest, club.updated_at);
+    }
+    if (locationIdentity.includes('ibrazoro')) {
+      ibrazoroCount += 1;
+      ibrazoroLatest = newerIso(ibrazoroLatest, club.updated_at);
+    }
+    if (locationIdentity.includes('qarabagh game center')) {
+      qarabaghCount += 1;
+      qarabaghLatest = newerIso(qarabaghLatest, club.updated_at);
     }
 
     if (!club.district?.slug) continue;
@@ -169,6 +187,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   };
 
   if (clubs.length > 0) addLanding('/yaxinliqda-gaming-klublari', 0.94, overallLatest);
+  if (clubs.length > 0) addLanding('/bakida-gaming-klub-statistikasi', 0.83, overallLatest);
   if (pcCount > 0) {
     addLanding('/bakida-pc-klublari', 0.9, typeLatest.get('pc') ?? null);
     addLanding('/bakida-internet-klublari', 0.88, typeLatest.get('pc') ?? null);
@@ -182,6 +201,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (laLigaCount >= 2) addLanding('/laliga-game-center', 0.84, laLigaLatest);
   if (justForFunCount >= 2) addLanding('/just-for-fun', 0.84, justForFunLatest);
   if (vegasCount >= 2) addLanding('/vegas-gaming-center', 0.84, vegasLatest);
+  if (forGamerCount >= 2) addLanding('/forgamer', 0.84, forGamerLatest);
+  if (ibrazoroCount >= 2) addLanding('/ibrazoro', 0.84, ibrazoroLatest);
+  if (qarabaghCount >= 2) addLanding('/qarabagh-game-center', 0.84, qarabaghLatest);
 
   const applyLatest = (url: string, latest: string | null) => {
     if (!latest) return;

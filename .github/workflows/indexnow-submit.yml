@@ -77,9 +77,10 @@ jobs:
       - name: Notify IndexNow
         env:
           FULL_BOOTSTRAP: ${{ inputs.full_bootstrap || false }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          if [ "${FULL_BOOTSTRAP}" = 'true' ]; then
+          if [ "${GITHUB_EVENT_NAME}" = 'push' ] || [ "${FULL_BOOTSTRAP}" = 'true' ]; then
             node scripts/indexnow-submit.mjs --all
           else
             node scripts/indexnow-submit.mjs

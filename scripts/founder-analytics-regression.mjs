@@ -158,6 +158,14 @@ console.log('founder analytics security, provider, and metric semantics regressi
 assert.ok(types.includes('submissionBacklogByKind:'), 'Supabase metrics must expose open submission backlog by business kind.');
 for (const kind of ['owner_claim', 'new_club', 'correction']) assert.ok(supabase.includes(`.eq('kind', '${kind}')`), `Operational backlog must count ${kind} independently.`);
 assert.ok(page.includes('submissionBacklogByKind.ownerClaim') && page.includes('submissionBacklogByKind.newClub') && page.includes('submissionBacklogByKind.correction'), 'Founder dashboard must surface the open supply backlog mix.');
+assert.ok(types.includes('evidenceFreshness:'), 'Supabase metrics must expose evidence freshness separately from verified flags.');
+assert.ok(types.includes("missingEvidence: Array<'status' | 'type' | 'location'>"), 'Evidence backlog must track status/type/location gaps explicitly.');
+assert.ok(supabase.includes("field_name,confidence,is_current,checked_at"), 'Evidence freshness must read field-level provenance.');
+assert.ok(supabase.includes("row.confidence === 'official' || row.confidence === 'corroborated'"), 'Fresh strong evidence must be official or corroborated.');
+assert.ok(supabase.includes("freshCutoffMs = Date.now() - 30 * 24 * 60 * 60 * 1000"), 'Evidence freshness window must remain 30 days.');
+assert.ok(supabase.includes("row.field_name === 'status'") && supabase.includes("row.field_name === 'type'") && supabase.includes("row.field_name === 'address' || row.field_name === 'coordinates'"), 'Evidence triplet must cover status, type and location.');
+assert.ok(page.includes('Sübut təzəliyi') && page.includes('Tam triplet') && page.includes('re-verification işi'), 'Founder dashboard must surface evidence freshness and re-verification work.');
+assert.ok(page.includes('public görünürlüğü dəyişmir') && page.includes('verified işarəsini avtomatik silmir'), 'Evidence UI must not imply public eligibility or automatic verification mutation.');
 
 assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0') && calculations.includes('Klub sahibi müraciəti gözləyir'), 'CEO signals must elevate open owner claims as an operational supply priority.');
 

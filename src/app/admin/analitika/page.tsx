@@ -68,6 +68,52 @@ export default async function FounderAnalyticsPage({ searchParams }: { searchPar
 
     <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="İcraçı göstəricilər"><MetricCard label="Unikal ziyarətçi" metric={data.posthog.visitors} detail="PostHog istifadəçi ID-si · əvvəlki eyni müddətlə müqayisə" /><MetricCard label="Sessiya" metric={data.posthog.sessions} detail="PostHog sessiya ID-si · real sayt trafiki" /><MetricCard label="Səhifə baxışı" metric={data.posthog.pageviews} detail="Real public səhifə baxışı hadisələri" /><MetricCard label="Klub profili → əlaqə niyyəti" metric={data.posthog.conversionRate} suffix="%" detail="Əlaqə niyyəti olan unikal sessiyalar / klub profilinə baxılan unikal sessiyalar" /><MetricCard label="Klub baxışı" metric={data.posthog.clubViews} detail="Klub profil səhifəsinin real açılışı" /><MetricCard label="Klub əlaqə düyməsi klikləri" metric={data.posthog.ctaClicks} detail="Telefon, Instagram, TikTok, istiqamət və WhatsApp rezervasiya sorğusu klikləri" /><MetricCard label="Founder təsdiqli klub" value={data.supabase.activeClubs} detail={`${data.supabase.activeClubs} aktiv klub Founder təsdiqli bazadadır · ${data.supabase.verifiedClubs} ayrıca doğrulanmış işarəsi daşıyır; bunu klub sahibinin təsdiqi kimi oxuma`} /><MetricCard label="Açıq müraciət" value={data.supabase.pendingSubmissions} detail={`${data.supabase.staleSubmissions} müraciət 72 saatdan köhnədir · ${data.supabase.submissionBacklogByKind.ownerClaim} klub sahibi müraciəti · ${data.supabase.submissionBacklogByKind.newClub} yeni klub · ${data.supabase.submissionBacklogByKind.correction} düzəliş`} /></section>
 
+    <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6" aria-labelledby="evidence-freshness-heading">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 id="evidence-freshness-heading" className="text-xl font-bold">Sübut təzəliyi</h2>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-gray-500">Verified işarəsi ilə provenance təzəliyini qarışdırmır. Saylar son 30 gündə <strong>official</strong> və ya <strong>corroborated</strong> evidence əsasında hesablanır.</p>
+        </div>
+        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold">{data.supabase.evidenceFreshness.backlog.length} re-verification işi</span>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {[
+          ['Current evidence', data.supabase.evidenceFreshness.currentAny, 'Ən azı 1 current evidence'],
+          ['Fresh strong', data.supabase.evidenceFreshness.strongAny, '30 gün · official/corroborated'],
+          ['Status', data.supabase.evidenceFreshness.status, 'Cari fəaliyyət sübutu'],
+          ['Type', data.supabase.evidenceFreshness.type, 'PC/PlayStation sübutu'],
+          ['Location', data.supabase.evidenceFreshness.location, 'Ünvan/koordinat sübutu'],
+          ['Tam triplet', data.supabase.evidenceFreshness.fullTriplet, 'Status + type + location'],
+        ].map(([label, value, detail]) => (
+          <div key={String(label)} className="rounded-xl bg-gray-50 p-4">
+            <p className="text-xs font-semibold text-gray-500">{label}</p>
+            <p className="mt-2 text-2xl font-bold">{value}</p>
+            <p className="mt-1 text-[11px] leading-4 text-gray-500">{detail}</p>
+          </div>
+        ))}
+      </div>
+      {data.supabase.evidenceFreshness.backlog.length > 0 ? (
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+              <tr><th className="px-4 py-3">Klub</th><th className="px-4 py-3">Verified</th><th className="px-4 py-3">Çatmayan fresh evidence</th><th className="px-4 py-3">Son evidence</th></tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.supabase.evidenceFreshness.backlog.slice(0, 12).map((club) => (
+                <tr key={club.slug}>
+                  <td className="px-4 py-3"><Link href={'/klub/' + club.slug} target="_blank" className="font-semibold text-[#6A47F0] hover:underline">{club.name}</Link><p className="text-xs text-gray-400">{club.slug}</p></td>
+                  <td className="px-4 py-3">{club.isVerified ? 'Bəli' : 'Xeyr'}</td>
+                  <td className="px-4 py-3">{club.missingEvidence.join(', ')}</td>
+                  <td className="px-4 py-3">{club.lastEvidenceCheckedAt ? new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', dateStyle: 'short' }).format(new Date(club.lastEvidenceCheckedAt)) : 'Yoxdur'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+      <p className="mt-4 text-xs leading-5 text-gray-500">Bu bölmə public görünürlüğü dəyişmir və verified işarəsini avtomatik silmir. Məqsəd re-verification işini auditable evidence əsasında prioritetləşdirməkdir.</p>
+    </section>
+
     <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="text-xl font-bold">İdarəetmə siqnalları</h2><p className="mt-1 text-sm text-gray-500">Məlumatdan avtomatik çıxarılan deterministik qərar siqnalları.</p></div><span className="h-fit rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold">{data.signals.length} siqnal</span></div><div className="mt-5 grid gap-4 lg:grid-cols-2">{data.signals.map((signal) => <article key={`${signal.title}-${signal.detail}`} className={`rounded-xl border p-4 ${signal.severity === 'critical' ? 'border-red-200 bg-red-50' : signal.severity === 'attention' ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}><p className="text-sm font-bold">{signal.title}</p><p className="mt-1 text-sm text-gray-700">{signal.detail}</p><p className="mt-3 text-xs font-semibold text-gray-600">Növbəti addım: {signal.action}</p></article>)}</div></section>
 
     <div className="mt-8 grid gap-6 xl:grid-cols-[1.3fr_0.7fr]"><section className="rounded-2xl border border-gray-200 bg-white p-6"><h2 className="text-xl font-bold">Davranış trendi</h2><p className="mt-1 text-sm text-gray-500">Günlük səhifə baxışı / ziyarətçi / əlaqə klikləri.</p><div className="mt-6 space-y-3">{data.posthog.trend.length === 0 ? <p className="text-sm text-gray-500">Bu interval üçün trend datası yoxdur.</p> : data.posthog.trend.map((point) => <div key={point.date} className="grid grid-cols-[82px_1fr_120px] items-center gap-3 text-xs"><span className="text-gray-500">{point.date}</span><div className="h-3 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-[#7C5CFC]" style={{ width: `${Math.max(2, (point.pageviews / maxTrend) * 100)}%` }} /></div><span className="text-right font-semibold">{point.pageviews} / {point.visitors} / {point.ctaClicks}</span></div>)}</div></section><section className="rounded-2xl border border-gray-200 bg-white p-6"><h2 className="text-xl font-bold">Məhsul davranışı</h2><p className="mt-1 text-sm text-gray-500">Kəşf etmə alətlərindən istifadə.</p><div className="mt-5 space-y-4"><MetricCard label="Axtarış" metric={data.posthog.searchQueries} detail={`${data.posthog.tracking.noResultSearches} nəticəsiz sorğu`} /><MetricCard label="Filtr dəyişikliyi" metric={data.posthog.filterChanges} detail="Rayon, tip və digər filtr seçimləri" /></div></section></div>
