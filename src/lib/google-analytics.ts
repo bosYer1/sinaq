@@ -21,7 +21,7 @@ export function buildGaBootstrap(measurementId: string) {
   const normalized = normalizeGaMeasurementId(measurementId);
   if (!normalized) return '';
 
-  return `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=gtag;gtag('js',new Date());gtag('config','${normalized}',{anonymize_ip:true});`;
+  return `(function(){if(new URLSearchParams(window.location.search).get('__analytics_smoke')==='1')return;window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=gtag;gtag('js',new Date());gtag('config','${normalized}',{anonymize_ip:true});})();`;
 }
 
 export function createGaRouteTracker(initialPathname: string | null = null) {
