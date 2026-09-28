@@ -128,7 +128,7 @@ export default async function GamingClubMarketStatsPage() {
         name: title,
         description: fallbackDescription,
         ...(latestUpdated ? { dateModified: latestUpdated } : {}),
-        isPartOf: { '@id': `${siteUrl}#website` },
+        isPartOf: { '@id': `${siteUrl}/#website` },
         about: [
           { '@type': 'Thing', name: 'Bakı gaming klubları' },
           { '@type': 'Thing', name: 'PC klubları' },
