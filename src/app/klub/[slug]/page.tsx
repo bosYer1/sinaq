@@ -136,6 +136,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const isVegasClub = locationIdentity.includes('vegas gaming');
   const isForGamerClub = locationIdentity.includes('forgamer');
   const isIbrazoroClub = locationIdentity.includes('ibrazoro');
+  const isQarabaghClub = locationIdentity.includes('qarabagh game center');
   const hasMap = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}` : undefined;
   const offerCatalog = hourlyPricing.length > 0 ? {
     '@type': 'OfferCatalog',
@@ -218,6 +219,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
       {isVegasClub ? <Link href="/vegas-gaming-center" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər Vegas filialları</Link> : null}
       {isForGamerClub ? <Link href="/forgamer" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər ForGamer filialları</Link> : null}
       {isIbrazoroClub ? <Link href="/ibrazoro" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər Ibrazoro filialları</Link> : null}
+      {isQarabaghClub ? <Link href="/qarabagh-game-center" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər Qarabagh filialları</Link> : null}
     </nav>
   </>;
 }
