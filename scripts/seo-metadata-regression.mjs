@@ -21,6 +21,9 @@ const vegasPage = fs.readFileSync('src/app/vegas-gaming-center/page.tsx', 'utf8'
 const forGamerPage = fs.readFileSync('src/app/forgamer/page.tsx', 'utf8');
 const ibrazoroPage = fs.readFileSync('src/app/ibrazoro/page.tsx', 'utf8');
 const qarabaghPage = fs.readFileSync('src/app/qarabagh-game-center/page.tsx', 'utf8');
+const marketStatsPage = fs.readFileSync('src/app/bakida-gaming-klub-statistikasi/page.tsx', 'utf8');
+const priceLanding = fs.readFileSync('src/app/bakida-gaming-klub-qiymetleri/page.tsx', 'utf8');
+const aboutPage = fs.readFileSync('src/app/haqqimizda/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
 const indexNowWorkflow = fs.readFileSync('.github/workflows/indexnow-submit.yml', 'utf8');
@@ -97,6 +100,10 @@ const checks = [
   [playstationLanding.includes('PlayStation filial şəbəkələri') && playstationLanding.includes('brandNetworks') && playstationLanding.includes('/qarabagh-game-center'), 'PlayStation landing must reinforce real multi-branch entity hubs'],
   [pcLanding.includes('PC filial şəbəkələri') && pcLanding.includes('brandNetworks') && pcLanding.includes('/forgamer'), 'PC landing must reinforce real multi-branch entity hubs'],
   [internetLanding.includes('PC və internet klub şəbəkələri') && internetLanding.includes('brandNetworks') && internetLanding.includes('/forgamer'), 'winning internet landing must pass internal authority to real multi-branch entity hubs'],
+  [marketStatsPage.includes("canonical: '/bakida-gaming-klub-statistikasi'") && marketStatsPage.includes('getClubs()') && marketStatsPage.includes('Rayon və şəhər üzrə klub sıxlığı'), 'market statistics asset must stay live-data-driven and canonicalized'],
+  [marketStatsPage.includes('Məlumat metodologiyası') && marketStatsPage.includes('pricedShare') && marketStatsPage.includes('open24Share'), 'market statistics asset must expose methodology and data coverage'],
+  [sitemapPage.includes("/bakida-gaming-klub-statistikasi") && sitemapPage.includes("0.83"), 'market statistics asset must be present in the sitemap when public supply exists'],
+  [priceLanding.includes('href="/bakida-gaming-klub-statistikasi"') && aboutPage.includes('href="/bakida-gaming-klub-statistikasi"'), 'pricing and about pages must reinforce the public market statistics asset'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
