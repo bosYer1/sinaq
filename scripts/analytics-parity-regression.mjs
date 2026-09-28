@@ -64,6 +64,7 @@ assert.ok(detail.includes("/^994(?:10|50|51|55|60|70|77|99)\\d{7}$/") && detail.
 assert.ok(detail.includes('GameYer.az-da klubunuzu gördüm') && detail.includes('Rezervasiya etmək istəyirəm') && detail.includes('Saat: __:__') && detail.includes('Nəfər sayı: __'), 'WhatsApp reservation message must preserve neutral GameYer discovery attribution plus time and party-size fields');
 assert.ok(!detail.includes('Bu klub sizindir? Təsdiqlə') && !detail.includes('ownerHref'), 'Club detail must not expose a direct owner-claim CTA.');
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
+assert.ok(pageview.includes("__analytics_smoke") && pageview.includes("return;"), 'Synthetic browser smoke must not write first-party page views.');
 for (const event of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) {
   assert.ok(submissionAnalytics.includes(`trackGaEvent('${event}'`) && submissionAnalytics.includes(`trackPostHogEvent('${event}'`), `${event} must stay wired to GA4 and PostHog`);
 }
