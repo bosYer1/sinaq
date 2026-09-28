@@ -95,6 +95,7 @@ export function PageViewTracker() {
 
   useEffect(() => {
     if (!pathname || pathname.startsWith('/admin') || pathname.startsWith('/api')) return;
+    if (new URLSearchParams(window.location.search).get('__analytics_smoke') === '1') return;
 
     trackSubmissionSuccess(pathname);
 
