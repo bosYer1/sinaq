@@ -149,6 +149,13 @@ assert.match(extended, /Quraşdırma imkanı.*download deyil/s, 'PWA availabilit
 assert.match(extended, /posthog\.pwa\.installed/, 'Founder Analytics must surface confirmed appinstalled evidence.');
 assert.match(extended, />Klub data prioritetləri</, 'Founder Analytics must surface demand-weighted club data priorities.');
 assert.match(page, /clubDataPriorities=\{data\.clubDataPriorities\}/, 'Founder page must pass calculated club data priorities to the analytics UI.');
+assert.ok(types.includes('evidenceFreshness: {') && types.includes('withFreshFullTriplet: number;'), 'Supabase metrics must distinguish verified flags from auditable evidence freshness.');
+assert.ok(types.includes("evidenceGaps: Array<'status' | 'type' | 'location'>;"), 'Club data priorities must expose exact status/type/location evidence gaps.');
+assert.ok(supabase.includes('EVIDENCE_FRESH_DAYS = 30') && supabase.includes("STRONG_EVIDENCE_CONFIDENCE = new Set(['official', 'corroborated'])"), 'Evidence freshness must use a bounded 30-day official/corroborated contract.');
+assert.ok(supabase.includes("evidence.field_name") && supabase.includes("groups.has('status')") && supabase.includes("groups.has('type')") && supabase.includes("groups.has('location')"), 'Evidence coverage must evaluate status, type and location separately.');
+assert.ok(page.includes('Verified flag') && page.includes('Fresh strong evidence') && page.includes('Fresh 3-lü sübut'), 'Founder dashboard must not collapse verified flag and fresh provenance into one number.');
+assert.ok(extended.includes('Fresh sübut boşluğu') && extended.includes('club.evidenceGaps.map(evidenceGapLabel)'), 'Club priority table must show exact fresh evidence gaps.');
+assert.ok(calculations.includes('Sübut təzəliyi verified bayraqdan geri qalır') && calculations.includes('withFreshFullTriplet'), 'CEO signals must surface provenance freshness debt.');
 
 assert.match(calculations, /posthog\.tracking\.attributionCompleteness < 90/, 'CEO attribution warning must use session-level completeness.');
 assert.doesNotMatch(calculations, /İki və daha çox sessiyası olan istifadəçilərin payı/, 'CEO returning signal must not equate repeat same-period sessions with returning users.');
