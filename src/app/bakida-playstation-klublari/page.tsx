@@ -38,6 +38,15 @@ export default async function BakuPlayStationClubsPage() {
   const siteUrl = getSiteUrl();
   const url = `${siteUrl}/bakida-playstation-klublari`;
   const districtCounts = new Map<string, { slug: string; name: string; count: number }>();
+  const brandHubDefinitions = [
+    { href: '/laliga-game-center', label: 'LaLiga Game Center', match: 'laliga' },
+    { href: '/just-for-fun', label: 'Just For Fun', match: 'just for fun' },
+    { href: '/vegas-gaming-center', label: 'Vegas Gaming Center', match: 'vegas gaming' },
+    { href: '/forgamer', label: 'ForGamer', match: 'forgamer' },
+    { href: '/ibrazoro', label: 'Ibrazoro', match: 'ibrazoro' },
+    { href: '/qarabagh-game-center', label: 'Qarabagh Game Center', match: 'qarabagh game center' },
+  ] as const;
+
   const { minimumPrice } = landingSignals(clubs);
 
   for (const club of clubs) {
@@ -47,6 +56,9 @@ export default async function BakuPlayStationClubsPage() {
   }
 
   const strongDistricts = [...districtCounts.values()].filter((district) => district.count >= 2).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'az'));
+  const brandNetworks = brandHubDefinitions.filter((hub) => (
+    clubs.filter((club) => `${club.name} ${club.slug}`.toLocaleLowerCase('az').includes(hub.match)).length >= 2
+  ));
   const faq = [
     { question: 'Bakıda PlayStation klub qiymətləri neçə AZN-dən başlayır?', answer: minimumPrice !== null ? `GameYer-də hazırda göstərilən PlayStation klublarında saatlıq qiymətlər ${minimumPrice} AZN-dən başlayır. Konkret klub profilində aktual tarifi yoxla.` : 'Saatlıq PlayStation qiymətləri klubdan və otaq/zona tipindən asılıdır. Qiymət məlumatı olan klubları GameYer-də müqayisə edə bilərsən.' },
     { question: 'Mənə yaxın PlayStation klubunu necə tapa bilərəm?', answer: 'Yaxın klublar səhifəsindən xəritəyə keçərək lokasiyana yaxın PlayStation klublarını görə bilərsən. Rayon səhifələri konkret ərazidə seçimləri daraltmağa kömək edir.' },
@@ -80,6 +92,20 @@ export default async function BakuPlayStationClubsPage() {
       <Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">24 saat PlayStation klubları</Link>
       <Link href="/28-may-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">28 May gaming klubları</Link>
     </div>
+
+    {brandNetworks.length > 0 ? (
+      <section className="mt-6" aria-labelledby="ps-brand-networks-heading">
+        <h2 id="ps-brand-networks-heading" className="font-display text-base font-bold text-ink">PlayStation filial şəbəkələri</h2>
+        <p className="mt-1 text-xs leading-5 text-muted">Bu kateqoriyada ən azı 2 aktiv filialı olan şəbəkələrin bütün filiallarını bir səhifədə müqayisə et.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {brandNetworks.map((hub) => (
+            <Link key={hub.href} href={hub.href} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">
+              {hub.label} filialları
+            </Link>
+          ))}
+        </div>
+      </section>
+    ) : null}
 
     {strongDistricts.length > 0 ? (
       <section className="mt-6" aria-labelledby="ps-districts-heading">
