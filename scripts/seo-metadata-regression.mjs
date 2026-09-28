@@ -18,6 +18,8 @@ const twentyEightMayPage = fs.readFileSync('src/app/28-may-gaming-klublari/page.
 const laLigaPage = fs.readFileSync('src/app/laliga-game-center/page.tsx', 'utf8');
 const justForFunPage = fs.readFileSync('src/app/just-for-fun/page.tsx', 'utf8');
 const vegasPage = fs.readFileSync('src/app/vegas-gaming-center/page.tsx', 'utf8');
+const forGamerPage = fs.readFileSync('src/app/forgamer/page.tsx', 'utf8');
+const ibrazoroPage = fs.readFileSync('src/app/ibrazoro/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
 const indexNowWorkflow = fs.readFileSync('.github/workflows/indexnow-submit.yml', 'utf8');
@@ -81,6 +83,12 @@ const checks = [
   [vegasPage.includes("getClubs({ q: 'Vegas' })") && vegasPage.includes("canonical: '/vegas-gaming-center'") && vegasPage.includes('clubs.length >= 2'), 'Vegas brand hub must stay data-driven, canonicalized and supply-gated'],
   [clubPage.includes("const isVegasClub = locationIdentity.includes('vegas gaming');") && clubPage.includes('isVegasClub ? <Link href="/vegas-gaming-center"'), 'Vegas branch profiles must reinforce the brand hub'],
   [sitemapPage.includes("vegasCount >= 2") && sitemapPage.includes("/vegas-gaming-center"), 'Vegas brand hub sitemap entry must be supply-gated'],
+  [forGamerPage.includes("getClubs({ q: 'ForGamer' })") && forGamerPage.includes("canonical: '/forgamer'") && forGamerPage.includes('clubs.length >= 2'), 'ForGamer brand hub must stay data-driven, canonicalized and supply-gated'],
+  [clubPage.includes("const isForGamerClub = locationIdentity.includes('forgamer');") && clubPage.includes('isForGamerClub ? <Link href="/forgamer"'), 'ForGamer branch profiles must reinforce the brand hub'],
+  [sitemapPage.includes("forGamerCount >= 2") && sitemapPage.includes("/forgamer"), 'ForGamer brand hub sitemap entry must be supply-gated'],
+  [ibrazoroPage.includes("getClubs({ q: 'Ibrazoro' })") && ibrazoroPage.includes("canonical: '/ibrazoro'") && ibrazoroPage.includes('clubs.length >= 2'), 'Ibrazoro brand hub must stay data-driven, canonicalized and supply-gated'],
+  [clubPage.includes("const isIbrazoroClub = locationIdentity.includes('ibrazoro');") && clubPage.includes('isIbrazoroClub ? <Link href="/ibrazoro"'), 'Ibrazoro branch profiles must reinforce the brand hub'],
+  [sitemapPage.includes("ibrazoroCount >= 2") && sitemapPage.includes("/ibrazoro"), 'Ibrazoro brand hub sitemap entry must be supply-gated'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
