@@ -83,6 +83,7 @@ function unavailableSupabase(detail: string): SupabaseMetrics {
     status: providerStatus('supabase', 'error', detail),
     activeClubs: 0,
     verifiedClubs: 0,
+    evidenceFreshness: { cutoffDays: 30, withAnyCurrentEvidence: 0, withFreshStrongEvidence: 0, withFreshStatus: 0, withFreshType: 0, withFreshLocation: 0, withFreshFullTriplet: 0 },
     pendingSubmissions: 0,
     staleSubmissions: 0,
     submissionBacklogByKind: { ownerClaim: 0, newClub: 0, correction: 0 },
@@ -110,8 +111,9 @@ function buildClubDataPriorities(posthog: PostHogMetrics, operational: SupabaseM
     const intentSessions = behavior?.intentSessions ?? 0;
     const gapPoints = 100 - club.completenessScore;
     const demandPoints = Math.min(60, views * 2 + intentSessions * 4);
-    const evidencePoints = club.evidenceState === 'missing' ? 10 : club.evidenceState === 'stale' ? 5 : 0;
-    return { ...club, views, ctaClicks, priorityScore: gapPoints + demandPoints + evidencePoints };
+    const evidenceStatePoints = club.evidenceState === 'missing' ? 10 : club.evidenceState === 'stale' ? 5 : 0;
+    const evidenceGapPoints = club.evidenceGaps.length * 6;
+    return { ...club, views, ctaClicks, priorityScore: gapPoints + demandPoints + evidenceStatePoints + evidenceGapPoints };
   }).sort((a, b) => b.priorityScore - a.priorityScore || b.views - a.views || a.name.localeCompare(b.name, 'az'));
 }
 
