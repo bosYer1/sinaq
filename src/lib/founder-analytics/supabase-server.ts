@@ -7,11 +7,22 @@ import type { Database } from '@/types/database';
 import type { ClubDataQualityRow, DateRange, SupabaseMetrics } from './types';
 
 type ClubQualityRow = Pick<Database['public']['Tables']['clubs']['Row'], 'id' | 'name' | 'slug' | 'phone' | 'instagram_url' | 'tiktok_url' | 'profile_image_url' | 'latitude' | 'longitude'>;
-type EvidenceRow = Pick<Database['public']['Tables']['club_data_evidence']['Row'], 'club_id' | 'checked_at'>;
+type EvidenceRow = Pick<Database['public']['Tables']['club_data_evidence']['Row'], 'club_id' | 'field_name' | 'confidence' | 'is_current' | 'checked_at'>;
+
+const EVIDENCE_FRESH_DAYS = 30;
+const STRONG_EVIDENCE_CONFIDENCE = new Set(['official', 'corroborated']);
+
+function evidenceGroup(fieldName: string): 'status' | 'type' | 'location' | null {
+  if (fieldName === 'status') return 'status';
+  if (fieldName === 'type') return 'type';
+  if (fieldName === 'address' || fieldName === 'coordinates') return 'location';
+  return null;
+}
 
 function emptyMetrics(detail: string): SupabaseMetrics {
   return {
     status: providerStatus('supabase', 'error', detail), activeClubs: 0, verifiedClubs: 0,
+    evidenceFreshness: { cutoffDays: EVIDENCE_FRESH_DAYS, withAnyCurrentEvidence: 0, withFreshStrongEvidence: 0, withFreshStatus: 0, withFreshType: 0, withFreshLocation: 0, withFreshFullTriplet: 0 },
     pendingSubmissions: 0, staleSubmissions: 0,
     submissionBacklogByKind: { ownerClaim: 0, newClub: 0, correction: 0 },
     completeness: { total: 0, missingImage: 0, missingPhone: 0, missingSocial: 0, missingCoordinates: 0, missingType: 0 },
@@ -27,11 +38,27 @@ function buildQualityBacklog(
   evidenceRows: EvidenceRow[],
 ): ClubDataQualityRow[] {
   const latestEvidence = new Map<string, string>();
+  const freshStrongGroups = new Map<string, Set<'status' | 'type' | 'location'>>();
+  const staleCutoffMs = Date.now() - EVIDENCE_FRESH_DAYS * 24 * 60 * 60 * 1000;
+
   for (const evidence of evidenceRows) {
+    if (!evidence.is_current) continue;
     const current = latestEvidence.get(evidence.club_id);
     if (!current || evidence.checked_at > current) latestEvidence.set(evidence.club_id, evidence.checked_at);
+
+    const checkedAtMs = Date.parse(evidence.checked_at);
+    const group = evidenceGroup(evidence.field_name);
+    if (
+      group
+      && Number.isFinite(checkedAtMs)
+      && checkedAtMs >= staleCutoffMs
+      && STRONG_EVIDENCE_CONFIDENCE.has(evidence.confidence)
+    ) {
+      const groups = freshStrongGroups.get(evidence.club_id) ?? new Set<'status' | 'type' | 'location'>();
+      groups.add(group);
+      freshStrongGroups.set(evidence.club_id, groups);
+    }
   }
-  const staleCutoffMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
   return clubs.map((club) => {
     const missingFields: ClubDataQualityRow['missingFields'] = [];
@@ -48,6 +75,9 @@ function buildQualityBacklog(
       : Number.isFinite(checkedAtMs) && checkedAtMs < staleCutoffMs
         ? 'stale'
         : 'fresh';
+    const strongGroups = freshStrongGroups.get(club.id) ?? new Set<'status' | 'type' | 'location'>();
+    const evidenceGaps: ClubDataQualityRow['evidenceGaps'] = (['status', 'type', 'location'] as const)
+      .filter((group) => !strongGroups.has(group));
 
     return {
       slug: club.slug,
@@ -56,8 +86,9 @@ function buildQualityBacklog(
       missingFields,
       lastEvidenceCheckedAt,
       evidenceState,
+      evidenceGaps,
     };
-  }).filter((club) => club.missingFields.length > 0 || club.evidenceState !== 'fresh')
+  }).filter((club) => club.missingFields.length > 0 || club.evidenceState !== 'fresh' || club.evidenceGaps.length > 0)
     .sort((a, b) => {
       if (a.completenessScore !== b.completenessScore) return a.completenessScore - b.completenessScore;
       if (a.evidenceState !== b.evidenceState) return a.evidenceState === 'missing' ? -1 : b.evidenceState === 'missing' ? 1 : 0;
@@ -77,7 +108,7 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
     supabase.from('club_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']).eq('kind', 'correction'),
     supabase.from('club_images').select('club_id'),
     supabase.from('club_type_assignments').select('club_id'),
-    supabase.from('club_data_evidence').select('club_id,checked_at').eq('is_current', true),
+    supabase.from('club_data_evidence').select('club_id,field_name,confidence,is_current,checked_at').eq('is_current', true),
     supabase.from('analytics_events')
       .select('session_id,event_type')
       .gte('created_at', range.from)
@@ -93,6 +124,31 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
   const typeIds = new Set((typesResult.data ?? []).map((row) => row.club_id));
   const evidenceRows = (evidenceResult.data ?? []) as EvidenceRow[];
   const intentRows = intentResult.error ? [] : (intentResult.data ?? []);
+  const activeClubIds = new Set(clubs.map((club) => club.id));
+  const freshCutoffMs = Date.now() - EVIDENCE_FRESH_DAYS * 24 * 60 * 60 * 1000;
+  const currentEvidenceClubIds = new Set<string>();
+  const freshStrongByClub = new Map<string, Set<'status' | 'type' | 'location'>>();
+  for (const evidence of evidenceRows) {
+    if (!activeClubIds.has(evidence.club_id) || !evidence.is_current) continue;
+    currentEvidenceClubIds.add(evidence.club_id);
+    const checkedAtMs = Date.parse(evidence.checked_at);
+    const group = evidenceGroup(evidence.field_name);
+    if (
+      group
+      && Number.isFinite(checkedAtMs)
+      && checkedAtMs >= freshCutoffMs
+      && STRONG_EVIDENCE_CONFIDENCE.has(evidence.confidence)
+    ) {
+      const groups = freshStrongByClub.get(evidence.club_id) ?? new Set<'status' | 'type' | 'location'>();
+      groups.add(group);
+      freshStrongByClub.set(evidence.club_id, groups);
+    }
+  }
+  const withFreshStatus = [...freshStrongByClub.values()].filter((groups) => groups.has('status')).length;
+  const withFreshType = [...freshStrongByClub.values()].filter((groups) => groups.has('type')).length;
+  const withFreshLocation = [...freshStrongByClub.values()].filter((groups) => groups.has('location')).length;
+  const withFreshFullTriplet = [...freshStrongByClub.values()]
+    .filter((groups) => groups.has('status') && groups.has('type') && groups.has('location')).length;
   const firstPartyIntent = intentResult.error
     ? { available: false, detail: 'First-party analytics_events oxunmadı.', events: 0, browserVisitors: 0, phoneClicks: 0, instagramClicks: 0, mapsClicks: 0, whatsappBookingClicks: 0 }
     : {
@@ -109,6 +165,15 @@ export async function getSupabaseMetrics(supabase: SupabaseClient<Database>, ran
     status: providerStatus('supabase', 'ready', 'Real klub, evidence və müraciət datası admin RLS sərhədindən oxundu.'),
     activeClubs: clubs.length,
     verifiedClubs: verifiedResult.count ?? 0,
+    evidenceFreshness: {
+      cutoffDays: EVIDENCE_FRESH_DAYS,
+      withAnyCurrentEvidence: currentEvidenceClubIds.size,
+      withFreshStrongEvidence: freshStrongByClub.size,
+      withFreshStatus,
+      withFreshType,
+      withFreshLocation,
+      withFreshFullTriplet,
+    },
     pendingSubmissions: pendingResult.count ?? 0,
     staleSubmissions: staleResult.count ?? 0,
     submissionBacklogByKind: { ownerClaim: ownerClaimPendingResult.count ?? 0, newClub: newClubPendingResult.count ?? 0, correction: correctionPendingResult.count ?? 0 },
