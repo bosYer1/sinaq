@@ -93,6 +93,8 @@ const checks = [
   [qarabaghPage.includes("getClubs({ q: 'Qarabagh Game Center' })") && qarabaghPage.includes("canonical: '/qarabagh-game-center'") && qarabaghPage.includes('clubs.length >= 2'), 'Qarabagh brand hub must stay data-driven, canonicalized and supply-gated'],
   [clubPage.includes("const isQarabaghClub = locationIdentity.includes('qarabagh game center');") && clubPage.includes('isQarabaghClub ? <Link href="/qarabagh-game-center"'), 'Qarabagh branch profiles must reinforce the brand hub'],
   [sitemapPage.includes("qarabaghCount >= 2") && sitemapPage.includes("/qarabagh-game-center"), 'Qarabagh brand hub sitemap entry must be supply-gated'],
+  [playstationLanding.includes('PlayStation filial şəbəkələri') && playstationLanding.includes('brandNetworks') && playstationLanding.includes('/qarabagh-game-center'), 'PlayStation landing must reinforce real multi-branch entity hubs'],
+  [pcLanding.includes('PC filial şəbəkələri') && pcLanding.includes('brandNetworks') && pcLanding.includes('/forgamer'), 'PC landing must reinforce real multi-branch entity hubs'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
