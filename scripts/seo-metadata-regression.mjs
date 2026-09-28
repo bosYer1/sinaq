@@ -24,6 +24,7 @@ const qarabaghPage = fs.readFileSync('src/app/qarabagh-game-center/page.tsx', 'u
 const marketStatsPage = fs.readFileSync('src/app/bakida-gaming-klub-statistikasi/page.tsx', 'utf8');
 const priceLanding = fs.readFileSync('src/app/bakida-gaming-klub-qiymetleri/page.tsx', 'utf8');
 const aboutPage = fs.readFileSync('src/app/haqqimizda/page.tsx', 'utf8');
+const methodologyPage = fs.readFileSync('src/app/melumat-metodologiyasi/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
 const indexNowWorkflow = fs.readFileSync('.github/workflows/indexnow-submit.yml', 'utf8');
@@ -104,6 +105,7 @@ const checks = [
   [marketStatsPage.includes('Məlumat metodologiyası') && marketStatsPage.includes('pricedShare') && marketStatsPage.includes('open24Share'), 'market statistics asset must expose methodology and data coverage'],
   [sitemapPage.includes("/bakida-gaming-klub-statistikasi") && sitemapPage.includes("0.83"), 'market statistics asset must be present in the sitemap when public supply exists'],
   [priceLanding.includes('href="/bakida-gaming-klub-statistikasi"') && aboutPage.includes('href="/bakida-gaming-klub-statistikasi"'), 'pricing and about pages must reinforce the public market statistics asset'],
+  [methodologyPage.includes('href="/bakida-gaming-klub-statistikasi"') && marketStatsPage.includes("timeZone: 'Asia/Baku'"), 'methodology must link to market statistics and freshness dates must render in Baku time'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
