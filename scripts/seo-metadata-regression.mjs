@@ -106,6 +106,7 @@ const checks = [
   [sitemapPage.includes("/bakida-gaming-klub-statistikasi") && sitemapPage.includes("0.83"), 'market statistics asset must be present in the sitemap when public supply exists'],
   [priceLanding.includes('href="/bakida-gaming-klub-statistikasi"') && aboutPage.includes('href="/bakida-gaming-klub-statistikasi"'), 'pricing and about pages must reinforce the public market statistics asset'],
   [methodologyPage.includes('href="/bakida-gaming-klub-statistikasi"') && marketStatsPage.includes("timeZone: 'Asia/Baku'"), 'methodology must link to market statistics and freshness dates must render in Baku time'],
+  [marketStatsPage.includes("'@type': 'Dataset'") && marketStatsPage.includes("isAccessibleForFree: true") && marketStatsPage.includes("variableMeasured") && marketStatsPage.includes("spatialCoverage"), 'market statistics page must expose Google-compatible Dataset metadata without inventing a download or license'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
