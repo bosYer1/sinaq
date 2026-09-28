@@ -134,7 +134,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (hourlyPricing.some((item) => item.club_type?.slug === 'pc' && item.price_from <= 2)) cheapPcCount += 1;
     if (hourlyPricing.some((item) => item.club_type?.slug === 'playstation' && item.price_from <= 3)) cheapPlayStationCount += 1;
     if (isOpen24HoursEveryDay(club.opening_hours ?? [])) open24Count += 1;
-    const locationIdentity = `${club.name} ${club.address} ${club.slug}`.toLowerCase().replaceAll('-', ' ');
+    const locationIdentity = `${club.name} ${club.address} ${club.slug}`.toLocaleLowerCase('az').replaceAll('-', ' ');
     if (locationIdentity.includes('28 may')) {
       twentyEightMayCount += 1;
       twentyEightMayLatest = newerIso(twentyEightMayLatest, club.updated_at);
