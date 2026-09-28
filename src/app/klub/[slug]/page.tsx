@@ -134,6 +134,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
   const isLaLigaClub = locationIdentity.includes('laliga') || locationIdentity.includes('la liga');
   const isJustForFunClub = locationIdentity.includes('just for fun');
   const isVegasClub = locationIdentity.includes('vegas gaming');
+  const isForGamerClub = locationIdentity.includes('forgamer');
+  const isIbrazoroClub = locationIdentity.includes('ibrazoro');
   const hasMap = club.latitude != null && club.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${club.latitude},${club.longitude}` : undefined;
   const offerCatalog = hourlyPricing.length > 0 ? {
     '@type': 'OfferCatalog',
@@ -214,6 +216,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
       {isLaLigaClub ? <Link href="/laliga-game-center" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər LaLiga filialları</Link> : null}
       {isJustForFunClub ? <Link href="/just-for-fun" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər Just For Fun filialları</Link> : null}
       {isVegasClub ? <Link href="/vegas-gaming-center" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər Vegas filialları</Link> : null}
+      {isForGamerClub ? <Link href="/forgamer" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər ForGamer filialları</Link> : null}
+      {isIbrazoroClub ? <Link href="/ibrazoro" className="rounded-control border border-border bg-surface px-3 py-2 text-muted transition hover:text-ink">Digər Ibrazoro filialları</Link> : null}
     </nav>
   </>;
 }
