@@ -109,6 +109,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let forGamerLatest: string | null = null;
   let ibrazoroCount = 0;
   let ibrazoroLatest: string | null = null;
+  let qarabaghCount = 0;
+  let qarabaghLatest: string | null = null;
 
   for (const club of clubs) {
     overallLatest = newerIso(overallLatest, club.updated_at);
@@ -157,6 +159,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ibrazoroCount += 1;
       ibrazoroLatest = newerIso(ibrazoroLatest, club.updated_at);
     }
+    if (locationIdentity.includes('qarabagh game center')) {
+      qarabaghCount += 1;
+      qarabaghLatest = newerIso(qarabaghLatest, club.updated_at);
+    }
 
     if (!club.district?.slug) continue;
     const districtSlug = club.district.slug;
@@ -196,6 +202,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (vegasCount >= 2) addLanding('/vegas-gaming-center', 0.84, vegasLatest);
   if (forGamerCount >= 2) addLanding('/forgamer', 0.84, forGamerLatest);
   if (ibrazoroCount >= 2) addLanding('/ibrazoro', 0.84, ibrazoroLatest);
+  if (qarabaghCount >= 2) addLanding('/qarabagh-game-center', 0.84, qarabaghLatest);
 
   const applyLatest = (url: string, latest: string | null) => {
     if (!latest) return;
