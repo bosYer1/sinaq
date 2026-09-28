@@ -74,6 +74,7 @@ const checks = [
   [twentyFourHourLanding.includes('href="#night-clubs"') && twentyFourHourLanding.includes('id="night-clubs"') && twentyFourHourLanding.includes('24 saat klublara bax ↓'), '24-hour landing primary CTA must jump directly to matching club results.'],
   [nextConfig.includes("source: '/favicon.ico'") && nextConfig.includes("destination: '/gameyer-favicon.jpeg'"), 'favicon.ico resolves to the locked GameYer favicon asset'],
   [indexNowWorkflow.includes('Wait for Vercel deployment') && indexNowWorkflow.includes('node scripts/indexnow-submit.mjs'), 'IndexNow workflow waits for production before notifying search engines'],
+  [indexNowWorkflow.includes('GITHUB_EVENT_NAME') && indexNowWorkflow.includes('node scripts/indexnow-submit.mjs --all'), 'IndexNow production pushes must submit the full current sitemap so brand-new URLs with older source lastmod are not skipped'],
   [twentyEightMayPage.includes("getClubs({ q: '28 May' })") && twentyEightMayPage.includes("canonical: '/28-may-gaming-klublari'"), '28 May landing is data-driven and canonicalized'],
   [twentyEightMayPage.includes("'28 May PlayStation və PC klubları — ünvan və xəritə'") && twentyEightMayPage.includes('28 Mayda PlayStation və PC klubları'), '28 May landing must prioritize the observed PlayStation query intent.'],
   [clubPage.includes("const isTwentyEightMayClub = locationIdentity.includes('28 may');") && clubPage.includes('isTwentyEightMayClub ? <Link href="/28-may-gaming-klublari"'), '28 May club profiles must contextually reinforce the dedicated landing.'],
