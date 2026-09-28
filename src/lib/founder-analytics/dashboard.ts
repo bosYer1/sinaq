@@ -89,6 +89,7 @@ function unavailableSupabase(detail: string): SupabaseMetrics {
     submissionBacklogByKind: { ownerClaim: 0, newClub: 0, correction: 0 },
     completeness: { total: 0, missingImage: 0, missingPhone: 0, missingSocial: 0, missingCoordinates: 0, missingType: 0 },
     qualityBacklog: [],
+    evidenceFreshness: { currentAny: 0, strongAny: 0, status: 0, type: 0, location: 0, fullTriplet: 0, backlog: [] },
     firstPartyIntent: {
       available: false,
       detail,
