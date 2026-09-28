@@ -10,6 +10,7 @@ test('normalizes valid GA4 Measurement IDs and rejects invalid values', () => {
 
 test('bootstrap initializes GA4 and sends the standard initial page view', () => {
   const script = buildGaBootstrap('G-GC6LNK1W6D');
+  assert.match(script, /__analytics_smoke/);
   assert.match(script, /gtag\('js',new Date\(\)\)/);
   assert.match(script, /gtag\('config','G-GC6LNK1W6D'/);
   assert.equal((script.match(/gtag\('config'/g) ?? []).length, 1);
