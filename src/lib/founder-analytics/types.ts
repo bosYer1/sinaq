@@ -85,6 +85,14 @@ export type ClubDataPriorityRow = ClubDataQualityRow & {
   priorityScore: number;
 };
 
+export type ClubEvidenceBacklogRow = {
+  slug: string;
+  name: string;
+  isVerified: boolean;
+  lastEvidenceCheckedAt: string | null;
+  missingEvidence: Array<'status' | 'type' | 'location'>;
+};
+
 export type TrendPoint = { date: string; pageviews: number; visitors: number; ctaClicks: number };
 
 export type ReturnLoopMetrics = {
@@ -255,6 +263,15 @@ export type SupabaseMetrics = {
     missingType: number;
   };
   qualityBacklog: ClubDataQualityRow[];
+  evidenceFreshness: {
+    currentAny: number;
+    strongAny: number;
+    status: number;
+    type: number;
+    location: number;
+    fullTriplet: number;
+    backlog: ClubEvidenceBacklogRow[];
+  };
   firstPartyIntent: {
     available: boolean;
     detail: string;

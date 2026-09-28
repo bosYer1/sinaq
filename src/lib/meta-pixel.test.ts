@@ -12,6 +12,7 @@ test('missing or invalid Pixel ID does not produce a script', () => {
 
 test('valid Pixel ID initializes and sends exactly one bootstrap PageView', () => {
   const script = buildMetaPixelBootstrap('1234567890');
+  assert.match(script, /__analytics_smoke/);
   assert.match(script, /fbq\('init','1234567890'\)/);
   assert.equal(script.match(/fbq\('track','PageView'\)/g)?.length, 1);
   assert.ok(script.indexOf("fbq('init'") < script.indexOf("fbq('track','PageView')"));

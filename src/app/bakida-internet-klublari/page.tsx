@@ -41,6 +41,14 @@ export default async function BakuInternetClubsPage() {
   const priced = clubs.filter((club) => Number.isFinite(minPcPrice(club)));
   const minPrice = priced.length ? Math.min(...priced.map(minPcPrice)) : null;
   const districtCounts = new Map<string, { name: string; slug: string; count: number }>();
+  const brandHubDefinitions = [
+    { href: '/laliga-game-center', label: 'LaLiga Game Center', match: 'laliga' },
+    { href: '/just-for-fun', label: 'Just For Fun', match: 'just for fun' },
+    { href: '/vegas-gaming-center', label: 'Vegas Gaming Center', match: 'vegas gaming' },
+    { href: '/forgamer', label: 'ForGamer', match: 'forgamer' },
+    { href: '/ibrazoro', label: 'Ibrazoro', match: 'ibrazoro' },
+    { href: '/qarabagh-game-center', label: 'Qarabagh Game Center', match: 'qarabagh game center' },
+  ] as const;
 
   for (const club of clubs) {
     if (!club.district?.slug) continue;
@@ -49,6 +57,9 @@ export default async function BakuInternetClubsPage() {
   }
 
   const districts = [...districtCounts.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'az'));
+  const brandNetworks = brandHubDefinitions.filter((hub) => (
+    clubs.filter((club) => `${club.name} ${club.slug}`.toLocaleLowerCase('az').includes(hub.match)).length >= 2
+  ));
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/bakida-internet-klublari`;
   const faq = [
@@ -82,6 +93,20 @@ export default async function BakuInternetClubsPage() {
       <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">“Internet klub”, “internet kafe”, “kompüter klubu” və “PC klub” kimi axtarılan Bakı gaming məkanlarını bir siyahıda müqayisə et. Hazırda {clubs.length} aktiv PC məkanı göstərilir.{minPrice != null ? ` Məlum saatlıq tariflər ${minPrice} AZN-dən başlayır.` : ''} Ünvan, xəritə və mövcud olduqda iş saatı və tarif məlumatlarını klub profillərində yoxla.</p>
 
       <div className="mt-5 flex flex-wrap gap-2"><Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Mənə yaxın internet klubları</Link><Link href="/bakida-pc-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Bütün PC klubları</Link><Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Qiymətləri müqayisə et</Link><Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Ucuz PC klubları</Link><Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">24 saat klublar</Link><Link href="/28-may-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">28 May gaming klubları</Link></div>
+
+      {brandNetworks.length > 0 ? (
+        <section className="mt-6" aria-labelledby="internet-brand-networks-heading">
+          <h2 id="internet-brand-networks-heading" className="font-display text-base font-bold text-ink">PC və internet klub şəbəkələri</h2>
+          <p className="mt-1 text-xs leading-5 text-muted">Ən azı 2 aktiv PC/internet filialı olan şəbəkələrin bütün uyğun filiallarını bir səhifədə müqayisə et.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {brandNetworks.map((hub) => (
+              <Link key={hub.href} href={hub.href} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">
+                {hub.label} filialları
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {districts.length > 0 ? <section className="mt-6" aria-labelledby="internet-districts"><h2 id="internet-districts" className="font-display text-base font-bold text-ink">Rayon üzrə internet kafe və kompüter klubları</h2><p className="mt-1 text-xs leading-5 text-muted">Bakı rayonları üzrə PC, internet klub və internet kafelərə keç.</p><div className="mt-3 flex flex-wrap gap-2">{districts.map((district) => <Link key={district.slug} href={`/rayon/${district.slug}/pc`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">{district.name} ({district.count})</Link>)}</div></section> : null}
 

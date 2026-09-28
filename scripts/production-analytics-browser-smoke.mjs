@@ -5,7 +5,7 @@ const BASE_URL = process.env.TEST_BASE_URL || 'https://gameyer.az';
 const BASE_ORIGIN = new URL(BASE_URL).origin;
 const CHROME_BIN = process.env.CHROME_BIN || 'google-chrome-stable';
 const PORT = Number(process.env.ANALYTICS_CDP_PORT || 9444);
-const SMOKE_QUERY = '__analytics_smoke=1';
+const SMOKE_QUERY = '__analytics_delivery_smoke=1';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const assert = (condition, message, context) => { if (!condition) throw new Error(`${message}\n${JSON.stringify(context ?? {}, null, 2)}`); };
 
@@ -81,6 +81,15 @@ const posthogRequests = () => requests.filter((request) => /posthog|us\.i\.posth
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Network.enable');
+await send('Network.setBlockedURLs', {
+  urls: [
+    '*/api/analytics/visit*',
+    '*/api/analytics/event*',
+    '*us.i.posthog.com/*',
+    '*google-analytics.com/*',
+    '*facebook.com/tr/*',
+  ],
+});
 
 // Observe the real PostHog SDK without replacing or short-circuiting it. The wrapper
 // forwards every call to the original capture implementation, so normal network
@@ -114,12 +123,12 @@ try {
   const home = await evaluate(`(() => ({
     host: location.host,
     path: location.pathname,
-    smoke: new URLSearchParams(location.search).get('__analytics_smoke'),
+    smoke: new URLSearchParams(location.search).get('__analytics_delivery_smoke'),
     distinctId: window.posthog?.get_distinct_id?.() || null,
     clubHref: Array.from(document.querySelectorAll('a[href^="/klub/"]')).map((a) => a.getAttribute('href')).find(Boolean) || null,
   }))()`);
   assert(home.host === 'gameyer.az' || BASE_URL.includes('127.0.0.1'), 'Unexpected production host', home);
-  assert(home.smoke === '1', 'Analytics smoke marker missing', home);
+  assert(home.smoke === '1', 'Analytics delivery-smoke marker missing', home);
   assert(home.distinctId, 'PostHog distinct id missing', home);
   assert(home.clubHref, 'No club detail link found', home);
 
@@ -195,9 +204,9 @@ try {
     currentUrl: window.location.href,
     documentReferrer: document.referrer || null,
     firstReferrer: window.posthog?.get_property?.('gameyer_first_referrer') || null,
-    smoke: new URLSearchParams(window.location.search).get('__analytics_smoke'),
+    smoke: new URLSearchParams(window.location.search).get('__analytics_delivery_smoke'),
   }))()`);
-  assert(attributionProbe.smoke === '1', 'Referrer probe lost analytics smoke marker', attributionProbe);
+  assert(attributionProbe.smoke === '1', 'Referrer probe lost analytics delivery-smoke marker', attributionProbe);
   assert(attributionProbe.documentReferrer, 'Same-origin referrer probe did not produce a document referrer', attributionProbe);
   const probeReferrerHost = new URL(attributionProbe.documentReferrer).hostname.replace(/^www\./i, '').toLowerCase();
   const probeCurrentHost = new URL(attributionProbe.currentUrl).hostname.replace(/^www\./i, '').toLowerCase();
