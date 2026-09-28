@@ -54,6 +54,15 @@ export function buildCeoSignals(posthog: PostHogMetrics, supabase: SupabaseMetri
     if (missingCore > 0) {
       signals.push({ severity: 'attention', title: 'Klub datasında boşluqlar var', detail: `${missingCore} əsas profil sahəsi tamamlanmayıb.`, action: 'Data Quality cədvəlində çatışmayan sahələri prioritetləşdir.' });
     }
+    const evidence = supabase.evidenceFreshness;
+    if (supabase.activeClubs > 0 && evidence.withFreshFullTriplet < supabase.activeClubs) {
+      signals.push({
+        severity: 'attention',
+        title: 'Sübut təzəliyi verified bayraqdan geri qalır',
+        detail: `${supabase.activeClubs} aktiv klubdan ${evidence.withFreshFullTriplet}-də son ${evidence.cutoffDays} gündə status + tip + lokasiya üzrə official/corroborated sübut üçlüyü tamamdır.`,
+        action: 'Verified bayrağını owner təsdiqi kimi oxuma; demand və evidence gap-ə görə re-verification növbəsini təmizlə.',
+      });
+    }
     if (supabase.staleSubmissions > 0) {
       signals.push({ severity: 'critical', title: 'Gecikmiş müraciətlər var', detail: `${supabase.staleSubmissions} müraciət 72 saatdan çoxdur gözləyir.`, action: 'Müraciət növbəsini bu gün təmizlə.' });
     }
