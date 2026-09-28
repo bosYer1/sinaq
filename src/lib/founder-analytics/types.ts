@@ -77,6 +77,7 @@ export type ClubDataQualityRow = {
   missingFields: Array<'image' | 'phone' | 'social' | 'coordinates' | 'type'>;
   lastEvidenceCheckedAt: string | null;
   evidenceState: 'fresh' | 'stale' | 'missing';
+  evidenceGaps: Array<'status' | 'type' | 'location'>;
 };
 
 export type ClubDataPriorityRow = ClubDataQualityRow & {
@@ -243,6 +244,15 @@ export type SupabaseMetrics = {
   status: ProviderStatus;
   activeClubs: number;
   verifiedClubs: number;
+  evidenceFreshness: {
+    cutoffDays: number;
+    withAnyCurrentEvidence: number;
+    withFreshStrongEvidence: number;
+    withFreshStatus: number;
+    withFreshType: number;
+    withFreshLocation: number;
+    withFreshFullTriplet: number;
+  };
   pendingSubmissions: number;
   staleSubmissions: number;
   submissionBacklogByKind: { ownerClaim: number; newClub: number; correction: number };
