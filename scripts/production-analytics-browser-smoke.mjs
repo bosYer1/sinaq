@@ -174,11 +174,16 @@ try {
 
   const analyticsRequests = {
     posthog: posthogRequests(),
-    ga4: requests.filter((request) => /google-analytics\.com|googletagmanager\.com/i.test(request.url)),
+    ga4Loader: requests.filter((request) => /googletagmanager\.com\/gtag\/js/i.test(request.url)),
+    ga4Collection: requests.filter((request) => /google-analytics\.com\/g\/collect/i.test(request.url)),
     meta: requests.filter((request) => /connect\.facebook\.net|facebook\.com\/tr/i.test(request.url)),
   };
   assert(analyticsRequests.posthog.length > 0, 'No PostHog network request observed', { count: 0 });
-  assert(analyticsRequests.ga4.length > 0, 'No GA4/GTM network request observed', { count: 0 });
+  assert(analyticsRequests.ga4Loader.length > 0, 'No GA4 loader request observed', { count: 0 });
+  assert(analyticsRequests.ga4Collection.length === 0, 'Tagged analytics smoke must not send GA4 collection requests', {
+    count: analyticsRequests.ga4Collection.length,
+    urls: analyticsRequests.ga4Collection.map((request) => request.url),
+  });
   assert(analyticsRequests.meta.length > 0, 'No Meta Pixel network request observed', { count: 0 });
 
   // Simulate a fresh browser identity that arrives from another GameYer page. This
@@ -224,7 +229,8 @@ try {
     },
     network: {
       posthogRequests: analyticsRequests.posthog.length,
-      ga4Requests: analyticsRequests.ga4.length,
+      ga4LoaderRequests: analyticsRequests.ga4Loader.length,
+      ga4CollectionRequests: analyticsRequests.ga4Collection.length,
       metaRequests: analyticsRequests.meta.length,
     },
   }, null, 2));
