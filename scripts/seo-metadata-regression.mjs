@@ -20,6 +20,7 @@ const justForFunPage = fs.readFileSync('src/app/just-for-fun/page.tsx', 'utf8');
 const vegasPage = fs.readFileSync('src/app/vegas-gaming-center/page.tsx', 'utf8');
 const forGamerPage = fs.readFileSync('src/app/forgamer/page.tsx', 'utf8');
 const ibrazoroPage = fs.readFileSync('src/app/ibrazoro/page.tsx', 'utf8');
+const qarabaghPage = fs.readFileSync('src/app/qarabagh-game-center/page.tsx', 'utf8');
 const sitemapPage = fs.readFileSync('src/app/sitemap.ts', 'utf8');
 const nextConfig = fs.readFileSync('next.config.js', 'utf8');
 const indexNowWorkflow = fs.readFileSync('.github/workflows/indexnow-submit.yml', 'utf8');
@@ -89,6 +90,9 @@ const checks = [
   [ibrazoroPage.includes("getClubs({ q: 'Ibrazoro' })") && ibrazoroPage.includes("canonical: '/ibrazoro'") && ibrazoroPage.includes('clubs.length >= 2'), 'Ibrazoro brand hub must stay data-driven, canonicalized and supply-gated'],
   [clubPage.includes("const isIbrazoroClub = locationIdentity.includes('ibrazoro');") && clubPage.includes('isIbrazoroClub ? <Link href="/ibrazoro"'), 'Ibrazoro branch profiles must reinforce the brand hub'],
   [sitemapPage.includes("ibrazoroCount >= 2") && sitemapPage.includes("/ibrazoro"), 'Ibrazoro brand hub sitemap entry must be supply-gated'],
+  [qarabaghPage.includes("getClubs({ q: 'Qarabagh Game Center' })") && qarabaghPage.includes("canonical: '/qarabagh-game-center'") && qarabaghPage.includes('clubs.length >= 2'), 'Qarabagh brand hub must stay data-driven, canonicalized and supply-gated'],
+  [clubPage.includes("const isQarabaghClub = locationIdentity.includes('qarabagh game center');") && clubPage.includes('isQarabaghClub ? <Link href="/qarabagh-game-center"'), 'Qarabagh branch profiles must reinforce the brand hub'],
+  [sitemapPage.includes("qarabaghCount >= 2") && sitemapPage.includes("/qarabagh-game-center"), 'Qarabagh brand hub sitemap entry must be supply-gated'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
