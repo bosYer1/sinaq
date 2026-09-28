@@ -95,6 +95,7 @@ const checks = [
   [sitemapPage.includes("qarabaghCount >= 2") && sitemapPage.includes("/qarabagh-game-center"), 'Qarabagh brand hub sitemap entry must be supply-gated'],
   [playstationLanding.includes('PlayStation filial şəbəkələri') && playstationLanding.includes('brandNetworks') && playstationLanding.includes('/qarabagh-game-center'), 'PlayStation landing must reinforce real multi-branch entity hubs'],
   [pcLanding.includes('PC filial şəbəkələri') && pcLanding.includes('brandNetworks') && pcLanding.includes('/forgamer'), 'PC landing must reinforce real multi-branch entity hubs'],
+  [internetLanding.includes('PC və internet klub şəbəkələri') && internetLanding.includes('brandNetworks') && internetLanding.includes('/forgamer'), 'winning internet landing must pass internal authority to real multi-branch entity hubs'],
 ];
 
 const failed = checks.filter(([ok]) => !ok).map(([, message]) => message);
