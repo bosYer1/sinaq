@@ -89,6 +89,7 @@ const checks = [
   [sitemapPage.includes("forGamerCount >= 2") && sitemapPage.includes("/forgamer"), 'ForGamer brand hub sitemap entry must be supply-gated'],
   [ibrazoroPage.includes("getClubs({ q: 'Ibrazoro' })") && ibrazoroPage.includes("canonical: '/ibrazoro'") && ibrazoroPage.includes('clubs.length >= 2'), 'Ibrazoro brand hub must stay data-driven, canonicalized and supply-gated'],
   [clubPage.includes("const isIbrazoroClub = locationIdentity.includes('ibrazoro');") && clubPage.includes('isIbrazoroClub ? <Link href="/ibrazoro"'), 'Ibrazoro branch profiles must reinforce the brand hub'],
+  [clubPage.includes("toLocaleLowerCase('az')") && sitemapPage.includes("toLocaleLowerCase('az')"), 'brand identity matching must use Azerbaijani locale casing so İbrazoro-style names remain discoverable'],
   [sitemapPage.includes("ibrazoroCount >= 2") && sitemapPage.includes("/ibrazoro"), 'Ibrazoro brand hub sitemap entry must be supply-gated'],
   [qarabaghPage.includes("getClubs({ q: 'Qarabagh Game Center' })") && qarabaghPage.includes("canonical: '/qarabagh-game-center'") && qarabaghPage.includes('clubs.length >= 2'), 'Qarabagh brand hub must stay data-driven, canonicalized and supply-gated'],
   [clubPage.includes("const isQarabaghClub = locationIdentity.includes('qarabagh game center');") && clubPage.includes('isQarabaghClub ? <Link href="/qarabagh-game-center"'), 'Qarabagh branch profiles must reinforce the brand hub'],
