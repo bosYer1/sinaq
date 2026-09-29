@@ -22,6 +22,7 @@ assert(tracker.includes('slug: club.clubSlug') && tracker.includes('name: club.c
 
 assert(home.includes("import { RecentlyViewedClubs }"), 'Homepage must load the return shortcut.');
 assert(home.includes('<RecentlyViewedClubs') && home.includes('clubs={discoveryClubs.map((club) => ({'), 'Homepage must restrict recent history to currently public clubs.');
+assert(home.indexOf('<RecentlyViewedClubs') < home.indexOf('<section id="club-search"'), 'Recent continuity must appear before search/filter controls for returning users.');
 assert(home.indexOf('<RecentlyViewedClubs') < home.indexOf('{activeUpdates.length > 0 ? ('), 'Recent continuity must appear before the optional offers feed.');
 
 assert(recentUi.includes('clubsBySlug.get(entry.slug)'), 'Recent history must ignore clubs that are no longer in current public inventory.');
@@ -30,5 +31,10 @@ assert(recentUi.includes("trackPostHogEvent('recent_club_click'"), 'Recent-club 
 assert(recentUi.includes("surface: 'home_recently_viewed'"), 'Recent-club analytics must use a stable surface identifier.');
 assert(recentUi.includes('rememberClubEntryOrigin(club.slug)'), 'Recent-club navigation must preserve the existing return-to-list behavior.');
 assert(recentUi.includes('prefetch={false}'), 'Recent-club links must avoid adding mobile viewport prefetch work.');
+assert(recentUi.includes("window.addEventListener('beforeinstallprompt'"), 'Engaged return users must be able to capture the browser install opportunity.');
+assert(recentUi.includes("'pwa_install_cta_click'"), 'Retention install CTA clicks must be measurable.');
+assert(recentUi.includes("'pwa_install_cta_result'"), 'Retention install prompt outcomes must be measurable.');
+assert(recentUi.includes("'GameYer-i quraşdır'"), 'Install CTA copy must stay explicit and user-initiated.');
+assert(recentUi.includes("'(display-mode: standalone)'"), 'Installed standalone users must not see the install CTA again.');
 
 console.log('Recent clubs regression checks passed.');
