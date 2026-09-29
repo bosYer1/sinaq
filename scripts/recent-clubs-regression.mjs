@@ -35,6 +35,9 @@ assert(recentUi.includes("window.addEventListener('beforeinstallprompt'"), 'Enga
 assert(recentUi.includes("'pwa_install_cta_click'"), 'Retention install CTA clicks must be measurable.');
 assert(recentUi.includes("'pwa_install_cta_result'"), 'Retention install prompt outcomes must be measurable.');
 assert(recentUi.includes("'GameYer-i quraşdır'"), 'Install CTA copy must stay explicit and user-initiated.');
+assert(recentUi.includes("'pwa_ios_install_help_click'"), 'iOS Safari manual install help must stay measurable.');
+assert(recentUi.includes('Ana ekrana əlavə et'), 'iOS Safari return users must get an explicit home-screen shortcut path.');
+assert(recentUi.includes('CriOS|FxiOS|EdgiOS|OPiOS'), 'Manual iOS install help must stay Safari-specific instead of misleading third-party browsers.');
 assert(recentUi.includes("'(display-mode: standalone)'"), 'Installed standalone users must not see the install CTA again.');
 
 console.log('Recent clubs regression checks passed.');
