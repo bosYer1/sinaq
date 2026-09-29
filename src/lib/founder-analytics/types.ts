@@ -117,6 +117,7 @@ export type ReturnLoopMetrics = {
   installCtaClicks: number;
   installAccepted: number;
   installDismissed: number;
+  iosInstallHelpClicks: number;
 };
 
 export type SupplyFunnelMetrics = {
