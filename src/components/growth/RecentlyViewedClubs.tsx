@@ -21,6 +21,8 @@ export function RecentlyViewedClubs({ clubs }: { clubs: AvailableClub[] }) {
   const [recent, setRecent] = useState<RecentClub[]>([]);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installBusy, setInstallBusy] = useState(false);
+  const [isIosSafari, setIsIosSafari] = useState(false);
+  const [iosInstallHelpOpen, setIosInstallHelpOpen] = useState(false);
   const impressionTracked = useRef(false);
 
   useEffect(() => {
@@ -35,6 +37,12 @@ export function RecentlyViewedClubs({ clubs }: { clubs: AvailableClub[] }) {
       || ('standalone' in window.navigator && Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone));
     if (standalone) return;
 
+    const userAgent = window.navigator.userAgent;
+    const iosSafari = /(iPhone|iPad|iPod)/.test(userAgent)
+      && /Safari/.test(userAgent)
+      && !/(CriOS|FxiOS|EdgiOS|OPiOS)/.test(userAgent);
+    const frame = window.requestAnimationFrame(() => setIsIosSafari(iosSafari));
+
     const onInstallAvailable = (event: Event) => {
       event.preventDefault();
       setInstallPrompt(event as BeforeInstallPromptEvent);
@@ -48,6 +56,7 @@ export function RecentlyViewedClubs({ clubs }: { clubs: AvailableClub[] }) {
     window.addEventListener('beforeinstallprompt', onInstallAvailable);
     window.addEventListener('appinstalled', onInstalled);
     return () => {
+      window.cancelAnimationFrame(frame);
       window.removeEventListener('beforeinstallprompt', onInstallAvailable);
       window.removeEventListener('appinstalled', onInstalled);
     };
@@ -117,8 +126,29 @@ export function RecentlyViewedClubs({ clubs }: { clubs: AvailableClub[] }) {
           >
             {installBusy ? 'Açılır…' : 'GameYer-i quraşdır'}
           </button>
+        ) : isIosSafari ? (
+          <button
+            type="button"
+            onClick={() => {
+              setIosInstallHelpOpen((current) => !current);
+              trackPostHogEvent('pwa_ios_install_help_click', {
+                surface: 'home_recently_viewed',
+                recent_club_count: visibleClubs.length,
+              });
+            }}
+            aria-expanded={iosInstallHelpOpen}
+            className="inline-flex h-9 shrink-0 items-center rounded-full border border-primary/25 bg-surface px-3 text-[11px] font-bold text-primary transition hover:border-primary sm:text-xs"
+          >
+            Ana ekrana əlavə et
+          </button>
         ) : null}
       </div>
+
+      {iosInstallHelpOpen ? (
+        <p className="mb-2 rounded-xl border border-primary/15 bg-surface px-3 py-2 text-[11px] leading-4 text-muted sm:text-xs">
+          Safari-də Paylaş menyusunu aç → “Ana ekrana əlavə et” → “Əlavə et”.
+        </p>
+      ) : null}
 
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visibleClubs.map((club, index) => (
