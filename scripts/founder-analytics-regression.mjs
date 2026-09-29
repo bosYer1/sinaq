@@ -136,9 +136,19 @@ assert.match(posthog, /event = 'club_update_club_click'/, 'Return-loop club tran
 assert.match(posthog, /event = 'club_update_source_click'/, 'Return-loop source clicks must be measured from the dedicated update event.');
 assert.ok(posthog.includes('(properties.$session_id, properties.club_id) IN ('), 'Downstream return-loop reach must stay on the same session and club.');
 assert.ok(posthog.includes('returningUpdateRate: rate(returningUpdateUsers, updateUsers)'), 'Return-loop returning rate must use users with prior public visits.');
-assert.ok(posthog.includes("['founder-analytics-posthog-v14']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
+assert.ok(posthog.includes("['founder-analytics-posthog-v15']"), 'PostHog cache key must be bumped when provider reliability semantics change.');
 assert.match(extended, />Geri dönüş modulu</, 'Founder Analytics must surface return-loop reach.');
 assert.match(extended, /ardıcıl funnel kimi təqdim edilmir/, 'Return-loop same-session reach must not be mislabeled as an ordered funnel.');
+assert.ok(types.includes('recentImpressions: number;') && types.includes('recentClickRate: number;'), 'Return-loop contract must expose recently-viewed reach and user CTR.');
+assert.ok(posthog.includes("event = 'recent_clubs_impression'") && posthog.includes("event = 'recent_club_click'"), 'PostHog return-loop query must measure recently-viewed exposure and clicks.');
+assert.ok(posthog.includes("event = 'pwa_install_cta_click'") && posthog.includes("properties.outcome = 'accepted'") && posthog.includes("properties.outcome = 'dismissed'"), 'Retention install CTA outcomes must stay separately measurable.');
+assert.ok(types.includes('iosInstallHelpClicks: number;'), 'Return-loop contract must expose iOS install-help clicks.');
+assert.ok(posthog.includes("event = 'pwa_ios_install_help_click'"), 'PostHog return-loop query must measure iOS Safari install-help clicks.');
+assert.ok(extended.includes('iOS ana ekran köməyi') && extended.includes('quraşdırma təsdiqi deyil'), 'Founder Analytics must surface iOS install help without mislabeling it as a confirmed install.');
+assert.ok(posthog.includes('recentClickRate: rate(recentClickUsers, recentImpressionUsers)'), 'Recent-club CTR must use unique exposed users as the denominator.');
+assert.ok(posthog.includes('returningRecentUsers: numberValue(returnLoop.returning_recent_users)'), 'Founder Analytics must expose historical returning users who reached the recent-club loop.');
+assert.ok(extended.includes('Son baxılan göstərimləri') && extended.includes('Son baxılan klikləri'), 'Founder Analytics must surface recent-club retention reach.');
+assert.ok(extended.includes('təsdiqlənmiş install ayrıca PWA bölməsindədir'), 'Install prompt acceptance must not be mislabeled as a confirmed installation.');
 
 assert.match(extended, /d1CohortUsers/, 'Founder Analytics must render the dedicated D1 mature cohort denominator.');
 assert.match(extended, /d3CohortUsers/, 'Founder Analytics must render the dedicated D3 mature cohort denominator.');
@@ -177,7 +187,7 @@ assert.ok(calculations.includes('supabase.submissionBacklogByKind.ownerClaim > 0
   assert.ok(source.includes('createLimitedPostHogRunner'), 'PostHog queries must use a bounded runner.');
   assert.ok(source.includes('errors.push(detail);') && source.includes('return [];'), 'Extended PostHog query failures must fail soft instead of taking down the whole dashboard.');
   assert.ok(source.includes("if (overviewRows.length === 0)"), 'Core overview failure must still fail closed rather than showing invented zero metrics.');
-  assert.ok(source.includes("['founder-analytics-posthog-v14']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
+  assert.ok(source.includes("['founder-analytics-posthog-v15']") && source.includes('revalidate: 300'), 'Successful PostHog dashboard reads must use bounded caching.');
 }
 
 assert.ok(posthog.includes('toFloatOrZero(toString(properties.metric_value))'), 'PostHog web-vitals query must use the supported HogQL float conversion helper.');

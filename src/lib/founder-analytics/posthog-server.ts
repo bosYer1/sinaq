@@ -34,7 +34,7 @@ function emptyMetrics(detail: string, status: 'unavailable' | 'error'): PostHogM
     funnel: { landingSessions: 0, discoverySessions: 0, clubViewSessions: 0, ctaSessions: 0, profileToLeadRate: 0, integrityOk: true },
     retention: { d1: null, d3: null, d7: null, d1CohortUsers: 0, d3CohortUsers: 0, d7CohortUsers: 0, cohortUsers: 0 },
     pwa: { installAvailable: 0, installed: 0, standaloneOpened: 0 },
-    returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0 },
+    returnLoop: { updateImpressions: 0, updateDetailClicks: 0, updateClubClicks: 0, updateSourceClicks: 0, updateUsers: 0, updateSessions: 0, downstreamClubViewSessions: 0, downstreamCtaSessions: 0, returningUpdateUsers: 0, returningUpdateRate: 0, clubViewReachRate: 0, ctaReachRate: 0, recentImpressions: 0, recentClicks: 0, recentImpressionUsers: 0, recentClickUsers: 0, recentClickRate: 0, returningRecentUsers: 0, installCtaClicks: 0, installAccepted: 0, installDismissed: 0, iosInstallHelpClicks: 0 },
     supplyFunnel: { ownerClaimViews: 0, newClubViews: 0, correctionViews: 0, ownerClaimStarts: 0, ownerClaimAttempts: 0, ownerClaimSent: 0, newClubSent: 0, correctionSent: 0, ownerClaimErrors: 0, ownerClaimRateLimited: 0, startRate: 0, submitRate: 0 },
     discoveryQuality: { searchSessions: 0, zeroResultSearchSessions: 0, zeroResultRate: 0, filterSessions: 0, filterAdoptionRate: 0, mapSessions: 0, mapAdoptionRate: 0, clubImpressionSessions: 0, clubClickSessions: 0, clubCtr: 0 },
     webVitals: { lcpP75: null, lcpSamples: 0, inpP75: null, inpSamples: 0, clsP75: null, clsSamples: 0 },
@@ -438,6 +438,14 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
           countIf(event = 'club_update_detail_click') AS update_detail_clicks,
           countIf(event = 'club_update_club_click') AS update_club_clicks,
           countIf(event = 'club_update_source_click') AS update_source_clicks,
+          countIf(event = 'recent_clubs_impression') AS recent_impressions,
+          countIf(event = 'recent_club_click') AS recent_clicks,
+          uniqIf(person_id, event = 'recent_clubs_impression') AS recent_impression_users,
+          uniqIf(person_id, event = 'recent_club_click') AS recent_click_users,
+          countIf(event = 'pwa_install_cta_click') AS install_cta_clicks,
+          countIf(event = 'pwa_install_cta_result' AND properties.outcome = 'accepted') AS install_accepted,
+          countIf(event = 'pwa_install_cta_result' AND properties.outcome = 'dismissed') AS install_dismissed,
+          countIf(event = 'pwa_ios_install_help_click') AS ios_install_help_clicks,
           uniqIf(person_id, event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click')) AS update_users,
           uniqIf(properties.$session_id, event IN ('club_update_impression','club_update_detail_click','club_update_club_click','club_update_source_click') AND notEmpty(properties.$session_id)) AS update_sessions,
           uniqIf(properties.$session_id, event = 'club_view' AND notEmpty(properties.$session_id)
@@ -469,7 +477,17 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
                 AND ${publicScope}
                 AND event = '$pageview'
               GROUP BY person_id
-            )) AS returning_update_users
+            )) AS returning_update_users,
+          uniqIf(person_id, event IN ('recent_clubs_impression','recent_club_click')
+            AND person_id IN (
+              SELECT person_id
+              FROM events
+              WHERE timestamp >= toDateTime('${historyFrom}')
+                AND timestamp < toDateTime('${from}')
+                AND ${publicScope}
+                AND event = '$pageview'
+              GROUP BY person_id
+            )) AS returning_recent_users
         FROM events
         WHERE timestamp >= toDateTime('${from}') AND timestamp < toDateTime('${to}') AND ${publicScope}
       `),
@@ -558,6 +576,8 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
     const returningUpdateUsers = numberValue(returnLoop.returning_update_users);
     const downstreamClubViewSessions = numberValue(returnLoop.downstream_club_view_sessions);
     const downstreamCtaSessions = numberValue(returnLoop.downstream_cta_sessions);
+    const recentImpressionUsers = numberValue(returnLoop.recent_impression_users);
+    const recentClickUsers = numberValue(returnLoop.recent_click_users);
     const d1CohortUsers = numberValue(cohort.d1_cohort_users);
     const d3CohortUsers = numberValue(cohort.d3_cohort_users);
     const d7CohortUsers = numberValue(cohort.d7_cohort_users);
@@ -676,6 +696,16 @@ async function fetchPostHogMetrics(range: DateRange): Promise<PostHogMetrics> {
         returningUpdateRate: rate(returningUpdateUsers, updateUsers),
         clubViewReachRate: rate(downstreamClubViewSessions, updateSessions),
         ctaReachRate: rate(downstreamCtaSessions, updateSessions),
+        recentImpressions: numberValue(returnLoop.recent_impressions),
+        recentClicks: numberValue(returnLoop.recent_clicks),
+        recentImpressionUsers,
+        recentClickUsers,
+        recentClickRate: rate(recentClickUsers, recentImpressionUsers),
+        returningRecentUsers: numberValue(returnLoop.returning_recent_users),
+        installCtaClicks: numberValue(returnLoop.install_cta_clicks),
+        installAccepted: numberValue(returnLoop.install_accepted),
+        installDismissed: numberValue(returnLoop.install_dismissed),
+        iosInstallHelpClicks: numberValue(returnLoop.ios_install_help_clicks),
       },
     };
   } catch (error) {
@@ -690,7 +720,7 @@ const getCachedPostHogMetrics = unstable_cache(
     if (result.status.status !== 'ready') throw new Error(result.status.detail);
     return result;
   },
-  ['founder-analytics-posthog-v14'],
+  ['founder-analytics-posthog-v15'],
   { revalidate: 300, tags: ['founder-analytics'] },
 );
 

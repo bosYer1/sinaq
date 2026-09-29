@@ -108,6 +108,16 @@ export type ReturnLoopMetrics = {
   returningUpdateRate: number;
   clubViewReachRate: number;
   ctaReachRate: number;
+  recentImpressions: number;
+  recentClicks: number;
+  recentImpressionUsers: number;
+  recentClickUsers: number;
+  recentClickRate: number;
+  returningRecentUsers: number;
+  installCtaClicks: number;
+  installAccepted: number;
+  installDismissed: number;
+  iosInstallHelpClicks: number;
 };
 
 export type SupplyFunnelMetrics = {

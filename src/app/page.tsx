@@ -132,6 +132,14 @@ export default async function HomePage({ searchParams }: PageProps) {
             </a>
           </section>
 
+          <RecentlyViewedClubs
+            clubs={discoveryClubs.map((club) => ({
+              slug: club.slug,
+              name: club.name,
+              district: club.district?.name ?? null,
+            }))}
+          />
+
           <section id="club-search" className="scroll-mt-20" aria-label="Klub axtarışı və filtrlər">
             <Suspense
               fallback={
@@ -143,14 +151,6 @@ export default async function HomePage({ searchParams }: PageProps) {
               <FilterBar districts={activeDistricts} metroStations={activeMetroStations} types={types} />
             </Suspense>
           </section>
-
-          <RecentlyViewedClubs
-            clubs={discoveryClubs.map((club) => ({
-              slug: club.slug,
-              name: club.name,
-              district: club.district?.name ?? null,
-            }))}
-          />
 
           {activeUpdates.length > 0 ? (
             <section
