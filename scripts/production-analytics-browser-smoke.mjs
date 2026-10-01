@@ -187,7 +187,7 @@ try {
     meta: requests.filter((request) => /connect\.facebook\.net|facebook\.com\/tr/i.test(request.url)),
   };
   assert(analyticsRequests.posthog.length > 0, 'No PostHog network request observed', { count: 0 });
-  assert(analyticsRequests.ga4.length > 0, 'No GA4/GTM network request observed', { count: 0 });
+  assert(analyticsRequests.ga4.length === 0, 'Tagged analytics smoke must not load or collect GA4 traffic', { count: analyticsRequests.ga4.length });
   assert(analyticsRequests.meta.length > 0, 'No Meta Pixel network request observed', { count: 0 });
 
   // Simulate a fresh browser identity that arrives from another GameYer page. This
