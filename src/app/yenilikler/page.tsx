@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ClubUpdatesFeed } from '@/components/growth/ClubUpdatesFeed';
 import { getActiveClubUpdates } from '@/lib/queries/club-updates';
 
-export const revalidate = 60;
+export const revalidate = 21600;
 
 export const metadata: Metadata = {
   title: 'Turnirlər və təkliflər',
