@@ -9,6 +9,8 @@ on:
       - 'src/lib/google-analytics.ts'
       - 'src/lib/posthog.ts'
       - 'src/lib/meta-pixel.ts'
+      - 'src/lib/meta-capi.ts'
+      - 'src/app/api/meta/capi/**'
       - 'scripts/production-analytics-browser-smoke.mjs'
       - '.github/workflows/production-analytics-smoke.yml'
 
