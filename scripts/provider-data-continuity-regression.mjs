@@ -60,6 +60,6 @@ assert.doesNotMatch(workflow, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY/, '
 
 assert.match(continuityDoc, /GSC Wizard/i, 'Continuity runbook must document the retired connector dependency.');
 assert.match(continuityDoc, /Supermetrics/i, 'Continuity runbook must document the paid connector dependency.');
-assert.match(continuityDoc, /PostHog.*1 il/is, 'Continuity runbook must document the PostHog free-retention risk.');
+assert.match(continuityDoc, /PostHog.*(?:1 year|1-year|1 il)/is, 'Continuity runbook must document the PostHog free-retention risk.');
 
 console.log('provider data continuity regression: ok');
