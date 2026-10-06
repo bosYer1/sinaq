@@ -1,14 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const routes = [
+const sixHourRoutes = [
   '../src/app/klub/[slug]/page.tsx',
   '../src/app/rayon/[slug]/page.tsx',
   '../src/app/rayon/[slug]/[type]/page.tsx',
-  '../src/app/yenilikler/page.tsx',
 ];
 
-for (const relative of routes) {
+for (const relative of sixHourRoutes) {
   const source = await readFile(new URL(relative, import.meta.url), 'utf8');
   assert.match(
     source,
@@ -21,6 +20,21 @@ for (const relative of routes) {
     `${relative} must not regress to one-minute ISR churn`,
   );
 }
+
+const updatesPage = await readFile(
+  new URL('../src/app/yenilikler/page.tsx', import.meta.url),
+  'utf8',
+);
+assert.match(
+  updatesPage,
+  /export const revalidate = 1800;/,
+  'Updates page must stay fresh within 30 minutes without one-minute ISR churn',
+);
+assert.doesNotMatch(
+  updatesPage,
+  /export const revalidate = 60;/,
+  'Updates page must not regress to one-minute ISR churn',
+);
 
 const popularity = await readFile(
   new URL('../src/lib/queries/club-popularity.ts', import.meta.url),
