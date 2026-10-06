@@ -85,6 +85,7 @@ await send('Network.setBlockedURLs', {
   urls: [
     '*/api/analytics/visit*',
     '*/api/analytics/event*',
+    '*/api/meta/capi*',
     '*us.i.posthog.com/*',
     '*google-analytics.com/*',
     '*facebook.com/tr/*',
