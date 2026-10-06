@@ -11,6 +11,7 @@ const [
   workflow,
   schemaCandidate,
   continuityDoc,
+  supabaseBackup,
 ] = await Promise.all([
   readFile(new URL('../src/lib/founder-analytics/gsc-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/founder-analytics/ga4-server.ts', import.meta.url), 'utf8'),
@@ -21,6 +22,7 @@ const [
   readFile(new URL('../.github/workflows/provider-data-archive.yml', import.meta.url), 'utf8'),
   readFile(new URL('../docs/analytics/provider_metric_snapshots_migration_candidate.sql', import.meta.url), 'utf8'),
   readFile(new URL('../docs/DATA_CONTINUITY.md', import.meta.url), 'utf8'),
+  readFile(new URL('./supabase-encrypted-logical-backup.sh', import.meta.url), 'utf8'),
 ]);
 
 for (const source of [gsc, ga4, posthog, meta, archive]) {
@@ -61,5 +63,14 @@ assert.doesNotMatch(workflow, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY/, '
 assert.match(continuityDoc, /GSC Wizard/i, 'Continuity runbook must document the retired connector dependency.');
 assert.match(continuityDoc, /Supermetrics/i, 'Continuity runbook must document the paid connector dependency.');
 assert.match(continuityDoc, /PostHog.*(?:1 year|1-year|1 il)/is, 'Continuity runbook must document the PostHog free-retention risk.');
+assert.match(continuityDoc, /Supabase.*Free.*(?:automatic|managed).*backup/is, 'Continuity runbook must document the Supabase Free backup gap.');
+assert.match(continuityDoc, /off-site/i, 'Continuity runbook must require an off-site database copy.');
+
+assert.match(supabaseBackup, /pg_dump/, 'Database recovery utility must use PostgreSQL logical dump.');
+assert.match(supabaseBackup, /--format=custom/, 'Database recovery utility must create a restorable custom archive.');
+assert.match(supabaseBackup, /pg_restore --list/, 'Database recovery utility must verify the archive.');
+assert.match(supabaseBackup, /--cipher-algo AES256/, 'Database recovery utility must encrypt the dump before storage.');
+assert.match(supabaseBackup, /BACKUP_PASSPHRASE/, 'Database recovery utility must require a runtime backup secret.');
+assert.doesNotMatch(supabaseBackup, /git (?:add|commit|push)|gh release|upload-artifact/i, 'Database backup utility must not publish sensitive dumps to the public repository.');
 
 console.log('provider data continuity regression: ok');
