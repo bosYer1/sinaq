@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const [
   gsc,
@@ -79,3 +81,6 @@ console.log('provider data continuity regression: ok');
 
 assert.match(gitignore, /^backups\/$/m, 'Local database backup directory must stay gitignored.');
 assert.match(gitignore, /^\*\.dump\.gpg$/m, 'Encrypted database dumps must stay gitignored.');
+
+execFileSync(process.execPath, ['--check', fileURLToPath(new URL('./provider-data-archive.mjs', import.meta.url))], { stdio: 'ignore' });
+execFileSync('bash', ['-n', fileURLToPath(new URL('./supabase-encrypted-logical-backup.sh', import.meta.url))], { stdio: 'ignore' });
