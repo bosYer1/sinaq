@@ -25,8 +25,13 @@ export type MetaCustomEvent =
   | { name: 'DirectionsClick'; params: Record<string, string> }
   | { name: 'SubmissionSuccess'; params: Record<string, string> };
 
+type PendingMetaEvent = {
+  event: MetaCustomEvent;
+  eventId: string;
+};
+
 const PIXEL_ID_PATTERN = /^\d{5,32}$/;
-const pendingEvents: MetaCustomEvent[] = [];
+const pendingEvents: PendingMetaEvent[] = [];
 
 export function normalizeMetaPixelId(value: string | undefined | null) {
   const normalized = value?.trim() ?? '';
@@ -99,17 +104,64 @@ export function submissionSuccessEvent(surface: 'contact' | 'club_owner', clubSl
   };
 }
 
-function sendEvent(event: MetaCustomEvent) {
-  window.fbq?.('trackCustom', event.name, event.params);
+export function createMetaEventId(now = Date.now()) {
+  const random =
+    globalThis.crypto?.randomUUID?.().replaceAll('-', '') ||
+    Math.random().toString(36).slice(2).padEnd(16, '0');
+  return `gy_${now.toString(36)}_${random.slice(0, 32)}`;
+}
+
+function readCookie(name: '_fbp' | '_fbc') {
+  if (typeof document === 'undefined') return undefined;
+  const prefix = `${name}=`;
+  const match = document.cookie
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix));
+  const value = match?.slice(prefix.length).trim();
+  return value || undefined;
+}
+
+function sendCapiEvent(item: PendingMetaEvent) {
+  if (
+    process.env.NEXT_PUBLIC_META_CAPI_ENABLED !== '1' ||
+    typeof window === 'undefined' ||
+    new URLSearchParams(window.location.search).get('__analytics_smoke') === '1' ||
+    window.location.pathname.startsWith('/admin') ||
+    window.location.pathname.startsWith('/api')
+  ) return;
+
+  void fetch('/api/meta/capi', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    keepalive: true,
+    body: JSON.stringify({
+      eventId: item.eventId,
+      name: item.event.name,
+      params: item.event.params,
+      path: window.location.pathname,
+      fbp: readCookie('_fbp'),
+      fbc: readCookie('_fbc'),
+    }),
+  }).catch(() => undefined);
+}
+
+function sendEvent(item: PendingMetaEvent) {
+  window.fbq?.('trackCustom', item.event.name, item.event.params, { eventID: item.eventId });
 }
 
 export function trackMetaCustomEvent(event: MetaCustomEvent) {
   if (typeof window === 'undefined' || !normalizeMetaPixelId(process.env.NEXT_PUBLIC_META_PIXEL_ID)) return;
+
+  const item = { event, eventId: createMetaEventId() };
+  sendCapiEvent(item);
+
   if (window.fbq) {
-    sendEvent(event);
+    sendEvent(item);
     return;
   }
-  if (pendingEvents.length < 20) pendingEvents.push(event);
+  if (pendingEvents.length < 20) pendingEvents.push(item);
 }
 
 export function markMetaPixelReady() {
