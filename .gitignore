@@ -29,3 +29,9 @@ pnpm-debug.log*
 
 # TypeScript cache
 *.tsbuildinfo
+
+# local encrypted database recovery artifacts
+backups/
+*.dump
+*.dump.gpg
+*.dump.gpg.sha256
