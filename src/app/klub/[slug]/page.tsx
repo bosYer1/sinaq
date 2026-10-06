@@ -9,7 +9,7 @@ import { getHourlyPriceRange, getHourlyPricing, getPlatformStartingPrices } from
 
 interface ClubPageProps { params: Promise<{ slug: string }> }
 
-export const revalidate = 60;
+export const revalidate = 21600;
 
 export async function generateStaticParams() {
   const clubs = await getClubs();
