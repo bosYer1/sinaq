@@ -13,7 +13,7 @@ interface DistrictTypePageProps {
   params: Promise<{ slug: string; type: string }>;
 }
 
-export const revalidate = 60;
+export const revalidate = 21600;
 
 export async function generateStaticParams() {
   const clubs = await getClubs();
