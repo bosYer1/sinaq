@@ -94,6 +94,24 @@ Priority:
 
 Never overwrite raw first-party Supabase analytics with third-party provider numbers; store them side-by-side because identity and attribution semantics differ.
 
+
+## Supabase Free-plan database disaster recovery
+
+The GameYer Supabase organization is currently on the Free plan. Free projects do not include managed automatic database backups, so provider snapshots alone are not enough: the first-party source database also needs a separate recovery copy.
+
+`scripts/supabase-encrypted-logical-backup.sh` creates a PostgreSQL custom-format dump, validates it, encrypts it with GPG AES-256 using a passphrase supplied via environment/stdin, verifies the encrypted round trip, and emits a SHA-256 checksum.
+
+Required runtime secrets:
+
+- `DATABASE_URL` — full Postgres connection string supplied at runtime only.
+- `BACKUP_PASSPHRASE` — strong backup secret supplied at runtime only.
+
+The script deliberately does **not** upload the result. The repository is public, so encrypted dumps must never be committed or attached to this repository. Move the resulting `.dump.gpg` and `.sha256` files to a private off-site destination.
+
+Before any automated schedule is enabled, choose/configure that private destination and recovery secret ownership. Until then, run the script from a trusted admin environment whenever a manual recovery point is needed.
+
+A backup is not complete until a restore/list verification succeeds; the script verifies the PostgreSQL archive before and after encryption.
+
 ## Connector rule
 
 GSC Wizard and Supermetrics are optional analysis surfaces only. Their subscription/trial state must never determine whether GameYer can collect or retain its analytics. If a connector stops working, the official API + private archive path remains canonical.
