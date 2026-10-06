@@ -11,7 +11,7 @@ import { SeoClubList } from '@/components/seo/SeoClubList';
 
 interface DistrictPageProps { params: Promise<{ slug: string }> }
 
-export const revalidate = 60;
+export const revalidate = 21600;
 
 export async function generateStaticParams() {
   const districts = await getDistricts();

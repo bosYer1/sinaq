@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [card, link, whatsappBookingLink, detail, clubView, pageview, submissionAnalytics, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest, productionAnalyticsSmoke] = await Promise.all([
+const [card, link, whatsappBookingLink, detail, clubView, pageview, submissionAnalytics, errorPage, notFound, posthog, eventRoute, visitRoute, googleAnalytics, correctionAnalyticsMigration, analyticsServer, serverOnlyAnalyticsMigration, trustedIngest, productionAnalyticsSmoke, metaPixel, metaCapi, metaCapiRoute] = await Promise.all([
   readFile(new URL('../src/components/clubs/ClubCard.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedClubLink.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/analytics/TrackedWhatsAppBookingLink.tsx', import.meta.url), 'utf8'),
@@ -20,6 +20,9 @@ const [card, link, whatsappBookingLink, detail, clubView, pageview, submissionAn
   readFile(new URL('../supabase/migrations/20260831183000_server_only_analytics_writes.sql', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/functions/gameyer-analytics-ingest/index.ts', import.meta.url), 'utf8'),
   readFile(new URL('./production-analytics-browser-smoke.mjs', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/meta-pixel.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/meta-capi.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/app/api/meta/capi/route.ts', import.meta.url), 'utf8'),
 ]);
 
 const [whatsappConstraintMigration, whatsappRateLimitMigration] = await Promise.all([
@@ -67,7 +70,12 @@ assert.ok(!detail.includes('Bu klub sizindir? Təsdiqlə') && !detail.includes('
 for (const token of ['submission_success', 'trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(pageview.includes(token), `submission parity must keep ${token}`);
 assert.ok(pageview.includes("__analytics_smoke") && pageview.includes("return;"), 'Synthetic browser smoke must not write first-party page views.');
 assert.ok(productionAnalyticsSmoke.includes("__analytics_delivery_smoke=1"), 'Production analytics smoke must use a delivery-only marker distinct from operator synthetic traffic.');
-for (const blocked of ['*/api/analytics/visit*', '*/api/analytics/event*', '*us.i.posthog.com/*', '*google-analytics.com/*', '*facebook.com/tr/*']) assert.ok(productionAnalyticsSmoke.includes(blocked), `Production analytics smoke must block ${blocked} from ingestion.`);
+for (const blocked of ['*/api/analytics/visit*', '*/api/analytics/event*', '*/api/meta/capi*', '*us.i.posthog.com/*', '*google-analytics.com/*', '*facebook.com/tr/*']) assert.ok(productionAnalyticsSmoke.includes(blocked), `Production analytics smoke must block ${blocked} from ingestion.`);
+for (const token of ['NEXT_PUBLIC_META_CAPI_ENABLED', '/api/meta/capi', 'eventID']) assert.ok(metaPixel.includes(token), `Meta Pixel direct CAPI bridge must keep ${token}`);
+for (const token of ['ClubView', 'ClubCardClick', 'Contact', 'InstagramClick', 'DirectionsClick', 'SubmissionSuccess']) assert.ok(metaCapi.includes(token), `Meta CAPI allowlist must keep ${token}`);
+for (const forbidden of ['client_ip_address', "'email'", "'phone'", "'em'", "'ph'"]) assert.ok(!metaCapi.includes(forbidden), `Meta CAPI helper must not collect ${forbidden}`);
+for (const token of ['META_CAPI_ACCESS_TOKEN', 'v26.0', 'guardPublicPost', 'sanitizeMetaCapiInput']) assert.ok(metaCapiRoute.includes(token), `Meta CAPI server route must keep ${token}`);
+
 for (const event of ['submission_form_viewed', 'submission_form_started', 'submission_submit_attempt', 'submission_result']) {
   assert.ok(submissionAnalytics.includes(`trackGaEvent('${event}'`) && submissionAnalytics.includes(`trackPostHogEvent('${event}'`), `${event} must stay wired to GA4 and PostHog`);
 }

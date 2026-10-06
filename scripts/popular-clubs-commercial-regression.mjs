@@ -15,7 +15,7 @@ const [clubs, popularity, popularPage, layout, tip, card, detail, sitemap] = awa
 assert.ok(popularity.includes("from('page_views')"), 'Popularity must derive from first-party club profile views.');
 assert.ok(popularity.includes("select('path,session_id,user_agent')") && popularity.includes('SYNTHETIC_USER_AGENT_RE.test'), 'First-party popularity must exclude synthetic/bot-like traffic.');
 assert.ok(popularity.includes("new Set<string>()"), 'Popularity must retain unique-session data as a tie-breaker.');
-assert.ok(popularity.includes("revalidate: 600"), 'Popularity reads must be cached to avoid per-request analytics load.');
+assert.ok(popularity.includes("revalidate: 21600"), 'Popularity reads must be cached to avoid per-request analytics load.');
 assert.ok(popularity.includes('skip caching the empty result') && popularity.includes('return queryClubPopularityMetrics();'), 'Transient empty popularity results must not be cached and must retry live.');
 
 const premiumIndex = clubs.indexOf('const premiumDelta');

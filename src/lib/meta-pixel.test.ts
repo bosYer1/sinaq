@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildMetaPixelBootstrap, clubActionEvent, clubCardClickEvent, clubViewEvent, createMetaRouteTracker, normalizeMetaPixelId, submissionSuccessEvent } from './meta-pixel.ts';
+import { buildMetaPixelBootstrap, clubActionEvent, clubCardClickEvent, clubViewEvent, createMetaEventId, createMetaRouteTracker, normalizeMetaPixelId, submissionSuccessEvent } from './meta-pixel.ts';
 
 const club = { clubId: 'club-1', clubSlug: 'test-club', clubName: 'Test Club' };
 
@@ -24,6 +24,12 @@ test('route tracker skips bootstrap path and emits once per later public pathnam
   assert.equal(shouldTrack('/klub/test-club'), true);
   assert.equal(shouldTrack('/klub/test-club'), false);
   assert.equal(shouldTrack('/admin'), false);
+});
+
+test('Meta event ids are namespaced and stable for browser/server dedupe', () => {
+  const id = createMetaEventId(1_800_000_000_000);
+  assert.match(id, /^gy_[a-z0-9]+_[A-Za-z0-9]+$/);
+  assert.ok(id.length >= 20 && id.length <= 64);
 });
 
 test('ClubView contains only the approved club fields', () => {

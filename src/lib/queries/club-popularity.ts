@@ -149,7 +149,7 @@ const getCachedClubPopularityMetrics = unstable_cache(
     return metrics;
   },
   ['gameyer-club-popularity-30d-v4'],
-  { revalidate: 600, tags: ['club-popularity'] },
+  { revalidate: 21600, tags: ['club-popularity'] },
 );
 
 export async function getClubPopularityMetrics() {
