@@ -12,6 +12,7 @@ const [
   schemaCandidate,
   continuityDoc,
   supabaseBackup,
+  gitignore,
 ] = await Promise.all([
   readFile(new URL('../src/lib/founder-analytics/gsc-server.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/founder-analytics/ga4-server.ts', import.meta.url), 'utf8'),
@@ -23,6 +24,7 @@ const [
   readFile(new URL('../docs/analytics/provider_metric_snapshots_migration_candidate.sql', import.meta.url), 'utf8'),
   readFile(new URL('../docs/DATA_CONTINUITY.md', import.meta.url), 'utf8'),
   readFile(new URL('./supabase-encrypted-logical-backup.sh', import.meta.url), 'utf8'),
+  readFile(new URL('../.gitignore', import.meta.url), 'utf8'),
 ]);
 
 for (const source of [gsc, ga4, posthog, meta, archive]) {
@@ -74,3 +76,6 @@ assert.match(supabaseBackup, /BACKUP_PASSPHRASE/, 'Database recovery utility mus
 assert.doesNotMatch(supabaseBackup, /git (?:add|commit|push)|gh release|upload-artifact/i, 'Database backup utility must not publish sensitive dumps to the public repository.');
 
 console.log('provider data continuity regression: ok');
+
+assert.match(gitignore, /^backups\/$/m, 'Local database backup directory must stay gitignored.');
+assert.match(gitignore, /^\*\.dump\.gpg$/m, 'Encrypted database dumps must stay gitignored.');
