@@ -1,0 +1,60 @@
+name: Provider data archive
+
+on:
+  workflow_dispatch:
+    inputs:
+      archive_date:
+        description: Optional Baku date to archive (YYYY-MM-DD). Defaults to three days ago.
+        required: false
+        type: string
+  schedule:
+    - cron: '23 8 * * *'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: provider-data-archive
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    name: Archive provider analytics
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
+      ARCHIVE_DATE: ${{ inputs.archive_date }}
+      GSC_SITE_URL: sc-domain:gameyer.az
+      GOOGLE_PROVIDER_CLIENT_EMAIL: ${{ secrets.GOOGLE_PROVIDER_CLIENT_EMAIL }}
+      GOOGLE_PROVIDER_PRIVATE_KEY: ${{ secrets.GOOGLE_PROVIDER_PRIVATE_KEY }}
+      GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
+      POSTHOG_PROJECT_ID: '585472'
+      POSTHOG_API_HOST: https://us.posthog.com
+      POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+      META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+      META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Data-continuity contract
+        run: node scripts/provider-data-continuity-regression.mjs
+
+      - name: Mint provider archive OIDC token
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const token = await core.getIDToken('https://gameyer.az/provider-archive-ci');
+            core.setSecret(token);
+            core.exportVariable('GAMEYER_PROVIDER_ARCHIVE_OIDC_TOKEN', token);
+
+      - name: Archive settled provider data
+        run: node scripts/provider-data-archive.mjs
