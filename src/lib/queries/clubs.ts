@@ -87,7 +87,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
     if (districtError) {
       console.error('getClubs (district lookup) xətası:', districtError.message);
-      return [];
+      throw new Error('Unable to load club districts.');
     }
 
     if (!districtRow) return [];
