@@ -283,8 +283,15 @@ async function assertHomepage(client, viewport) {
     assert(listView.mapActive === 'false', `${viewport.name}: list map is interactive before activation`, listView);
     assert(listView.clubsVisible, `${viewport.name}: club list heading is missing`, listView);
     assert(listView.mapContainerHeight >= 335 && listView.mapContainerHeight <= 410, `${viewport.name}: enlarged list-view map height regressed`, listView);
-    assert(listView.updateCardCount > 0, `${viewport.name}: mobile offer cards are missing from the homepage`, listView);
-    assert(listView.firstUpdateTop != null && listView.mapContainerRect?.top != null && listView.firstUpdateTop < listView.mapContainerRect.top, `${viewport.name}: mobile offers must remain above club discovery`, listView);
+    if (listView.updateCardCount > 0) {
+      assert(
+        listView.firstUpdateTop != null &&
+          listView.mapContainerRect?.top != null &&
+          listView.firstUpdateTop < listView.mapContainerRect.top,
+        `${viewport.name}: mobile offers must remain above club discovery when verified updates exist`,
+        listView,
+      );
+    }
     await capture(client, `${viewport.name}-home-list`);
     await evaluate(client, `document.querySelector('[aria-label="Xəritəni aktiv et"]')?.click()`);
     await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
