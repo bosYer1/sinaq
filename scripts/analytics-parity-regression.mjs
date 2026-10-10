@@ -35,6 +35,7 @@ for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent'
 for (const token of ['trackGaEvent', 'trackPostHogEvent', 'whatsapp_booking_click', 'contact_whatsapp_booking', 'intent_only', "navigator.sendBeacon('/api/analytics/event'", "eventType: 'whatsapp_booking_click'"]) assert.ok(whatsappBookingLink.includes(token), `WhatsApp booking analytics must keep ${token}`);
 assert.ok(!whatsappBookingLink.includes('trackMetaCustomEvent'), 'WhatsApp booking rollout must not touch Meta/SMM tracking');
 assert.ok(eventRoute.includes("'whatsapp_booking_click'"), 'First-party analytics route must accept WhatsApp reservation intent.');
+assert.ok(trustedIngest.includes("'whatsapp_booking_click'"), 'Trusted OIDC analytics ingest must accept WhatsApp reservation intent.');
 assert.ok(whatsappConstraintMigration.includes("'whatsapp_booking_click'") && whatsappConstraintMigration.includes('analytics_events_type_valid'), 'Production analytics constraint migration must allow WhatsApp reservation intent.');
 assert.ok(whatsappRateLimitMigration.includes("'whatsapp_booking_click'") && whatsappRateLimitMigration.includes('enforce_analytics_event_rate_limit'), 'Production analytics trigger migration must allow WhatsApp reservation intent.');
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(clubView.includes(token), `ClubViewTracker must keep ${token}`);
