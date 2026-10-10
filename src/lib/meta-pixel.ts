@@ -75,12 +75,22 @@ export function clubViewEvent(club: ClubViewMeta): MetaCustomEvent {
   };
 }
 
-export function clubCardClickEvent(club: ClubMeta & { district?: string | null }): MetaCustomEvent {
+export function clubCardClickEvent(club: ClubMeta & {
+  district?: string | null;
+  sourceSurface?: 'seo_landing';
+  landingPath?: string;
+  listPosition?: number;
+}): MetaCustomEvent {
   return {
     name: 'ClubCardClick',
     params: {
       ...baseClubParams(club),
       ...(club.district ? { district: club.district } : {}),
+      ...(club.sourceSurface ? { source_surface: club.sourceSurface } : {}),
+      ...(club.landingPath ? { landing_path: club.landingPath } : {}),
+      ...(typeof club.listPosition === 'number' && Number.isSafeInteger(club.listPosition) && club.listPosition > 0
+        ? { list_position: String(club.listPosition) }
+        : {}),
     },
   };
 }
