@@ -28,4 +28,10 @@ for (const token of [
   assert.ok(tracked.includes(token), `Tracked SEO club links must keep ${token}`);
 }
 
+for (const route of ['bakida-internet-klublari', 'bakida-playstation-klublari']) {
+  const page = await readFile(new URL(`../src/app/${route}/page.tsx`, import.meta.url), 'utf8');
+  const clubList = page.indexOf('<SeoClubList clubs={clubs} />');
+  const brandLinks = page.indexOf('{brandNetworks.length > 0 ? (');
+  assert.ok(clubList > 0 && brandLinks > 0 && clubList < brandLinks, `${route} must present actual club results before directory/brand navigation.`);
+}
 console.log('SEO landing club conversion regression: PASS');
