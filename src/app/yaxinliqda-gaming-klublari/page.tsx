@@ -5,6 +5,8 @@ import { getSiteUrl } from '@/lib/site-url';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata(): Promise<Metadata> {
   const clubs = await getClubs();
   const title = 'Mənə yaxın PC, internet və PlayStation klubları';

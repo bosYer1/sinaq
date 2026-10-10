@@ -7,6 +7,8 @@ import { inferClubTypeSlugs } from '@/lib/clubType';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 import type { ClubWithRelations } from '@/types/database';
 
+export const dynamic = 'force-dynamic';
+
 function isOpen24HoursEveryDay(club: ClubWithRelations) {
   const hoursByDay = new Map(club.opening_hours.map((hours) => [hours.day_of_week, hours]));
   return Array.from({ length: 7 }, (_, day) => day).every((day) => {

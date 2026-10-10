@@ -5,6 +5,8 @@ import { getSiteUrl } from '@/lib/site-url';
 import { getStartingPrice } from '@/lib/pricing';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
+export const dynamic = 'force-dynamic';
+
 const description = 'Bakıda PlayStation, PS5 və PS4 klub axtarırsan? Aktiv PS klublarını ünvan, rayon və xəritə ilə GameYer-də müqayisə et.';
 
 function landingSignals(clubs: Awaited<ReturnType<typeof getClubs>>) {

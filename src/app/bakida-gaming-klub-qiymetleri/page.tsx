@@ -4,6 +4,8 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
+export const dynamic = 'force-dynamic';
+
 const title = 'Bakıda gaming klub qiymətləri — PC və PlayStation saatlıq tariflər';
 const description = 'Bakıda PC, kompüter və PlayStation klub qiymətlərini müqayisə et. Saatlıq tariflər, rayon, ünvan, iş saatları və xəritə məlumatlarına GameYer-də bax.';
 

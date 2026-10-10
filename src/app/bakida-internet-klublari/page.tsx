@@ -5,6 +5,8 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
+export const dynamic = 'force-dynamic';
+
 const getInternetClubs = cache(() => getClubs({ type: 'pc' }));
 
 function minPcPrice(club: Awaited<ReturnType<typeof getClubs>>[number]) {
