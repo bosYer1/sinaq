@@ -4,6 +4,7 @@ import { createSign } from 'node:crypto';
 import { unstable_cache } from 'next/cache';
 import { metric } from './calculations';
 import { providerStatus } from './providers';
+import { prioritizeGscCtrOpportunities } from './gsc-ctr-opportunities';
 import type { DateRange, GscMetrics, GscSearchRow } from './types';
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -35,9 +36,9 @@ function createServiceAccountAssertion(clientEmail: string, privateKey: string) 
   return `${unsigned}.${signer.sign(normalizePrivateKey(privateKey)).toString('base64url')}`;
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit) {
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = REQUEST_TIMEOUT_MS) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try { return await fetch(url, { ...init, signal: controller.signal, cache: 'no-store' }); }
   finally { clearTimeout(timer); }
 }
@@ -59,12 +60,12 @@ function bakuDate(iso: string, subtractMillisecond = false) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Baku', year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
 }
 
-async function querySearchAnalytics(siteUrl: string, accessToken: string, from: string, to: string, dimensions: string[] = [], rowLimit = 25): Promise<GscApiResponse> {
+async function querySearchAnalytics(siteUrl: string, accessToken: string, from: string, to: string, dimensions: string[] = [], rowLimit = 25, timeoutMs = REQUEST_TIMEOUT_MS): Promise<GscApiResponse> {
   const response = await fetchWithTimeout(`${GSC_API_ROOT}/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
     method: 'POST',
     headers: { authorization: `Bearer ${accessToken}`, 'content-type': 'application/json' },
     body: JSON.stringify({ startDate: bakuDate(from), endDate: bakuDate(to, true), dimensions, rowLimit, dataState: 'final' }),
-  });
+  }, timeoutMs);
   if (!response.ok) throw new Error(`GSC Search Analytics request failed (${response.status})`);
   return response.json() as Promise<GscApiResponse>;
 }
@@ -98,6 +99,8 @@ function unavailableGsc(detail: string): GscMetrics {
     averagePosition: metric(0, 0),
     topQueries: [],
     topPages: [],
+    ctrOpportunities: [],
+    ctrOpportunitiesAvailable: false,
   };
 }
 
@@ -111,11 +114,13 @@ async function loadGscMetrics(range: DateRange): Promise<GscMetrics> {
 
   try {
     const accessToken = await getAccessToken(clientEmail!, privateKey!);
-    const [currentBody, previousBody, queryBody, pageBody] = await Promise.all([
+    const [currentBody, previousBody, queryBody, pageBody, queryPageBody] = await Promise.all([
       querySearchAnalytics(siteUrl!, accessToken, range.from, range.to),
       querySearchAnalytics(siteUrl!, accessToken, range.previousFrom, range.previousTo),
       querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['query'], 10),
       querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['page'], 10),
+      // Optional diagnostic: a broken/slow query+page report must not blank GSC totals.
+      querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['query', 'page'], 1000, 2_000).catch(() => null),
     ]);
     const current = totalFrom(currentBody);
     const previous = totalFrom(previousBody);
@@ -127,6 +132,8 @@ async function loadGscMetrics(range: DateRange): Promise<GscMetrics> {
       averagePosition: metric(current.position, previous.position),
       topQueries: rowsFrom(queryBody),
       topPages: rowsFrom(pageBody),
+      ctrOpportunities: queryPageBody ? prioritizeGscCtrOpportunities(queryPageBody.rows ?? []) : [],
+      ctrOpportunitiesAvailable: queryPageBody !== null,
     };
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'GSC Search Analytics sorğusu uğursuz oldu';
@@ -136,7 +143,7 @@ async function loadGscMetrics(range: DateRange): Promise<GscMetrics> {
 
 const cachedGscMetrics = unstable_cache(
   async (serializedRange: string) => loadGscMetrics(JSON.parse(serializedRange) as DateRange),
-  ['founder-analytics-gsc-v1'],
+  ['founder-analytics-gsc-v2'],
   { revalidate: 300 },
 );
 

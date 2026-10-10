@@ -63,7 +63,7 @@ function unavailableGsc(detail: string): GscMetrics {
   return {
     status: providerStatus('gsc', 'error', detail),
     clicks: zero, impressions: zero, ctr: zero, averagePosition: zero,
-    topQueries: [], topPages: [],
+    topQueries: [], topPages: [], ctrOpportunities: [], ctrOpportunitiesAvailable: false,
   };
 }
 
