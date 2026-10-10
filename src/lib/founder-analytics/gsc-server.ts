@@ -4,6 +4,7 @@ import { createSign } from 'node:crypto';
 import { unstable_cache } from 'next/cache';
 import { metric } from './calculations';
 import { providerStatus } from './providers';
+import { prioritizeGscCtrOpportunities } from './gsc-ctr-opportunities';
 import type { DateRange, GscMetrics, GscSearchRow } from './types';
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -98,6 +99,8 @@ function unavailableGsc(detail: string): GscMetrics {
     averagePosition: metric(0, 0),
     topQueries: [],
     topPages: [],
+    ctrOpportunities: [],
+    ctrOpportunitiesAvailable: false,
   };
 }
 
@@ -111,11 +114,13 @@ async function loadGscMetrics(range: DateRange): Promise<GscMetrics> {
 
   try {
     const accessToken = await getAccessToken(clientEmail!, privateKey!);
-    const [currentBody, previousBody, queryBody, pageBody] = await Promise.all([
+    const [currentBody, previousBody, queryBody, pageBody, queryPageBody] = await Promise.all([
       querySearchAnalytics(siteUrl!, accessToken, range.from, range.to),
       querySearchAnalytics(siteUrl!, accessToken, range.previousFrom, range.previousTo),
       querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['query'], 10),
       querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['page'], 10),
+      // Optional diagnostic: a broken/slow query+page report must not blank GSC totals.
+      querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['query', 'page'], 1000).catch(() => null),
     ]);
     const current = totalFrom(currentBody);
     const previous = totalFrom(previousBody);
@@ -127,6 +132,8 @@ async function loadGscMetrics(range: DateRange): Promise<GscMetrics> {
       averagePosition: metric(current.position, previous.position),
       topQueries: rowsFrom(queryBody),
       topPages: rowsFrom(pageBody),
+      ctrOpportunities: queryPageBody ? prioritizeGscCtrOpportunities(queryPageBody.rows ?? []) : [],
+      ctrOpportunitiesAvailable: queryPageBody !== null,
     };
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'GSC Search Analytics sorğusu uğursuz oldu';
@@ -136,7 +143,7 @@ async function loadGscMetrics(range: DateRange): Promise<GscMetrics> {
 
 const cachedGscMetrics = unstable_cache(
   async (serializedRange: string) => loadGscMetrics(JSON.parse(serializedRange) as DateRange),
-  ['founder-analytics-gsc-v1'],
+  ['founder-analytics-gsc-v2'],
   { revalidate: 300 },
 );
 

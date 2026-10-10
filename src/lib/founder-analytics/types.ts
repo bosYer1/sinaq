@@ -221,6 +221,17 @@ export type GscSearchRow = {
   position: number;
 };
 
+export type GscCtrOpportunity = {
+  query: string;
+  path: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+  matchingPages: number;
+  nextAction: 'snippet' | 'ranking';
+};
+
 export type GscMetrics = {
   status: ProviderStatus;
   clicks: Metric;
@@ -229,6 +240,8 @@ export type GscMetrics = {
   averagePosition: Metric;
   topQueries: GscSearchRow[];
   topPages: GscSearchRow[];
+  ctrOpportunities: GscCtrOpportunity[];
+  ctrOpportunitiesAvailable: boolean;
 };
 
 export type MetaCampaignRow = {
