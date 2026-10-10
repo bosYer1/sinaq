@@ -265,7 +265,7 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
   const { data, error } = await query.returns<PublicClubCountRow[]>();
   if (error) {
     console.error('getPublicClubCount xətası:', error.message);
-    return 0;
+    throw new Error('Unable to read public club counts.');
   }
 
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
