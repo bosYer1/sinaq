@@ -50,6 +50,9 @@ export function TrackedSeoClubLink({
         clubSlug,
         clubName,
         district: districtName ?? null,
+        sourceSurface: 'seo_landing',
+        landingPath: window.location.pathname,
+        listPosition,
       }),
     );
     trackGaEvent('club_card_click', properties);
