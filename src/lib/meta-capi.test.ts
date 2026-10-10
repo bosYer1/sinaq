@@ -54,6 +54,7 @@ test('SEO click attribution passes the bounded CAPI custom-data allowlist', () =
   assert.deepEqual(sanitizeMetaCapiInput(seoClick), seoClick);
   assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, email: 'x@y.com' } }), null);
   assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, source_surface: 'unverified' } }), null);
+  assert.equal(sanitizeMetaCapiInput({ ...seoClick, name: 'Contact' }), null);
   assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, landing_path: '/admin' } }), null);
   assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, landing_path: '/bakida-internet-klublari?email=example' } }), null);
   assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, list_position: '-1' } }), null);
