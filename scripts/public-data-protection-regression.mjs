@@ -178,4 +178,16 @@ assert.match(terms, /Məcburi qanunvericiliyin müddəaları bu qaydalarla ziddi
 assert.match(rootLayout, /href="\/istifade-qaydalari"/, 'desktop footer must expose the usage terms');
 assert.match(menuPage, /href: '\/istifade-qaydalari'/, 'mobile menu must expose the usage terms');
 
+// A temporary trusted-proxy failure must not become a 200/zero-club homepage,
+// a false 404 club profile, or a silently truncated sitemap for crawlers.
+for (const message of [
+  'Unable to load club districts.',
+  'Unable to load the public club inventory.',
+  'Unable to read district data.',
+  'Unable to read public club counts.',
+  'Unable to read public club profile.',
+]) {
+  assert.ok(clubs.includes(`throw new Error('${message}')`), `Public club reads must preserve error: ${message}`);
+}
+assert.match(sitemap, /throw new Error\('Unable to generate a complete public sitemap\.'\)/, 'Failed sitemap inventory reads must not emit an incomplete indexable sitemap');
 console.log('Public data anti-scrape regression contract: PASS');
