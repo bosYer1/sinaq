@@ -130,7 +130,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
   ]);
   if (error) {
     console.error('getClubs xətası:', error.message);
-    return [];
+    throw new Error('Unable to load the public club inventory.');
   }
 
   let clubs = (data ?? []).map(normalizeClubRelations).filter(isPublicClubForWeb);
