@@ -302,7 +302,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
 
   if (error) {
     console.error('getClubBySlug xətası:', error.message);
-    return null;
+    throw new Error('Unable to read public club profile.');
   }
 
   if (!data) return null;
