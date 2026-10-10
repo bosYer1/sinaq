@@ -62,6 +62,9 @@ function cleanParams(value: unknown) {
     if (!PARAM_KEYS.has(key) || typeof raw !== 'string') return null;
     const normalized = raw.trim();
     if (!normalized || normalized.length > 160) return null;
+    if (key === 'source_surface' && normalized !== 'seo_landing') return null;
+    if (key === 'landing_path' && (!/^\/[a-z0-9/-]{1,159}$/.test(normalized) || normalized.startsWith('//'))) return null;
+    if (key === 'list_position' && !/^[1-9]\d{0,2}$/.test(normalized)) return null;
     params[key] = normalized;
   }
   return params;
