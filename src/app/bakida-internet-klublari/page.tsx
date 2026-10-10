@@ -96,6 +96,8 @@ export default async function BakuInternetClubsPage() {
 
       <div className="mt-5 flex flex-wrap gap-2"><Link href="/yaxinliqda-gaming-klublari" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">Mənə yaxın internet klubları</Link><Link href="/bakida-pc-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Bütün PC klubları</Link><Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Qiymətləri müqayisə et</Link><Link href="/bakida-ucuz-pc-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Ucuz PC klubları</Link><Link href="/bakida-24-saat-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">24 saat klublar</Link><Link href="/28-may-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">28 May gaming klubları</Link></div>
 
+            {clubs.length > 0 ? <div className="mt-7"><SeoClubList clubs={clubs} /></div> : <div className="mt-7 rounded-card border border-border bg-surface p-5 text-sm text-muted">Hazırda xəritə məlumatı tam olan aktiv PC/internet klubu yoxdur. Bütün klublar yeniləndikcə bu siyahı avtomatik dolacaq.</div>}
+
       {brandNetworks.length > 0 ? (
         <section className="mt-6" aria-labelledby="internet-brand-networks-heading">
           <h2 id="internet-brand-networks-heading" className="font-display text-base font-bold text-ink">PC və internet klub şəbəkələri</h2>
@@ -112,7 +114,6 @@ export default async function BakuInternetClubsPage() {
 
       {districts.length > 0 ? <section className="mt-6" aria-labelledby="internet-districts"><h2 id="internet-districts" className="font-display text-base font-bold text-ink">Rayon üzrə internet kafe və kompüter klubları</h2><p className="mt-1 text-xs leading-5 text-muted">Bakı rayonları üzrə PC, internet klub və internet kafelərə keç.</p><div className="mt-3 flex flex-wrap gap-2">{districts.map((district) => <Link key={district.slug} href={`/rayon/${district.slug}/pc`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">{district.name} ({district.count})</Link>)}</div></section> : null}
 
-      {clubs.length > 0 ? <div className="mt-7"><SeoClubList clubs={clubs} /></div> : <div className="mt-7 rounded-card border border-border bg-surface p-5 text-sm text-muted">Hazırda xəritə məlumatı tam olan aktiv PC/internet klubu yoxdur. Bütün klublar yeniləndikcə bu siyahı avtomatik dolacaq.</div>}
 
       <section className="mt-10 rounded-card border border-border bg-surface p-5"><h2 className="font-display text-lg font-bold text-ink">Internet klubla PC klub arasında fərq varmı?</h2><p className="mt-2 text-sm leading-6 text-muted">Azərbaycanda “internet klub”, “internet kafe”, “kompüter klubu” və “PC klub” ifadələri çox vaxt eyni tip məkan üçün işlədilir. Müasir klublar əsasən oyun kompüterləri, sürətli internet, gaming monitor və periferiyalar təklif edir. GameYer bu məkanları PC kateqoriyasında birləşdirib ünvan, xəritə və mövcud olduqda qiymət və iş saatlarına görə müqayisə etməyə imkan verir.</p></section>
 
