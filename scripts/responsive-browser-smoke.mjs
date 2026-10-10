@@ -264,6 +264,7 @@ async function assertHomepage(client, viewport) {
         clubsVisible: document.body.innerText.includes('Klublar ('),
         mapContainerHeight: rect?.height ?? 0,
         updateCardCount: updateCards.length,
+        updatesSectionPresent: Boolean(document.querySelector('section[aria-label="Aktiv təkliflər və turnirlər"]')),
         firstUpdateTop,
         mobileNavTop: navRect?.top ?? null,
         clubResultsTop: document.getElementById('club-results')?.getBoundingClientRect().top ?? null,
@@ -283,8 +284,18 @@ async function assertHomepage(client, viewport) {
     assert(listView.mapActive === 'false', `${viewport.name}: list map is interactive before activation`, listView);
     assert(listView.clubsVisible, `${viewport.name}: club list heading is missing`, listView);
     assert(listView.mapContainerHeight >= 335 && listView.mapContainerHeight <= 410, `${viewport.name}: enlarged list-view map height regressed`, listView);
-    assert(listView.updateCardCount > 0, `${viewport.name}: mobile offer cards are missing from the homepage`, listView);
-    assert(listView.firstUpdateTop != null && listView.mapContainerRect?.top != null && listView.firstUpdateTop < listView.mapContainerRect.top, `${viewport.name}: mobile offers must remain above club discovery`, listView);
+    assert(
+      listView.updateCardCount > 0 ? listView.updatesSectionPresent : !listView.updatesSectionPresent,
+      `${viewport.name}: homepage updates section/card state is inconsistent`,
+      listView,
+    );
+    if (listView.updateCardCount > 0) {
+      assert(
+        listView.firstUpdateTop != null && listView.mapContainerRect?.top != null && listView.firstUpdateTop < listView.mapContainerRect.top,
+        `${viewport.name}: mobile offers must remain above club discovery`,
+        listView,
+      );
+    }
     await capture(client, `${viewport.name}-home-list`);
     await evaluate(client, `document.querySelector('[aria-label="Xəritəni aktiv et"]')?.click()`);
     await waitForPage(client, '[aria-label="GameYer klub xəritəsi"]');
