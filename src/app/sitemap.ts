@@ -80,7 +80,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('is_active', true)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null);
-  if (error) return entries;
+  if (error) {
+    console.error('Sitemap club inventory read failed:', error.message);
+    throw new Error('Unable to generate a complete public sitemap.');
+  }
 
   const clubs = ((data ?? []) as unknown as SitemapClub[]).filter((club) =>
     hasConfirmedPublicType(club) && Boolean(club.instagram_url?.trim() || club.tiktok_url?.trim())
