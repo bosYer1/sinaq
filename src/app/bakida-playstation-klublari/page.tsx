@@ -95,6 +95,8 @@ export default async function BakuPlayStationClubsPage() {
       <Link href="/28-may-gaming-klublari" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold">28 May gaming klubları</Link>
     </div>
 
+        <div className="mt-7"><SeoClubList clubs={clubs} /></div>
+
     {brandNetworks.length > 0 ? (
       <section className="mt-6" aria-labelledby="ps-brand-networks-heading">
         <h2 id="ps-brand-networks-heading" className="font-display text-base font-bold text-ink">PlayStation filial şəbəkələri</h2>
@@ -123,7 +125,6 @@ export default async function BakuPlayStationClubsPage() {
       </section>
     ) : null}
 
-    <div className="mt-7"><SeoClubList clubs={clubs} /></div>
     <section className="mt-10 rounded-card border border-border bg-surface p-5">
       <h2 className="font-display text-lg font-bold">Yaxın PlayStation klubunu tap</h2>
       <p className="mt-2 text-sm leading-6 text-muted">Rayon, qiymət, iş saatı və lokasiyaya görə müqayisə et. Xəritə görünüşü yaxın PS klublarını tapmağı, 24 saat səhifəsi gecə-gündüz açıq məkanları, rayon səhifələri isə konkret ərazidə seçim etməyi asanlaşdırır.</p>
