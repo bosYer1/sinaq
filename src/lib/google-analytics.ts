@@ -11,10 +11,16 @@ declare global {
 
 const GA_MEASUREMENT_ID_PATTERN = /^G-[A-Z0-9]{4,20}$/;
 const GA_EVENT_NAME_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
+const GA_ANALYTICS_SMOKE_PARAM = '__analytics_smoke';
 
 export function normalizeGaMeasurementId(value: string | undefined | null) {
   const normalized = value?.trim().toUpperCase() ?? '';
   return GA_MEASUREMENT_ID_PATTERN.test(normalized) ? normalized : null;
+}
+
+export function isGaAnalyticsTestTraffic(search?: string | null) {
+  const locationSearch = search ?? (typeof window !== 'undefined' ? window.location.search : '');
+  return new URLSearchParams(locationSearch).get(GA_ANALYTICS_SMOKE_PARAM) === '1';
 }
 
 export function buildGaBootstrap(measurementId: string) {
@@ -36,7 +42,7 @@ export function createGaRouteTracker(initialPathname: string | null = null) {
 }
 
 export function trackGaPageView(measurementId: string) {
-  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function' || isGaAnalyticsTestTraffic()) return;
   const normalized = normalizeGaMeasurementId(measurementId);
   if (!normalized) return;
 
@@ -49,7 +55,7 @@ export function trackGaPageView(measurementId: string) {
 }
 
 export function trackGaEvent(eventName: string, params: GaEventParams = {}) {
-  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function' || isGaAnalyticsTestTraffic()) return;
   const measurementId = normalizeGaMeasurementId(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
   if (!measurementId || !GA_EVENT_NAME_PATTERN.test(eventName)) return;
 
