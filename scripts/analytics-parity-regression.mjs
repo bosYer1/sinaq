@@ -38,9 +38,13 @@ assert.ok(eventRoute.includes("'whatsapp_booking_click'"), 'First-party analytic
 assert.ok(trustedIngest.includes("'whatsapp_booking_click'"), 'Trusted OIDC analytics ingest must accept WhatsApp reservation intent.');
 
 function analyticsEventTypesFromAllowlist(source, label) {
-  const match = source.match(/const EVENT_TYPES = new Set\\(\\[([^\\]]+)\\]\\)/);
-  assert.ok(match, `${label} must define a static EVENT_TYPES allowlist`);
-  const literals = [...match[1].matchAll(/'([a-z_]+)'/g)].map((entry) => entry[1]);
+  const prefix = 'const EVENT_TYPES = new Set([';
+  const start = source.indexOf(prefix);
+  assert.ok(start >= 0, `${label} must define a static EVENT_TYPES allowlist`);
+  const end = source.indexOf(']);', start + prefix.length);
+  assert.ok(end > start, `${label} EVENT_TYPES list must be closed`);
+  const list = source.slice(start + prefix.length, end);
+  const literals = [...list.matchAll(/'([a-z_]+)'/g)].map((entry) => entry[1]);
   assert.ok(literals.length > 0, `${label} must allow at least one event`);
   assert.equal(literals.length, new Set(literals).size, `${label} must not duplicate event types`);
   return literals.sort();
