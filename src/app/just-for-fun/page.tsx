@@ -5,6 +5,8 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 
+export const dynamic = 'force-dynamic';
+
 const getJustForFunClubs = cache(() => getClubs({ q: 'Just For Fun' }));
 
 export async function generateMetadata(): Promise<Metadata> {

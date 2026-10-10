@@ -4,6 +4,8 @@ import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 
+export const dynamic = 'force-dynamic';
+
 const title = 'Bakı və ətrafında gaming klub bazarı — statistika və qiymətlər';
 const fallbackDescription = 'GameYer-in public klub datası əsasında Bakı və ətrafında PC və PlayStation klublarının sayı, rayon bölgüsü, qiymət aralığı və 24/7 işləyən məkanların statistikası.';
 
