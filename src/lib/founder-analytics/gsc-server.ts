@@ -36,9 +36,9 @@ function createServiceAccountAssertion(clientEmail: string, privateKey: string) 
   return `${unsigned}.${signer.sign(normalizePrivateKey(privateKey)).toString('base64url')}`;
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit) {
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = REQUEST_TIMEOUT_MS) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try { return await fetch(url, { ...init, signal: controller.signal, cache: 'no-store' }); }
   finally { clearTimeout(timer); }
 }
@@ -60,12 +60,12 @@ function bakuDate(iso: string, subtractMillisecond = false) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Baku', year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
 }
 
-async function querySearchAnalytics(siteUrl: string, accessToken: string, from: string, to: string, dimensions: string[] = [], rowLimit = 25): Promise<GscApiResponse> {
+async function querySearchAnalytics(siteUrl: string, accessToken: string, from: string, to: string, dimensions: string[] = [], rowLimit = 25, timeoutMs = REQUEST_TIMEOUT_MS): Promise<GscApiResponse> {
   const response = await fetchWithTimeout(`${GSC_API_ROOT}/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
     method: 'POST',
     headers: { authorization: `Bearer ${accessToken}`, 'content-type': 'application/json' },
     body: JSON.stringify({ startDate: bakuDate(from), endDate: bakuDate(to, true), dimensions, rowLimit, dataState: 'final' }),
-  });
+  }, timeoutMs);
   if (!response.ok) throw new Error(`GSC Search Analytics request failed (${response.status})`);
   return response.json() as Promise<GscApiResponse>;
 }
@@ -120,7 +120,7 @@ async function loadGscMetrics(range: DateRange): Promise<GscMetrics> {
       querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['query'], 10),
       querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['page'], 10),
       // Optional diagnostic: a broken/slow query+page report must not blank GSC totals.
-      querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['query', 'page'], 1000).catch(() => null),
+      querySearchAnalytics(siteUrl!, accessToken, range.from, range.to, ['query', 'page'], 1000, 2_000).catch(() => null),
     ]);
     const current = totalFrom(currentBody);
     const previous = totalFrom(previousBody);

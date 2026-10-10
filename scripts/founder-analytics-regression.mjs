@@ -44,7 +44,7 @@ assert.match(metaSection, /campaign\.campaignId.*campaign\.campaignName/s, 'Camp
 assert.match(dashboard, /getGa4Metrics\(range\)/, 'GA4 provider must execute the real server-side adapter.');
 assert.match(dashboard, /ga4\.status/, 'GA4 provider badge must reflect the real adapter state.');
 assert.match(dashboard, /getGscMetrics\(range\)/, 'GSC provider must execute the real server-side adapter.');
-assert.match(gsc, /\['query', 'page'\], 1000/, 'CTR opportunities must be sourced from real combined GSC query+page data.');
+assert.match(gsc, /\['query', 'page'\], 1000, 2_000/, 'CTR opportunities must be sourced from real combined GSC query+page data with a strict optional deadline.');
 assert.match(gsc, /\.catch\(\(\) => null\)/, 'Optional query+page report must not break top-level GSC metrics.');
 assert.match(gscSection, /gsc\.ctrOpportunities/, 'Founder-only analytics must show concrete CTR query+page opportunities.');
 assert.match(gscSection, /gsc\.ctrOpportunitiesAvailable/, 'Founder report must separate empty opportunities from unavailable API data.');
