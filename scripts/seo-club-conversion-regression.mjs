@@ -15,6 +15,9 @@ for (const token of [
   "trackGaEvent('club_card_click'",
   "trackPostHogEvent('club_card_click'",
   'clubCardClickEvent({',
+  "sourceSurface: 'seo_landing'",
+  'landingPath: window.location.pathname',
+  'listPosition,'
   "source_surface: 'seo_landing'",
   "discovery_surface: 'seo_landing'",
   'landing_path: window.location.pathname',
