@@ -30,6 +30,9 @@ const PARAM_KEYS = new Set([
   'club_types',
   'channel',
   'surface',
+  'source_surface',
+  'landing_path',
+  'list_position',
 ]);
 const EVENT_NAMES = new Set<string>(META_CAPI_EVENT_NAMES);
 
