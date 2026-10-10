@@ -86,6 +86,7 @@ export function sanitizeMetaCapiInput(value: unknown): MetaCapiInput | null {
 
   const params = cleanParams(raw.params);
   if (!params) return null;
+  if (raw.name !== 'ClubCardClick' && (params.source_surface || params.landing_path || params.list_position)) return null;
 
   return {
     eventId: raw.eventId,
