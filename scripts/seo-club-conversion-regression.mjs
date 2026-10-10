@@ -34,4 +34,6 @@ for (const route of ['bakida-internet-klublari', 'bakida-playstation-klublari'])
   const brandLinks = page.indexOf('{brandNetworks.length > 0 ? (');
   assert.ok(clubList > 0 && brandLinks > 0 && clubList < brandLinks, `${route} must present actual club results before directory/brand navigation.`);
 }
+const nightLanding = await readFile(new URL('../src/app/bakida-24-saat-gaming-klublari/page.tsx', import.meta.url), 'utf8');
+assert.ok(nightLanding.indexOf('id="night-clubs"') < nightLanding.indexOf('aria-labelledby="night-districts"'), '24-hour club results must appear before district navigation.');
 console.log('SEO landing club conversion regression: PASS');
