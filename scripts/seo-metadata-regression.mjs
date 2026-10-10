@@ -32,6 +32,7 @@ const rootFavicon = fs.readFileSync('public/favicon.jpeg');
 const brandedFavicon = fs.readFileSync('public/gameyer-favicon.jpeg');
 
 const checks = [
+  ['src/app/laliga-game-center/page.tsx', 'src/app/bakida-internet-klublari/page.tsx', 'src/app/28-may-gaming-klublari/page.tsx', 'src/app/sitemap.ts'].every((route) => fs.readFileSync(route, 'utf8').includes("export const dynamic = 'force-dynamic';")) ? [true, 'Critical organic pages render live inventory'] : [false, 'Critical organic pages must render live inventory'],
   [clubPage.includes("const title = `${club.name} — ${open24Hours ? '24/7, ' : ''}${districtName ?? 'Bakı'}, ${titleDetail}`;"), 'club title keeps club name + verified 24/7 status + district context in a compact form'],
   [clubPage.includes("open24Hours ? '24/7 fəaliyyət göstərir.' : null"), 'club description must surface verified 24/7 status when present'],
   [clubPage.includes("minPrice != null ? `${minPrice} AZN-dən` : category"), 'club title keeps a factual price/category fallback'],
