@@ -238,7 +238,11 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
       .eq('slug', filters.district)
       .maybeSingle()
       .returns<{ id: string }>();
-    if (districtError || !districtRow) return 0;
+    if (districtError) {
+      console.error('getPublicClubCount district xətası:', districtError.message);
+      throw new Error('Unable to read district data.');
+    }
+    if (!districtRow) return 0;
     districtId = districtRow.id;
   }
 
