@@ -36,6 +36,20 @@ for (const token of ['trackGaEvent', 'trackPostHogEvent', 'whatsapp_booking_clic
 assert.ok(!whatsappBookingLink.includes('trackMetaCustomEvent'), 'WhatsApp booking rollout must not touch Meta/SMM tracking');
 assert.ok(eventRoute.includes("'whatsapp_booking_click'"), 'First-party analytics route must accept WhatsApp reservation intent.');
 assert.ok(trustedIngest.includes("'whatsapp_booking_click'"), 'Trusted OIDC analytics ingest must accept WhatsApp reservation intent.');
+
+function analyticsEventTypesFromAllowlist(source, label) {
+  const match = source.match(/const EVENT_TYPES = new Set\\(\\[([^\\]]+)\\]\\)/);
+  assert.ok(match, `${label} must define a static EVENT_TYPES allowlist`);
+  const literals = [...match[1].matchAll(/'([a-z_]+)'/g)].map((entry) => entry[1]);
+  assert.ok(literals.length > 0, `${label} must allow at least one event`);
+  assert.equal(literals.length, new Set(literals).size, `${label} must not duplicate event types`);
+  return literals.sort();
+}
+assert.deepEqual(
+  analyticsEventTypesFromAllowlist(trustedIngest, 'Trusted OIDC ingest'),
+  analyticsEventTypesFromAllowlist(eventRoute, 'Public analytics API route'),
+  'Every public analytics event must be accepted by the trusted production ingest bridge',
+);
 assert.ok(whatsappConstraintMigration.includes("'whatsapp_booking_click'") && whatsappConstraintMigration.includes('analytics_events_type_valid'), 'Production analytics constraint migration must allow WhatsApp reservation intent.');
 assert.ok(whatsappRateLimitMigration.includes("'whatsapp_booking_click'") && whatsappRateLimitMigration.includes('enforce_analytics_event_rate_limit'), 'Production analytics trigger migration must allow WhatsApp reservation intent.');
 for (const token of ['trackGaEvent', 'trackMetaCustomEvent', 'trackPostHogEvent']) assert.ok(clubView.includes(token), `ClubViewTracker must keep ${token}`);
