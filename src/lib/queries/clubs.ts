@@ -87,7 +87,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
 
     if (districtError) {
       console.error('getClubs (district lookup) xətası:', districtError.message);
-      throw new Error('Unable to load club districts.');
+      throw districtError;
     }
 
     if (!districtRow) return [];
@@ -130,7 +130,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
   ]);
   if (error) {
     console.error('getClubs xətası:', error.message);
-    throw new Error('Unable to load the public club inventory.');
+    throw error;
   }
 
   let clubs = (data ?? []).map(normalizeClubRelations).filter(isPublicClubForWeb);
@@ -240,7 +240,7 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
       .returns<{ id: string }>();
     if (districtError) {
       console.error('getPublicClubCount district xətası:', districtError.message);
-      throw new Error('Unable to read district data.');
+      throw districtError;
     }
     if (!districtRow) return 0;
     districtId = districtRow.id;
@@ -265,7 +265,7 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
   const { data, error } = await query.returns<PublicClubCountRow[]>();
   if (error) {
     console.error('getPublicClubCount xətası:', error.message);
-    throw new Error('Unable to read public club counts.');
+    throw error;
   }
 
   const requestedType = filters.type === 'ps' ? 'playstation' : filters.type;
@@ -302,7 +302,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
 
   if (error) {
     console.error('getClubBySlug xətası:', error.message);
-    throw new Error('Unable to read public club profile.');
+    throw error;
   }
 
   if (!data) return null;
