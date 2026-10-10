@@ -17,7 +17,7 @@ for (const token of [
   'clubCardClickEvent({',
   "sourceSurface: 'seo_landing'",
   'landingPath: window.location.pathname',
-  'listPosition,'
+  'listPosition,',
   "source_surface: 'seo_landing'",
   "discovery_surface: 'seo_landing'",
   'landing_path: window.location.pathname',
