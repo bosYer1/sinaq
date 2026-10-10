@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+const [list, tracked] = await Promise.all([
+  readFile(new URL('../src/components/seo/SeoClubList.tsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/seo/TrackedSeoClubLink.tsx', import.meta.url), 'utf8'),
+]);
+
+assert.ok(list.includes('TrackedSeoClubLink'), 'SEO club lists must use the measured club-profile link wrapper.');
+assert.ok(list.includes('data-seo-club-cta="true"'), 'SEO club cards must expose a visible selection cue.');
+assert.ok(list.includes('Klub profilinə bax →'), 'SEO club cards must tell users the next action explicitly.');
+assert.ok(list.includes('listPosition={index + 1}'), 'SEO club click analytics must retain list position.');
+
+for (const token of [
+  "trackGaEvent('club_card_click'",
+  "trackPostHogEvent('club_card_click'",
+  'clubCardClickEvent({',
+  "source_surface: 'seo_landing'",
+  "discovery_surface: 'seo_landing'",
+  'landing_path: window.location.pathname',
+  'rememberClubEntryOrigin(clubSlug)',
+  'prefetch={false}',
+  "transport: 'sendBeacon'",
+]) {
+  assert.ok(tracked.includes(token), `Tracked SEO club links must keep ${token}`);
+}
+
+console.log('SEO landing club conversion regression: PASS');
