@@ -5,6 +5,8 @@ import { getClubTypes } from '@/lib/queries/districts';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { getSiteUrl } from '@/lib/site-url';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Bakıda PC və PlayStation klubları — kateqoriya və ünvan',
   description: 'Bakıda PC, kompüter, internet kafe və PlayStation klublarını kateqoriyaya görə tap. Rayon, ünvan və xəritəni müqayisə et; qiymət və iş saatları məlum olduqda klub profilində göstərilir.',

@@ -30,6 +30,9 @@ const PARAM_KEYS = new Set([
   'club_types',
   'channel',
   'surface',
+  'source_surface',
+  'landing_path',
+  'list_position',
 ]);
 const EVENT_NAMES = new Set<string>(META_CAPI_EVENT_NAMES);
 
@@ -59,6 +62,9 @@ function cleanParams(value: unknown) {
     if (!PARAM_KEYS.has(key) || typeof raw !== 'string') return null;
     const normalized = raw.trim();
     if (!normalized || normalized.length > 160) return null;
+    if (key === 'source_surface' && normalized !== 'seo_landing') return null;
+    if (key === 'landing_path' && (!/^\/[a-z0-9/-]{1,159}$/.test(normalized) || normalized.startsWith('//') || normalized.startsWith('/admin') || normalized.startsWith('/api'))) return null;
+    if (key === 'list_position' && !/^[1-9]\d{0,2}$/.test(normalized)) return null;
     params[key] = normalized;
   }
   return params;
@@ -80,6 +86,7 @@ export function sanitizeMetaCapiInput(value: unknown): MetaCapiInput | null {
 
   const params = cleanParams(raw.params);
   if (!params) return null;
+  if (raw.name !== 'ClubCardClick' && (params.source_surface || params.landing_path || params.list_position)) return null;
 
   return {
     eventId: raw.eventId,

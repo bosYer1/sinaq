@@ -7,6 +7,8 @@ import { inferClubTypeSlugs } from '@/lib/clubType';
 import { SeoClubList } from '@/components/seo/SeoClubList';
 import type { ClubWithRelations } from '@/types/database';
 
+export const dynamic = 'force-dynamic';
+
 function isOpen24HoursEveryDay(club: ClubWithRelations) {
   const hoursByDay = new Map(club.opening_hours.map((hours) => [hours.day_of_week, hours]));
   return Array.from({ length: 7 }, (_, day) => day).every((day) => {
@@ -72,9 +74,11 @@ export default async function TwentyFourHourClubsPage() {
 
       <div className="mt-5 flex flex-wrap gap-2"><a href="#night-clubs" className="rounded-control bg-primary px-4 py-2 text-sm font-semibold text-white">24 saat klublara bax ↓</a><Link href="/bakida-gaming-klub-qiymetleri" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Saatlıq qiymətləri müqayisə et</Link><Link href="/?view=map" className="rounded-control border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink">Klubları xəritədə gör</Link></div>
 
+      {clubs.length > 0 ? <div id="night-clubs" className="mt-7 scroll-mt-24"><SeoClubList clubs={clubs} /></div> : <div className="mt-7 rounded-card border border-border bg-surface p-5 text-sm text-muted">Hazırda həftənin 7 günü 24 saat işlədiyi təsdiqlənmiş klub yoxdur. Bütün klublara və xəritəyə bax.</div>}
+
       {districts.length > 0 ? <section className="mt-6" aria-labelledby="night-districts"><h2 id="night-districts" className="font-display text-base font-bold text-ink">24 saat klublar hansı rayonlardadır?</h2><p className="mt-1 text-xs leading-5 text-muted">Gecə gaming üçün uyğun klubların yerləşdiyi rayonlara keç.</p><div className="mt-3 flex flex-wrap gap-2">{districts.map((district) => <Link key={district.slug} href={`/rayon/${district.slug}`} className="rounded-control border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-primary">{district.name} ({district.count})</Link>)}</div></section> : null}
 
-      {clubs.length > 0 ? <div id="night-clubs" className="mt-7 scroll-mt-24"><SeoClubList clubs={clubs} /></div> : <div className="mt-7 rounded-card border border-border bg-surface p-5 text-sm text-muted">Hazırda həftənin 7 günü 24 saat işlədiyi təsdiqlənmiş klub yoxdur. Bütün klublara və xəritəyə bax.</div>}
+
       <section className="mt-10 rounded-card border border-border bg-surface p-5">
         <h2 className="font-display text-lg font-bold text-ink">Gecə açıq gaming klub seçərkən nəyə baxmaq lazımdır?</h2>
         <p className="mt-2 text-sm leading-6 text-muted">24 saat və gecə açıq klub seçərkən ünvanı, xəritədə məsafəni, saatlıq tarifi və iş qrafikini birlikdə yoxla. İş saatları dəyişə bildiyi üçün klub profilində telefon və ya Instagram varsa, gecə getməzdən əvvəl məlumatı dəqiqləşdirmək faydalıdır.</p>

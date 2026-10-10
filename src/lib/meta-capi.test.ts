@@ -36,6 +36,30 @@ test('Meta CAPI input accepts only approved events, paths, cookies and custom fi
   assert.equal(sanitizeMetaCapiInput({ ...validInput, eventId: 'external-id' }), null);
 });
 
+test('SEO click attribution passes the bounded CAPI custom-data allowlist', () => {
+  const seoClick = {
+    ...validInput,
+    name: 'ClubCardClick',
+    params: {
+      club_id: 'club-1',
+      club_slug: 'test-club',
+      club_name: 'Test Club',
+      district: 'Nərimanov',
+      source_surface: 'seo_landing',
+      landing_path: '/bakida-playstation-klublari',
+      list_position: '2',
+    },
+    path: '/bakida-playstation-klublari',
+  };
+  assert.deepEqual(sanitizeMetaCapiInput(seoClick), seoClick);
+  assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, email: 'x@y.com' } }), null);
+  assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, source_surface: 'unverified' } }), null);
+  assert.equal(sanitizeMetaCapiInput({ ...seoClick, name: 'Contact' }), null);
+  assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, landing_path: '/admin' } }), null);
+  assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, landing_path: '/bakida-internet-klublari?email=example' } }), null);
+  assert.equal(sanitizeMetaCapiInput({ ...seoClick, params: { ...seoClick.params, list_position: '-1' } }), null);
+});
+
 test('Meta CAPI server event carries dedupe ids without PII or client IP', () => {
   const input = sanitizeMetaCapiInput(validInput);
   assert.ok(input);

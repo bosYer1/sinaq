@@ -178,4 +178,13 @@ assert.match(terms, /Məcburi qanunvericiliyin müddəaları bu qaydalarla ziddi
 assert.match(rootLayout, /href="\/istifade-qaydalari"/, 'desktop footer must expose the usage terms');
 assert.match(menuPage, /href: '\/istifade-qaydalari'/, 'mobile menu must expose the usage terms');
 
+// Never cache an empty indexable club page, a false 404 or a truncated sitemap.
+// Re-throw the ORIGINAL error: Next.js uses DynamicServerError during static
+// prerendering to detect pages that require per-request server rendering.
+assert.match(clubs, /getClubs \(district lookup\) xətası:[\s\S]*?throw districtError;/, 'District errors must propagate the original exception');
+assert.match(clubs, /getClubs xətası:[\s\S]*?throw error;/, 'Inventory failures must not become valid zero-club results');
+assert.match(clubs, /getPublicClubCount district xətası:[\s\S]*?throw districtError;/, 'District count failure must propagate');
+assert.match(clubs, /getPublicClubCount xətası:[\s\S]*?throw error;/, 'Club count read failures must propagate');
+assert.match(clubs, /getClubBySlug xətası:[\s\S]*?throw error;/, 'Club profile failures must not become false 404s');
+assert.match(sitemap, /Sitemap club inventory read failed:[\s\S]*?throw error;/, 'Sitemap must not respond 200 with missing clubs after backend failure');
 console.log('Public data anti-scrape regression contract: PASS');

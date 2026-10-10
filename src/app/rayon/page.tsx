@@ -5,6 +5,8 @@ import { getDistricts } from '@/lib/queries/districts';
 import { getSiteUrl } from '@/lib/site-url';
 import { discoveryLocationPhrase } from '@/lib/seo-location';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Bakı və ətrafı üzrə gaming klubları — PC və PlayStation',
   description: 'Bakı, Xırdalan və Sumqayıtda PC, kompüter və PlayStation klublarını ərazi üzrə tap. Ünvan və xəritəni müqayisə et; qiymət və iş saatları məlum olduqda göstərilir.',

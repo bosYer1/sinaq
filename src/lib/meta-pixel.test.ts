@@ -44,6 +44,28 @@ test('club discovery and CTA events map to their Meta names', () => {
   assert.equal(clubActionEvent('maps_click', club).name, 'DirectionsClick');
 });
 
+test('SEO club clicks preserve attribution in Meta event fields', () => {
+  assert.deepEqual(clubCardClickEvent({
+    ...club,
+    district: 'Nərimanov',
+    sourceSurface: 'seo_landing',
+    landingPath: '/bakida-internet-klublari',
+    listPosition: 3,
+  }), {
+    name: 'ClubCardClick',
+    params: {
+      club_id: 'club-1',
+      club_slug: 'test-club',
+      club_name: 'Test Club',
+      district: 'Nərimanov',
+      source_surface: 'seo_landing',
+      landing_path: '/bakida-internet-klublari',
+      list_position: '3',
+    },
+  });
+  assert.equal(Object.hasOwn(clubCardClickEvent({ ...club }).params, 'source_surface'), false);
+});
+
 test('submission success keeps only approved surface and club metadata', () => {
   assert.deepEqual(submissionSuccessEvent('club_owner', 'test-club', 'Test Club'), {
     name: 'SubmissionSuccess',

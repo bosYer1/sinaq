@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next';
 import { createServerDataClient } from '@/lib/supabase/server-data';
 import { getSiteUrl } from '@/lib/site-url';
 
+export const dynamic = 'force-dynamic';
+
 interface SitemapClub {
   name: string;
   address: string;
@@ -80,7 +82,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('is_active', true)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null);
-  if (error) return entries;
+  if (error) {
+    console.error('Sitemap club inventory read failed:', error.message);
+    throw error;
+  }
 
   const clubs = ((data ?? []) as unknown as SitemapClub[]).filter((club) =>
     hasConfirmedPublicType(club) && Boolean(club.instagram_url?.trim() || club.tiktok_url?.trim())
