@@ -82,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .not('longitude', 'is', null);
   if (error) {
     console.error('Sitemap club inventory read failed:', error.message);
-    throw new Error('Unable to generate a complete public sitemap.');
+    throw error;
   }
 
   const clubs = ((data ?? []) as unknown as SitemapClub[]).filter((club) =>
