@@ -1,7 +1,9 @@
 import process from 'node:process';
+import { createObservedGetStatus } from './site-integrity-status-cache.mjs';
 
 const BASE_URL = (process.env.TEST_BASE_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
 const EXPECTED_CANONICAL_ORIGIN = (process.env.EXPECTED_CANONICAL_ORIGIN || 'https://gameyer.az').replace(/\/$/, '');
+const observedGetStatus = createObservedGetStatus();
 
 function assert(condition, message, context = undefined) {
   if (!condition) {
@@ -15,7 +17,11 @@ function absolute(path) {
 }
 
 async function fetchText(path, options = {}) {
-  const response = await fetch(absolute(path), { redirect: 'manual', ...options });
+  const url = absolute(path);
+  const response = await fetch(url, { redirect: 'manual', ...options });
+  // An exact same-URL GET has already been validated during this smoke run.
+  // Save status only; do not cache HTML across separate requests or deployments.
+  if (Object.keys(options).length === 0) observedGetStatus.observe(url, response.status);
   const text = await response.text();
   return { response, text };
 }
@@ -216,9 +222,11 @@ async function checkInternalLinks(pageHtmlByPath) {
 
   const failures = [];
   for (const [href, sources] of sourcesByHref.entries()) {
-    const response = await fetch(absolute(href), { redirect: 'manual' });
-    if (response.status >= 400 || response.status === 0) {
-      failures.push({ href, status: response.status, sources: [...sources].slice(0, 5) });
+    // Reuse already-verified 200/redirect/404 statuses, but still request every
+    // as-yet-unchecked unique URL. Every broken link is still reported.
+    const status = await observedGetStatus.check(absolute(href));
+    if (status >= 400 || status === 0) {
+      failures.push({ href, status, sources: [...sources].slice(0, 5) });
     }
   }
   assert(failures.length === 0, 'Public sitemap pages contain broken internal links', failures);
@@ -255,4 +263,5 @@ await checkInternalLinks(pageHtmlByPath);
 await checkKnownSeoRedirects();
 await checkParameterizedHomeIsNotIndexable();
 
-console.log(`Site integrity smoke passed for ${sitemapUrls.length} sitemap URLs on ${EXPECTED_CANONICAL_ORIGIN}.`);
+const statusReuse = observedGetStatus.stats();
+console.log(`Site integrity smoke passed for ${sitemapUrls.length} sitemap URLs on ${EXPECTED_CANONICAL_ORIGIN}. Reused ${statusReuse.reused} verified GET statuses; checked ${statusReuse.fetched} new internal link URLs.`);

@@ -128,18 +128,23 @@ jobs:
           node <<'NODE'
           const base = 'http://127.0.0.1:3000';
           (async () => {
+            const checkedPaths = new Set();
             for (const path of ['/', '/rayon', '/tip', '/yaxinliqda-gaming-klublari', '/bakida-pc-klublari', '/bakida-internet-klublari', '/bakida-playstation-klublari', '/bakida-gaming-klub-qiymetleri', '/bakida-ucuz-pc-klublari', '/bakida-ucuz-playstation-klublari', '/bakida-24-saat-gaming-klublari', '/elaqe', '/mexfilik']) {
               const response = await fetch(`${base}${path}`, { redirect: 'manual' });
               if (response.status < 200 || response.status >= 300) throw new Error(`${path}: ${response.status}`);
+              checkedPaths.add(path);
             }
             const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
             const paths = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
             if (paths.length < 36) throw new Error(`Expected at least 36 sitemap URLs, got ${paths.length}`);
             for (const path of paths) {
+              // These URLs were already checked above during the same run.
+              if (checkedPaths.has(path)) continue;
               const response = await fetch(`${base}${path}`, { redirect: 'manual' });
               if (response.status < 200 || response.status >= 300) throw new Error(`Sitemap URL ${path}: ${response.status}`);
+              checkedPaths.add(path);
             }
-            console.log(`Security/public smoke-tested ${paths.length} sitemap routes successfully.`);
+            console.log(`Security/public smoke-tested ${paths.length} sitemap routes successfully (${checkedPaths.size} unique paths).`);
           })().catch((error) => { console.error(error); process.exit(1); });
           NODE
 
