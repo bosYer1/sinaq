@@ -64,8 +64,16 @@ const wait = async (expression, label, attempts = 100) => {
 };
 const navigate = async (path) => {
   const separator = path.includes('?') ? '&' : '?';
-  await send('Page.navigate', { url: `${BASE_URL}${path}${separator}${SMOKE_QUERY}` });
-  await wait(`document.readyState === 'complete'`, `navigate ${path}`);
+  const url = `${BASE_URL}${path}${separator}${SMOKE_QUERY}`;
+  const expected = new URL(url);
+  await send('Page.navigate', { url });
+  // Slow third-party images can delay 'complete' after the actual content is ready.
+  // Check the *new* document's origin and pathname, not a stale previous page.
+  await wait(
+    `location.origin === ${JSON.stringify(expected.origin)} && location.pathname === ${JSON.stringify(expected.pathname)} && ['interactive', 'complete'].includes(document.readyState)`,
+    `navigate ${path}`,
+    250,
+  );
   await sleep(1500);
 };
 const clickWithoutNavigation = async (selectorExpression) => evaluate(`(() => {
