@@ -10,6 +10,7 @@ const meta = await readFile(new URL('../src/lib/founder-analytics/meta-server.ts
 const ga4 = await readFile(new URL('../src/lib/founder-analytics/ga4-server.ts', import.meta.url), 'utf8');
 const gsc = await readFile(new URL('../src/lib/founder-analytics/gsc-server.ts', import.meta.url), 'utf8');
 const dashboard = await readFile(new URL('../src/lib/founder-analytics/dashboard.ts', import.meta.url), 'utf8');
+const gscSection = await readFile(new URL('../src/app/admin/analitika/GscAnalyticsSection.tsx', import.meta.url), 'utf8');
 const calculations = await readFile(new URL('../src/lib/founder-analytics/calculations.ts', import.meta.url), 'utf8');
 const types = await readFile(new URL('../src/lib/founder-analytics/types.ts', import.meta.url), 'utf8');
 const supabase = await readFile(new URL('../src/lib/founder-analytics/supabase-server.ts', import.meta.url), 'utf8');
@@ -43,6 +44,10 @@ assert.match(metaSection, /campaign\.campaignId.*campaign\.campaignName/s, 'Camp
 assert.match(dashboard, /getGa4Metrics\(range\)/, 'GA4 provider must execute the real server-side adapter.');
 assert.match(dashboard, /ga4\.status/, 'GA4 provider badge must reflect the real adapter state.');
 assert.match(dashboard, /getGscMetrics\(range\)/, 'GSC provider must execute the real server-side adapter.');
+assert.match(gsc, /\['query', 'page'\], 1000, 2_000/, 'CTR opportunities must be sourced from real combined GSC query+page data with a strict optional deadline.');
+assert.match(gsc, /\.catch\(\(\) => null\)/, 'Optional query+page report must not break top-level GSC metrics.');
+assert.match(gscSection, /gsc\.ctrOpportunities/, 'Founder-only analytics must show concrete CTR query+page opportunities.');
+assert.match(gscSection, /gsc\.ctrOpportunitiesAvailable/, 'Founder report must separate empty opportunities from unavailable API data.');
 assert.match(dashboard, /gsc\.status/, 'GSC provider badge must reflect the real adapter state.');
 assert.match(posthog, /gameyer_traffic_scope = 'public'/, 'Behavior queries must exclude test traffic.');
 assert.match(posthog, /properties\.\$host = 'gameyer\.az'/, 'Founder behavior metrics must be restricted to the canonical production host.');
