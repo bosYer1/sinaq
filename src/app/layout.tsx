@@ -3,7 +3,6 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSiteUrl } from '@/lib/site-url';
-import { emergencyNeonCatalogEnabled } from '@/lib/neon/emergency-catalog';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
@@ -163,12 +162,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </header>
-
-        {emergencyNeonCatalogEnabled() ? (
-          <div role="status" className="shrink-0 border-b border-warn/25 bg-warn-tint px-4 py-2 text-center text-xs text-ink">
-            Müvəqqəti kataloq rejimi: klub məlumatlarına baxmaq mümkündür, lakin yeni müraciətlər və yeniləmələr hazırda məhduddur.
-          </div>
-        ) : null}
 
         <main
           data-mobile-scroll-root="true"
