@@ -37,13 +37,16 @@ test('environment-scoped OIDC and server secrets allow cross-request caching', (
 test('shared public cache does not affect filtered queries or public eligibility gate', async () => {
   const source = await readFile(new URL('./clubs.ts', import.meta.url), 'utf8');
   assert.match(source, /const hasFilters = Boolean\(district \|\| metro \|\| type \|\| priceMax \|\| q\?\.trim\(\)\)/);
-  assert.match(source, /if \(!hasFilters && hasRequestIndependentPublicDataCredential\(\)\)/);
+  assert.match(source, /if \(!hasFilters\) return getTrustedPublicClubs\(\);/);
+  assert.match(source, /const trustedToken = await requestVercelPublicReadToken\(\);/);
+  assert.match(source, /const clubs = await queryClubs\(\{\}, trustedToken\);/);
+  assert.match(source, /\['gameyer-public-clubs-header-v1'\]/);
   assert.match(source, /return queryClubs\(\{ district, metro, type, priceMax, q \}\);/);
   assert.match(source, /\.eq\('is_active', true\)/);
   assert.match(source, /hasConfirmedPublicSocial\(club\)/);
   assert.match(source, /hasConfirmedPublicType\(club\)/);
   assert.match(source, /getSharedPublicClubs = unstable_cache/);
-  assert.match(source, /const clubs = await getSharedPublicClubs\(\);/);
+  assert.match(source, /const clubs = await getTrustedPublicClubs\(\);/);
   assert.match(source, /return clubs\.find\(\(club\) => club\.slug === slug\) \?\? null;/);
   assert.match(source, /return queryClubBySlug\(slug\);/);
   assert.match(source, /getSharedPublicClubCount = unstable_cache/);

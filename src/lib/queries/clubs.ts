@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { hasRequestIndependentPublicDataCredential, PUBLIC_INVENTORY_CACHE_SECONDS } from '@/lib/queries/public-inventory-cache';
+import { requestVercelPublicReadToken } from '@/lib/supabase/server-data';
 import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { isPremiumActive } from '@/lib/utils';
@@ -75,8 +76,8 @@ function normalizeSearchText(value: string | null | undefined) {
     .trim();
 }
 
-async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
-  const supabase = createPublicClient();
+async function queryClubs(filters: ClubFilters, trustedToken?: string): Promise<ClubWithRelations[]> {
+  const supabase = createPublicClient(trustedToken);
   let districtId: string | null = null;
 
   if (filters.district) {
@@ -218,6 +219,35 @@ const getSharedPublicClubs = unstable_cache(
   { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
 );
 
+// At runtime, Vercel supplies OIDC in a request header (not process.env).
+// Resolve the header BEFORE constructing the cached function; only a
+// visibility-filtered public result is cached, never the credential.
+async function getTrustedPublicClubs(): Promise<ClubWithRelations[]> {
+  if (hasRequestIndependentPublicDataCredential()) return getSharedPublicClubs();
+
+  if (process.env.VERCEL_ENV === 'production') {
+    const trustedToken = await requestVercelPublicReadToken();
+    if (trustedToken) {
+      return unstable_cache(
+        async () => {
+          const clubs = await queryClubs({}, trustedToken);
+          if (clubs.length === 0) {
+            throw new Error('Refusing to cache an unexpectedly empty public club inventory.');
+          }
+          return clubs;
+        },
+        // Deliberately independent of rotating OIDC credentials: the cached
+        // payload is identical for every authorized public-site request.
+        ['gameyer-public-clubs-header-v1'],
+        { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
+      )();
+    }
+  }
+
+  // No trusted request token: preserve the original fail-closed behavior.
+  return queryClubs({});
+}
+
 const getCachedClubs = cache(
   async (
     district?: string,
@@ -229,9 +259,7 @@ const getCachedClubs = cache(
     // Free-text searches and filtered variants retain their existing query
     // semantics and do not create an unbounded shared cache key space.
     const hasFilters = Boolean(district || metro || type || priceMax || q?.trim());
-    if (!hasFilters && hasRequestIndependentPublicDataCredential()) {
-      return getSharedPublicClubs();
-    }
+    if (!hasFilters) return getTrustedPublicClubs();
     return queryClubs({ district, metro, type, priceMax, q });
   },
 );
@@ -253,8 +281,11 @@ type PublicClubCountRow = {
   type_assignments: Array<{ club_type: { slug: string } | null }>;
 };
 
-async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
-  const supabase = createPublicClient();
+async function queryPublicClubCount(
+  filters: Pick<ClubFilters, 'district' | 'type'>,
+  trustedToken?: string,
+): Promise<number> {
+  const supabase = createPublicClient(trustedToken);
   let districtId: string | null = null;
 
   if (filters.district) {
@@ -311,11 +342,22 @@ const getSharedPublicClubCount = unstable_cache(
   { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
 );
 
-const getCachedPublicClubCount = cache(
-  async (district?: string, type?: string) => hasRequestIndependentPublicDataCredential()
-    ? getSharedPublicClubCount(district, type)
-    : queryPublicClubCount({ district, type }),
-);
+const getCachedPublicClubCount = cache(async (district?: string, type?: string) => {
+  if (hasRequestIndependentPublicDataCredential()) return getSharedPublicClubCount(district, type);
+
+  if (process.env.VERCEL_ENV === 'production') {
+    const trustedToken = await requestVercelPublicReadToken();
+    if (trustedToken) {
+      return unstable_cache(
+        async () => queryPublicClubCount({ district, type }, trustedToken),
+        // Count varies with the district/type; the rotating OIDC token does not.
+        ['gameyer-public-club-count-header-v1', district ?? '', type ?? ''],
+        { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
+      )();
+    }
+  }
+  return queryPublicClubCount({ district, type });
+});
 
 export async function getPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
   return getCachedPublicClubCount(filters.district, filters.type);
@@ -347,11 +389,11 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
 // Detail requests reuse exactly the same eligibility-gated inventory snapshot
 // as the home page. In sitemap smoke tests this avoids one proxy read per slug.
 const getCachedClubBySlug = cache(async (slug: string) => {
-  if (hasRequestIndependentPublicDataCredential()) {
-    const clubs = await getSharedPublicClubs();
+  if (hasRequestIndependentPublicDataCredential() || process.env.VERCEL_ENV === 'production') {
+    const clubs = await getTrustedPublicClubs();
     return clubs.find((club) => club.slug === slug) ?? null;
   }
-  // Preserve the request-scoped OIDC fallback; never cache request headers.
+  // Preserve the uncached direct-query path for local and preview environments.
   return queryClubBySlug(slug);
 });
 
