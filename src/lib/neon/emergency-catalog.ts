@@ -50,3 +50,27 @@ const cachedEmergencyClubs = unstable_cache(async (): Promise<ClubWithRelations[
 export async function getEmergencyPublicClubs(): Promise<ClubWithRelations[]> {
   return cachedEmergencyClubs();
 }
+
+const cachedEmergencyDistricts = unstable_cache(
+  () => readPublicRows<District>(
+    'SELECT to_jsonb(d) FROM (SELECT id, name, slug, created_at FROM gameyer_catalog.districts) d',
+  ),
+  ['gameyer-neon-emergency-districts-20261012'],
+  { revalidate: 3600 },
+);
+
+export async function getEmergencyDistricts(): Promise<District[]> {
+  return (await cachedEmergencyDistricts()).sort((a, b) => a.name.localeCompare(b.name, 'az'));
+}
+
+const cachedEmergencyTypes = unstable_cache(
+  () => readPublicRows<ClubType>(
+    'SELECT to_jsonb(t) FROM (SELECT id, name, slug FROM gameyer_catalog.club_types) t',
+  ),
+  ['gameyer-neon-emergency-types-20261012'],
+  { revalidate: 3600 },
+);
+
+export async function getEmergencyClubTypes(): Promise<ClubType[]> {
+  return (await cachedEmergencyTypes()).sort((a, b) => a.name.localeCompare(b.name, 'az'));
+}
