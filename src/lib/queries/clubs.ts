@@ -414,7 +414,7 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
 // Detail requests reuse exactly the same eligibility-gated inventory snapshot
 // as the home page. In sitemap smoke tests this avoids one proxy read per slug.
 const getCachedClubBySlug = cache(async (slug: string) => {
-  if (hasRequestIndependentPublicDataCredential() || process.env.VERCEL_ENV === 'production') {
+  if (emergencyNeonCatalogEnabled() || hasRequestIndependentPublicDataCredential() || process.env.VERCEL_ENV === 'production') {
     const clubs = await getTrustedPublicClubs();
     return clubs.find((club) => club.slug === slug) ?? null;
   }
