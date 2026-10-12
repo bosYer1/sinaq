@@ -23,6 +23,11 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ZRyHR5Qj2LmbCZVsKTBZ4Q_eRByoSYf
       NEXT_PUBLIC_SITE_URL: https://gameyer.az
+      # Recovery PR only: compile and browser-test against the same checked,
+      # visibility-gated static public catalog used by production.
+      # Main still builds with its existing live-data/OIDC contract.
+      GAMEYER_NEON_EMERGENCY_READS: ${{ github.head_ref == 'perf/cross-request-public-inventory-cache-20261012' && '1' || '0' }}
+      GAMEYER_NEON_STATIC_CATALOG: ${{ github.head_ref == 'perf/cross-request-public-inventory-cache-20261012' && '1' || '0' }}
       TEST_BASE_URL: http://127.0.0.1:3000
       RESPONSIVE_ARTIFACT_DIR: /tmp/gameyer-responsive
     steps:
