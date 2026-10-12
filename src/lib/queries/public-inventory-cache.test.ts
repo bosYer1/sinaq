@@ -172,3 +172,25 @@ test('emergency metrics do not write to quota-limited Supabase', async () => {
     assert.match(route, /'x-gameyer-analytics-write': 'disabled'/);
   }
 });
+
+
+test('diagnostic: exact original media and Vercel optimizer reachability', async () => {
+  if (process.env.GITHUB_ACTIONS !== 'true') return;
+  const imageUrl = "https://uxcedpbumulpheglhlvs.supabase.co/storage/v1/object/public/club-images/b21ba925-3267-42af-af2b-1377e7ddabd8/profile/1787338647118-cb216ec6-168b-4b34-94b8-4c2ba0f1b0f6.jpg";
+  const encoded = encodeURIComponent(imageUrl);
+  const probes = [
+    ['supabase-original', imageUrl],
+    ['image-optimized-96', `https://gameyer.az/_next/image?url=${encoded}&w=96&q=75`],
+    ['image-optimized-256', `https://gameyer.az/_next/image?url=${encoded}&w=256&q=75`],
+    ['image-optimized-640', `https://gameyer.az/_next/image?url=${encoded}&w=640&q=75`],
+  ];
+  for (const [name, url] of probes) {
+    try {
+      const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      const bytes = (await response.arrayBuffer()).byteLength;
+      console.log('MEDIA_PROBE', name, response.status, response.headers.get('content-type'), bytes);
+    } catch (error) {
+      console.log('MEDIA_PROBE', name, 'ERR', error instanceof Error ? error.message : String(error));
+    }
+  }
+});
