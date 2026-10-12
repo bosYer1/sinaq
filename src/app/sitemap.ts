@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { createServerDataClient } from '@/lib/supabase/server-data';
+import { emergencyNeonCatalogEnabled } from '@/lib/neon/emergency-catalog';
+import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 
 export const dynamic = 'force-dynamic';
@@ -53,8 +55,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/istifade-qaydalari`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
-  const supabase = createServerDataClient();
-  const { data, error } = await supabase
+  let data: unknown[] | null = null;
+  let error: { message: string } | null = null;
+  if (emergencyNeonCatalogEnabled()) {
+    data = await getClubs();
+  } else {
+    const supabase = createServerDataClient();
+    const { data: dataResult, error: liveError } = await supabase
     .from('clubs')
     .select(`
       name,
@@ -82,6 +89,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('is_active', true)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null);
+    data = dataResult as unknown[] | null;
+    error = liveError;
+  }
   if (error) {
     console.error('Sitemap club inventory read failed:', error.message);
     throw error;
