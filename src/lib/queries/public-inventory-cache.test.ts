@@ -7,6 +7,7 @@ import {
   normalizePublicSearchText,
   publicSearchTerms,
   filterPublicInventorySnapshot,
+  type PublicInventoryFilter,
 } from './public-inventory-cache.ts';
 
 test('public inventory is cached for only five minutes', () => {
@@ -97,7 +98,7 @@ const fixtureHelpers = {
   inferTypeSlugs: (club: FixtureClub) => club.types,
 };
 
-const filterFixture = (filters: Parameters<typeof filterPublicInventorySnapshot<FixtureClub>>[1]) =>
+const filterFixture = (filters: PublicInventoryFilter) =>
   filterPublicInventorySnapshot(discoveryFixtures, filters, fixtureHelpers).map((club) => club.slug);
 
 test('snapshot filter respects district, metro and PC/PlayStation types', () => {
@@ -132,10 +133,10 @@ test('snapshot filtering is stable, side-effect free and does not change unknown
 
 test('price queries keep SQL join semantics; cache refuses unexpectedly empty inventories', async () => {
   const source = await readFile(new URL('./clubs.ts', import.meta.url), 'utf8');
-  assert.match(source, /return filterPublicInventorySnapshot\\(/);
-  assert.match(source, /const clubs = await getTrustedPublicClubs\\(\\)/);
-  assert.match(source, /if \\(priceMax == null \\|\\| priceMax <= 0\\)/);
-  assert.match(source, /return queryClubs\\(\\{ district, metro, type, priceMax, q \\}\\);/);
+  assert.match(source, /return filterPublicInventorySnapshot\(/);
+  assert.match(source, /const clubs = await getTrustedPublicClubs\(\)/);
+  assert.match(source, /if \(priceMax == null \|\| priceMax <= 0\)/);
+  assert.match(source, /return queryClubs\(\{ district, metro, type, priceMax, q \}\);/);
   assert.match(source, /pricing:club_pricing!inner/);
   assert.match(source, /Refusing to cache an unexpectedly empty public club inventory/);
 });
