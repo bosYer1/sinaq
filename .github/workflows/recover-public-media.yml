@@ -1,0 +1,51 @@
+name: Recover genuinely cached public club images
+on:
+  pull_request:
+    types: [synchronize]
+    paths:
+      - .github/workflows/recover-public-media.yml
+permissions:
+  contents: write
+jobs:
+  recover:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'perf/cross-request-public-inventory-cache-20261012'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Save genuine cache-hit images to static assets (skip uncached originals)
+        run: node scripts/recovery/recover-cached-media.mjs
+      - name: Publish recovery assets to the same draft branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          recovered=$(node -e "const m=require('./src/data/recovered-club-media.json'); console.log(Object.keys(m).length)")
+          echo "Verified recovered images: $recovered"
+          if [ "$recovered" -eq 0 ]; then
+            echo "Nothing recoverable; leave branch untouched."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/recovered-club-media src/data/recovered-club-media.json
+          if git diff --cached --quiet; then
+            echo "Recovered assets unchanged."
+            exit 0
+          fi
+          git commit -m "media: preserve verified original photos recovered from existing Vercel image cache"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: real-recovered-club-photos
+          path: |
+            public/recovered-club-media/
+            src/data/recovered-club-media.json
+          if-no-files-found: ignore
+          retention-days: 7
