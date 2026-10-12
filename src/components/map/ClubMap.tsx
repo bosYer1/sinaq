@@ -90,11 +90,41 @@ function createPopupContent(club: ClubWithDistance) {
 }
 
 export function ClubMap({ clubs, activeClubId, onSelectClub, userLocation, locationFocusRequest = 0 }: ClubMapProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null); const mapRef = useRef<L.Map | null>(null); const markerLayerRef = useRef<L.LayerGroup | null>(null); const tileLayerRef = useRef<L.TileLayer | null>(null); const markerRefs = useRef<Map<string, L.Marker>>(new Map()); const clubRefs = useRef<Map<string, ClubWithDistance>>(new Map()); const activeClubIdRef = useRef<string | null>(activeClubId ?? null); const onSelectClubRef = useRef(onSelectClub); const userMarkerRef = useRef<L.CircleMarker | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null); const mapRef = useRef<L.Map | null>(null); const markerLayerRef = useRef<L.LayerGroup | null>(null); const tileLayerRef = useRef<L.TileLayer | null>(null); const markerRefs = useRef<Map<string, L.Marker>>(new Map()); const clubRefs = useRef<Map<string, ClubWithDistance>>(new Map()); const activeClubIdRef = useRef<string | null>(activeClubId ?? null); const previousActiveClubIdRef = useRef<string | null>(null); const onSelectClubRef = useRef(onSelectClub); const userMarkerRef = useRef<L.CircleMarker | null>(null);
   useEffect(() => { onSelectClubRef.current = onSelectClub; }, [onSelectClub]); useEffect(() => { activeClubIdRef.current = activeClubId ?? null; }, [activeClubId]);
-  useEffect(() => { const container = containerRef.current; if (!container || mapRef.current) return; const markerRegistry = markerRefs.current; const clubRegistry = clubRefs.current; const map = L.map(container, { center: MAP_DEFAULT_CENTER, zoom: MAP_DEFAULT_ZOOM, zoomControl: false, scrollWheelZoom: true }); L.control.zoom({ position: 'bottomright' }).addTo(map); const tileLayer = L.tileLayer(MAP_TILE_URL, { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(map); const markerLayer = L.layerGroup().addTo(map); mapRef.current = map; markerLayerRef.current = markerLayer; tileLayerRef.current = tileLayer; const invalidate = () => window.requestAnimationFrame(() => map.invalidateSize(false)); const timer = window.setTimeout(invalidate, 100); const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(invalidate) : null; observer?.observe(container); return () => { window.clearTimeout(timer); observer?.disconnect(); map.remove(); markerRegistry.clear(); clubRegistry.clear(); mapRef.current = null; markerLayerRef.current = null; tileLayerRef.current = null; userMarkerRef.current = null; }; }, []);
+  useEffect(() => { const container = containerRef.current; if (!container || mapRef.current) return; const markerRegistry = markerRefs.current; const clubRegistry = clubRefs.current; const map = L.map(container, { center: MAP_DEFAULT_CENTER, zoom: MAP_DEFAULT_ZOOM, zoomControl: false, scrollWheelZoom: true }); L.control.zoom({ position: 'bottomright' }).addTo(map); const tileLayer = L.tileLayer(MAP_TILE_URL, { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(map); const markerLayer = L.layerGroup().addTo(map); mapRef.current = map; markerLayerRef.current = markerLayer; tileLayerRef.current = tileLayer; let invalidateFrame = 0; let lastWidth = 0; let lastHeight = 0;
+  const invalidate = () => {
+    const { width, height } = container.getBoundingClientRect();
+    if (width <= 0 || height <= 0 || (Math.abs(width - lastWidth) < 0.5 && Math.abs(height - lastHeight) < 0.5)) return;
+    lastWidth = width; lastHeight = height;
+    if (invalidateFrame) return;
+    invalidateFrame = window.requestAnimationFrame(() => {
+      invalidateFrame = 0;
+      if (mapRef.current === map) map.invalidateSize(false);
+    });
+  };
+  const timer = window.setTimeout(invalidate, 100);
+  const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(invalidate) : null;
+  observer?.observe(container);
+  return () => { window.clearTimeout(timer); if (invalidateFrame) window.cancelAnimationFrame(invalidateFrame); observer?.disconnect(); map.remove(); markerRegistry.clear(); clubRegistry.clear(); mapRef.current = null; markerLayerRef.current = null; tileLayerRef.current = null; userMarkerRef.current = null; }; }, []);
   useEffect(() => { const layer = markerLayerRef.current; if (!layer) return; layer.clearLayers(); markerRefs.current.clear(); clubRefs.current.clear(); for (const club of clubs) { if (club.latitude == null || club.longitude == null) continue; const isActive = club.id === activeClubIdRef.current; const marker = L.marker([club.latitude, club.longitude], { icon: createClubIcon(club, isActive), zIndexOffset: isActive ? 1000 : 0, title: club.name }); marker.bindPopup(createPopupContent(club), { minWidth: 210, maxWidth: 280, className: 'gameyer-map-popup' }); marker.on('click', () => onSelectClubRef.current?.(club.id)); marker.addTo(layer); markerRefs.current.set(club.id, marker); clubRefs.current.set(club.id, club); } }, [clubs]);
-  useEffect(() => { for (const [clubId, marker] of markerRefs.current) { const club = clubRefs.current.get(clubId); if (!club) continue; const isActive = clubId === activeClubId; marker.setIcon(createClubIcon(club, isActive)); marker.setZIndexOffset(isActive ? 1000 : 0); } }, [activeClubId]);
+  useEffect(() => {
+    // Rebuilding every Leaflet icon on each hovered card stalls mobile rendering.
+    // Only the formerly active and newly active marker can change appearance.
+    const lastActive = previousActiveClubIdRef.current;
+    const nextActive = activeClubId ?? null;
+    if (lastActive === nextActive) return;
+    for (const clubId of [lastActive, nextActive]) {
+      if (!clubId) continue;
+      const marker = markerRefs.current.get(clubId);
+      const club = clubRefs.current.get(clubId);
+      if (!marker || !club) continue;
+      const selected = clubId === nextActive;
+      marker.setIcon(createClubIcon(club, selected));
+      marker.setZIndexOffset(selected ? 1000 : 0);
+    }
+    previousActiveClubIdRef.current = nextActive;
+  }, [activeClubId]);
   useEffect(() => { const map = mapRef.current; if (!map) return; if (userMarkerRef.current) { userMarkerRef.current.removeFrom(map); userMarkerRef.current = null; } if (userLocation) userMarkerRef.current = L.circleMarker([userLocation.lat, userLocation.lng], { radius: 8, color: '#ffffff', weight: 3, fillColor: '#2563EB', fillOpacity: 1 }).bindTooltip('Sənin konumun', { direction: 'top', offset: [0, -8] }).addTo(map); }, [userLocation]);
   useEffect(() => { const map = mapRef.current; if (!map) return; if (userLocation && locationFocusRequest > 0) { map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 0.45 }); return; } const coordinates = getMappableCoordinates(clubs); if (coordinates.length === 0) { map.setView(MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM); return; } if (coordinates.length === 1) { map.setView(coordinates[0], MAP_SINGLE_CLUB_ZOOM); return; } const bounds = L.latLngBounds(coordinates.map(([latitude, longitude]) => [latitude, longitude] as [number, number])); map.fitBounds(bounds, { padding: [MAP_FIT_PADDING, MAP_FIT_PADDING], maxZoom: MAP_MAX_FIT_ZOOM, animate: false }); }, [clubs, userLocation, locationFocusRequest]);
   return <div ref={containerRef} className="h-full w-full" aria-label="GameYer klub xəritəsi" />;
