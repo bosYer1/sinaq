@@ -4,6 +4,9 @@ import test from 'node:test';
 import {
   hasRequestIndependentPublicDataCredential,
   PUBLIC_INVENTORY_CACHE_SECONDS,
+  normalizePublicSearchText,
+  publicSearchTerms,
+  filterPublicInventorySnapshot,
 } from './public-inventory-cache.ts';
 
 test('public inventory is cached for only five minutes', () => {
@@ -51,4 +54,88 @@ test('shared public cache does not affect filtered queries or public eligibility
   assert.match(source, /return queryClubBySlug\(slug\);/);
   assert.match(source, /getSharedPublicClubCount = unstable_cache/);
   assert.doesNotMatch(source, /createBrowserClient|from '@\/lib\/supabase\/client'/);
+});
+
+type FixtureClub = {
+  name: string;
+  slug: string;
+  address: string;
+  district: { name: string; slug: string } | null;
+  metros: readonly string[];
+  types: readonly string[];
+};
+
+const discoveryFixtures: readonly FixtureClub[] = [
+  {
+    name: 'Alpha Arena',
+    slug: 'alpha-arena',
+    address: 'Sınaq küçəsi',
+    district: { name: 'Əhmədli', slug: 'ehmedli' },
+    metros: ['ehmedli'],
+    types: ['pc', 'playstation'],
+  },
+  {
+    name: 'Beta Computer',
+    slug: 'beta-computer',
+    address: 'Nümunə prospekti',
+    district: { name: 'Nəsimi', slug: 'nesimi' },
+    metros: ['28-may'],
+    types: ['pc'],
+  },
+  {
+    name: 'Gamma Console',
+    slug: 'gamma-console',
+    address: 'Digər küçə',
+    district: { name: 'Əhmədli', slug: 'ehmedli' },
+    metros: ['ehmedli'],
+    types: ['playstation'],
+  },
+];
+
+const fixtureHelpers = {
+  matchesMetro: (club: FixtureClub, metro: string) => club.metros.includes(metro),
+  inferTypeSlugs: (club: FixtureClub) => club.types,
+};
+
+const filterFixture = (filters: Parameters<typeof filterPublicInventorySnapshot<FixtureClub>>[1]) =>
+  filterPublicInventorySnapshot(discoveryFixtures, filters, fixtureHelpers).map((club) => club.slug);
+
+test('snapshot filter respects district, metro and PC/PlayStation types', () => {
+  assert.deepEqual(filterFixture({ district: 'ehmedli' }), ['alpha-arena', 'gamma-console']);
+  assert.deepEqual(filterFixture({ metro: '28-may' }), ['beta-computer']);
+  assert.deepEqual(filterFixture({ type: 'pc' }), ['alpha-arena', 'beta-computer']);
+  assert.deepEqual(filterFixture({ type: 'ps' }), ['alpha-arena', 'gamma-console']);
+  assert.deepEqual(filterFixture({ type: 'playstation', district: 'nesimi' }), []);
+  assert.deepEqual(filterFixture({ type: 'pc', metro: 'ehmedli', district: 'ehmedli' }), ['alpha-arena']);
+  assert.deepEqual(filterFixture({ district: 'missing' }), []);
+});
+
+test('snapshot search follows Azerbaijani normalization and all-term semantics', () => {
+  assert.equal(normalizePublicSearchText('ƏHMƏDLİ m/s'), 'ehmedli metro');
+  assert.deepEqual(publicSearchTerms('Əhmədli m/s'), ['ehmedli']);
+  assert.deepEqual(publicSearchTerms('ms metro'), ['ms', 'metro']);
+  assert.deepEqual(filterFixture({ q: 'alpha ƏHMƏDLİ m/s' }), ['alpha-arena']);
+  assert.deepEqual(filterFixture({ q: 'BETA  nəsimi' }), ['beta-computer']);
+  assert.deepEqual(filterFixture({ q: 'alpha gamma' }), []);
+  assert.deepEqual(filterFixture({ q: 'metro' }), []);
+  assert.deepEqual(filterFixture({ q: '   ' }), ['alpha-arena', 'beta-computer', 'gamma-console']);
+});
+
+test('snapshot filtering is stable, side-effect free and does not change unknown-filter behavior', () => {
+  const originalOrder = discoveryFixtures.map((club) => club.slug);
+  const original = filterPublicInventorySnapshot(discoveryFixtures, { type: 'playstation' }, fixtureHelpers);
+  assert.equal(original[0], discoveryFixtures[0]);
+  assert.equal(original[1], discoveryFixtures[2]);
+  assert.deepEqual(discoveryFixtures.map((club) => club.slug), originalOrder);
+  assert.deepEqual(filterFixture({ type: 'unknown' }), originalOrder);
+});
+
+test('price queries keep SQL join semantics; cache refuses unexpectedly empty inventories', async () => {
+  const source = await readFile(new URL('./clubs.ts', import.meta.url), 'utf8');
+  assert.match(source, /return filterPublicInventorySnapshot\\(/);
+  assert.match(source, /const clubs = await getTrustedPublicClubs\\(\\)/);
+  assert.match(source, /if \\(priceMax == null \\|\\| priceMax <= 0\\)/);
+  assert.match(source, /return queryClubs\\(\\{ district, metro, type, priceMax, q \\}\\);/);
+  assert.match(source, /pricing:club_pricing!inner/);
+  assert.match(source, /Refusing to cache an unexpectedly empty public club inventory/);
 });
