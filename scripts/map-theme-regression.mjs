@@ -68,4 +68,10 @@ const previewDarkRule = css.slice(css.indexOf("html[data-theme='dark'] .gameyer-
 assert(liveDarkRule.includes(darkFilter), 'Live map dark filter changed or disappeared.');
 assert(previewDarkRule.includes(darkFilter), 'Preview dark filter no longer matches the live map.');
 
+assert(clubMap.includes('previousActiveClubIdRef'), 'Live map must remember the previous selected marker.');
+assert(clubMap.includes('for (const clubId of [lastActive, nextActive])'), 'Marker selection must update only two markers, not recreate all icons.');
+assert(!clubMap.includes('for (const [clubId, marker] of markerRefs.current)'), 'Selection must not iterate over all map markers.');
+assert(clubMap.includes('window.cancelAnimationFrame(invalidateFrame)'), 'Resize observer must cancel scheduled invalidations at unmount.');
+assert(clubMap.includes('if (invalidateFrame) return;'), 'Resize invalidations must coalesce into one animation frame.');
+
 console.log('Map theme regression checks passed.');
