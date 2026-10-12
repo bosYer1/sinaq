@@ -3,6 +3,7 @@ import type { ClubWithRelations, District, ClubType } from '@/types/database';
 import { unstable_cache } from 'next/cache';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { isPremiumActive } from '@/lib/utils';
+import recoveredMedia from '@/data/recovered-club-media.json';
 
 /** Temporary read-only recovery source review deadline. */
 export const EMERGENCY_NEON_REVIEW_DATE = '2026-10-19';
@@ -45,22 +46,40 @@ const cachedEmergencyClubs = unstable_cache(async (): Promise<ClubWithRelations[
     || !(club.instagram_url?.trim() || club.tiktok_url?.trim())
     || !inferClubTypeSlugs(club).some(type => type === 'pc' || type === 'playstation')
   )) throw new Error('Emergency public catalog eligibility violation.');
+  const recoveredByOriginalUrl = recoveredMedia as Record<string, string>;
+  const recoveredPhoto = (original: string | null): string | null => {
+    if (!original) return null;
+    const local = recoveredByOriginalUrl[original];
+    return typeof local === 'string' && /^\/recovered-club-media\/[a-f0-9]{25}\.(jpg|png|webp)$/.test(local) ? local : null;
+  };
   const blockedMedia = (url: string | null) =>
     Boolean(url?.includes('.supabase.co/storage/v1/'));
   // Supabase Storage also returns 402. Do not issue hundreds of broken
   // image requests, and never fabricate replacement club photographs.
-  const clean = clubs.map(club => ({
-    ...club,
-    profile_image_url: blockedMedia(club.profile_image_url) ? null : club.profile_image_url,
-    images: club.images.filter(image => !blockedMedia(image.url)),
-  }));
+  const clean = clubs.map(club => {
+    const images = club.images.flatMap(image => {
+      if (!blockedMedia(image.url)) return [image];
+      const local = recoveredPhoto(image.url);
+      return local ? [{ ...image, url: local }] : [];
+    });
+    const profile = blockedMedia(club.profile_image_url)
+      ? recoveredPhoto(club.profile_image_url)
+      : club.profile_image_url;
+    // If the exact profile image was not cached, a genuine salvaged gallery
+    // photo from the same verified club is preferable to a fake placeholder.
+    return {
+      ...club,
+      profile_image_url: profile ?? images.find(image => image.is_cover)?.url ?? images[0]?.url ?? null,
+      images,
+    };
+  });
   return clean.sort((a, b) =>
     Number(isPremiumActive(b)) - Number(isPremiumActive(a))
     || Number(Boolean(b.profile_image_url)) - Number(Boolean(a.profile_image_url))
     || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     || a.name.localeCompare(b.name, 'az')
   );
-}, ['gameyer-neon-emergency-public-20261012'], { revalidate: 300 });
+}, ['gameyer-neon-emergency-public-media-20261012'], { revalidate: 300 });
 
 export async function getEmergencyPublicClubs(): Promise<ClubWithRelations[]> {
   return cachedEmergencyClubs();
