@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { ClubLogo } from '@/components/clubs/ClubLogo';
 import { ClubPricingDisplay } from '@/components/clubs/ClubPricingDisplay';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { emergencyNeonCatalogEnabled } from '@/lib/neon/emergency-catalog';
 import { cn, DAY_NAMES_AZ, formatOpeningHoursLabel, isClubOpenNow, isPremiumActive } from '@/lib/utils';
 
 const BAKU_DATE_FORMATTER = new Intl.DateTimeFormat('az-AZ', { timeZone: 'Asia/Baku', year: 'numeric', month: 'long', day: 'numeric' });
@@ -68,7 +69,7 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
             <ClubLogo slug={club.slug} name={club.name} profileImageUrl={club.profile_image_url} className="mx-auto h-16 w-16 rounded-2xl border border-border text-3xl shadow-card sm:h-20 sm:w-20 sm:text-4xl" priority />
             <p className="mt-4 break-words font-display text-lg font-semibold leading-snug text-ink sm:text-xl">{club.name}</p>
             <span className="mt-2 inline-flex max-w-full items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary sm:text-xs">{fallbackType}</span>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-5 text-muted">Real klub şəkilləri əlavə ediləndə burada görünəcək.</p>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-5 text-muted">{emergencyNeonCatalogEnabled() ? 'Klubun bəzi şəkilləri müvəqqəti əlçatan deyil. Məlumatlar və əlaqə düymələri işləyir.' : 'Real klub şəkilləri əlavə ediləndə burada görünəcək.'}</p>
           </div>
         </div>
       )}
