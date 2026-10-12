@@ -1,4 +1,6 @@
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
+import { hasRequestIndependentPublicDataCredential, PUBLIC_INVENTORY_CACHE_SECONDS } from '@/lib/queries/public-inventory-cache';
 import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { isPremiumActive } from '@/lib/utils';
@@ -200,6 +202,22 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
   return clubs;
 }
 
+// A normal React cache is request-scoped: the dynamic home page otherwise
+// downloads the entire nested public inventory from Supabase on every visit.
+// Cache only the unfiltered, visibility-gated inventory across requests.
+// Never enter a Next.js cache scope if an OIDC token needs request headers.
+const getSharedPublicClubs = unstable_cache(
+  async () => {
+    const clubs = await queryClubs({});
+    if (clubs.length === 0) {
+      throw new Error('Refusing to cache an unexpectedly empty public club inventory.');
+    }
+    return clubs;
+  },
+  ['gameyer-public-clubs-v1'],
+  { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
+);
+
 const getCachedClubs = cache(
   async (
     district?: string,
@@ -207,7 +225,15 @@ const getCachedClubs = cache(
     type?: string,
     priceMax?: number,
     q?: string,
-  ) => queryClubs({ district, metro, type, priceMax, q }),
+  ) => {
+    // Free-text searches and filtered variants retain their existing query
+    // semantics and do not create an unbounded shared cache key space.
+    const hasFilters = Boolean(district || metro || type || priceMax || q?.trim());
+    if (!hasFilters && hasRequestIndependentPublicDataCredential()) {
+      return getSharedPublicClubs();
+    }
+    return queryClubs({ district, metro, type, priceMax, q });
+  },
 );
 
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
@@ -279,8 +305,16 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
   }).length;
 }
 
-const getCachedPublicClubCount = cache(
+const getSharedPublicClubCount = unstable_cache(
   async (district?: string, type?: string) => queryPublicClubCount({ district, type }),
+  ['gameyer-public-club-count-v1'],
+  { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
+);
+
+const getCachedPublicClubCount = cache(
+  async (district?: string, type?: string) => hasRequestIndependentPublicDataCredential()
+    ? getSharedPublicClubCount(district, type)
+    : queryPublicClubCount({ district, type }),
 );
 
 export async function getPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
@@ -310,7 +344,17 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
   return isPublicClubForWeb(club) ? club : null;
 }
 
-const getCachedClubBySlug = cache(async (slug: string) => queryClubBySlug(slug));
+const getSharedClubBySlug = unstable_cache(
+  async (slug: string) => queryClubBySlug(slug),
+  ['gameyer-public-club-detail-v1'],
+  { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
+);
+
+const getCachedClubBySlug = cache(async (slug: string) =>
+  hasRequestIndependentPublicDataCredential()
+    ? getSharedClubBySlug(slug)
+    : queryClubBySlug(slug),
+);
 
 export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
   return getCachedClubBySlug(slug);
