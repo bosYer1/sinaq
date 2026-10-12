@@ -56,10 +56,10 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
       {sortedImages.length > 0 ? (
         <div className="mb-6 grid grid-cols-4 gap-1.5 overflow-hidden rounded-card bg-surface-alt">
           <div className="relative col-span-4 aspect-video sm:col-span-2 sm:row-span-2 sm:aspect-square">
-            <Image src={sortedImages[0].url} alt={`${club.name} — əsas şəkil`} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" priority />
+            <Image src={sortedImages[0].url} alt={`${club.name} — əsas şəkil`} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" priority unoptimized={sortedImages[0].url.startsWith('/recovered-club-media/')} />
           </div>
           {sortedImages.slice(1, 5).map((img, index) => (
-            <div key={img.id} className="relative col-span-2 aspect-square sm:col-span-1"><Image src={img.url} alt={`${club.name} — şəkil ${index + 2}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" /></div>
+            <div key={img.id} className="relative col-span-2 aspect-square sm:col-span-1"><Image src={img.url} alt={`${club.name} — şəkil ${index + 2}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" unoptimized={img.url.startsWith('/recovered-club-media/')} /></div>
           ))}
         </div>
       ) : (
