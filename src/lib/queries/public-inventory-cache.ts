@@ -43,7 +43,7 @@ const SEARCH_LOCATION_STOP_WORDS = new Set(['ms', 'metro', 'metrosu']);
 
 export function normalizePublicSearchText(value: string | null | undefined): string {
   return (value ?? '')
-    .replace(/\\bm\\s*\\/\\s*s\\b/giu, ' metro ')
+    .replace(/\bm\s*\/\s*s\b/giu, ' metro ')
     .toLocaleLowerCase('az')
     .replace(/ə/g, 'e')
     .replace(/ı/g, 'i')
@@ -58,7 +58,7 @@ export function normalizePublicSearchText(value: string | null | undefined): str
 }
 
 export function publicSearchTerms(query: string | null | undefined): string[] {
-  const terms = normalizePublicSearchText(query).split(/\\s+/).filter(Boolean).slice(0, 6);
+  const terms = normalizePublicSearchText(query).split(/\s+/).filter(Boolean).slice(0, 6);
   const meaningful = terms.filter((term) => !SEARCH_LOCATION_STOP_WORDS.has(term));
   return meaningful.length > 0 ? meaningful : terms;
 }
