@@ -199,3 +199,53 @@ test('salvaged club photos are real local media from approved catalog URLs', asy
     assert.ok(jpeg || png || webp, 'recovered photo is not binary image data');
   }
 });
+
+
+test('emergency public snapshot preserves every approved visible club and review deadline', async () => {
+  const snapshot = JSON.parse(await readFile(new URL('../../data/neon-public-catalog-snapshot.json', import.meta.url), 'utf8')) as {
+    source: string; captured_at: string; review_by: string; clubs: Array<{
+      slug: string; is_active: boolean; latitude: number | null; longitude: number | null;
+      instagram_url: string | null; tiktok_url: string | null;
+      type_assignments: Array<{ club_type: { slug: string } | null }>;
+    }>;
+  };
+  assert.equal(snapshot.source, 'gameyer_public.club_catalog_v1');
+  assert.ok(Date.parse(snapshot.review_by) > Date.parse(snapshot.captured_at));
+  assert.equal(snapshot.clubs.length, 61);
+  assert.equal(new Set(snapshot.clubs.map((club) => club.slug)).size, 61);
+  for (const club of snapshot.clubs) {
+    assert.ok(club.is_active);
+    assert.ok(club.latitude != null && club.longitude != null);
+    assert.ok(Boolean(club.instagram_url?.trim() || club.tiktok_url?.trim()));
+    assert.ok(club.type_assignments.some((item) => ['pc', 'playstation'].includes(item.club_type?.slug ?? '')));
+  }
+});
+
+test('recovery cache is rate-limited, fail-closed on eligibility, and uses bounded read-only fallback', async () => {
+  const source = await readFile(new URL('../neon/emergency-catalog.ts', import.meta.url), 'utf8');
+  assert.match(source, /revalidate: 3600/);
+  assert.match(source, /revalidate: 86_400/);
+  assert.match(source, /AbortSignal\.timeout\(5_000\)/);
+  assert.match(source, /fallbackCatalog\.review_by/);
+  assert.match(source, /fallbackFacets\.review_by/);
+  assert.match(source, /Emergency public catalog eligibility violation/);
+  assert.match(source, /url\.username !== 'gameyer_catalog_login'/);
+  assert.match(source, /import 'server-only'/);
+  assert.match(source, /recoveredByOriginalUrl/);
+});
+
+test('temporary recovery does not degrade logo identity or show site-wide outage banners', async () => {
+  const files = await Promise.all([
+    readFile(new URL('../../components/clubs/ClubLogo.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../clubLogos.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../app/layout.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../../components/clubs/ClubDetail.tsx', import.meta.url), 'utf8'),
+  ]);
+  const [logo, logoRegistry, layout, detail] = files;
+  assert.match(logo, /\[confirmedLogo, profileImageUrl\]/);
+  assert.match(logo, /isOfficialLogo \? 'object-contain p-2' : 'object-cover'/);
+  assert.match(logo, /unoptimized=\{isLocalRecoveredPhoto \|\| isOfficialLogo\}/);
+  assert.doesNotMatch(logoRegistry, /milli-gaming-arena\.jpg\.b64/);
+  assert.doesNotMatch(layout, /Müvəqqəti kataloq rejimi/);
+  assert.match(detail, /unoptimized=\{img\.url\.startsWith\('/);
+});
