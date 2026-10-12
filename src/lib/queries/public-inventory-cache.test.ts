@@ -214,3 +214,23 @@ test('diagnostic: sample across clubs to locate existing image-cache copies', as
   }
   console.log('SAMPLE_MEDIA_TOTAL', counts);
 });
+
+
+test('salvaged club photos are real local media from approved catalog URLs', async () => {
+  const restored = JSON.parse(await readFile(new URL('../../data/recovered-club-media.json', import.meta.url), 'utf8')) as Record<string, string>;
+  const manifest = JSON.parse(await readFile(new URL('../../../scripts/recovery/public-media-manifest-20261012.json', import.meta.url), 'utf8')) as {
+    media: Array<{ profile: string | null; images: string[] }>;
+  };
+  const approved = new Set(manifest.media.flatMap(item => [item.profile, ...item.images].filter((url): url is string => Boolean(url))));
+  assert.ok(Object.keys(restored).length > 0, 'no real cached media recovered');
+  for (const [source, local] of Object.entries(restored)) {
+    assert.ok(approved.has(source), 'unapproved source image');
+    assert.match(local, /^\/recovered-club-media\/[a-f0-9]{25}\.(jpg|png|webp)$/);
+    const bytes = await readFile(new URL(`../../../public${local}`, import.meta.url));
+    assert.ok(bytes.length >= 1200 && bytes.length <= 2_000_000, 'invalid recovered image length');
+    const jpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    const png = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+    const webp = bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP';
+    assert.ok(jpeg || png || webp, 'recovered photo is not binary image data');
+  }
+});
