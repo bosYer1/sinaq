@@ -249,3 +249,29 @@ test('temporary recovery does not degrade logo identity or show site-wide outage
   assert.doesNotMatch(layout, /Müvəqqəti kataloq rejimi/);
   assert.match(detail, /unoptimized=\{img\.url\.startsWith\('/);
 });
+
+
+test('temporary static catalog uses exactly 61 approved clubs without consuming Neon quota', async () => {
+  const [source, catalogText, facetsText, config, layout] = await Promise.all([
+    readFile(new URL('../neon/emergency-catalog.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../data/neon-public-catalog-snapshot.json', import.meta.url), 'utf8'),
+    readFile(new URL('../../data/neon-public-facets-snapshot.json', import.meta.url), 'utf8'),
+    readFile(new URL('../../../next.config.js', import.meta.url), 'utf8'),
+    readFile(new URL('../../app/layout.tsx', import.meta.url), 'utf8'),
+  ]);
+  const catalog = JSON.parse(catalogText) as { clubs: Array<{ slug: string }> };
+  const facets = JSON.parse(facetsText) as { districts: unknown[]; types: unknown[] };
+  assert.equal(catalog.clubs.length, 61);
+  assert.equal(new Set(catalog.clubs.map(x => x.slug)).size, 61);
+  assert.ok(facets.districts.length >= 10);
+  assert.equal(facets.types.length, 2);
+  assert.match(source, /GAMEYER_NEON_STATIC_CATALOG === '1'/);
+  assert.match(source, /Date\.now\(\) <= Date\.parse/);
+  assert.match(source, /if \(pinnedPublicRecoverySnapshotEnabled\(\)\) \{/);
+  assert.match(source, /if \(pinnedPublicRecoverySnapshotEnabled\(\)\) return fallbackFacets\.districts/);
+  assert.match(source, /if \(pinnedPublicRecoverySnapshotEnabled\(\)\) return fallbackFacets\.types/);
+  assert.match(source, /Emergency public catalog eligibility violation/);
+  assert.match(config, /recovered-club-media\/:path\*/);
+  assert.match(config, /max-age=31536000, immutable/);
+  assert.doesNotMatch(layout, /Müvəqqəti kataloq rejimi/);
+});
