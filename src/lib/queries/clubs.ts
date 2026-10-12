@@ -1,6 +1,12 @@
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import { hasRequestIndependentPublicDataCredential, PUBLIC_INVENTORY_CACHE_SECONDS } from '@/lib/queries/public-inventory-cache';
+import {
+  hasRequestIndependentPublicDataCredential,
+  PUBLIC_INVENTORY_CACHE_SECONDS,
+  filterPublicInventorySnapshot,
+  normalizePublicSearchText as normalizeSearchText,
+  publicSearchTerms,
+} from '@/lib/queries/public-inventory-cache';
 import { requestVercelPublicReadToken } from '@/lib/supabase/server-data';
 import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
@@ -57,25 +63,6 @@ function isPublicClubForWeb(club: ClubWithRelations) {
   );
 }
 
-const SEARCH_LOCATION_STOP_WORDS = new Set(['ms', 'metro', 'metrosu']);
-
-function normalizeSearchText(value: string | null | undefined) {
-  return (value ?? '')
-    .replace(/\bm\s*\/\s*s\b/giu, ' metro ')
-    .toLocaleLowerCase('az')
-    .replace(/ə/g, 'e')
-    .replace(/ı/g, 'i')
-    .replace(/ö/g, 'o')
-    .replace(/ü/g, 'u')
-    .replace(/ş/g, 's')
-    .replace(/ç/g, 'c')
-    .replace(/ğ/g, 'g')
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
-
 async function queryClubs(filters: ClubFilters, trustedToken?: string): Promise<ClubWithRelations[]> {
   const supabase = createPublicClient(trustedToken);
   let districtId: string | null = null;
@@ -120,12 +107,7 @@ async function queryClubs(filters: ClubFilters, trustedToken?: string): Promise<
       .lte('pricing.price_from', filters.priceMax!);
   }
 
-  const normalizedSearchTerms = normalizeSearchText(filters.q)
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 6);
-  const meaningfulSearchTerms = normalizedSearchTerms.filter((term) => !SEARCH_LOCATION_STOP_WORDS.has(term));
-  const searchTerms = meaningfulSearchTerms.length > 0 ? meaningfulSearchTerms : normalizedSearchTerms;
+  const searchTerms = publicSearchTerms(filters.q);
 
   const [{ data, error }, popularity] = await Promise.all([
     query.returns<ClubWithRelations[]>(),
@@ -267,29 +249,11 @@ const getCachedClubs = cache(
     if (!hasFilters) return getTrustedPublicClubs();
     if (priceMax == null || priceMax <= 0) {
       const clubs = await getTrustedPublicClubs();
-      const normalizedSearchTerms = normalizeSearchText(q)
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 6);
-      const meaningfulSearchTerms = normalizedSearchTerms.filter((term) => !SEARCH_LOCATION_STOP_WORDS.has(term));
-      const searchTerms = meaningfulSearchTerms.length > 0 ? meaningfulSearchTerms : normalizedSearchTerms;
-      const requestedType = type === 'ps' ? 'playstation' : type;
-      const hasTypeFilter = requestedType === 'pc' || requestedType === 'playstation';
-
-      // The snapshot is already sorted using the same popularity/premium
-      // ranking as live queries; filtering it preserves the exact ordering.
-      return clubs.filter((club) => {
-        if (district && club.district?.slug !== district) return false;
-        if (metro && !clubMatchesMetro(club, metro)) return false;
-        if (hasTypeFilter && !inferClubTypeSlugs(club).includes(requestedType)) return false;
-        if (searchTerms.length > 0) {
-          const searchableText = normalizeSearchText([
-            club.name, club.slug, club.address, club.district?.name,
-          ].filter(Boolean).join(' '));
-          if (!searchTerms.every((term) => searchableText.includes(term))) return false;
-        }
-        return true;
-      });
+      return filterPublicInventorySnapshot(
+        clubs,
+        { district, metro, type, q },
+        { matchesMetro: clubMatchesMetro, inferTypeSlugs: inferClubTypeSlugs },
+      );
     }
     return queryClubs({ district, metro, type, priceMax, q });
   },
