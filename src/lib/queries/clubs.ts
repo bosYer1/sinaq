@@ -268,7 +268,7 @@ const getCachedClubs = cache(
     if (priceMax == null || priceMax <= 0) {
       const clubs = await getTrustedPublicClubs();
       const normalizedSearchTerms = normalizeSearchText(q)
-        .split(/\\s+/)
+        .split(/\s+/)
         .filter(Boolean)
         .slice(0, 6);
       const meaningfulSearchTerms = normalizedSearchTerms.filter((term) => !SEARCH_LOCATION_STOP_WORDS.has(term));
