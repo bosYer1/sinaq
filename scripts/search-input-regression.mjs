@@ -69,7 +69,7 @@ assert(clubsQuery.includes('const searchTerms = publicSearchTerms(filters.q);') 
 assert(publicCache.includes("SEARCH_LOCATION_STOP_WORDS = new Set(['ms', 'metro', 'metrosu'])"), 'Club search must ignore explicit metro shorthand only when another meaningful search term remains.');
 assert(publicCache.includes(".replace(/\\bm\\s*\\/\\s*s\\b/giu, ' metro ')"), 'm/s shorthand must normalize to the bounded metro stop-word path.');
 assert(publicCache.includes("club.district?.name"), 'Club search must include district names so location intent can resolve without exact address wording.');
-assert(publicCache.includes('if (!searchTerms.every((term) => searchableText.includes(term))) return false;') && clubsQuery.includes('if (!searchTerms.every((term) => searchableText.includes(term))) return false;'), 'All normalized search terms must match both the direct and snapshot search surfaces.');
+assert(publicCache.includes('if (!searchTerms.every((term) => searchableText.includes(term))) return false;') && clubsQuery.includes('return searchTerms.every((term) => searchableText.includes(term));'), 'All normalized search terms must match both the direct and snapshot search surfaces.');
 assert(!clubsQuery.includes('name.ilike.%'), 'Public search must not fall back to accent-sensitive DB ilike matching.');
 assert(clubsQuery.includes("import { cache } from 'react';") && clubsQuery.includes('const getCachedClubs = cache('), 'Public club query memoization must remain request-scoped while preserving tolerant search semantics.');
 
