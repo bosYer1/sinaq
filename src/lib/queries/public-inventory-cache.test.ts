@@ -140,3 +140,35 @@ test('price queries keep SQL join semantics; cache refuses unexpectedly empty in
   assert.match(source, /pricing:club_pricing!inner/);
   assert.match(source, /Refusing to cache an unexpectedly empty public club inventory/);
 });
+
+test('Neon recovery is opt-in, server-only and reads only approved catalog views', async () => {
+  const [neon, clubs, districts, updates, sitemap, health] = await Promise.all([
+    readFile(new URL('../neon/emergency-catalog.ts', import.meta.url), 'utf8'),
+    readFile(new URL('./clubs.ts', import.meta.url), 'utf8'),
+    readFile(new URL('./districts.ts', import.meta.url), 'utf8'),
+    readFile(new URL('./club-updates.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../app/sitemap.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../app/api/health/route.ts', import.meta.url), 'utf8'),
+  ]);
+  assert.match(neon, /import 'server-only'/);
+  assert.match(neon, /GAMEYER_NEON_EMERGENCY_READS === '1'/);
+  assert.match(neon, /GAMEYER_NEON_CATALOG_DATABASE_URL/);
+  assert.match(neon, /SELECT club FROM gameyer_public\.club_catalog_v1/);
+  assert.match(neon, /Emergency public catalog eligibility violation/);
+  assert.doesNotMatch(neon, /\b(INSERT|UPDATE|DELETE|ALTER|TRUNCATE)\s+gameyer_/);
+  assert.match(clubs, /if \(emergencyNeonCatalogEnabled\(\)\) return getEmergencyPublicClubs\(\);/);
+  assert.match(clubs, /if \(emergencyNeonCatalogEnabled\(\)\) \{/);
+  assert.match(districts, /getEmergencyDistricts\(\)/);
+  assert.match(districts, /getEmergencyClubTypes\(\)/);
+  assert.match(updates, /if \(emergencyNeonCatalogEnabled\(\)\) return \[\];/);
+  assert.match(sitemap, /if \(emergencyNeonCatalogEnabled\(\)\)/);
+  assert.match(health, /getEmergencyPublicClubs\(\)/);
+});
+
+test('emergency metrics do not write to quota-limited Supabase', async () => {
+  for (const filename of ['visit', 'event']) {
+    const route = await readFile(new URL(`../../app/api/analytics/${filename}/route.ts`, import.meta.url), 'utf8');
+    assert.match(route, /if \(emergencyNeonCatalogEnabled\(\)\)/);
+    assert.match(route, /'x-gameyer-analytics-write': 'disabled'/);
+  }
+});
