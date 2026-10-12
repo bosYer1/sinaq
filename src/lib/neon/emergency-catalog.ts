@@ -11,5 +11,5 @@ export function temporaryCatalogConfigured(): boolean {
 }
 
 export function emergencyNeonCatalogEnabled(): boolean {
-  return temporaryCatalogConfigured();
+  return temporaryCatalogConfigured() && Boolean(process.env.GAMEYER_NEON_CATALOG_DATABASE_URL);
 }
