@@ -1,9 +1,11 @@
 import { cache } from 'react';
 import { createPublicClient } from '@/lib/supabase/public-server';
+import { emergencyNeonCatalogEnabled, getEmergencyDistricts, getEmergencyClubTypes } from '@/lib/neon/emergency-catalog';
 import type { District, ClubType } from '@/types/database';
 
 const getCachedDistricts = cache(
   async (): Promise<District[]> => {
+    if (emergencyNeonCatalogEnabled()) return getEmergencyDistricts();
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from('districts')
@@ -27,6 +29,7 @@ export async function getDistricts(): Promise<District[]> {
 
 const getCachedClubTypes = cache(
   async (): Promise<ClubType[]> => {
+    if (emergencyNeonCatalogEnabled()) return getEmergencyClubTypes();
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from('club_types')
