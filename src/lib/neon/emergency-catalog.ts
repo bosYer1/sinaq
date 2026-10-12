@@ -7,8 +7,19 @@ import recoveredMedia from '@/data/recovered-club-media.json';
 import fallbackCatalog from '@/data/neon-public-catalog-snapshot.json';
 import fallbackFacets from '@/data/neon-public-facets-snapshot.json';
 
-/** Temporary read-only recovery source review deadline. */
+/** Temporary public-only recovery snapshot: mandatory review on 2026-10-19. */
 export const EMERGENCY_NEON_REVIEW_DATE = '2026-10-19';
+
+/**
+ * Static recovery reduces database compute AND egress to zero on normal reads.
+ * This is safe only while new submissions and catalogue writes remain paused.
+ * The feature automatically expires so a stale snapshot cannot silently persist.
+ */
+export function pinnedPublicRecoverySnapshotEnabled(): boolean {
+  return process.env.GAMEYER_NEON_STATIC_CATALOG === '1'
+    && process.env.GAMEYER_NEON_EMERGENCY_READS === '1'
+    && Date.now() <= Date.parse(`${EMERGENCY_NEON_REVIEW_DATE}T23:59:59Z`);
+}
 
 export function temporaryCatalogConfigured(): boolean {
   return process.env.GAMEYER_NEON_EMERGENCY_READS === '1';
@@ -51,14 +62,18 @@ const cachedEmergencyClubs = unstable_cache(async (): Promise<ClubWithRelations[
   // A bounded local snapshot protects visitors from brief free-tier cold starts or
   // quota errors, without retry storms or leaking unpublished clubs.
   let clubs: ClubWithRelations[];
-  try {
-    clubs = await readPublicRows<ClubWithRelations>(
-      'SELECT club FROM gameyer_public.club_catalog_v1 ORDER BY slug',
-    );
-  } catch (error) {
-    if (Date.now() > Date.parse(`${fallbackCatalog.review_by}T23:59:59Z`)) throw error;
-    console.error('Neon public catalog unavailable; using pre-approved public-only snapshot.');
+  if (pinnedPublicRecoverySnapshotEnabled()) {
     clubs = fallbackCatalog.clubs as unknown as ClubWithRelations[];
+  } else {
+    try {
+      clubs = await readPublicRows<ClubWithRelations>(
+        'SELECT club FROM gameyer_public.club_catalog_v1 ORDER BY slug',
+      );
+    } catch (error) {
+      if (Date.now() > Date.parse(`${fallbackCatalog.review_by}T23:59:59Z`)) throw error;
+      console.error('Neon public catalog unavailable; using pre-approved public-only snapshot.');
+      clubs = fallbackCatalog.clubs as unknown as ClubWithRelations[];
+    }
   }
   if (clubs.length === 0 || clubs.some(club =>
     !club.is_active || club.latitude == null || club.longitude == null
@@ -106,6 +121,7 @@ export async function getEmergencyPublicClubs(): Promise<ClubWithRelations[]> {
 
 const cachedEmergencyDistricts = unstable_cache(
   async (): Promise<District[]> => {
+    if (pinnedPublicRecoverySnapshotEnabled()) return fallbackFacets.districts as District[];
     try {
       return await readPublicRows<District>(
         'SELECT to_jsonb(d) FROM (SELECT id, name, slug, created_at FROM gameyer_catalog.districts) d',
@@ -126,6 +142,7 @@ export async function getEmergencyDistricts(): Promise<District[]> {
 
 const cachedEmergencyTypes = unstable_cache(
   async (): Promise<ClubType[]> => {
+    if (pinnedPublicRecoverySnapshotEnabled()) return fallbackFacets.types as ClubType[];
     try {
       return await readPublicRows<ClubType>(
         'SELECT to_jsonb(t) FROM (SELECT id, name, slug FROM gameyer_catalog.club_types) t',
