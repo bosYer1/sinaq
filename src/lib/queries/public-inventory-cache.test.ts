@@ -174,6 +174,13 @@ test('emergency metrics do not write to quota-limited Supabase', async () => {
 });
 
 
+test('temporary Neon source enforces the least-privileged catalog role', async () => {
+  const source = await readFile(new URL('../neon/emergency-catalog.ts', import.meta.url), 'utf8');
+  assert.match(source, /url\.username !== 'gameyer_catalog_login'/);
+  assert.match(source, /url\.pathname !== '\/gameyer'/);
+  assert.match(source, /Emergency catalog connection must use the approved read-only role/);
+});
+
 test('salvaged club photos are real local media from approved catalog URLs', async () => {
   const restored = JSON.parse(await readFile(new URL('../../data/recovered-club-media.json', import.meta.url), 'utf8')) as Record<string, string>;
   const manifest = JSON.parse(await readFile(new URL('../../../scripts/recovery/public-media-manifest-20261012.json', import.meta.url), 'utf8')) as {
