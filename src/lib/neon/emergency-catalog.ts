@@ -4,6 +4,8 @@ import { unstable_cache } from 'next/cache';
 import { inferClubTypeSlugs } from '@/lib/clubType';
 import { isPremiumActive } from '@/lib/utils';
 import recoveredMedia from '@/data/recovered-club-media.json';
+import fallbackCatalog from '@/data/neon-public-catalog-snapshot.json';
+import fallbackFacets from '@/data/neon-public-facets-snapshot.json';
 
 /** Temporary read-only recovery source review deadline. */
 export const EMERGENCY_NEON_REVIEW_DATE = '2026-10-19';
@@ -33,7 +35,7 @@ async function readPublicRows<T>(query: string): Promise<T[]> {
     headers: { 'content-type': 'application/json', 'Neon-Connection-String': connectionString, 'Neon-Array-Mode': 'true', 'Neon-Raw-Text-Output': 'true' },
     body: JSON.stringify({ query, params: [] }),
     cache: 'no-store',
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(5_000),
   });
   if (!response.ok) throw new Error(`Emergency catalog read status ${response.status}.`);
   const payload = await response.json() as { rows?: unknown[][] };
@@ -45,9 +47,19 @@ async function readPublicRows<T>(query: string): Promise<T[]> {
 }
 
 const cachedEmergencyClubs = unstable_cache(async (): Promise<ClubWithRelations[]> => {
-  const clubs = await readPublicRows<ClubWithRelations>(
-    'SELECT club FROM gameyer_public.club_catalog_v1 ORDER BY slug',
-  );
+  // Public catalog changes infrequently while submissions and writes are paused.
+  // A bounded local snapshot protects visitors from brief free-tier cold starts or
+  // quota errors, without retry storms or leaking unpublished clubs.
+  let clubs: ClubWithRelations[];
+  try {
+    clubs = await readPublicRows<ClubWithRelations>(
+      'SELECT club FROM gameyer_public.club_catalog_v1 ORDER BY slug',
+    );
+  } catch (error) {
+    if (Date.now() > Date.parse(`${fallbackCatalog.review_by}T23:59:59Z`)) throw error;
+    console.error('Neon public catalog unavailable; using pre-approved public-only snapshot.');
+    clubs = fallbackCatalog.clubs as unknown as ClubWithRelations[];
+  }
   if (clubs.length === 0 || clubs.some(club =>
     !club.is_active || club.latitude == null || club.longitude == null
     || !(club.instagram_url?.trim() || club.tiktok_url?.trim())
@@ -86,18 +98,26 @@ const cachedEmergencyClubs = unstable_cache(async (): Promise<ClubWithRelations[
     || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     || a.name.localeCompare(b.name, 'az')
   );
-}, ['gameyer-neon-emergency-public-media-20261012'], { revalidate: 300 });
+}, ['gameyer-neon-emergency-public-media-fallback-v2'], { revalidate: 3600 });
 
 export async function getEmergencyPublicClubs(): Promise<ClubWithRelations[]> {
   return cachedEmergencyClubs();
 }
 
 const cachedEmergencyDistricts = unstable_cache(
-  () => readPublicRows<District>(
-    'SELECT to_jsonb(d) FROM (SELECT id, name, slug, created_at FROM gameyer_catalog.districts) d',
-  ),
-  ['gameyer-neon-emergency-districts-20261012'],
-  { revalidate: 3600 },
+  async (): Promise<District[]> => {
+    try {
+      return await readPublicRows<District>(
+        'SELECT to_jsonb(d) FROM (SELECT id, name, slug, created_at FROM gameyer_catalog.districts) d',
+      );
+    } catch (error) {
+      if (Date.now() > Date.parse(`${fallbackFacets.review_by}T23:59:59Z`)) throw error;
+      console.error('Neon district read unavailable; using approved public facets.');
+      return fallbackFacets.districts as District[];
+    }
+  },
+  ['gameyer-neon-emergency-districts-fallback-v2'],
+  { revalidate: 86_400 },
 );
 
 export async function getEmergencyDistricts(): Promise<District[]> {
@@ -105,11 +125,19 @@ export async function getEmergencyDistricts(): Promise<District[]> {
 }
 
 const cachedEmergencyTypes = unstable_cache(
-  () => readPublicRows<ClubType>(
-    'SELECT to_jsonb(t) FROM (SELECT id, name, slug FROM gameyer_catalog.club_types) t',
-  ),
-  ['gameyer-neon-emergency-types-20261012'],
-  { revalidate: 3600 },
+  async (): Promise<ClubType[]> => {
+    try {
+      return await readPublicRows<ClubType>(
+        'SELECT to_jsonb(t) FROM (SELECT id, name, slug FROM gameyer_catalog.club_types) t',
+      );
+    } catch (error) {
+      if (Date.now() > Date.parse(`${fallbackFacets.review_by}T23:59:59Z`)) throw error;
+      console.error('Neon platform types unavailable; using approved public facets.');
+      return fallbackFacets.types as ClubType[];
+    }
+  },
+  ['gameyer-neon-emergency-types-fallback-v2'],
+  { revalidate: 86_400 },
 );
 
 export async function getEmergencyClubTypes(): Promise<ClubType[]> {
