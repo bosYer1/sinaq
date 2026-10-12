@@ -40,7 +40,6 @@ async function restoreOne(item) {
     let response;
     try {
       response = await fetch(url, {
-        headers: { Accept: 'image/jpeg' },
         signal: AbortSignal.timeout(8000),
         redirect: 'error',
       });
