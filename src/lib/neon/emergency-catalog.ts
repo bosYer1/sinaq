@@ -34,3 +34,19 @@ async function readPublicRows<T>(query: string): Promise<T[]> {
     return (typeof row[0] === 'string' ? JSON.parse(row[0]) : row[0]) as T;
   });
 }
+
+const cachedEmergencyClubs = unstable_cache(async (): Promise<ClubWithRelations[]> => {
+  const clubs = await readPublicRows<ClubWithRelations>(
+    'SELECT club FROM gameyer_public.club_catalog_v1 ORDER BY slug',
+  );
+  if (clubs.length === 0 || clubs.some(club =>
+    !club.is_active || club.latitude == null || club.longitude == null
+    || !(club.instagram_url?.trim() || club.tiktok_url?.trim())
+    || !inferClubTypeSlugs(club).some(type => type === 'pc' || type === 'playstation')
+  )) throw new Error('Emergency public catalog eligibility violation.');
+  return clubs;
+}, ['gameyer-neon-emergency-public-20261012'], { revalidate: 300 });
+
+export async function getEmergencyPublicClubs(): Promise<ClubWithRelations[]> {
+  return cachedEmergencyClubs();
+}
