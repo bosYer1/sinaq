@@ -6,6 +6,7 @@ import { getAvailableMetroStations } from '@/lib/metro';
 import { getDistricts, getClubTypes } from '@/lib/queries/districts';
 import { getActiveClubUpdates } from '@/lib/queries/club-updates';
 import { isSupabaseConfigured } from '@/lib/config';
+import { emergencyNeonCatalogEnabled } from '@/lib/neon/emergency-catalog';
 import { getSiteUrl } from '@/lib/site-url';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { ExploreView } from '@/components/explore/ExploreView';
@@ -104,7 +105,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeStructuredData).replace(/</g, '\\u003c') }}
       />
       <div className="min-h-full md:min-h-[calc(100vh-64px)] bg-bg-elevated">
-        {!isSupabaseConfigured() ? (
+        {!isSupabaseConfigured() && !emergencyNeonCatalogEnabled() ? (
           <div className="border-b border-warn/30 bg-warn-tint px-4 py-1.5 text-center text-xs font-medium text-warn sm:px-6">
             Supabase hələ qoşulmayıb — heç bir klub göstərilmir.
           </div>
