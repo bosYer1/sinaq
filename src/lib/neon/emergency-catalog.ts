@@ -20,7 +20,14 @@ async function readPublicRows<T>(query: string): Promise<T[]> {
   if (!emergencyNeonCatalogEnabled()) throw new Error('Emergency read unavailable.');
   const connectionString = process.env.GAMEYER_NEON_CATALOG_DATABASE_URL!;
   const url = new URL(connectionString);
-  if (!url.hostname.endsWith('.neon.tech')) throw new Error('Unexpected catalog host.');
+  // Restrict this temporary server credential to its non-privileged,
+  // public-catalog-only role; never accept an owner/admin database URL.
+  if (!['postgres:', 'postgresql:'].includes(url.protocol)
+    || url.username !== 'gameyer_catalog_login'
+    || url.pathname !== '/gameyer'
+    || !url.hostname.endsWith('.neon.tech')) {
+    throw new Error('Emergency catalog connection must use the approved read-only role.');
+  }
   const response = await fetch(`https://${url.hostname}/sql`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'Neon-Connection-String': connectionString, 'Neon-Array-Mode': 'true', 'Neon-Raw-Text-Output': 'true' },
