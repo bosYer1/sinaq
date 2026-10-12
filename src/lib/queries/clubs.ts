@@ -340,6 +340,17 @@ const getSharedPublicClubCount = unstable_cache(
 );
 
 const getCachedPublicClubCount = cache(async (district?: string, type?: string) => {
+  if (emergencyNeonCatalogEnabled()) {
+    const clubs = await getTrustedPublicClubs();
+    const requestedType = type === 'ps' ? 'playstation' : type;
+    return clubs.filter((club) => {
+      if (district && club.district?.slug !== district) return false;
+      const slugs = (club.type_assignments ?? []).map((item) => item.club_type?.slug);
+      return requestedType === 'pc' || requestedType === 'playstation'
+        ? slugs.includes(requestedType)
+        : slugs.includes('pc') || slugs.includes('playstation');
+    }).length;
+  }
   if (hasRequestIndependentPublicDataCredential()) return getSharedPublicClubCount(district, type);
 
   if (process.env.VERCEL_ENV === 'production') {
