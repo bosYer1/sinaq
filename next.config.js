@@ -96,6 +96,12 @@ const nextConfig = {
   },
   async headers() {
     return [
+      {
+        // Content-addressed original club photos: allow repeat visitors to use
+        // browser cache without new Vercel image optimization or bandwidth.
+        source: '/recovered-club-media/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
       ...utilityQueryNoindexHeaders,
       {
         source: '/:path*',
