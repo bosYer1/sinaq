@@ -2,6 +2,7 @@ import 'server-only';
 import type { ClubWithRelations, District, ClubType } from '@/types/database';
 import { unstable_cache } from 'next/cache';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { isPremiumActive } from '@/lib/utils';
 
 /** Temporary read-only recovery source review deadline. */
 export const EMERGENCY_NEON_REVIEW_DATE = '2026-10-19';
@@ -44,7 +45,21 @@ const cachedEmergencyClubs = unstable_cache(async (): Promise<ClubWithRelations[
     || !(club.instagram_url?.trim() || club.tiktok_url?.trim())
     || !inferClubTypeSlugs(club).some(type => type === 'pc' || type === 'playstation')
   )) throw new Error('Emergency public catalog eligibility violation.');
-  return clubs;
+  const blockedMedia = (url: string | null) =>
+    Boolean(url?.includes('.supabase.co/storage/v1/'));
+  // Supabase Storage also returns 402. Do not issue hundreds of broken
+  // image requests, and never fabricate replacement club photographs.
+  const clean = clubs.map(club => ({
+    ...club,
+    profile_image_url: blockedMedia(club.profile_image_url) ? null : club.profile_image_url,
+    images: club.images.filter(image => !blockedMedia(image.url)),
+  }));
+  return clean.sort((a, b) =>
+    Number(isPremiumActive(b)) - Number(isPremiumActive(a))
+    || Number(Boolean(b.profile_image_url)) - Number(Boolean(a.profile_image_url))
+    || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    || a.name.localeCompare(b.name, 'az')
+  );
 }, ['gameyer-neon-emergency-public-20261012'], { revalidate: 300 });
 
 export async function getEmergencyPublicClubs(): Promise<ClubWithRelations[]> {
