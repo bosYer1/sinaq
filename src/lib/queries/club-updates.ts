@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { createServerDataClient } from '@/lib/supabase/server-data';
 import { getClubs } from '@/lib/queries/clubs';
+import { emergencyNeonCatalogEnabled } from '@/lib/neon/emergency-catalog';
 
 export type ClubUpdateKind = 'tournament' | 'offer';
 
@@ -35,6 +36,8 @@ function firstRelatedRow<T>(value: T | T[] | null | undefined): T | null {
 }
 
 async function queryActiveClubUpdates(clubId?: string): Promise<ClubUpdateItem[]> {
+  // Snapshot contains no currently verified offers. Never show stale promotions.
+  if (emergencyNeonCatalogEnabled()) return [];
   const supabase = createClubUpdatesClient();
   const publicClubs = await getClubs();
   const publicClubIds = publicClubs.map((club) => club.id);
