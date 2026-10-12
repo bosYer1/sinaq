@@ -344,17 +344,16 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
   return isPublicClubForWeb(club) ? club : null;
 }
 
-const getSharedClubBySlug = unstable_cache(
-  async (slug: string) => queryClubBySlug(slug),
-  ['gameyer-public-club-detail-v1'],
-  { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
-);
-
-const getCachedClubBySlug = cache(async (slug: string) =>
-  hasRequestIndependentPublicDataCredential()
-    ? getSharedClubBySlug(slug)
-    : queryClubBySlug(slug),
-);
+// Detail requests reuse exactly the same eligibility-gated inventory snapshot
+// as the home page. In sitemap smoke tests this avoids one proxy read per slug.
+const getCachedClubBySlug = cache(async (slug: string) => {
+  if (hasRequestIndependentPublicDataCredential()) {
+    const clubs = await getSharedPublicClubs();
+    return clubs.find((club) => club.slug === slug) ?? null;
+  }
+  // Preserve the request-scoped OIDC fallback; never cache request headers.
+  return queryClubBySlug(slug);
+});
 
 export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
   return getCachedClubBySlug(slug);

@@ -43,7 +43,9 @@ test('shared public cache does not affect filtered queries or public eligibility
   assert.match(source, /hasConfirmedPublicSocial\(club\)/);
   assert.match(source, /hasConfirmedPublicType\(club\)/);
   assert.match(source, /getSharedPublicClubs = unstable_cache/);
-  assert.match(source, /getSharedClubBySlug = unstable_cache/);
+  assert.match(source, /const clubs = await getSharedPublicClubs\(\);/);
+  assert.match(source, /return clubs\.find\(\(club\) => club\.slug === slug\) \?\? null;/);
+  assert.match(source, /return queryClubBySlug\(slug\);/);
   assert.match(source, /getSharedPublicClubCount = unstable_cache/);
   assert.doesNotMatch(source, /createBrowserClient|from '@\/lib\/supabase\/client'/);
 });
