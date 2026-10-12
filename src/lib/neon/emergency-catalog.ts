@@ -26,7 +26,9 @@ export function temporaryCatalogConfigured(): boolean {
 }
 
 export function emergencyNeonCatalogEnabled(): boolean {
-  return temporaryCatalogConfigured() && Boolean(process.env.GAMEYER_NEON_CATALOG_DATABASE_URL);
+  return temporaryCatalogConfigured() && (
+    pinnedPublicRecoverySnapshotEnabled() || Boolean(process.env.GAMEYER_NEON_CATALOG_DATABASE_URL)
+  );
 }
 
 async function readPublicRows<T>(query: string): Promise<T[]> {
