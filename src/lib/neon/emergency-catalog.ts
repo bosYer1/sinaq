@@ -21,7 +21,7 @@ async function readPublicRows<T>(query: string): Promise<T[]> {
   if (!url.hostname.endsWith('.neon.tech')) throw new Error('Unexpected catalog host.');
   const response = await fetch(`https://${url.hostname}/sql`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'Neon-Connection-String': connectionString },
+    headers: { 'content-type': 'application/json', 'Neon-Connection-String': connectionString, 'Neon-Array-Mode': 'true', 'Neon-Raw-Text-Output': 'true' },
     body: JSON.stringify({ query, params: [] }),
     cache: 'no-store',
     signal: AbortSignal.timeout(10_000),
@@ -29,5 +29,8 @@ async function readPublicRows<T>(query: string): Promise<T[]> {
   if (!response.ok) throw new Error(`Emergency catalog read status ${response.status}.`);
   const payload = await response.json() as { rows?: unknown[][] };
   if (!Array.isArray(payload.rows)) throw new Error('Invalid emergency catalog rows.');
-  return payload.rows.map(row => row[0] as T);
+  return payload.rows.map(row => {
+    if (!Array.isArray(row) || row.length !== 1) throw new Error('Malformed catalog row.');
+    return (typeof row[0] === 'string' ? JSON.parse(row[0]) : row[0]) as T;
+  });
 }
