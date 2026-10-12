@@ -1,11 +1,12 @@
 import { readFile } from 'node:fs/promises';
 
-const [filterBar, searchFilter, typeFilter, exploreView, clubsQuery] = await Promise.all([
+const [filterBar, searchFilter, typeFilter, exploreView, clubsQuery, publicCache] = await Promise.all([
   readFile(new URL('../src/components/filters/FilterBar.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/filters/SearchFilter.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/filters/TypeFilter.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/explore/ExploreView.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/queries/clubs.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/queries/public-inventory-cache.ts', import.meta.url), 'utf8'),
 ]);
 
 function assert(condition, message) {
@@ -60,15 +61,15 @@ assert(exploreView.includes('“${searchQuery}” üçün uyğun klublar'), 'Act
 assert(exploreView.includes('const hasStructuredFilters = Boolean(filters.district || filters.type || filters.priceMax);'), 'Search empty state must know whether structured filters are also active.');
 assert(exploreView.includes('searchQuery={searchQuery}'), 'Search empty state must receive the committed query for missing-club suggestions.');
 
-assert(clubsQuery.includes('function normalizeSearchText'), 'Club search must normalize Azerbaijani spelling variants before matching.');
+assert(publicCache.includes('function normalizePublicSearchText'), 'Club search must normalize Azerbaijani spelling variants before matching.');
 for (const token of [".replace(/ə/g, 'e')", ".replace(/ı/g, 'i')", ".replace(/ö/g, 'o')", ".replace(/ü/g, 'u')", ".replace(/ş/g, 's')", ".replace(/ç/g, 'c')", ".replace(/ğ/g, 'g')"]) {
-  assert(clubsQuery.includes(token), `Club search normalization must preserve Azerbaijani transliteration rule ${token}.`);
+  assert(publicCache.includes(token), `Club search normalization must preserve Azerbaijani transliteration rule ${token}.`);
 }
-assert(clubsQuery.includes("const normalizedSearchTerms = normalizeSearchText(filters.q)"), 'Club search must tokenize the normalized settled query.');
-assert(clubsQuery.includes("SEARCH_LOCATION_STOP_WORDS = new Set(['ms', 'metro', 'metrosu'])"), 'Club search must ignore explicit metro shorthand only when another meaningful search term remains.');
-assert(clubsQuery.includes(".replace(/\\bm\\s*\\/\\s*s\\b/giu, ' metro ')"), 'm/s shorthand must normalize to the bounded metro stop-word path.');
-assert(clubsQuery.includes("club.district?.name"), 'Club search must include district names so location intent can resolve without exact address wording.');
-assert(clubsQuery.includes("return searchTerms.every((term) => searchableText.includes(term));"), 'All normalized search terms must match the club search surface.');
+assert(clubsQuery.includes('const searchTerms = publicSearchTerms(filters.q);') && publicCache.includes('export function publicSearchTerms('), 'Club search must tokenize queries using the shared normalized search function.');
+assert(publicCache.includes("SEARCH_LOCATION_STOP_WORDS = new Set(['ms', 'metro', 'metrosu'])"), 'Club search must ignore explicit metro shorthand only when another meaningful search term remains.');
+assert(publicCache.includes(".replace(/\\bm\\s*\\/\\s*s\\b/giu, ' metro ')"), 'm/s shorthand must normalize to the bounded metro stop-word path.');
+assert(publicCache.includes("club.district?.name"), 'Club search must include district names so location intent can resolve without exact address wording.');
+assert(publicCache.includes('if (!searchTerms.every((term) => searchableText.includes(term))) return false;') && clubsQuery.includes('if (!searchTerms.every((term) => searchableText.includes(term))) return false;'), 'All normalized search terms must match both the direct and snapshot search surfaces.');
 assert(!clubsQuery.includes('name.ilike.%'), 'Public search must not fall back to accent-sensitive DB ilike matching.');
 assert(clubsQuery.includes("import { cache } from 'react';") && clubsQuery.includes('const getCachedClubs = cache('), 'Public club query memoization must remain request-scoped while preserving tolerant search semantics.');
 
