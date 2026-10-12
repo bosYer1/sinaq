@@ -257,6 +257,23 @@ const getCachedClubs = cache(
         { matchesMetro: clubMatchesMetro, inferTypeSlugs: inferClubTypeSlugs },
       );
     }
+    if (emergencyNeonCatalogEnabled()) {
+      const clubs = await getTrustedPublicClubs();
+      const requestedType = type === 'ps' ? 'playstation' : type;
+      return filterPublicInventorySnapshot(
+        clubs, { district, metro, type, q },
+        { matchesMetro: clubMatchesMetro, inferTypeSlugs: inferClubTypeSlugs },
+      ).flatMap((club) => {
+        const pricing = club.pricing.filter((price) =>
+          price.unit === 'saat' && price.price_from > 0 && price.price_from <= priceMax
+        );
+        if (!pricing.length) return [];
+        if ((requestedType === 'pc' || requestedType === 'playstation') &&
+          !pricing.some((price) => price.club_type?.slug === requestedType)) return [];
+        // The original SQL !inner relation returns only matching hourly prices.
+        return [{ ...club, pricing }];
+      });
+    }
     return queryClubs({ district, metro, type, priceMax, q });
   },
 );
