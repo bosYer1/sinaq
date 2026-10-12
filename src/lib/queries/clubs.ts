@@ -10,6 +10,7 @@ import {
 import { requestVercelPublicReadToken } from '@/lib/supabase/server-data';
 import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { emergencyNeonCatalogEnabled, getEmergencyPublicClubs } from '@/lib/neon/emergency-catalog';
 import { isPremiumActive } from '@/lib/utils';
 import { getClubPopularityMetrics } from '@/lib/queries/club-popularity';
 import { clubMatchesMetro } from '@/lib/metro';
@@ -205,6 +206,7 @@ const getSharedPublicClubs = unstable_cache(
 // Resolve the header BEFORE constructing the cached function; only a
 // visibility-filtered public result is cached, never the credential.
 async function getTrustedPublicClubs(): Promise<ClubWithRelations[]> {
+  if (emergencyNeonCatalogEnabled()) return getEmergencyPublicClubs();
   if (hasRequestIndependentPublicDataCredential()) return getSharedPublicClubs();
 
   if (process.env.VERCEL_ENV === 'production') {
