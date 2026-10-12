@@ -22,10 +22,6 @@ const CLUB_LOGOS: Record<string, ClubLogoSource> = {
   'laliga-lounge-elmler-2': LALIGA_LOGO,
   'laliga-lounge-tibb': LALIGA_LOGO,
   'laliga-lounge-genclik': LALIGA_LOGO,
-  'milli-gaming-arena': {
-    imageUrl: '/club-logos/milli-gaming-arena.jpg.b64',
-    sourceUrl: 'club-provided',
-  },
 };
 
 export function getClubLogo(slug: string): ClubLogoSource | null {
