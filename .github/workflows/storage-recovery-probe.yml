@@ -1,0 +1,42 @@
+name: Temporary storage image recovery probe
+on:
+  push:
+    branches:
+      - perf/cross-request-public-inventory-cache-20261012
+    paths:
+      - .github/workflows/storage-recovery-probe.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check exact original club photo and image cache without credentials
+        shell: bash
+        env:
+          IMAGE_URL: https://uxcedpbumulpheglhlvs.supabase.co/storage/v1/object/public/club-images/b21ba925-3267-42af-af2b-1377e7ddabd8/profile/1787338647118-cb216ec6-168b-4b34-94b8-4c2ba0f1b0f6.jpg
+        run: |
+          set -u
+          echo "Recovery diagnostic, no write and no billing actions"
+          IMAGE_ENCODED=$(python3 - <<'PY'
+          import os, urllib.parse
+          print(urllib.parse.quote(os.environ['IMAGE_URL'], safe=''))
+          PY
+          )
+          urls=(
+            "$IMAGE_URL"
+            "https://gameyer.az/_next/image?url=$IMAGE_ENCODED&w=96&q=75"
+            "https://gameyer.az/_next/image?url=$IMAGE_ENCODED&w=256&q=75"
+            "https://gameyer.az/_next/image?url=$IMAGE_ENCODED&w=640&q=75"
+            "https://gameyer.az/gameyer-logo.jpeg"
+          )
+          i=0
+          for url in "${urls[@]}"; do
+            i=$((i + 1))
+            echo "--- Probe ${i} ---"
+            rm -f /tmp/media-probe
+            curl -L -sS --max-time 16 --retry 0 -o /tmp/media-probe -w 'status=%{http_code} content_type=%{content_type} bytes=%{size_download}\n' "$url" || true
+            if [ -f /tmp/media-probe ]; then file -b /tmp/media-probe | cut -c1-135; fi
+          done
