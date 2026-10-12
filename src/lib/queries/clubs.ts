@@ -256,10 +256,41 @@ const getCachedClubs = cache(
     priceMax?: number,
     q?: string,
   ) => {
-    // Free-text searches and filtered variants retain their existing query
-    // semantics and do not create an unbounded shared cache key space.
+    // Reuse the already visibility-gated 5-minute snapshot for ordinary
+    // discovery filters. This removes a second full 61-club proxy download
+    // from filtered home pages and stops crawled district/type pages from
+    // issuing fresh nested SELECTs on every visit.
+    // Keep price searches on the existing SQL path: its !inner join prunes
+    // the pricing relation, so filtering the full snapshot would change the
+    // pricing returned to cards.
     const hasFilters = Boolean(district || metro || type || priceMax || q?.trim());
     if (!hasFilters) return getTrustedPublicClubs();
+    if (priceMax == null || priceMax <= 0) {
+      const clubs = await getTrustedPublicClubs();
+      const normalizedSearchTerms = normalizeSearchText(q)
+        .split(/\\s+/)
+        .filter(Boolean)
+        .slice(0, 6);
+      const meaningfulSearchTerms = normalizedSearchTerms.filter((term) => !SEARCH_LOCATION_STOP_WORDS.has(term));
+      const searchTerms = meaningfulSearchTerms.length > 0 ? meaningfulSearchTerms : normalizedSearchTerms;
+      const requestedType = type === 'ps' ? 'playstation' : type;
+      const hasTypeFilter = requestedType === 'pc' || requestedType === 'playstation';
+
+      // The snapshot is already sorted using the same popularity/premium
+      // ranking as live queries; filtering it preserves the exact ordering.
+      return clubs.filter((club) => {
+        if (district && club.district?.slug !== district) return false;
+        if (metro && !clubMatchesMetro(club, metro)) return false;
+        if (hasTypeFilter && !inferClubTypeSlugs(club).includes(requestedType)) return false;
+        if (searchTerms.length > 0) {
+          const searchableText = normalizeSearchText([
+            club.name, club.slug, club.address, club.district?.name,
+          ].filter(Boolean).join(' '));
+          if (!searchTerms.every((term) => searchableText.includes(term))) return false;
+        }
+        return true;
+      });
+    }
     return queryClubs({ district, metro, type, priceMax, q });
   },
 );
