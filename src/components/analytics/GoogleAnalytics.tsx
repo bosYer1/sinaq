@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { usePathname } from 'next/navigation';
 import { useReportWebVitals } from 'next/web-vitals';
 import Script from 'next/script';
-import { buildGaBootstrap, createGaRouteTracker, normalizeGaMeasurementId, trackGaEvent, trackGaPageView } from '@/lib/google-analytics';
+import { buildGaBootstrap, createGaRouteTracker, isGaAnalyticsTestTraffic, normalizeGaMeasurementId, trackGaEvent, trackGaPageView } from '@/lib/google-analytics';
 import { trackPostHogEvent } from '@/lib/posthog';
 
 type LargestContentfulPaintEntry = PerformanceEntry & {
@@ -16,6 +16,8 @@ type INPEntry = PerformanceEventTiming & {
   target?: Node | null;
   targetSelector?: string;
 };
+
+const subscribeToAnalyticsLocation = () => () => {};
 
 function lcpAttribution(entries: PerformanceEntry[]) {
   const entry = entries.at(-1) as LargestContentfulPaintEntry | undefined;
@@ -73,6 +75,11 @@ export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
   const pathname = usePathname();
   const normalizedMeasurementId = normalizeGaMeasurementId(measurementId);
   const [shouldTrackRoute] = useState(() => createGaRouteTracker(pathname));
+  const shouldLoadAnalytics = useSyncExternalStore(
+    subscribeToAnalyticsLocation,
+    () => !isGaAnalyticsTestTraffic(),
+    () => false,
+  );
 
   useReportWebVitals((metric) => {
     if (!pathname || pathname.startsWith('/admin') || pathname.startsWith('/api')) return;
@@ -94,7 +101,7 @@ export function GoogleAnalytics({ measurementId }: { measurementId?: string }) {
     trackGaPageView(normalizedMeasurementId);
   }, [normalizedMeasurementId, pathname, shouldTrackRoute]);
 
-  if (!normalizedMeasurementId) return null;
+  if (!normalizedMeasurementId || !shouldLoadAnalytics) return null;
 
   return (
     <>
