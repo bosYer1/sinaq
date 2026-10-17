@@ -292,7 +292,7 @@ jobs:
               await check(path);
             }
             const sitemap = await (await check('/sitemap.xml')).text();
-            const paths = [...sitemap.matchAll(/<loc>(.*?)<\\/loc>/g)].map(m => new URL(m[1]).pathname);
+            const paths = [...sitemap.matchAll(new RegExp('<loc>(.*?)</loc>', 'g'))].map(m => new URL(m[1]).pathname);
             if (paths.length !== 110) throw new Error(`Live Supabase sitemap expected 110 URLs; got ${paths.length}`);
             // Bounded concurrency to avoid a synthetic Supabase request storm.
             for (let offset = 0; offset < paths.length; offset += 4) {
