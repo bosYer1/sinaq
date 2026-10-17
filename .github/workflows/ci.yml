@@ -312,6 +312,14 @@ jobs:
             kill "$(cat /tmp/gameyer-live-supabase.pid)" || true
           fi
 
+      - name: Verify production build with real Supabase mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Catch build-time Supabase/OIDC failures before touching production.
+          # The trusted GitHub OIDC path is already provisioned above.
+          GAMEYER_NEON_EMERGENCY_READS=0 GAMEYER_NEON_STATIC_CATALOG=0 npm run build
+
       - name: Stop production server
         if: always()
         run: |
