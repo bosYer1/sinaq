@@ -71,7 +71,8 @@ assert.match(clubUpdates, /createServerDataClient/, 'club updates must be loaded
 assert.doesNotMatch(clubUpdates, /SUPABASE_PUBLISHABLE_KEY/, 'club updates query must not use the browser publishable key');
 assert.match(clubUpdates, /const publicClubs = await getClubs\(\)/, 'club updates must derive visibility from the canonical public club query');
 assert.match(clubUpdates, /\.in\('club_id', publicClubIds\)/, 'server-secret club update reads must stay restricted to public club ids');
-assert.match(sitemap, /createServerDataClient/, 'sitemap inventory reads must be server-only');
+assert.match(sitemap, /await getClubs\(\)/, 'sitemap must reuse the trusted server-only cached public inventory');
+assert.doesNotMatch(sitemap, /createServerDataClient|\.from\(['"]clubs['"]\)/, 'sitemap must not trigger a duplicate origin inventory query');
 assert.match(health, /createServerDataClient/, 'health inventory reads must be server-only');
 assert.match(submissions, /getClubBySlug/, 'public submission club lookup must reuse the canonical public club visibility query');
 assert.doesNotMatch(submissions, /createServerDataClient/, 'submission code must not bypass canonical public club visibility directly');
