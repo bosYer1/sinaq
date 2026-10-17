@@ -80,6 +80,41 @@ jobs:
             core.setSecret(token);
             core.exportVariable('GAMEYER_CI_OIDC_TOKEN', token);
 
+      - name: Verify live trusted Supabase read and original club photo availability
+        shell: bash
+        run: |
+          set -euo pipefail
+          # This uses the already-minted GitHub Actions OIDC token. It does not
+          # grant public anon access or print secrets into the workflow logs.
+          test -n "${GAMEYER_CI_OIDC_TOKEN:-}" || { echo 'Missing trusted CI OIDC'; exit 1; }
+          cat > /tmp/gameyer-public-read.json <<'JSON'
+          {"url":"https://uxcedpbumulpheglhlvs.supabase.co/rest/v1/clubs?select=id%2Cslug&is_active=eq.true&limit=1","method":"GET","headers":{"accept":"application/json"}}
+          JSON
+          status="$(curl --silent --show-error --max-time 20 \
+            --output /tmp/gameyer-public-read-response.json \
+            --write-out '%{http_code}' \
+            -X POST 'https://uxcedpbumulpheglhlvs.supabase.co/functions/v1/gameyer-public-data-proxy' \
+            -H 'content-type: application/json' \
+            -H "x-gameyer-github-oidc: $GAMEYER_CI_OIDC_TOKEN" \
+            --data-binary @/tmp/gameyer-public-read.json)"
+          echo "Trusted public-data proxy response status: $status"
+          test "$status" = 200 || { echo 'Live Supabase public read failed; block recovery cutover.' >&2; exit 1; }
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/gameyer-public-read-response.json', 'utf8'));
+          if (!Array.isArray(data) || data.length !== 1 || typeof data[0].slug !== 'string') {
+            throw new Error('Trusted public-data proxy returned an invalid club response.');
+          }
+          console.log('Validated authorized live Supabase public club read (one row).');
+          NODE
+          # Preserve the original Supabase Storage image URLs. Never replace
+          # original photographs with an invented or cross-club substitute.
+          image_status="$(curl --silent --show-error --location --head --max-time 20 \
+            --output /dev/null --write-out '%{http_code}' \
+            'https://uxcedpbumulpheglhlvs.supabase.co/storage/v1/object/public/club-images/1d0b68d6-d39a-4a8b-85a8-60c97171a89d/profile/1787320301757-b6b263b6-5c3d-41a8-9f15-dd35b7db9f03.jpg')"
+          echo "Original Supabase club photo response status: $image_status"
+          test "$image_status" = 200
+
       - name: Start production server
         run: |
           npm run start > /tmp/gameyer-next.log 2>&1 &
