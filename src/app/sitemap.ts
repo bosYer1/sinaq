@@ -1,6 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { createServerDataClient } from '@/lib/supabase/server-data';
-import { emergencyNeonCatalogEnabled } from '@/lib/neon/emergency-catalog';
 import { getClubs } from '@/lib/queries/clubs';
 import { getSiteUrl } from '@/lib/site-url';
 
@@ -55,51 +53,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/istifade-qaydalari`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
-  let data: unknown[] | null = null;
-  let error: { message: string } | null = null;
-  if (emergencyNeonCatalogEnabled()) {
-    data = await getClubs();
-  } else {
-    const supabase = createServerDataClient();
-    const { data: dataResult, error: liveError } = await supabase
-    .from('clubs')
-    .select(`
-      name,
-      address,
-      slug,
-      updated_at,
-      instagram_url,
-      tiktok_url,
-      district:districts ( slug ),
-      type_assignments:club_type_assignments (
-        club_type:club_types ( slug )
-      ),
-      pricing:club_pricing (
-        price_from,
-        unit,
-        club_type:club_types ( slug )
-      ),
-      opening_hours:club_opening_hours (
-        day_of_week,
-        open_time,
-        close_time,
-        is_closed
-      )
-    `)
-    .eq('is_active', true)
-    .not('latitude', 'is', null)
-    .not('longitude', 'is', null);
-    data = dataResult as unknown[] | null;
-    error = liveError;
-  }
-  if (error) {
-    console.error('Sitemap club inventory read failed:', error.message);
-    throw error;
-  }
-
-  const clubs = ((data ?? []) as unknown as SitemapClub[]).filter((club) =>
+  // One trusted, visibility-gated inventory read shared across home, club detail
+  // and sitemap. Avoid a separate large Supabase proxy download on every
+  // dynamic sitemap request (important for the Free egress budget).
+  // getClubs() fails closed on an unavailable provider; never output an empty
+  // success sitemap after a 402/quota failure.
+  const clubs: SitemapClub[] = (await getClubs()).filter((club) =>
     hasConfirmedPublicType(club) && Boolean(club.instagram_url?.trim() || club.tiktok_url?.trim())
   );
+
   const activeDistricts = new Set<string>();
   const comboCounts = new Map<string, number>();
   const districtLatest = new Map<string, string | null>();
