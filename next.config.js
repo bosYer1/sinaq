@@ -42,6 +42,10 @@ const nextConfig = {
     POSTHOG_API_HOST: 'https://us.posthog.com',
   },
   images: {
+    // Public club media uses timestamped object keys; cache transformed images
+    // for one day to avoid repeatedly charging Supabase Storage egress.
+    // Keep the original Supabase Storage URLs and allow new uploads immediately.
+    minimumCacheTTL: 86_400,
     remotePatterns: [
       {
         protocol: 'https',
