@@ -187,5 +187,5 @@ assert.match(clubs, /getClubs xətası:[\s\S]*?throw error;/, 'Inventory failure
 assert.match(clubs, /getPublicClubCount district xətası:[\s\S]*?throw districtError;/, 'District count failure must propagate');
 assert.match(clubs, /getPublicClubCount xətası:[\s\S]*?throw error;/, 'Club count read failures must propagate');
 assert.match(clubs, /getClubBySlug xətası:[\s\S]*?throw error;/, 'Club profile failures must not become false 404s');
-assert.match(sitemap, /Sitemap club inventory read failed:[\s\S]*?throw error;/, 'Sitemap must not respond 200 with missing clubs after backend failure');
+assert.match(sitemap, /const clubs: SitemapClub\[\] = \(await getClubs\(\)\)\.filter\(/, 'Sitemap must inherit the trusted inventory fail-closed behavior and never silently publish an empty result');
 console.log('Public data anti-scrape regression contract: PASS');
