@@ -264,6 +264,54 @@ jobs:
           });
           NODE
 
+      - name: Exercise live Supabase mode locally without changing Vercel production
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Test the exact recovery switches OFF against GitHub's trusted OIDC,
+          # without touching the gameyer.az alias or deployed production flags.
+          GAMEYER_NEON_EMERGENCY_READS=0 GAMEYER_NEON_STATIC_CATALOG=0 PORT=3100 npm run start > /tmp/gameyer-live-supabase.log 2>&1 &
+          echo $! > /tmp/gameyer-live-supabase.pid
+          for i in {1..30}; do
+            if curl --fail --silent --max-time 5 http://127.0.0.1:3100/api/health > /tmp/gameyer-live-health.json; then
+              break
+            fi
+            sleep 1
+          done
+          grep '"ok":true' /tmp/gameyer-live-health.json > /dev/null
+          grep '"database":"ok"' /tmp/gameyer-live-health.json > /dev/null
+          node <<'NODE'
+          const base = 'http://127.0.0.1:3100';
+          const check = async (path) => {
+            const res = await fetch(base + path, { redirect: 'manual', signal: AbortSignal.timeout(20000) });
+            if (res.status !== 200) throw new Error(`Live Supabase ${path}: HTTP ${res.status}`);
+            return res;
+          };
+          (async () => {
+            for (const path of ['/', '/?type=pc&price_max=3', '/?q=apex', '/rayon', '/robots.txt', '/admin/login']) {
+              await check(path);
+            }
+            const sitemap = await (await check('/sitemap.xml')).text();
+            const paths = [...sitemap.matchAll(/<loc>(.*?)<\\/loc>/g)].map(m => new URL(m[1]).pathname);
+            if (paths.length !== 110) throw new Error(`Live Supabase sitemap expected 110 URLs; got ${paths.length}`);
+            // Bounded concurrency to avoid a synthetic Supabase request storm.
+            for (let offset = 0; offset < paths.length; offset += 4) {
+              await Promise.all(paths.slice(offset, offset + 4).map(path => check(path)));
+            }
+            const missing = await fetch(base + '/gameyer-nonexistent-404', { redirect: 'manual' });
+            if (missing.status !== 404) throw new Error(`Live Supabase 404 response: ${missing.status}`);
+            console.log(`Live Supabase smoke passed: ${paths.length} sitemap pages + filters, SEO, health, admin login and 404.`);
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
+
+      - name: Stop live Supabase smoke server
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/gameyer-live-supabase.pid ]; then
+            kill "$(cat /tmp/gameyer-live-supabase.pid)" || true
+          fi
+
       - name: Stop production server
         if: always()
         run: |
