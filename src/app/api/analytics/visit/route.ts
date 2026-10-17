@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { emergencyNeonCatalogEnabled } from '@/lib/neon/emergency-catalog';
 import { createClient } from '@/lib/supabase/server';
 import { requestVercelOidcToken, writeAnalyticsRecord } from '@/lib/supabase/analytics-server';
 import { guardPublicPost, readJsonBodyLimited } from '@/lib/security/publicRequestGuard';
@@ -73,6 +74,15 @@ export async function POST(request: Request) {
   const cleanReferrer = typeof referrerHost === 'string' && referrerHost !== requestHost
     ? referrerHost.toLowerCase()
     : null;
+
+  if (emergencyNeonCatalogEnabled()) {
+    // Keep first-party write traffic away from the quota-restricted origin.
+    // GA4/PostHog browser instrumentation remains independent.
+    return new NextResponse(null, {
+      status: 204,
+      headers: { 'cache-control': 'no-store', 'x-gameyer-analytics-write': 'disabled' },
+    });
+  }
 
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();

@@ -42,6 +42,10 @@ const nextConfig = {
     POSTHOG_API_HOST: 'https://us.posthog.com',
   },
   images: {
+    // Public club media uses timestamped object keys; cache transformed images
+    // for one day to avoid repeatedly charging Supabase Storage egress.
+    // Keep the original Supabase Storage URLs and allow new uploads immediately.
+    minimumCacheTTL: 86_400,
     remotePatterns: [
       {
         protocol: 'https',
@@ -96,6 +100,12 @@ const nextConfig = {
   },
   async headers() {
     return [
+      {
+        // Content-addressed original club photos: allow repeat visitors to use
+        // browser cache without new Vercel image optimization or bandwidth.
+        source: '/recovered-club-media/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
       ...utilityQueryNoindexHeaders,
       {
         source: '/:path*',

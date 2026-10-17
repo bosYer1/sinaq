@@ -13,6 +13,7 @@ import { trackPostHogEvent } from '@/lib/posthog';
 
 const MOBILE_EXPANDED_STATE_KEY = 'gameyer:mobile-expanded-state';
 const MOBILE_INITIAL_CLUB_COUNT = 8;
+const MOBILE_EXPANDED_RENDER_BATCH = 12;
 
 type MobileExpandedState = {
   origin: string;
@@ -82,6 +83,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   const [locationFocusRequest, setLocationFocusRequest] = useState(0);
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState(false);
+  const [mobileVisibleCount, setMobileVisibleCount] = useState(MOBILE_INITIAL_CLUB_COUNT);
   const [mobileListMapActive, setMobileListMapActive] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
@@ -123,9 +125,19 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
     };
   }, [view]);
 
+  // Spread heavy club-card mounting across short tasks to keep touch input responsive.
+  useEffect(() => {
+    if (!mobileExpanded || mobileVisibleCount >= clubs.length) return;
+    const timer = window.setTimeout(() => {
+      setMobileVisibleCount((current) => Math.min(current + MOBILE_EXPANDED_RENDER_BATCH, clubs.length));
+    }, 32);
+    return () => window.clearTimeout(timer);
+  }, [clubs.length, mobileExpanded, mobileVisibleCount]);
+
   useEffect(() => {
     const restoredScrollY = restoredScrollYRef.current;
-    if (!mobileExpanded || restoredScrollY == null) return;
+    // On return from a club profile, wait until the original list is tall enough.
+    if (!mobileExpanded || restoredScrollY == null || mobileVisibleCount < clubs.length) return;
 
     restoredScrollYRef.current = null;
     let secondFrame = 0;
@@ -139,7 +151,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       window.cancelAnimationFrame(firstFrame);
       if (secondFrame) window.cancelAnimationFrame(secondFrame);
     };
-  }, [mobileExpanded]);
+  }, [mobileExpanded, mobileVisibleCount, clubs.length]);
 
   const clubsWithDistance = useMemo(() => {
     const enriched = clubs.map((club) => ({
@@ -166,7 +178,7 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
       .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity))[0] ?? null;
   }, [clubsWithDistance, location]);
 
-  const mobileClubs = mobileExpanded ? clubsWithDistance : clubsWithDistance.slice(0, MOBILE_INITIAL_CLUB_COUNT);
+  const mobileClubs = clubsWithDistance.slice(0, mobileExpanded ? mobileVisibleCount : MOBILE_INITIAL_CLUB_COUNT);
   const searchQuery = filters.q?.trim() ?? '';
   const hasStructuredFilters = Boolean(filters.district || filters.type || filters.priceMax);
   const resultsTitle = searchActive ? `Axtarış nəticələri (${clubsWithDistance.length})` : `Klublar (${clubsWithDistance.length})`;
@@ -203,6 +215,8 @@ export function ExploreView({ clubs, view, searchActive }: ExploreViewProps) {
   function handleMobileExpandedToggle() {
     const nextExpanded = !mobileExpanded;
     trackPostHogEvent('mobile_more_clubs_clicked', { action: nextExpanded ? 'expand' : 'collapse', surface: 'mobile_list' });
+    if (nextExpanded) setMobileVisibleCount(Math.min(clubsWithDistance.length, MOBILE_INITIAL_CLUB_COUNT + MOBILE_EXPANDED_RENDER_BATCH));
+    else setMobileVisibleCount(MOBILE_INITIAL_CLUB_COUNT);
     setMobileExpanded(nextExpanded);
     if (nextExpanded) saveMobileExpandedState(getMobileScrollTop());
     else clearMobileExpandedState();

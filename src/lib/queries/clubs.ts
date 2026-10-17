@@ -1,6 +1,16 @@
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
+import {
+  hasRequestIndependentPublicDataCredential,
+  PUBLIC_INVENTORY_CACHE_SECONDS,
+  filterPublicInventorySnapshot,
+  normalizePublicSearchText as normalizeSearchText,
+  publicSearchTerms,
+} from '@/lib/queries/public-inventory-cache';
+import { requestVercelPublicReadToken } from '@/lib/supabase/server-data';
 import { createPublicClient } from '@/lib/supabase/public-server';
 import { inferClubTypeSlugs } from '@/lib/clubType';
+import { emergencyNeonCatalogEnabled, getEmergencyPublicClubs } from '@/lib/neon/emergency-catalog';
 import { isPremiumActive } from '@/lib/utils';
 import { getClubPopularityMetrics } from '@/lib/queries/club-popularity';
 import { clubMatchesMetro } from '@/lib/metro';
@@ -54,27 +64,8 @@ function isPublicClubForWeb(club: ClubWithRelations) {
   );
 }
 
-const SEARCH_LOCATION_STOP_WORDS = new Set(['ms', 'metro', 'metrosu']);
-
-function normalizeSearchText(value: string | null | undefined) {
-  return (value ?? '')
-    .replace(/\bm\s*\/\s*s\b/giu, ' metro ')
-    .toLocaleLowerCase('az')
-    .replace(/ə/g, 'e')
-    .replace(/ı/g, 'i')
-    .replace(/ö/g, 'o')
-    .replace(/ü/g, 'u')
-    .replace(/ş/g, 's')
-    .replace(/ç/g, 'c')
-    .replace(/ğ/g, 'g')
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
-
-async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
-  const supabase = createPublicClient();
+async function queryClubs(filters: ClubFilters, trustedToken?: string): Promise<ClubWithRelations[]> {
+  const supabase = createPublicClient(trustedToken);
   let districtId: string | null = null;
 
   if (filters.district) {
@@ -117,12 +108,7 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
       .lte('pricing.price_from', filters.priceMax!);
   }
 
-  const normalizedSearchTerms = normalizeSearchText(filters.q)
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 6);
-  const meaningfulSearchTerms = normalizedSearchTerms.filter((term) => !SEARCH_LOCATION_STOP_WORDS.has(term));
-  const searchTerms = meaningfulSearchTerms.length > 0 ? meaningfulSearchTerms : normalizedSearchTerms;
+  const searchTerms = publicSearchTerms(filters.q);
 
   const [{ data, error }, popularity] = await Promise.all([
     query.returns<ClubWithRelations[]>(),
@@ -200,6 +186,52 @@ async function queryClubs(filters: ClubFilters): Promise<ClubWithRelations[]> {
   return clubs;
 }
 
+// A normal React cache is request-scoped: the dynamic home page otherwise
+// downloads the entire nested public inventory from Supabase on every visit.
+// Cache only the unfiltered, visibility-gated inventory across requests.
+// Never enter a Next.js cache scope if an OIDC token needs request headers.
+const getSharedPublicClubs = unstable_cache(
+  async () => {
+    const clubs = await queryClubs({});
+    if (clubs.length === 0) {
+      throw new Error('Refusing to cache an unexpectedly empty public club inventory.');
+    }
+    return clubs;
+  },
+  ['gameyer-public-clubs-v1'],
+  { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
+);
+
+// At runtime, Vercel supplies OIDC in a request header (not process.env).
+// Resolve the header BEFORE constructing the cached function; only a
+// visibility-filtered public result is cached, never the credential.
+async function getTrustedPublicClubs(): Promise<ClubWithRelations[]> {
+  if (emergencyNeonCatalogEnabled()) return getEmergencyPublicClubs();
+  if (hasRequestIndependentPublicDataCredential()) return getSharedPublicClubs();
+
+  if (process.env.VERCEL_ENV === 'production') {
+    const trustedToken = await requestVercelPublicReadToken();
+    if (trustedToken) {
+      return unstable_cache(
+        async () => {
+          const clubs = await queryClubs({}, trustedToken);
+          if (clubs.length === 0) {
+            throw new Error('Refusing to cache an unexpectedly empty public club inventory.');
+          }
+          return clubs;
+        },
+        // Deliberately independent of rotating OIDC credentials: the cached
+        // payload is identical for every authorized public-site request.
+        ['gameyer-public-clubs-header-v1'],
+        { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
+      )();
+    }
+  }
+
+  // No trusted request token: preserve the original fail-closed behavior.
+  return queryClubs({});
+}
+
 const getCachedClubs = cache(
   async (
     district?: string,
@@ -207,7 +239,43 @@ const getCachedClubs = cache(
     type?: string,
     priceMax?: number,
     q?: string,
-  ) => queryClubs({ district, metro, type, priceMax, q }),
+  ) => {
+    // Reuse the already visibility-gated 5-minute snapshot for ordinary
+    // discovery filters. This removes a second full 61-club proxy download
+    // from filtered home pages and stops crawled district/type pages from
+    // issuing fresh nested SELECTs on every visit.
+    // Keep price searches on the existing SQL path: its !inner join prunes
+    // the pricing relation, so filtering the full snapshot would change the
+    // pricing returned to cards.
+    const hasFilters = Boolean(district || metro || type || priceMax || q?.trim());
+    if (!hasFilters) return getTrustedPublicClubs();
+    if (priceMax == null || priceMax <= 0) {
+      const clubs = await getTrustedPublicClubs();
+      return filterPublicInventorySnapshot(
+        clubs,
+        { district, metro, type, q },
+        { matchesMetro: clubMatchesMetro, inferTypeSlugs: inferClubTypeSlugs },
+      );
+    }
+    if (emergencyNeonCatalogEnabled()) {
+      const clubs = await getTrustedPublicClubs();
+      const requestedType = type === 'ps' ? 'playstation' : type;
+      return filterPublicInventorySnapshot(
+        clubs, { district, metro, type, q },
+        { matchesMetro: clubMatchesMetro, inferTypeSlugs: inferClubTypeSlugs },
+      ).flatMap((club) => {
+        const pricing = club.pricing.filter((price) =>
+          price.unit === 'saat' && price.price_from > 0 && price.price_from <= priceMax
+        );
+        if (!pricing.length) return [];
+        if ((requestedType === 'pc' || requestedType === 'playstation') &&
+          !pricing.some((price) => price.club_type?.slug === requestedType)) return [];
+        // The original SQL !inner relation returns only matching hourly prices.
+        return [{ ...club, pricing }];
+      });
+    }
+    return queryClubs({ district, metro, type, priceMax, q });
+  },
 );
 
 export async function getClubs(filters: ClubFilters = {}): Promise<ClubWithRelations[]> {
@@ -227,8 +295,11 @@ type PublicClubCountRow = {
   type_assignments: Array<{ club_type: { slug: string } | null }>;
 };
 
-async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
-  const supabase = createPublicClient();
+async function queryPublicClubCount(
+  filters: Pick<ClubFilters, 'district' | 'type'>,
+  trustedToken?: string,
+): Promise<number> {
+  const supabase = createPublicClient(trustedToken);
   let districtId: string | null = null;
 
   if (filters.district) {
@@ -279,9 +350,39 @@ async function queryPublicClubCount(filters: Pick<ClubFilters, 'district' | 'typ
   }).length;
 }
 
-const getCachedPublicClubCount = cache(
+const getSharedPublicClubCount = unstable_cache(
   async (district?: string, type?: string) => queryPublicClubCount({ district, type }),
+  ['gameyer-public-club-count-v1'],
+  { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
 );
+
+const getCachedPublicClubCount = cache(async (district?: string, type?: string) => {
+  if (emergencyNeonCatalogEnabled()) {
+    const clubs = await getTrustedPublicClubs();
+    const requestedType = type === 'ps' ? 'playstation' : type;
+    return clubs.filter((club) => {
+      if (district && club.district?.slug !== district) return false;
+      const slugs = (club.type_assignments ?? []).map((item) => item.club_type?.slug);
+      return requestedType === 'pc' || requestedType === 'playstation'
+        ? slugs.includes(requestedType)
+        : slugs.includes('pc') || slugs.includes('playstation');
+    }).length;
+  }
+  if (hasRequestIndependentPublicDataCredential()) return getSharedPublicClubCount(district, type);
+
+  if (process.env.VERCEL_ENV === 'production') {
+    const trustedToken = await requestVercelPublicReadToken();
+    if (trustedToken) {
+      return unstable_cache(
+        async () => queryPublicClubCount({ district, type }, trustedToken),
+        // Count varies with the district/type; the rotating OIDC token does not.
+        ['gameyer-public-club-count-header-v1', district ?? '', type ?? ''],
+        { revalidate: PUBLIC_INVENTORY_CACHE_SECONDS, tags: ['gameyer-public-clubs'] },
+      )();
+    }
+  }
+  return queryPublicClubCount({ district, type });
+});
 
 export async function getPublicClubCount(filters: Pick<ClubFilters, 'district' | 'type'>): Promise<number> {
   return getCachedPublicClubCount(filters.district, filters.type);
@@ -310,7 +411,16 @@ async function queryClubBySlug(slug: string): Promise<ClubWithRelations | null> 
   return isPublicClubForWeb(club) ? club : null;
 }
 
-const getCachedClubBySlug = cache(async (slug: string) => queryClubBySlug(slug));
+// Detail requests reuse exactly the same eligibility-gated inventory snapshot
+// as the home page. In sitemap smoke tests this avoids one proxy read per slug.
+const getCachedClubBySlug = cache(async (slug: string) => {
+  if (emergencyNeonCatalogEnabled() || hasRequestIndependentPublicDataCredential() || process.env.VERCEL_ENV === 'production') {
+    const clubs = await getTrustedPublicClubs();
+    return clubs.find((club) => club.slug === slug) ?? null;
+  }
+  // Preserve the uncached direct-query path for local and preview environments.
+  return queryClubBySlug(slug);
+});
 
 export async function getClubBySlug(slug: string): Promise<ClubWithRelations | null> {
   return getCachedClubBySlug(slug);

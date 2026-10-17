@@ -7,6 +7,6 @@ import { createServerDataClient } from '@/lib/supabase/server-data';
  * Public club data must be read through the trusted server data client, never directly
  * from the browser publishable key.
  */
-export function createPublicClient() {
-  return createServerDataClient();
+export function createPublicClient(vercelOidcTokenOverride?: string) {
+  return createServerDataClient(vercelOidcTokenOverride);
 }

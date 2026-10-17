@@ -71,7 +71,8 @@ assert.match(clubUpdates, /createServerDataClient/, 'club updates must be loaded
 assert.doesNotMatch(clubUpdates, /SUPABASE_PUBLISHABLE_KEY/, 'club updates query must not use the browser publishable key');
 assert.match(clubUpdates, /const publicClubs = await getClubs\(\)/, 'club updates must derive visibility from the canonical public club query');
 assert.match(clubUpdates, /\.in\('club_id', publicClubIds\)/, 'server-secret club update reads must stay restricted to public club ids');
-assert.match(sitemap, /createServerDataClient/, 'sitemap inventory reads must be server-only');
+assert.match(sitemap, /await getClubs\(\)/, 'sitemap must reuse the trusted server-only cached public inventory');
+assert.doesNotMatch(sitemap, /createServerDataClient|\.from\(['"]clubs['"]\)/, 'sitemap must not trigger a duplicate origin inventory query');
 assert.match(health, /createServerDataClient/, 'health inventory reads must be server-only');
 assert.match(submissions, /getClubBySlug/, 'public submission club lookup must reuse the canonical public club visibility query');
 assert.doesNotMatch(submissions, /createServerDataClient/, 'submission code must not bypass canonical public club visibility directly');
@@ -186,5 +187,5 @@ assert.match(clubs, /getClubs xətası:[\s\S]*?throw error;/, 'Inventory failure
 assert.match(clubs, /getPublicClubCount district xətası:[\s\S]*?throw districtError;/, 'District count failure must propagate');
 assert.match(clubs, /getPublicClubCount xətası:[\s\S]*?throw error;/, 'Club count read failures must propagate');
 assert.match(clubs, /getClubBySlug xətası:[\s\S]*?throw error;/, 'Club profile failures must not become false 404s');
-assert.match(sitemap, /Sitemap club inventory read failed:[\s\S]*?throw error;/, 'Sitemap must not respond 200 with missing clubs after backend failure');
+assert.match(sitemap, /const clubs: SitemapClub\[\] = \(await getClubs\(\)\)\.filter\(/, 'Sitemap must inherit the trusted inventory fail-closed behavior and never silently publish an empty result');
 console.log('Public data anti-scrape regression contract: PASS');

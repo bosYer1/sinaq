@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getClubLogo, getClubMonogram } from '@/lib/clubLogos';
 import { cn } from '@/lib/utils';
 
@@ -14,56 +14,37 @@ type ClubLogoProps = {
   priority?: boolean;
 };
 
+/**
+ * A confirmed official logo is always preferred over a venue photo.
+ * If it fails, fall back to the club's own real photo and then a monogram.
+ * Never reuse another club's logo or a generic invented brand asset.
+ */
 export function ClubLogo({ slug, name, profileImageUrl, className, imageClassName, priority = false }: ClubLogoProps) {
-  const staticLogo = getClubLogo(slug);
-  const resolvedProfileImageUrl = profileImageUrl ?? null;
-  const sourceUrl = resolvedProfileImageUrl || staticLogo?.imageUrl || null;
-  const isBase64Asset = sourceUrl?.endsWith('.b64') === true;
-  const [failed, setFailed] = useState(false);
-  const [base64DataUrl, setBase64DataUrl] = useState<string | null>(null);
-
-
-  useEffect(() => {
-    if (!sourceUrl || !isBase64Asset) return;
-
-    let cancelled = false;
-    fetch(sourceUrl)
-      .then((response) => {
-        if (!response.ok) throw new Error('Logo asset could not be loaded');
-        return response.text();
-      })
-      .then((content) => {
-        if (!cancelled) setBase64DataUrl(`data:image/jpeg;base64,${content.trim()}`);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isBase64Asset, sourceUrl]);
-
-  const resolvedUrl = isBase64Asset ? base64DataUrl : sourceUrl;
+  const confirmedLogo = getClubLogo(slug)?.imageUrl ?? null;
+  const [failedUrls, setFailedUrls] = useState<string[]>([]);
+  const candidates = [confirmedLogo, profileImageUrl].filter(
+    (url): url is string => Boolean(url?.trim()) && !url!.endsWith('.b64'),
+  );
+  const sourceUrl = candidates.find((url) => !failedUrls.includes(url)) ?? null;
+  const isOfficialLogo = sourceUrl === confirmedLogo;
+  const isLocalRecoveredPhoto = sourceUrl?.startsWith('/recovered-club-media/') === true;
 
   return (
     <div
-      className={cn(
-        'relative flex shrink-0 items-center justify-center overflow-hidden bg-surface text-primary',
-        className
-      )}
-      title={resolvedUrl ? `${name} profil şəkli` : `${name} monoqramı`}
+      className={cn('relative flex shrink-0 items-center justify-center overflow-hidden bg-surface text-primary', className)}
+      title={sourceUrl ? (isOfficialLogo ? `${name} loqosu` : `${name} şəkli`) : `${name} monoqramı`}
     >
-      {resolvedUrl && !failed ? (
+      {sourceUrl ? (
         <Image
-          src={resolvedUrl}
-          alt={`${name} profil şəkli`}
+          key={sourceUrl}
+          src={sourceUrl}
+          alt={isOfficialLogo ? `${name} loqosu` : `${name} şəkli`}
           fill
-          sizes="96px"
-          className={cn('object-contain p-1.5', imageClassName)}
+          sizes="(max-width: 640px) 104px, 96px"
+          className={cn(isOfficialLogo ? 'object-contain p-2' : 'object-cover', imageClassName)}
           priority={priority}
-          unoptimized={isBase64Asset}
-          onError={() => setFailed(true)}
+          unoptimized={isLocalRecoveredPhoto || isOfficialLogo}
+          onError={() => setFailedUrls((failed) => failed.includes(sourceUrl) ? failed : [...failed, sourceUrl])}
         />
       ) : (
         <span className="font-display text-[0.72em] font-bold tracking-tight" aria-hidden="true">

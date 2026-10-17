@@ -23,9 +23,56 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://uxcedpbumulpheglhlvs.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ZRyHR5Qj2LmbCZVsKTBZ4Q_eRByoSYf
       NEXT_PUBLIC_SITE_URL: https://gameyer.az
+      # Recovery PR only: compile and browser-test against the same checked,
+      # visibility-gated static public catalog used by production.
+      # Main still builds with its existing live-data/OIDC contract.
+      GAMEYER_NEON_EMERGENCY_READS: ${{ github.head_ref == 'perf/cross-request-public-inventory-cache-20261012' && '1' || '0' }}
+      GAMEYER_NEON_STATIC_CATALOG: ${{ github.head_ref == 'perf/cross-request-public-inventory-cache-20261012' && '1' || '0' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Verify approved Supabase return on live production
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Read-only smoke. Never print secrets or produce analytics writes.
+          curl --fail --silent --show-error --max-time 20 \
+            https://gameyer.az/api/health > /tmp/gameyer-recovered-health.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const health = JSON.parse(fs.readFileSync('/tmp/gameyer-recovered-health.json', 'utf8'));
+          if (!health.ok || health.database !== 'ok') {
+            throw new Error('gameyer.az public database is not healthy after Supabase return');
+          }
+          if (health.analytics_write === 'disabled') {
+            throw new Error('gameyer.az still reports emergency/disabled analytics writes; return not confirmed');
+          }
+          console.log('gameyer.az live health OK; recovery mode no longer serves requests.');
+          NODE
+          curl --fail --silent --show-error --max-time 20 https://gameyer.az/ > /tmp/gameyer-recovered-home.html
+          grep 'Bakıda gaming klubunu tap' /tmp/gameyer-recovered-home.html > /dev/null
+          curl --fail --silent --show-error --max-time 20 \
+            https://gameyer.az/sitemap.xml > /tmp/gameyer-recovered-sitemap.xml
+          node <<'NODE'
+          const fs = require('node:fs');
+          const sitemap = fs.readFileSync('/tmp/gameyer-recovered-sitemap.xml', 'utf8');
+          const paths = [...sitemap.matchAll(new RegExp('<loc>(.*?)</loc>', 'g'))].map(m => new URL(m[1]).pathname);
+          if (paths.length !== 110) throw new Error(`Production sitemap URL count changed: ${paths.length}`);
+          const slug = paths.find(path => path.startsWith('/klub/'));
+          if (!slug) throw new Error('No club details in production sitemap');
+          console.log('Production sitemap contains 110 approved SEO URLs; sample club route:', slug);
+          fs.writeFileSync('/tmp/gameyer-recovered-club-path', slug);
+          NODE
+          club_path="$(cat /tmp/gameyer-recovered-club-path)"
+          curl --fail --silent --show-error --max-time 20 "https://gameyer.az$club_path" > /dev/null
+          curl --fail --silent --show-error --max-time 20 \
+            'https://gameyer.az/?type=pc&price_max=3' > /dev/null
+          curl --fail --silent --show-error --location --head --max-time 20 \
+            'https://uxcedpbumulpheglhlvs.supabase.co/storage/v1/object/public/club-images/1d0b68d6-d39a-4a8b-85a8-60c97171a89d/profile/1787320301757-b6b263b6-5c3d-41a8-9f15-dd35b7db9f03.jpg' > /dev/null
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            https://gameyer.az/gameyer-missing-page-404)" = 404
+          echo 'Supabase production cutover smoke passed without writing any records.'
 
       - name: Reject committed private credentials
         shell: bash
@@ -74,6 +121,41 @@ jobs:
             const token = await core.getIDToken('https://gameyer.az/public-data-ci');
             core.setSecret(token);
             core.exportVariable('GAMEYER_CI_OIDC_TOKEN', token);
+
+      - name: Verify live trusted Supabase read and original club photo availability
+        shell: bash
+        run: |
+          set -euo pipefail
+          # This uses the already-minted GitHub Actions OIDC token. It does not
+          # grant public anon access or print secrets into the workflow logs.
+          test -n "${GAMEYER_CI_OIDC_TOKEN:-}" || { echo 'Missing trusted CI OIDC'; exit 1; }
+          cat > /tmp/gameyer-public-read.json <<'JSON'
+          {"url":"https://uxcedpbumulpheglhlvs.supabase.co/rest/v1/clubs?select=id%2Cslug&is_active=eq.true&limit=1","method":"GET","headers":{"accept":"application/json"}}
+          JSON
+          status="$(curl --silent --show-error --max-time 20 \
+            --output /tmp/gameyer-public-read-response.json \
+            --write-out '%{http_code}' \
+            -X POST 'https://uxcedpbumulpheglhlvs.supabase.co/functions/v1/gameyer-public-data-proxy' \
+            -H 'content-type: application/json' \
+            -H "x-gameyer-github-oidc: $GAMEYER_CI_OIDC_TOKEN" \
+            --data-binary @/tmp/gameyer-public-read.json)"
+          echo "Trusted public-data proxy response status: $status"
+          test "$status" = 200 || { echo 'Live Supabase public read failed; block recovery cutover.' >&2; exit 1; }
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/gameyer-public-read-response.json', 'utf8'));
+          if (!Array.isArray(data) || data.length !== 1 || typeof data[0].slug !== 'string') {
+            throw new Error('Trusted public-data proxy returned an invalid club response.');
+          }
+          console.log('Validated authorized live Supabase public club read (one row).');
+          NODE
+          # Preserve the original Supabase Storage image URLs. Never replace
+          # original photographs with an invented or cross-club substitute.
+          image_status="$(curl --silent --show-error --location --head --max-time 20 \
+            --output /dev/null --write-out '%{http_code}' \
+            'https://uxcedpbumulpheglhlvs.supabase.co/storage/v1/object/public/club-images/1d0b68d6-d39a-4a8b-85a8-60c97171a89d/profile/1787320301757-b6b263b6-5c3d-41a8-9f15-dd35b7db9f03.jpg')"
+          echo "Original Supabase club photo response status: $image_status"
+          test "$image_status" = 200
 
       - name: Start production server
         run: |
@@ -223,6 +305,62 @@ jobs:
             process.exit(1);
           });
           NODE
+
+      - name: Exercise live Supabase mode locally without changing Vercel production
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Test the exact recovery switches OFF against GitHub's trusted OIDC,
+          # without touching the gameyer.az alias or deployed production flags.
+          GAMEYER_NEON_EMERGENCY_READS=0 GAMEYER_NEON_STATIC_CATALOG=0 PORT=3100 npm run start > /tmp/gameyer-live-supabase.log 2>&1 &
+          echo $! > /tmp/gameyer-live-supabase.pid
+          for i in {1..30}; do
+            if curl --fail --silent --max-time 5 http://127.0.0.1:3100/api/health > /tmp/gameyer-live-health.json; then
+              break
+            fi
+            sleep 1
+          done
+          grep '"ok":true' /tmp/gameyer-live-health.json > /dev/null
+          grep '"database":"ok"' /tmp/gameyer-live-health.json > /dev/null
+          node <<'NODE'
+          const base = 'http://127.0.0.1:3100';
+          const check = async (path) => {
+            const res = await fetch(base + path, { redirect: 'manual', signal: AbortSignal.timeout(20000) });
+            if (res.status !== 200) throw new Error(`Live Supabase ${path}: HTTP ${res.status}`);
+            return res;
+          };
+          (async () => {
+            for (const path of ['/', '/?type=pc&price_max=3', '/?q=apex', '/rayon', '/robots.txt', '/admin/login']) {
+              await check(path);
+            }
+            const sitemap = await (await check('/sitemap.xml')).text();
+            const paths = [...sitemap.matchAll(new RegExp('<loc>(.*?)</loc>', 'g'))].map(m => new URL(m[1]).pathname);
+            if (paths.length !== 110) throw new Error(`Live Supabase sitemap expected 110 URLs; got ${paths.length}`);
+            // Bounded concurrency to avoid a synthetic Supabase request storm.
+            for (let offset = 0; offset < paths.length; offset += 4) {
+              await Promise.all(paths.slice(offset, offset + 4).map(path => check(path)));
+            }
+            const missing = await fetch(base + '/gameyer-nonexistent-404', { redirect: 'manual' });
+            if (missing.status !== 404) throw new Error(`Live Supabase 404 response: ${missing.status}`);
+            console.log(`Live Supabase smoke passed: ${paths.length} sitemap pages + filters, SEO, health, admin login and 404.`);
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
+
+      - name: Stop live Supabase smoke server
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/gameyer-live-supabase.pid ]; then
+            kill "$(cat /tmp/gameyer-live-supabase.pid)" || true
+          fi
+
+      - name: Verify production build with real Supabase mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Catch build-time Supabase/OIDC failures before touching production.
+          # The trusted GitHub OIDC path is already provisioned above.
+          GAMEYER_NEON_EMERGENCY_READS=0 GAMEYER_NEON_STATIC_CATALOG=0 npm run build
 
       - name: Stop production server
         if: always()

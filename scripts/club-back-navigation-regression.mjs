@@ -44,4 +44,9 @@ assert(exploreSource.includes('if (nextExpanded) saveMobileExpandedState(getMobi
 assert(exploreSource.includes("mobileExpanded ? 'Daha az klub göstər'"), 'The restored expanded list must remain collapsible after return.');
 assert(exploreSource.includes('grid-cols-[390px_minmax(0,1fr)]'), 'Desktop discovery cards must use the same compact mobile-like card width target.');
 
+assert(exploreSource.includes('MOBILE_EXPANDED_RENDER_BATCH'), 'Expanded mobile club cards must be mounted progressively.');
+assert(exploreSource.includes('setMobileVisibleCount((current) => Math.min(current + MOBILE_EXPANDED_RENDER_BATCH'), 'Mobile list expansion must preserve small incremental batches.');
+assert(exploreSource.includes('mobileVisibleCount < clubs.length'), 'Saved scroll position must not restore before all requested cards are mounted.');
+assert(exploreSource.includes('window.clearTimeout(timer)'), 'Progressive render timers must be cleaned up to avoid background churn.');
+
 console.log('Club back-navigation, scroll performance, and card parity regression checks passed.');

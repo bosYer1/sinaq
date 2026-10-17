@@ -91,6 +91,12 @@ async function requestScopedVercelOidcToken() {
   }
 }
 
+// Read request-scoped Vercel OIDC outside any Next.js Data Cache callback.
+// The signed token is never persisted in the cached public inventory.
+export async function requestVercelPublicReadToken() {
+  return requestScopedVercelOidcToken();
+}
+
 async function proxyPublicDataFetch(
   directRequest: Request,
   trustedHeader: 'x-gameyer-github-oidc' | 'x-gameyer-vercel-oidc',
@@ -143,8 +149,9 @@ async function trustedPublicDataFetch(input: RequestInfo | URL, init?: RequestIn
 
 }
 
-export function createServerDataClient() {
-  if (serverDataClient) return serverDataClient;
+export function createServerDataClient(vercelOidcTokenOverride?: string) {
+  // Clients with a request-scoped OIDC credential must not be a global singleton.
+  if (serverDataClient && !vercelOidcTokenOverride) return serverDataClient;
 
   const secret = process.env.SUPABASE_SECRET_KEY?.trim()
     || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -163,7 +170,13 @@ export function createServerDataClient() {
 
   const baseFetch = (isProduction || hasCiOidc) && !secret
     ? async (input: RequestInfo | URL, init?: RequestInit) => {
-        const response = await trustedPublicDataFetch(input, init);
+        const response = vercelOidcTokenOverride && isProduction && !hasCiOidc
+          ? await proxyPublicDataFetch(
+              new Request(input, init),
+              'x-gameyer-vercel-oidc',
+              vercelOidcTokenOverride,
+            )
+          : await trustedPublicDataFetch(input, init);
         if (
           response.status === 401
           && githubOidcRuntimeAvailable()
@@ -179,7 +192,7 @@ export function createServerDataClient() {
       }
     : undefined;
 
-  serverDataClient = createClient<Database>(SUPABASE_URL, key, {
+  const client = createClient<Database>(SUPABASE_URL, key, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -188,5 +201,6 @@ export function createServerDataClient() {
     ...(baseFetch ? { global: { fetch: baseFetch } } : {}),
   });
 
-  return serverDataClient;
+  if (!vercelOidcTokenOverride) serverDataClient = client;
+  return client;
 }

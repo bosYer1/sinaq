@@ -5,6 +5,7 @@ import { getClubBySlug, getClubs, getPublicClubCount } from '@/lib/queries/clubs
 import { ClubDetail } from '@/components/clubs/ClubDetail';
 import { ShareClubButton } from '@/components/clubs/ShareClubButton';
 import { getSiteUrl } from '@/lib/site-url';
+import { getClubLogo } from '@/lib/clubLogos';
 import { getHourlyPriceRange, getHourlyPricing, getPlatformStartingPrices } from '@/lib/pricing';
 
 interface ClubPageProps { params: Promise<{ slug: string }> }
@@ -178,7 +179,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
         mainEntityOfPage: clubUrl,
         description: club.description?.trim() || factualDescription,
         image: allBusinessImages.length > 0 ? allBusinessImages : primaryImage || undefined,
-        logo: club.profile_image_url || undefined,
+        logo: getClubLogo(club.slug)?.imageUrl || undefined,
         telephone: club.phone || undefined,
         priceRange,
         currenciesAccepted: 'AZN',

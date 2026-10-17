@@ -56,10 +56,10 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
       {sortedImages.length > 0 ? (
         <div className="mb-6 grid grid-cols-4 gap-1.5 overflow-hidden rounded-card bg-surface-alt">
           <div className="relative col-span-4 aspect-video sm:col-span-2 sm:row-span-2 sm:aspect-square">
-            <Image src={sortedImages[0].url} alt={`${club.name} — əsas şəkil`} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" priority />
+            <Image src={sortedImages[0].url} alt={`${club.name} — əsas şəkil`} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" priority unoptimized={sortedImages[0].url.startsWith('/recovered-club-media/')} />
           </div>
           {sortedImages.slice(1, 5).map((img, index) => (
-            <div key={img.id} className="relative col-span-2 aspect-square sm:col-span-1"><Image src={img.url} alt={`${club.name} — şəkil ${index + 2}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" /></div>
+            <div key={img.id} className="relative col-span-2 aspect-square sm:col-span-1"><Image src={img.url} alt={`${club.name} — şəkil ${index + 2}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" unoptimized={img.url.startsWith('/recovered-club-media/')} /></div>
           ))}
         </div>
       ) : (
@@ -68,7 +68,7 @@ export function ClubDetail({ club, tiktokUrl = null }: { club: ClubWithRelations
             <ClubLogo slug={club.slug} name={club.name} profileImageUrl={club.profile_image_url} className="mx-auto h-16 w-16 rounded-2xl border border-border text-3xl shadow-card sm:h-20 sm:w-20 sm:text-4xl" priority />
             <p className="mt-4 break-words font-display text-lg font-semibold leading-snug text-ink sm:text-xl">{club.name}</p>
             <span className="mt-2 inline-flex max-w-full items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary sm:text-xs">{fallbackType}</span>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-5 text-muted">Real klub şəkilləri əlavə ediləndə burada görünəcək.</p>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-5 text-muted">Klub haqqında daha çox foto mövcud olduqda burada göstəriləcək.</p>
           </div>
         </div>
       )}
