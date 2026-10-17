@@ -161,7 +161,7 @@ test('Neon recovery is opt-in, server-only and reads only approved catalog views
   assert.match(districts, /getEmergencyDistricts\(\)/);
   assert.match(districts, /getEmergencyClubTypes\(\)/);
   assert.match(updates, /if \(emergencyNeonCatalogEnabled\(\)\) return \[\];/);
-  assert.match(sitemap, /if \(emergencyNeonCatalogEnabled\(\)\)/);
+  // Sitemap must share the gated cached inventory instead of fetching it separately.\n  assert.match(sitemap, /await getClubs\(\)/);\n  assert.doesNotMatch(sitemap, /createServerDataClient|\.from\('clubs'\)/);
   assert.match(health, /getEmergencyPublicClubs\(\)/);
 });
 
